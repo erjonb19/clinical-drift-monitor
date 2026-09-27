@@ -1,0 +1,10 @@
+# LF in the repo, native in the working copy. Keeps diffs clean between Windows dev and Linux CI.
+* text=auto eol=lf
+
+*.py text diff=python
+*.ipynb text linguist-documentation
+
+*.pptx binary
+*.png binary
+*.zip binary
+*.npz binary
