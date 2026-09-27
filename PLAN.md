@@ -125,7 +125,7 @@ The model becomes a service with a threshold, a schedule and a CI gate, which is
 
 An LLM turns a drift alarm into a report a clinical ops lead can act on, and every number in it is checked against the data.
 
-- [ ] When the drift job flags, Gemini on the free tier writes an incident report: what shifted, which classes are affected, and a recommended action (hold, relabel a sample, or retrain).
+- [ ] When the drift job flags, Gemini on the free tier writes an incident report in 8D structure: the problem (what shifted and which classes), containment (hold or abstain), root cause, the permanent fix (relabel a sample or retrain), how the fix was checked, and how to prevent a repeat.
 - [ ] Groundedness check: every number in the report must match the drift table, reusing the governed agent's groundedness check.
 - [ ] Eval: 20 to 30 synthetic drift scenarios with known findings, scored for correctness and groundedness, with cost and latency tracked per call.
 - [ ] Reports land in a human review queue before they count as sent.
@@ -137,7 +137,7 @@ An LLM turns a drift alarm into a report a clinical ops lead can act on, and eve
 This phase makes the project easy for someone else to pick up and run, which is the core forward deployed skill.
 
 - [ ] One-command demo (`docker compose up`) with a sample batch that trips the drift alarm.
-- [ ] Runbook: what to do when the alarm fires, who reviews the report, and how to retrain.
+- [ ] Runbook in 8D steps: containment when the alarm fires, who reviews the report, root cause, retraining as the permanent fix, and the check that prevents a repeat.
 - [ ] Model card and data card: what the model is for, what data it saw, per-skin-type results, and where it fails.
 - [ ] README in the reckoner style: results table first, real vs staged drift labeled, a silent-failures list, and a built vs planned page.
 - [ ] Optional: a 3-minute demo recording.
@@ -171,6 +171,6 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 - [ ] Test in week 1 whether Databricks Free Edition can read the public ISIC S3 bucket, since custom storage locations are not supported.
 - [ ] Check whether Free Edition includes Asset Bundles and data quality monitoring before planning around them.
 - [ ] Find out whether ISIC images carry an upload date to sort by, and how often new data actually arrives.
-- [ ] When does this start? The CM study targets Oct 31 and reckoner's first scheduled run is Oct 1.
+- [ ] When does this start? The CM study targets Oct 2 and reckoner's first scheduled run is Oct 1.
 - [x] Purdue's policy allows this coursework in a public repo (confirmed Sep 27).
 - [ ] Free Edition and CC-BY-NC images are both non-commercial only, which fits a portfolio. Attribution is required for CC-BY images.
