@@ -32,10 +32,12 @@ AUROC that far below 50% means the score ranks almost every OOD image as *more*
 in-distribution than the in-distribution images, which is a sign the comparison is
 broken, not a finding about the detector.
 
-**Cause.** The two sides were scored differently. In-distribution images were scored
-against the mean of their *true* class; CIFAR-10 images against the *nearest* class mean,
-which is never farther and usually much closer. The in-distribution images were also the
-training images the statistics were fit on.
+**Cause.** The in-distribution images were the same 1,002 images a 300-component whitened
+PCA had just been fit on. That puts each of them about sqrt(300) from the centre by
+construction (printed mean 16.49), while unseen images, CIFAR-10 included, project much
+closer (printed mean 6.81). On top of that, in-distribution images were scored against
+their *true* class mean and CIFAR-10 against the *nearest*, which is never farther.
+[phase0-note.md](phase0-note.md) walks through the cells.
 
 **Caught by.** `MahalanobisDetector.score` takes no labels, so every input is scored
 against its nearest class mean; `test_mahalanobis_uses_nearest_class_not_true_class`
@@ -49,8 +51,9 @@ test split. `cdm.reproduce` refuses to report an AUROC below 0.5 and exits non-z
 **Symptom.** HAM10000 vs PathMNIST printed an AUROC of 43.4%, with no error.
 
 **Cause.** PathMNIST ran through the ImageNet EfficientNet, not the fine-tuned one, and
-PCA was refit on PathMNIST features. The two sets of distances were measured in different
-spaces, so comparing them means nothing.
+PCA was refit on PathMNIST's own training images. Those points were then measured against
+class means from HAM10000's PCA space. The two sets of distances were measured in
+different spaces, so comparing them means nothing.
 
 **Caught by.** `cdm.reproduce` extracts features for every set with the one fine-tuned
 model it just trained. The detector is fit once on training features, and
