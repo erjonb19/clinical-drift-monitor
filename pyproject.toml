@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cdm"
+version = "0.1.0"
+description = "Clinical imaging drift monitor: a skin lesion classifier served with an out-of-distribution score."
+requires-python = ">=3.11"
+dependencies = [
+    # CI and local dev install the CPU wheels from download.pytorch.org; Colab
+    # already ships a CUDA build that satisfies these floors.
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pillow>=10.0",
+    "scikit-learn>=1.5",
+    # 3.x is the release that serves the native 224px MedMNIST+ files.
+    "medmnist>=3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pandas-stubs",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+# reference/ is read-only course history, not code this repo maintains.
+extend-exclude = ["reference"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
+
+[tool.mypy]
+files = ["src", "tests"]
+python_version = "3.11"
+strict = true
+# Neither ships type information.
+[[tool.mypy.overrides]]
+module = ["medmnist.*", "sklearn.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
