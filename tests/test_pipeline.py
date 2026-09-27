@@ -69,7 +69,7 @@ def test_aggregate_and_markdown(result_and_sets: tuple[Result, int]) -> None:
     result, _ = result_and_sets
     summary = aggregate([result, {**result, "seed": 1}])
     assert summary["seeds"] == [0, 1]
-    provenance = {"git_commit": "abc", "device": "cpu", "split_fingerprint": "f00"}
+    provenance = {"code_version": "abc", "device": "cpu", "split_fingerprint": "f00"}
     table = results_markdown(summary, provenance)
     assert "Balanced accuracy" in table
     assert all(f"| {d} |" in table for d in DETECTORS)
@@ -92,7 +92,7 @@ def test_limit_keeps_every_class() -> None:
 
 
 def test_resume_reuses_only_a_matching_seed(tmp_path: Path) -> None:
-    key = {"git_commit": "abc1234", "config": {"epochs": 12}}
+    key = {"code_version": "abc1234", "config": {"epochs": 12}}
     path = tmp_path / "seed0.json"
     assert load_finished(path, key) is None
     write_json(path, {"run_key": key, "seed": 0})
