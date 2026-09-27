@@ -59,3 +59,29 @@ different spaces, so comparing them means nothing.
 model it just trained. The detector is fit once on training features, and
 `test_mahalanobis_statistics_do_not_change_when_scoring` fails if scoring changes the
 PCA or class means.
+
+---
+
+## 4. Saved seeds were tied to the repository's latest commit, not the code's
+
+**Symptom.** The first launch of the full Phase 0 run started cleanly, logged its settings
+and began training. Nothing was wrong with what it was computing. But every saved seed
+carried a run key built from `HEAD`, and a restart only reuses a seed whose key matches.
+The next commit of any kind, including a STATUS.md edit or committing the finished seed
+files themselves, would have changed `HEAD`. A restart after a crash would then have
+refused every finished seed.
+
+This one would not have produced a wrong number. The refusal is loud
+(`ResumeMismatchError`). It is logged here because the run looked healthy while carrying
+it, and the natural reaction to the refusal ("move it aside and rerun") would have thrown
+away up to 10 hours of finished CPU training.
+
+**Cause.** "Same code" was approximated by "same commit". Docs and results live in the
+same repository, so the commit changes far more often than the code does.
+
+**Caught by.** Review of the run design two minutes after launch, before anything was
+committed; the run was stopped and relaunched. The run key now uses the last commit that
+touched `src/` or `pyproject.toml` (`cdm.reproduce.CODE_PATHS`), and the uncommitted-code
+guard covers the same paths. `test_resume_reuses_only_a_matching_seed` checks that a
+matching key is reused and a changed one is refused. The docs commits made while the run
+was training left its code version at `2ccda00`, which confirms the fix on the real run.
