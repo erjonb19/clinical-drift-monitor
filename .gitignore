@@ -7,6 +7,7 @@ data/
 *.onnx
 checkpoints/
 results/smoke/
+logs/
 
 # Secrets
 .env

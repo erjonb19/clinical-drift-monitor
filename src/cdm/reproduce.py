@@ -3,6 +3,9 @@
 Trains EfficientNet-B0 on the fixed lesion-level HAM10000 split once per seed, reports
 test-split classification metrics, and scores three OOD detectors on PathMNIST (near) and
 CIFAR-10 (far). Every number in the README comes from the files this writes.
+
+Each finished seed is saved at once. A restart with the same code, data and settings skips
+seeds already saved, so a crash loses at most the seed in progress.
 """
 
 from __future__ import annotations
@@ -51,8 +54,47 @@ ImageSet = Dataset[tuple[torch.Tensor, int]]
 Result = dict[str, Any]
 
 
-class ImplausibleResultError(RuntimeError):
-    pass
+class ResumeMismatchError(RuntimeError):
+    """A saved seed came from different code, data or settings than this run."""
+
+
+def log(message: str) -> None:
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{stamp}] {message}", flush=True)
+
+
+def keep_awake() -> None:
+    """Ask Windows not to sleep while this process runs; released when it exits."""
+    if sys.platform == "win32":
+        import ctypes
+
+        es_continuous, es_system_required = 0x80000000, 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(es_continuous | es_system_required)
+
+
+def write_json(path: Path, data: object) -> None:
+    """Write via a temporary file so a crash never leaves half a result on disk."""
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+def run_key(provenance: Result) -> Result:
+    """What must match for a saved seed to be reused: code, data, split and settings."""
+    keys = ("git_commit", "split_fingerprint", "metadata_md5", "images", "n_ood", "config")
+    return {k: provenance[k] for k in keys}
+
+
+def load_finished(path: Path, key: Result) -> Result | None:
+    if not path.exists():
+        return None
+    saved: Result = json.loads(path.read_text(encoding="utf-8"))
+    if saved.get("run_key") != key:
+        raise ResumeMismatchError(
+            f"{path} was produced by a different run (code, data or settings changed). "
+            "Move it aside or pass a different --out; results from two setups are never mixed."
+        )
+    return saved
 
 
 def run_seed(
@@ -64,10 +106,12 @@ def run_seed(
 ) -> Result:
     """Train one model, then score the test split and every OOD set with that same model."""
     model = build_model(pretrained=cfg.pretrained)
-    model, history = train(model, sets["train"], sets["val"], cfg, seed, device)
+    model, history = train(model, sets["train"], sets["val"], cfg, seed, device, log=log)
 
     def features(ds: ImageSet) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        loader = DataLoader(ds, batch_size=cfg.batch_size, num_workers=cfg.num_workers)
+        # OOD sets are in-memory arrays; worker processes would each get a pickled copy.
+        workers = cfg.num_workers if isinstance(ds, HamDataset) else 0
+        loader = DataLoader(ds, batch_size=cfg.batch_size, num_workers=workers)
         return extract(model, loader, device)
 
     # Detector statistics come from training images with the eval transform, never test.
@@ -82,6 +126,7 @@ def run_seed(
             "energy": energy_score(logits),
         }
 
+    log(f"seed {seed}: scoring test split and OOD sets")
     id_scores = scores(test_feats, test_logits)
     ood: Result = {}
     for name, ds in ood_sets.items():
@@ -211,6 +256,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.limit is not None and args.out == Path("results/phase0"):
         args.out = Path("results/smoke")  # never overwrite real results with a smoke run
 
+    keep_awake()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     cfg = TrainConfig(epochs=args.epochs, batch_size=args.batch_size, num_workers=args.workers)
 
@@ -243,27 +289,42 @@ def main(argv: list[str] | None = None) -> int:
         "n_ood": {n: len(ds) for n, ds in ood_sets.items()},
         "config": {**vars(cfg), "limit": args.limit},
     }
-    print(json.dumps(provenance, indent=2))
+    commit = provenance["git_commit"]
+    if args.limit is None and (commit == "unknown" or commit.endswith("-dirty")):
+        log(f"refusing a full run from uncommitted code (commit {provenance['git_commit']})")
+        return 1
+    log("run settings:\n" + json.dumps(provenance, indent=2))
 
     args.out.mkdir(parents=True, exist_ok=True)
+    key = run_key(provenance)
     results: list[Result] = []
     problems: list[str] = []
     for seed in args.seeds:
-        result = run_seed(seed, sets, ood_sets, cfg, device)
-        (args.out / f"seed{seed}.json").write_text(json.dumps(result, indent=2) + "\n")
+        path = args.out / f"seed{seed}.json"
+        # Smoke runs always start fresh; only full runs resume.
+        result = load_finished(path, key) if args.limit is None else None
+        if result is not None:
+            log(f"seed {seed}: already finished, loaded {path}")
+        else:
+            log(f"seed {seed}: training ({cfg.epochs} epochs)")
+            result = {"run_key": key, **run_seed(seed, sets, ood_sets, cfg, device)}
+            result["finished_utc"] = datetime.now(UTC).isoformat(timespec="seconds")
+            write_json(path, result)
+            log(f"seed {seed}: finished, saved {path}")
         results.append(result)
         problems += check_plausible(result)
 
-    summary = aggregate(results)
-    (args.out / "summary.json").write_text(
-        json.dumps({"provenance": provenance, **summary}, indent=2) + "\n"
-    )
-    (args.out / "results.md").write_text(results_markdown(summary, provenance))
-    print((args.out / "results.md").read_text())
+        summary = aggregate(results)
+        write_json(args.out / "summary.json", {"provenance": provenance, **summary})
+        (args.out / "results.md").write_text(
+            results_markdown(summary, provenance), encoding="utf-8"
+        )
 
+    log("results:\n" + (args.out / "results.md").read_text(encoding="utf-8"))
     if problems:
-        print("\nIMPLAUSIBLE RESULTS, investigate before reporting:", *problems, sep="\n  ")
+        log("IMPLAUSIBLE RESULTS, investigate before reporting:\n  " + "\n  ".join(problems))
         return 2
+    log("done")
     return 0
 
 

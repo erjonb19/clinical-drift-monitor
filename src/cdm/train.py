@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import random
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
@@ -124,6 +125,7 @@ def train(
 
     best_score, best_state, history = -1.0, copy.deepcopy(model.state_dict()), []
     for epoch in range(1, cfg.epochs + 1):
+        started = time.monotonic()
         model.train()
         total, batches = 0.0, 0
         for x, y in train_loader:
@@ -138,7 +140,10 @@ def train(
             total, batches = total + loss.item(), batches + 1
         val_bacc = balanced_accuracy(model, val_loader, device)
         history.append({"epoch": epoch, "train_loss": total / batches, "val_bacc": val_bacc})
-        log(f"seed {seed} epoch {epoch}: loss {total / batches:.4f}, val bacc {val_bacc:.4f}")
+        log(
+            f"seed {seed} epoch {epoch}/{cfg.epochs}: loss {total / batches:.4f}, "
+            f"val bacc {val_bacc:.4f}, {time.monotonic() - started:.0f}s"
+        )
         if val_bacc > best_score:
             best_score, best_state = val_bacc, copy.deepcopy(model.state_dict())
 
