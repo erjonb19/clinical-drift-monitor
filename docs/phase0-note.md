@@ -53,4 +53,4 @@ near chance.
 | An AUROC below 50% reported | Any AUROC below 50% exits non-zero | `test_implausible_auroc_is_flagged` |
 
 The corrected numbers are in [`results/phase0/results.md`](../results/phase0/results.md)
-once the Colab run is committed. Until then, this note makes no claim about what they are.
+once the local CPU run is committed. Until then, this note makes no claim about what they are.
