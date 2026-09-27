@@ -15,11 +15,14 @@ from cdm.data import CLASSES, HamDataset, OODImages, eval_transform, train_trans
 from cdm.reproduce import (
     DETECTORS,
     Result,
+    ResumeMismatchError,
     _limit,
     aggregate,
     check_plausible,
+    load_finished,
     results_markdown,
     run_seed,
+    write_json,
 )
 from cdm.train import TrainConfig
 
@@ -86,3 +89,14 @@ def test_limit_keeps_every_class() -> None:
     limited = _limit(frame, 20, seed=0)
     assert len(limited) == 20
     assert set(limited["dx"]) == set(CLASSES)
+
+
+def test_resume_reuses_only_a_matching_seed(tmp_path: Path) -> None:
+    key = {"git_commit": "abc1234", "config": {"epochs": 12}}
+    path = tmp_path / "seed0.json"
+    assert load_finished(path, key) is None
+    write_json(path, {"run_key": key, "seed": 0})
+    assert load_finished(path, key) == {"run_key": key, "seed": 0}
+    changed = {**key, "config": {"epochs": 1}}
+    with pytest.raises(ResumeMismatchError):
+        load_finished(path, changed)
