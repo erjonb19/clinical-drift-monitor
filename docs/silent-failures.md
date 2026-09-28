@@ -100,8 +100,9 @@ Nothing reported was wrong, so this is a near miss rather than a silent failure.
 logged because a "finished" run looked complete while missing what an investigation
 needs, and the gap only showed when a result had to be checked.
 
-**Cause.** Checkpoint saving was in the Phase 0 plan's intent (weights stay out of git, but
-beside the data) and was never implemented. No test or check asked for it.
+**Cause.** The Phase 0 plan said weights are never committed, but not that they must be
+kept. Claude meant to save them beside the data and never implemented it, and no test or
+check asked for them.
 
 **Caught by.** `run_seed` now saves the selected weights to
 `<data root>/checkpoints/<results folder>/seedN.pt` and records the path and MD5 in the
