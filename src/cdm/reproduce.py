@@ -103,10 +103,21 @@ def run_seed(
     ood_sets: Mapping[str, OODImages],
     cfg: TrainConfig,
     device: torch.device,
+    checkpoint: Path | None = None,
 ) -> Result:
-    """Train one model, then score the test split and every OOD set with that same model."""
+    """Train one model, then score the test split and every OOD set with that same model.
+
+    With ``checkpoint``, the selected (best-validation) weights are saved there so the
+    features behind a result can be re-extracted later.
+    """
     model = build_model(pretrained=cfg.pretrained)
     model, history = train(model, sets["train"], sets["val"], cfg, seed, device, log=log)
+    saved: Result | None = None
+    if checkpoint is not None:
+        checkpoint.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(model.state_dict(), checkpoint)
+        saved = {"path": str(checkpoint), "md5": md5sum(checkpoint)}
+        log(f"seed {seed}: saved weights to {checkpoint}")
 
     def features(ds: ImageSet) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         # OOD sets are in-memory arrays; worker processes would each get a pickled copy.
@@ -142,6 +153,7 @@ def run_seed(
         "history": history,
         "test": classification_metrics(test_labels, test_logits),
         "ood": ood,
+        "checkpoint": saved,
     }
 
 
@@ -316,7 +328,9 @@ def main(argv: list[str] | None = None) -> int:
             log(f"seed {seed}: already finished, loaded {path}")
         else:
             log(f"seed {seed}: training ({cfg.epochs} epochs)")
-            result = {"run_key": key, **run_seed(seed, sets, ood_sets, cfg, device)}
+            # Weights live beside the data, never in git.
+            ckpt = args.data / "checkpoints" / args.out.name / f"seed{seed}.pt"
+            result = {"run_key": key, **run_seed(seed, sets, ood_sets, cfg, device, ckpt)}
             result["finished_utc"] = datetime.now(UTC).isoformat(timespec="seconds")
             write_json(path, result)
             log(f"seed {seed}: finished, saved {path}")

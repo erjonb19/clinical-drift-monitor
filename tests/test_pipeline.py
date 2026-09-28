@@ -11,7 +11,7 @@ import torch
 from PIL import Image
 from torch.utils.data import TensorDataset
 
-from cdm.data import CLASSES, HamDataset, OODImages, eval_transform, train_transform
+from cdm.data import CLASSES, HamDataset, OODImages, eval_transform, md5sum, train_transform
 from cdm.reproduce import (
     DETECTORS,
     Result,
@@ -24,7 +24,7 @@ from cdm.reproduce import (
     run_seed,
     write_json,
 )
-from cdm.train import TrainConfig
+from cdm.train import TrainConfig, build_model
 
 
 def fake_ham(tmp_path: Path, per_class: int) -> pd.DataFrame:
@@ -42,6 +42,7 @@ def fake_ham(tmp_path: Path, per_class: int) -> pd.DataFrame:
 @pytest.fixture(scope="module")
 def result_and_sets(tmp_path_factory: pytest.TempPathFactory) -> tuple[Result, int]:
     frame = fake_ham(tmp_path_factory.mktemp("ham"), per_class=3)
+    checkpoint = tmp_path_factory.mktemp("ckpt") / "seed0.pt"
     sets = {
         "train": HamDataset(frame, train_transform()),
         "train_eval": HamDataset(frame, eval_transform()),
@@ -51,7 +52,7 @@ def result_and_sets(tmp_path_factory: pytest.TempPathFactory) -> tuple[Result, i
     noise = TensorDataset(torch.randn(10, 3, 224, 224), torch.zeros(10))
     ood = {"noise": OODImages(noise, range(10))}  # type: ignore[arg-type]
     cfg = TrainConfig(epochs=1, batch_size=8, num_workers=0, pretrained=False)
-    return run_seed(0, sets, ood, cfg, torch.device("cpu")), len(frame)
+    return run_seed(0, sets, ood, cfg, torch.device("cpu"), checkpoint), len(frame)
 
 
 def test_run_seed_reports_every_metric(result_and_sets: tuple[Result, int]) -> None:
@@ -100,3 +101,10 @@ def test_resume_reuses_only_a_matching_seed(tmp_path: Path) -> None:
     changed = {**key, "config": {"epochs": 1}}
     with pytest.raises(ResumeMismatchError):
         load_finished(path, changed)
+
+
+def test_checkpoint_is_saved_and_reloads(result_and_sets: tuple[Result, int]) -> None:
+    result, _ = result_and_sets
+    path = Path(result["checkpoint"]["path"])
+    assert md5sum(path) == result["checkpoint"]["md5"]
+    build_model(pretrained=False).load_state_dict(torch.load(path, map_location="cpu"))
