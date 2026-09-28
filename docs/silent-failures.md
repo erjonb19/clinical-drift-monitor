@@ -85,3 +85,26 @@ touched `src/` or `pyproject.toml` (`cdm.reproduce.CODE_PATHS`), and the uncommi
 guard covers the same paths. `test_resume_reuses_only_a_matching_seed` checks that a
 matching key is reused and a changed one is refused. The docs commits made while the run
 was training left its code version at `2ccda00`, which confirms the fix on the real run.
+
+---
+
+## 5. Near miss: the Phase 0 run saved its metrics but not its model
+
+**Symptom.** The full 3-seed run finished cleanly (`done`, exit 0) and wrote every metric
+it promised. When the CIFAR-10 Mahalanobis result needed checking, the fine-tuned weights
+and features behind it did not exist anywhere. `reproduce.py` wrote JSON only. Every number
+was real, but none could be re-examined without retraining, which costs about 4 hours per
+seed on CPU.
+
+Nothing reported was wrong, so this is a near miss rather than a silent failure. It is
+logged because a "finished" run looked complete while missing what an investigation
+needs, and the gap only showed when a result had to be checked.
+
+**Cause.** Checkpoint saving was in the Phase 0 plan's intent (weights stay out of git, but
+beside the data) and was never implemented. No test or check asked for it.
+
+**Caught by.** `run_seed` now saves the selected weights to
+`<data root>/checkpoints/<results folder>/seedN.pt` and records the path and MD5 in the
+seed's JSON. `test_checkpoint_is_saved_and_reloads` checks that the file matches its
+recorded MD5 and loads into a fresh model. `scripts/phase0_cifar_check.py --checkpoint`
+re-extracts features from a saved model.
