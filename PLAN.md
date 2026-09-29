@@ -34,7 +34,7 @@ Flow:
 7. LLM incident report (grounded in drift metrics)
 8. Dashboard + runbook (Streamlit, one-command demo)
 
-ISIC records the contributing institution for each image, so institutions become the federated clients and held-out institutions play the new hospital.
+ISIC does not reliably record the contributing institution (`attribution` is often "Anonymous"), but each image belongs to collections, and several collections come from one hospital. A **site** is therefore a named set of collections in `config/sites.json`. Sites become the federated clients, and held-out sites play the new hospital.
 
 ## Data and drift sources
 
@@ -42,11 +42,11 @@ Real drift is the headline. Staged drift exists only to score the detector again
 
 | Source | Real or staged | What it shows |
 | --- | --- | --- |
-| ISIC Archive, replayed by institution month by month | Real data, chosen order | Shifts that already exist: other hospitals, clinical photos vs dermoscopy, more skin types than HAM10000 |
+| ISIC Archive, replayed by site month by month | Real data, chosen order | Shifts that already exist: other hospitals, clinical photos vs dermoscopy, more skin types than HAM10000 |
 | ISIC Archive, new images checked monthly | Real and live | Whatever contributors add. Months with nothing new are logged as no new data |
 | Built-in shifts on known dates (blur, brightness, age mix) | Staged | Time to detect and false alarm rate, because the start date is known |
 
-The ISIC Archive is public in AWS S3 with no account needed, grows when contributors add data, and carries institution, license, age, sex, body site, Fitzpatrick skin type and image type per image ([AWS registry](https://registry.opendata.aws/isic-archive/), [example image](https://api.isic-archive.com/images/ISIC_6589782/)). How often new images arrive is not published.
+The ISIC Archive is public in AWS S3 with no account needed, grows when contributors add data, and carries license, attribution, collections, age, sex, body site, image type and, for about 2% of images, Fitzpatrick skin type per image ([AWS registry](https://registry.opendata.aws/isic-archive/), [example image](https://api.isic-archive.com/images/ISIC_6589782/)). How often new images arrive is not published.
 
 ## Stack
 
@@ -86,10 +86,17 @@ Every later phase builds on these numbers, so they have to survive a skeptical r
 Images get the same medallion treatment as reckoner, so the pipeline is the data engineering proof, not a side step.
 
 - [ ] **Bronze:** raw HAM10000 and ISIC images and metadata as delivered, in a Unity Catalog volume, with a manifest and checksums (the reckoner pattern). Auto Loader picks up new images.
-- [ ] **Silver:** decoded, resized to 224, duplicates removed, lesion-level split, institution and skin type attached, as Delta tables built in PySpark.
-- [ ] **Gold:** an embeddings table (image, model version, feature vector), per-institution and per-skin-type feature statistics, and the baseline score distributions the drift job compares against.
+- [ ] **Silver:** decoded, resized to 224, duplicates removed, lesion-level split wherever the data is used for training, site attached, and skin type attached where ISIC records it, as Delta tables built in PySpark. Sites used only for scoring need de-duplication, not a split.
+- [ ] **Gold:** an embeddings table (image, model version, feature vector), per-site and per-skin-type feature statistics, and the baseline score distributions the drift job compares against. Phase 1 computes embeddings with the pretrained ImageNet EfficientNet-B0 (model version `imagenet-effb0`), because no registered model exists yet; Phase 2 recomputes them with the registered model.
 - [ ] Build it as one Lakeflow Declarative Pipeline, with expectations as the gates: no lesion in two splits, class counts within expected ranges, no missing labels, failed decodes quarantined rather than dropped.
 - [ ] Record each image's license and attribution, and keep only images whose license allows this use.
+
+Sources and route, decided after the week 1 Databricks checks:
+
+- **Sites:** Barcelona (BCN20000, collection 249, capped at 5,000 images by whole lesions, chosen with a fixed seed recorded in `config/sites.json` with a fingerprint of the selection), Buenos Aires (HIBA, 251), MSK (287 and 289) and PAD-UFES-20 (406, smartphone photos).
+- **HAM10000** comes from ISIC collection 212 by image ID, because Databricks Free Edition cannot reach Harvard Dataverse. ISIC serves these images re-encoded at stronger JPEG compression, so they are not byte-identical to Phase 0's files; the manifest records our own SHA-256 per file. `HAM10000_metadata.csv` is uploaded to the volume once and checked against Dataverse's published MD5, so the Phase 0 lesion split is reproduced exactly (fingerprint `cc2b196cd5bf58ad`). No HAM10000 image may appear in a site table.
+- **Ingestion:** a job task downloads each file to `/tmp`, checks it, and copies it into the volume with `shutil.copyfile` (direct writes into a volume failed on large files). Auto Loader then picks up what lands in the volume.
+- **Deployment:** a committed job and pipeline definition created with the Databricks CLI, because bundles have not been checked on Free Edition yet.
 
 **Done when** one command rebuilds bronze to gold and a broken input fails a gate loudly.
 
@@ -98,12 +105,13 @@ Images get the same medallion treatment as reckoner, so the pipeline is the data
 This is where the project becomes real ML work: proper federated training and OOD detection tested on a realistic shift.
 
 - [ ] Train on Databricks serverless GPU (Colab Pro as backup), logging every run to MLflow and registering the chosen model in Unity Catalog.
-- [ ] Federated training with Flower: one client per institution, 20 or more rounds, FedAvg against FedProx, compared to the centralized model's accuracy.
-- [ ] OOD on three kinds of shift: held-out institutions (real), PathMNIST (near), CIFAR-10 (far).
+- [ ] Recompute the gold embeddings and baseline score distributions with the registered model.
+- [ ] Federated training with Flower: one client per site, 20 or more rounds, FedAvg against FedProx, compared to the centralized model's accuracy.
+- [ ] OOD on three kinds of shift: held-out sites (real), PathMNIST (near), CIFAR-10 (far).
 - [ ] One results table: 4 detectors (Mahalanobis, Gram, max softmax, energy) by 3 shifts by centralized vs federated, AUROC and FPR@95TPR, mean over 3 seeds.
 - [ ] Accuracy and drift reported per Fitzpatrick skin type, including which types have too few images to judge.
 - [ ] Label delay: the monitor watches drift without labels first, then checks accuracy once diagnoses for that batch are released.
-- [ ] Error analysis: confusion matrix, which classes, institutions and skin types fail, and a look at the 20 worst misses.
+- [ ] Error analysis: confusion matrix, which classes, sites and skin types fail, and a look at the 20 worst misses.
 
 **Done when** the results table is fully logged and you can say which detector to ship and why.
 
@@ -161,7 +169,7 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 | Lane | Unlocked by | Claim once done |
 | --- | --- | --- |
 | Data engineering | Phase 1 | Built a medallion image lakehouse with lesion-level, leak-free splits and write-audit-publish gates, published to Databricks Delta |
-| ML | Phases 0 and 2 | Trained EfficientNet-B0 on HAM10000 and ISIC and federated it across institutions with Flower, comparing 4 OOD detectors on a real institution shift, with results by skin type (AUROC to fill in) |
+| ML | Phases 0 and 2 | Trained EfficientNet-B0 on HAM10000 and ISIC and federated it across sites with Flower, comparing 4 OOD detectors on a real site shift, with results by skin type (AUROC to fill in) |
 | MLOps | Phase 3 | Served the model through ONNX Runtime and FastAPI with a validated abstain threshold, a monthly drift job, and a CI accuracy gate |
 | LLMOps and applied AI | Phase 4 | Generated grounded drift incident reports from an LLM, scored on a scenario eval with cost and latency tracked |
 | Forward deployed | Phases 3 and 5 | Shipped a one-command demo and runbook a clinical ops team could operate |
