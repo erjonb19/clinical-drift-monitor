@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import os
 import random
 import time
 from collections.abc import Callable
@@ -27,6 +29,8 @@ class TrainConfig:
     weight_decay: float = 1e-4
     num_workers: int = 4
     pretrained: bool = True
+    # Fixed so results do not depend on how many cores a machine happens to have.
+    num_threads: int = 8
 
 
 def build_model(pretrained: bool = True) -> nn.Module:
@@ -51,7 +55,31 @@ def features_and_logits(model: nn.Module, x: torch.Tensor) -> tuple[torch.Tensor
     return feats, head(feats)
 
 
-def seed_everything(seed: int) -> torch.Generator:
+def weights_hash(model: nn.Module) -> str:
+    """SHA-256 of the weight values, in state-dict order.
+
+    Use this, not the checkpoint file's MD5, to ask "same model?": ``torch.save`` names the
+    archive's inner folder after the file, so identical weights saved under two names get
+    two different file hashes.
+    """
+    digest = hashlib.sha256()
+    for name, tensor in model.state_dict().items():
+        digest.update(name.encode())
+        digest.update(tensor.detach().cpu().contiguous().numpy().tobytes())
+    return digest.hexdigest()[:16]
+
+
+def seed_everything(seed: int, num_threads: int) -> torch.Generator:
+    """Make everything after this call repeatable: call it before building the model.
+
+    Seeds every random number generator, fixes the CPU thread count and turns on PyTorch's
+    deterministic algorithms. Returns the generator that orders training batches; DataLoader
+    workers derive their own seeds from it (``_worker_seed``).
+    """
+    # Required by deterministic cuBLAS on GPU; harmless on CPU.
+    os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+    torch.set_num_threads(num_threads)
+    torch.use_deterministic_algorithms(True)
     random.seed(seed)
     np.random.seed(seed)  # noqa: NPY002 - seeds libraries that use the legacy global state
     torch.manual_seed(seed)
@@ -94,10 +122,10 @@ def train(
     cfg: TrainConfig,
     seed: int,
     device: torch.device,
+    generator: torch.Generator,
     log: Callable[[str], None] = print,
 ) -> tuple[nn.Module, list[dict[str, float]]]:
     """Fine-tune ``model`` and return it at the epoch with the best validation balanced accuracy."""
-    generator = seed_everything(seed)
     loader_args: dict[str, object] = {
         "batch_size": cfg.batch_size,
         "num_workers": cfg.num_workers,
