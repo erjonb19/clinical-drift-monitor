@@ -48,3 +48,38 @@ akiec 327 · vasc 142 · df 115.
 | License | No license is stated by the dataset authors; used for research with citation |
 | Attribution | Krizhevsky, A. Learning Multiple Layers of Features from Tiny Images. Technical report, University of Toronto (2009). |
 | Contents used | A fixed random subset of the test split, 32 px upscaled to 224 px |
+
+## Phase 1 sources: ISIC Archive
+
+From Phase 1 on, all images reach the lakehouse from the ISIC Archive (public S3 bucket
+`isic-archive` and its API, no account), because Databricks Free Edition cannot reach Harvard
+Dataverse. License and attribution are recorded **per image** from ISIC's metadata, and
+every image's license must be CC-0, CC-BY or CC-BY-NC (a pipeline gate). CC-BY and
+CC-BY-NC require attribution, which is kept with every row.
+
+| Source | ISIC collections | License(s) | Attribution in ISIC | Used as |
+| --- | --- | --- | --- | --- |
+| HAM10000 | 212, restricted to the 10,015 HAM10000 image IDs | CC-BY-NC | "MILK study team" | Training, validation, test (Phase 0 split) |
+| Barcelona (BCN20000) | 249, capped at 5,000 images by whole lesions | CC-BY-NC | Hospital Clínic de Barcelona | New site |
+| Buenos Aires (HIBA) | 251 | CC-BY | Hospital Italiano de Buenos Aires | New site |
+| MSK | 287, 289 | CC-0 | "Anonymous" (collections from Memorial Sloan Kettering) | New site |
+| PAD-UFES-20 | 406 | CC-BY | Federal University of Espírito Santo (UFES) | New site, smartphone photos |
+
+Sites and the Barcelona selection are defined in `config/sites.json`. The selection is
+reproducible from a seed and pinned by a fingerprint of the chosen image IDs; if ISIC's
+collection changes, ingestion stops rather than silently choosing different images.
+
+**HAM10000 differs from Phase 0's files.** ISIC serves HAM10000 re-encoded with stronger
+JPEG compression (same 600 × 450 pixels, same picture; mean absolute pixel difference of
+1.7 to 2.9 on a 0–255 scale in the three images compared). The manifest records our own
+byte count and SHA-256 for every file. Labels and lesion IDs still come from
+`HAM10000_metadata.csv` (checked against Dataverse's MD5), so the Phase 0 split is
+reproduced exactly.
+
+**Diagnoses.** Site labels come from ISIC's diagnosis hierarchy mapped to HAM10000's seven
+classes (`cdm.sources.map_diagnosis`). On HAM10000's own images, the mapping reproduces
+every HAM10000 label. Images whose diagnosis is missing or outside the seven classes keep
+a null label and are used for scoring only.
+
+Attribution for the ISIC Archive as a whole: International Skin Imaging Collaboration (ISIC)
+Archive, accessed 2026-09-29 from https://registry.opendata.aws/isic-archive.
