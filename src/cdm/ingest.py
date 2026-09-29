@@ -26,6 +26,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from cdm.sources import (
@@ -39,7 +40,7 @@ from cdm.sources import (
     load_sites,
     site_rows,
 )
-from cdm.splits import DataError
+from cdm.splits import DataError, assign_splits, split_fingerprint
 
 HAM_SOURCE = "ham10000"
 
@@ -144,56 +145,105 @@ def ingest(
 CORRUPT_ID = "ISIC_BROKEN_0000001"
 
 
-def make_broken(raw: Path, tmp_dir: Path, sources: Iterable[str]) -> list[str]:
-    """Copy the latest metadata and manifest into ``raw/broken`` with four faults.
-
-    Returns the gates the broken run must fail. The corrupt JPEG must be quarantined without
-    failing any gate.
-    """
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    broken = raw / "broken"
-    meta = {s: read_latest_jsonl(raw / "metadata" / s) for s in sources}
-    manifest = {s: read_latest_jsonl(raw / "manifest" / s) for s in sources}
-    ham, site = meta[HAM_SOURCE], meta["barcelona"]
-
-    # 1. Move one HAM10000 image to another lesion: the split no longer matches Phase 0.
-    ham[0]["lesion_id"] = next(r["lesion_id"] for r in ham if r["lesion_id"] != ham[0]["lesion_id"])
-    # 2. Drop one HAM10000 label.
-    ham[1]["label"] = None
-    # 3. Slip one HAM10000 image into Barcelona, file and all.
-    slipped = dict(ham[2], source="barcelona")
-    site.append(slipped)
-    src = raw / "images" / HAM_SOURCE / f"{slipped['isic_id']}.jpg"
-    dst = broken / "images" / "barcelona" / src.name
+def _copy_into(raw: Path, row: Row, source: str) -> dict[str, Any]:
+    """Copy a landed image into ``raw/broken/images/<source>`` and return its manifest row."""
+    src = raw / "images" / row["source"] / f"{row['isic_id']}.jpg"
+    dst = raw / "broken" / "images" / source / src.name
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, dst)
     data = dst.read_bytes()
-    manifest["barcelona"].append(
-        {"isic_id": slipped["isic_id"], "source": "barcelona", "path": str(dst),
-         "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "downloaded": False}
-    )  # fmt: skip
-    # 4. A corrupt JPEG in Barcelona: quarantined, not a gate failure.
-    corrupt = broken / "images" / "barcelona" / f"{CORRUPT_ID}.jpg"
-    corrupt.write_bytes(b"\xff\xd8\xff\xe0 this is not a complete JPEG")
-    site.append(dict(site[0], isic_id=CORRUPT_ID, lesion_id=CORRUPT_ID))
-    manifest["barcelona"].append(
-        {"isic_id": CORRUPT_ID, "source": "barcelona", "path": str(corrupt),
-         "bytes": corrupt.stat().st_size,
-         "sha256": hashlib.sha256(corrupt.read_bytes()).hexdigest(), "downloaded": False}
-    )  # fmt: skip
+    return {"isic_id": row["isic_id"], "source": source, "path": str(dst), "bytes": len(data),
+            "sha256": hashlib.sha256(data).hexdigest(), "downloaded": False}  # fmt: skip
+
+
+def make_broken(
+    raw: Path,
+    tmp_dir: Path,
+    config: dict[str, Any],
+    lesions_per_class: int = 30,
+    site_images: int = 20,
+    seed: int = 0,
+    faults: bool = True,
+) -> list[str]:
+    """Write a small, faulted copy of the landed data under ``raw/broken``.
+
+    Takes a clean subset (whole HAM10000 lesions, ``lesions_per_class`` per class, and
+    ``site_images`` images per site), copies only those files, and writes
+    ``broken/sites.json`` whose expected split fingerprint and class counts are the clean
+    subset's. A clean subset therefore passes every gate, so each fault shows up as its own
+    gate failure. Returns the gates the faulted run must fail; the corrupt JPEG must be
+    quarantined without failing any gate.
+    """
+    broken = raw / "broken"
+    if broken.exists():
+        shutil.rmtree(broken)  # every demo starts from a clean copy
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    rng = np.random.default_rng(seed)
+
+    ham_all = read_latest_jsonl(raw / "metadata" / HAM_SOURCE)
+    chosen: set[str] = set()
+    for label in sorted({r["label"] for r in ham_all}):
+        lesions = sorted({r["lesion_id"] for r in ham_all if r["label"] == label})
+        chosen.update(rng.permutation(lesions)[:lesions_per_class])
+    meta = {HAM_SOURCE: [r for r in ham_all if r["lesion_id"] in chosen]}
+    for site in config["sites"]:
+        rows = sorted(read_latest_jsonl(raw / "metadata" / site), key=lambda r: r["isic_id"])
+        picks = rng.choice(len(rows), size=min(site_images, len(rows)), replace=False)
+        meta[site] = [rows[i] for i in sorted(picks)]
+
+    clean = pd.DataFrame(meta[HAM_SOURCE])
+    split = assign_splits(clean.assign(source=HAM_SOURCE), seed=config["ham10000"]["split_seed"])
+    broken_config = json.loads(json.dumps(config))
+    broken_config["ham10000"]["split_fingerprint"] = split_fingerprint(clean, split)
+    broken_config["ham10000"]["class_counts"] = clean["label"].value_counts().to_dict()
+    broken_config["broken_demo"] = {"lesions_per_class": lesions_per_class,
+                                    "site_images": site_images, "seed": seed}  # fmt: skip
+    local = tmp_dir / "sites.json"
+    local.write_text(json.dumps(broken_config, indent=2), encoding="utf-8")
+    broken.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(local, broken / "sites.json")
+
+    manifest = {s: [_copy_into(raw, r, s) for r in rows] for s, rows in meta.items()}
+    log("broken subset copied: " + ", ".join(f"{s} {len(rows)}" for s, rows in manifest.items()))
+    expected: list[str] = []
+    if faults:
+        ham, site = meta[HAM_SOURCE], meta["barcelona"]
+        # 1. Move one HAM10000 image to another lesion: the split no longer matches.
+        ham[0]["lesion_id"] = next(
+            r["lesion_id"] for r in ham if r["lesion_id"] != ham[0]["lesion_id"]
+        )
+        # 2. Drop one HAM10000 label.
+        ham[1]["label"] = None
+        # 3. Slip one HAM10000 image into Barcelona, file and all.
+        site.append(dict(ham[2], source="barcelona"))
+        manifest["barcelona"].append(_copy_into(raw, ham[2], "barcelona"))
+        # 4. A corrupt JPEG in Barcelona: quarantined, not a gate failure.
+        corrupt = broken / "images" / "barcelona" / f"{CORRUPT_ID}.jpg"
+        corrupt.write_bytes(bytes([0xFF, 0xD8, 0xFF, 0xE0]) + b" this is not a complete JPEG")
+        site.append(dict(site[0], isic_id=CORRUPT_ID, lesion_id=CORRUPT_ID))
+        data = corrupt.read_bytes()
+        manifest["barcelona"].append(
+            {"isic_id": CORRUPT_ID, "source": "barcelona", "path": str(corrupt), "bytes": len(data),
+             "sha256": hashlib.sha256(data).hexdigest(), "downloaded": False}
+        )  # fmt: skip
+        expected = [
+            "split_fingerprint_matches_phase0",
+            "no_missing_labels",
+            "class_counts_as_expected",
+            "diagnosis_mapping_matches_ham10000",
+            "no_ham10000_image_in_a_site",
+            "no_duplicate_files",
+        ]
 
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    for s in sources:
+    for s in meta:
         write_jsonl(meta[s], broken / "metadata" / s / f"{run_id}.jsonl", tmp_dir)
-        write_jsonl(manifest[s], broken / "manifest" / s / f"{run_id}.jsonl", tmp_dir)
-    return [
-        "split_fingerprint_matches_phase0",
-        "no_missing_labels",
-        "class_counts_as_expected",
-        "diagnosis_mapping_matches_ham10000",
-        "no_ham10000_image_in_a_site",
-        "no_duplicate_files",
-    ]
+        write_jsonl(
+            ({**m, "run_id": run_id} for m in manifest[s]),
+            broken / "manifest" / s / f"{run_id}.jsonl",
+            tmp_dir,
+        )
+    return expected
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -204,12 +254,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workers", type=int, default=16)
     parser.add_argument("--code-version", default="unknown")
     parser.add_argument("--make-broken", action="store_true")
+    parser.add_argument("--broken-lesions-per-class", type=int, default=30)
+    parser.add_argument("--broken-site-images", type=int, default=20)
     args = parser.parse_args(argv)
 
     config = json.loads(args.config.read_text(encoding="utf-8"))
     if args.make_broken:
-        sources = [HAM_SOURCE, *config["sites"]]
-        expected = make_broken(args.raw, args.tmp, sources)
+        expected = make_broken(
+            args.raw, args.tmp, config, args.broken_lesions_per_class, args.broken_site_images
+        )
         log(f"wrote {args.raw / 'broken'}; the broken run must fail: {', '.join(expected)}")
         return 0
     counts = ingest(config, args.raw, args.tmp, args.workers, args.code_version)

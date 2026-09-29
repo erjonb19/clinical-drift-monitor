@@ -18,7 +18,7 @@
     {
       "task_key": "pipeline",
       "depends_on": [{"task_key": "make_broken"}],
-      "pipeline_task": {"pipeline_id": "{{BROKEN_PIPELINE_ID}}"}
+      "pipeline_task": {"pipeline_id": "{{BROKEN_PIPELINE_ID}}", "full_refresh": true}
     }
   ]
 }
