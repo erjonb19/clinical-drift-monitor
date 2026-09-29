@@ -5,7 +5,8 @@ so a violation stops the pipeline update. Keeping the logic here means CI tests 
 checks that decide whether a pipeline run fails.
 
 Frames use the silver column names: ``isic_id``, ``source``, ``lesion_id``, ``split``,
-``label``, ``isic_label``, ``license``, ``attribution``, ``sha256``.
+``label``, ``isic_label``, ``license``, ``attribution``, ``sha256`` (computed in the
+pipeline; null if no file landed) and ``manifest_sha256`` (recorded by the ingest task).
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from cdm.splits import SPLITS, split_fingerprint
+from cdm.splits import SPLITS, assign_splits, split_fingerprint
 
 NEEDS_ATTRIBUTION = ("CC-BY", "CC-BY-NC")
 
@@ -32,6 +33,35 @@ def _examples(values: Iterable[object], limit: int = 5) -> str:
     return ", ".join(items[:limit]) + (
         f" (+{len(items) - limit} more)" if len(items) > limit else ""
     )
+
+
+def silver_frame(
+    metadata: pd.DataFrame, manifest: pd.DataFrame, landed: pd.DataFrame, seed: int
+) -> pd.DataFrame:
+    """The frame the gates check, built the same way in the pipeline and in tests.
+
+    ``metadata`` and ``manifest`` are every ingest run's rows (latest run wins per image);
+    ``landed`` has ``source``, ``isic_id`` and the ``sha256`` computed from the file in bronze.
+    """
+    key = ["source", "isic_id"]
+    latest = metadata.sort_values("run_id").drop_duplicates(key, keep="last")
+    recorded = (
+        manifest.sort_values("run_id")
+        .drop_duplicates(key, keep="last")[[*key, "sha256"]]
+        .rename(columns={"sha256": "manifest_sha256"})
+    )
+    frame = latest.merge(recorded, on=key, how="left").merge(
+        landed[[*key, "sha256"]].drop_duplicates(key), on=key, how="left"
+    )
+    frame = frame.reset_index(drop=True)
+    frame["split"] = assign_splits(frame, seed)
+    return frame
+
+
+def split_computed(frame: pd.DataFrame) -> Gate:
+    """The lesion split could be computed (stratification needs enough lesions per class)."""
+    bad = frame[frame["split"] == "unsplittable"]["isic_id"]
+    return Gate("split_computed", len(bad), _examples(bad))
 
 
 def lesions_in_one_split(frame: pd.DataFrame) -> Gate:
@@ -60,8 +90,8 @@ def class_counts(ham: pd.DataFrame, expected: Mapping[str, int]) -> Gate:
 
 
 def no_missing_labels(frame: pd.DataFrame) -> Gate:
-    """Every image used for training, validation or testing has a label."""
-    missing = frame[frame["split"].isin(SPLITS) & frame["label"].isna()]["isic_id"]
+    """Every image of a trained source has a label: anything not marked ``score``."""
+    missing = frame[(frame["split"] != "score") & frame["label"].isna()]["isic_id"]
     return Gate("no_missing_labels", len(missing), _examples(missing))
 
 
@@ -96,6 +126,20 @@ def no_duplicate_files(frame: pd.DataFrame) -> Gate:
     return Gate("no_duplicate_files", len(dup), _examples(dup))
 
 
+def every_image_landed(frame: pd.DataFrame) -> Gate:
+    """Every metadata row has a file in bronze. A file that fails to decode still counts as
+    landed: it goes to quarantine, which is reported, not failed."""
+    missing = frame[frame["sha256"].isna()]["isic_id"]
+    return Gate("every_image_landed", len(missing), _examples(missing))
+
+
+def files_match_manifest(frame: pd.DataFrame) -> Gate:
+    """The SHA-256 computed in the pipeline equals the one the ingest task recorded."""
+    landed = frame[frame["sha256"].notna()]
+    wrong = landed[landed["sha256"] != landed["manifest_sha256"]]["isic_id"]
+    return Gate("files_match_manifest", len(wrong), _examples(wrong))
+
+
 def run_all(frame: pd.DataFrame, config: Mapping[str, object]) -> list[Gate]:
     ham_cfg = config["ham10000"]
     assert isinstance(ham_cfg, Mapping)
@@ -103,6 +147,7 @@ def run_all(frame: pd.DataFrame, config: Mapping[str, object]) -> list[Gate]:
     assert isinstance(allowed, list)
     ham = frame[frame["source"] == "ham10000"]
     return [
+        split_computed(frame),
         lesions_in_one_split(frame),
         split_matches_phase0(ham, str(ham_cfg["split_fingerprint"])),
         class_counts(ham, dict(ham_cfg["class_counts"])),
@@ -110,5 +155,7 @@ def run_all(frame: pd.DataFrame, config: Mapping[str, object]) -> list[Gate]:
         no_ham_in_sites(frame),
         license_policy(frame, allowed),
         mapping_reproduces_ham_labels(ham),
-        no_duplicate_files(frame),
+        no_duplicate_files(frame[frame["sha256"].notna()]),
+        every_image_landed(frame),
+        files_match_manifest(frame),
     ]

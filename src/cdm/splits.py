@@ -64,3 +64,27 @@ def split_fingerprint(meta: pd.DataFrame, split: pd.Series) -> str:
     pairs = sorted(set(zip(meta["lesion_id"], split, strict=True)))
     text = "\n".join(f"{lesion},{s}" for lesion, s in pairs)
     return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def assign_splits(frame: pd.DataFrame, seed: int, trained_source: str = "ham10000") -> pd.Series:
+    """Phase 0's lesion split for the trained source; every other source is ``score``.
+
+    ``frame`` needs ``source``, ``lesion_id`` and ``label`` columns. Phase 1 sites are used
+    only for scoring (PLAN.md), so they get no train, validation or test split yet. Images of
+    the trained source without a label get ``unlabelled``, and a split that cannot be
+    stratified gives ``unsplittable``, so gates report both by name instead of a library
+    error ending the run.
+    """
+    split = pd.Series("score", index=frame.index, name="split")
+    trained = frame[frame["source"] == trained_source]
+    labelled = trained[trained["label"].notna()]
+    split.loc[trained.index] = "unlabelled"
+    if len(labelled):
+        try:
+            lesions = labelled[["lesion_id", "label"]].rename(columns={"label": "dx"})
+            assigned = lesion_split(lesions, seed=seed)
+        except ValueError:
+            # Too few lesions of some class to stratify: the split_computed gate names it.
+            assigned = pd.Series("unsplittable", index=labelled.index)
+        split.loc[labelled.index] = assigned
+    return split

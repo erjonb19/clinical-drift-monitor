@@ -11,7 +11,7 @@ from PIL import Image
 
 from cdm.gates import run_all
 from cdm.images import SIZE, DecodeError, decode_resize
-from cdm.splits import lesion_split, split_fingerprint
+from cdm.splits import assign_splits, lesion_split, split_fingerprint
 
 
 def clean_frame() -> tuple[pd.DataFrame, dict[str, object]]:
@@ -46,6 +46,7 @@ def clean_frame() -> tuple[pd.DataFrame, dict[str, object]]:
     )
     frame = pd.concat([ham, site], ignore_index=True)
     frame["sha256"] = [f"{i:064x}" for i in range(len(frame))]
+    frame["manifest_sha256"] = frame["sha256"]
     config: dict[str, object] = {
         "license_allowed": ["CC-0", "CC-BY", "CC-BY-NC"],
         "ham10000": {
@@ -81,7 +82,7 @@ def drop_a_label(f: pd.DataFrame) -> None:
 
 def ham_image_in_a_site(f: pd.DataFrame) -> None:
     f.loc[len(f)] = {**f.loc[_first_ham(f)].to_dict(), "source": "barcelona", "split": "score",
-                     "sha256": "f" * 64}  # fmt: skip
+                     "sha256": "f" * 64, "manifest_sha256": "f" * 64}  # fmt: skip
 
 
 def unknown_license(f: pd.DataFrame) -> None:
@@ -93,7 +94,16 @@ def cc_by_without_attribution(f: pd.DataFrame) -> None:
 
 
 def duplicate_file(f: pd.DataFrame) -> None:
-    f.at[len(f) - 1, "sha256"] = f.at[0, "sha256"]
+    """The same file landed twice under two IDs, faithfully recorded in the manifest."""
+    f.at[len(f) - 1, "sha256"] = f.at[len(f) - 1, "manifest_sha256"] = f.at[0, "sha256"]
+
+
+def file_never_landed(f: pd.DataFrame) -> None:
+    f.at[len(f) - 1, "sha256"] = None
+
+
+def file_changed_after_ingest(f: pd.DataFrame) -> None:
+    f.at[len(f) - 1, "sha256"] = "e" * 64
 
 
 def wrong_mapping(f: pd.DataFrame) -> None:
@@ -113,6 +123,8 @@ def wrong_mapping(f: pd.DataFrame) -> None:
         (cc_by_without_attribution, {"license_and_attribution"}),
         (duplicate_file, {"no_duplicate_files"}),
         (wrong_mapping, {"diagnosis_mapping_matches_ham10000"}),
+        (file_never_landed, {"every_image_landed"}),
+        (file_changed_after_ingest, {"files_match_manifest"}),
     ],
 )
 def test_each_breakage_fails_its_gate(
@@ -142,3 +154,13 @@ def test_decode_resize_centre_crops_and_records_compression() -> None:
 def test_undecodable_bytes_raise_for_quarantine(data: bytes) -> None:
     with pytest.raises(DecodeError):
         decode_resize(data)
+
+
+def test_a_split_that_cannot_be_stratified_fails_a_named_gate() -> None:
+    frame, config = clean_frame()
+    ham = frame["source"] == "ham10000"
+    keep = frame[~ham | (frame["label"] != "bcc")].index.tolist()
+    one_bcc = frame[ham & (frame["label"] == "bcc")].index[:1].tolist()
+    small = frame.loc[keep + one_bcc].reset_index(drop=True)
+    small["split"] = assign_splits(small, seed=0)
+    assert "split_computed" in failing(small, config)

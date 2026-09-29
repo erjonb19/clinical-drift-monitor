@@ -6,13 +6,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cdm.data import (
+from cdm.data import data_root
+from cdm.splits import (
     CLASSES,
     HAM_IMAGES,
     HAM_LESIONS,
     SPLITS,
     DataError,
-    data_root,
+    assign_splits,
     lesion_split,
     split_fingerprint,
     validate_ham,
@@ -99,3 +100,11 @@ def test_real_ham10000_split_is_leak_free() -> None:
     meta = pd.read_csv(REAL_META)
     validate_ham(meta, HAM_IMAGES, HAM_LESIONS)
     assert_leak_free(meta, lesion_split(meta, seed=0))
+
+
+@pytest.mark.skipif(not REAL_META.exists(), reason="HAM10000 metadata not downloaded")
+def test_pipeline_split_reproduces_phase0_on_real_ham10000() -> None:
+    meta = pd.read_csv(REAL_META)
+    frame = meta.assign(source="ham10000", label=meta["dx"])
+    split = assign_splits(frame, seed=0)
+    assert split_fingerprint(meta, split) == "cc2b196cd5bf58ad"
