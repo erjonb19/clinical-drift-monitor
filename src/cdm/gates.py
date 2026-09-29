@@ -35,12 +35,12 @@ def _examples(values: Iterable[object], limit: int = 5) -> str:
     )
 
 
-def silver_frame(
-    metadata: pd.DataFrame, manifest: pd.DataFrame, landed: pd.DataFrame, seed: int
+def latest_joined(
+    metadata: pd.DataFrame, manifest: pd.DataFrame, landed: pd.DataFrame
 ) -> pd.DataFrame:
-    """The frame the gates check, built the same way in the pipeline and in tests.
+    """Latest metadata row per image, with the manifest's SHA-256 and the landed file's.
 
-    ``metadata`` and ``manifest`` are every ingest run's rows (latest run wins per image);
+    The pipeline does this step in Spark; tests use this pandas version on the same inputs.
     ``landed`` has ``source``, ``isic_id`` and the ``sha256`` computed from the file in bronze.
     """
     key = ["source", "isic_id"]
@@ -53,9 +53,21 @@ def silver_frame(
     frame = latest.merge(recorded, on=key, how="left").merge(
         landed[[*key, "sha256"]].drop_duplicates(key), on=key, how="left"
     )
+    return frame.reset_index(drop=True)
+
+
+def with_splits(frame: pd.DataFrame, seed: int) -> pd.DataFrame:
+    """Add the ``split`` column. Shared by the pipeline (inside applyInPandas) and tests."""
     frame = frame.reset_index(drop=True)
-    frame["split"] = assign_splits(frame, seed)
-    return frame
+    return frame.assign(split=assign_splits(frame, seed))
+
+
+def silver_frame(
+    metadata: pd.DataFrame, manifest: pd.DataFrame, landed: pd.DataFrame, seed: int
+) -> pd.DataFrame:
+    """The frame the gates check: every ingest run's metadata and manifest rows, plus the
+    SHA-256 of each landed file, reduced to the latest row per image and split."""
+    return with_splits(latest_joined(metadata, manifest, landed), seed)
 
 
 def split_computed(frame: pd.DataFrame) -> Gate:
