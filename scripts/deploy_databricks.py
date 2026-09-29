@@ -143,6 +143,8 @@ def main() -> int:
         weights: f"{raw}/deploy/weights/{WEIGHTS_FILE}",
     }
     for local, remote in uploads.items():
+        # fs cp does not create parent folders inside a volume.
+        cli("fs", "mkdirs", f"dbfs:{remote.rsplit('/', 1)[0]}")
         cli("fs", "cp", str(local), f"dbfs:{remote}", "--overwrite")
     workspace_dir = f"/Users/{me}/cdm/{sha}"
     cli("workspace", "mkdirs", workspace_dir)
