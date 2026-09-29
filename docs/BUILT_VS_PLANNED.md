@@ -41,10 +41,27 @@ Known limits, documented rather than fixed:
 
 ## Scaffolded
 
+### Phase 1: data engineering (code written and tested; not yet run on Databricks)
+
+- ISIC sources (`src/cdm/sources.py`, `config/sites.json`): four sites defined by
+  collection, Barcelona capped at 5,000 images by whole lesions and pinned by fingerprint,
+  HAM10000 taken from ISIC by ID and labelled from its MD5-checked metadata. Checked
+  against the live API from a laptop (`results/phase1/isic_checks.json`).
+- Ingest task (`src/cdm/ingest.py`), declarative pipeline (`pipelines/lakehouse.py`),
+  gold task (`src/cdm/gold.py`), gates (`src/cdm/gates.py`), CLI deployment
+  (`scripts/deploy_databricks.py`, `databricks/*.json`), runbook
+  (`docs/phase1-runbook.md`).
+- Tested in CI without Databricks: every gate, the ingest task end to end on a fake ISIC,
+  the broken-input demo's expected gate failures, image decoding, gold calculations, and
+  the deploy templates. The pipeline file, the CLI commands and the job definitions have
+  not run yet; the first Databricks run is their test.
+
+### Tooling
+
 - CI: ruff, ruff format, mypy (strict) and pytest on every push. No eval gate yet
   (Phase 3).
 
 ## Not started
 
-- Phases 1 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
+- Phases 2 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.
