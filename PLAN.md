@@ -71,13 +71,13 @@ Source: [Databricks Free Edition limitations](https://docs.databricks.com/aws/en
 
 Every later phase builds on these numbers, so they have to survive a skeptical reviewer first.
 
-- [ ] Split train, validation and test by lesion, not by image. HAM10000 has several images of the same lesion, so a random split leaks.
-- [ ] Train on the full dataset locally on CPU (an overnight run), 10 to 15 epochs, class-weighted loss. Report balanced accuracy and per-class recall on the test split.
-- [ ] Fit PCA and Mahalanobis statistics on training features only. Score held-out in-distribution images and every OOD set the same way, against the nearest class mean.
-- [ ] Run every OOD set through the same fine-tuned model and the same PCA.
-- [ ] Add two standard baselines: maximum softmax probability and energy score.
-- [ ] Run 3 seeds per result and report the mean and range.
-- [ ] Move from one notebook to PyTorch scripts (data, train, ood, eval) with tests that the splits never share a lesion and that scores point the right way.
+- [x] Split train, validation and test by lesion, not by image. HAM10000 has several images of the same lesion, so a random split leaks.
+- [x] Train on the full dataset locally on CPU (an overnight run), 10 to 15 epochs, class-weighted loss. Report balanced accuracy and per-class recall on the test split.
+- [x] Fit PCA and Mahalanobis statistics on training features only. Score held-out in-distribution images and every OOD set the same way, against the nearest class mean.
+- [x] Run every OOD set through the same fine-tuned model and the same PCA.
+- [x] Add two standard baselines: maximum softmax probability and energy score.
+- [x] Run 3 seeds per result and report the mean and range.
+- [x] Move from one notebook to PyTorch scripts (data, train, ood, eval) with tests that the splits never share a lesion and that scores point the right way.
 
 **Done when** one command reproduces every number (run locally on CPU), and a short note explains why the old 4.1% AUROC was wrong.
 

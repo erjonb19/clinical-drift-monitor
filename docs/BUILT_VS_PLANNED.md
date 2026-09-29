@@ -7,21 +7,39 @@ runs and is reproducible from the repository.
 **This is a personal portfolio project.** No patients, clinicians or business decisions
 depend on it.
 
-Last updated: 2026-09-27.
+Last updated: 2026-09-29.
 
 ## Built
 
-Nothing yet.
+Working, tested, and run on real data. Results in `results/phase0/`.
+
+### Phase 0: fix the science (awaiting sign-off)
+
+- HAM10000 download from Harvard Dataverse with MD5 checks and metadata validation;
+  PathMNIST (224 px) and CIFAR-10 as fixed 2,000-image OOD subsets (`src/cdm/data.py`).
+- Lesion-level 70/15/15 split, stratified by diagnosis: 5,229 / 1,120 / 1,121 lesions.
+  Tested for leakage on synthetic data in CI and on the real metadata locally.
+- EfficientNet-B0 fine-tuning with class-weighted loss, best epoch chosen on validation
+  balanced accuracy (`src/cdm/train.py`). Best weights saved beside the data.
+- Three OOD detectors, all fit on training data only and scored the same way for every
+  set: Mahalanobis (nearest class mean, PCA 256), max softmax probability, energy
+  (`src/cdm/ood.py`). AUROC, FPR@95TPR, mean and range over seeds (`src/cdm/eval.py`).
+- One command (`python -m cdm.reproduce`) that saves each seed as it finishes, resumes
+  from saved seeds, and refuses an AUROC below 50% or uncommitted code.
+- **Measured:** balanced accuracy 78.0% (76.4–79.3) over 3 seeds on CPU. OOD results
+  and their caveats in the README.
+
+Known limits, documented rather than fixed:
+- A fixed seed does not reproduce a run on CPU ([silent-failures #6](silent-failures.md)).
+- Mahalanobis on CIFAR-10 is unstable and sensitive to PCA size
+  ([phase0-note.md](phase0-note.md)).
 
 ## Scaffolded
 
-- HAM10000 download with checksum verification, metadata validation, and a lesion-level
-  split (`src/cdm/data.py`). The split is tested for leakage on synthetic data in CI and
-  on the real metadata when it is present locally: 5,229 / 1,120 / 1,121 lesions in
-  train / val / test. Not yet used by a training run.
-- Package layout, lint, type check and CI (`pyproject.toml`, `.github/workflows/ci.yml`).
+- CI: ruff, ruff format, mypy (strict) and pytest on every push. No eval gate yet
+  (Phase 3).
 
 ## Not started
 
-- Phase 0 to Phase 6 as listed in `PLAN.md`. The course notebook in `reference/` is
-  history, not a starting point: its numbers are superseded once Phase 0 reruns them.
+- Phases 1 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
+  not a starting point; its numbers are superseded by Phase 0.
