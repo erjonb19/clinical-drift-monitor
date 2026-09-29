@@ -1,31 +1,28 @@
 # Status
 
-Updated 2026-09-29. Phase 0 (fix the science) has results and is **awaiting your sign-off**.
-Phase 1 has not started.
+Updated 2026-09-29. **Phase 0 (fix the science) is done**, signed off 2026-09-29.
+Phase 1 (data engineering) has not started: its plan is waiting for your OK.
 
-## Done
+## Phase 0 outcome
 
-- 3-seed run on CPU finished 2026-09-28 06:58 (code `2ccda00`). Results committed in
-  `results/phase0/`; README results table filled from them.
-- CIFAR-10 Mahalanobis investigation: seed 1 retrained with checkpoint saving (code
-  `06245f4`, `results/phase0_seed1_rerun/`), checks on pretrained and fine-tuned features
-  (`results/phase0/checks/`), written up in `docs/phase0-note.md`.
-- All seven Phase 0 checkboxes in PLAN.md ticked.
-- silent-failures #5 (no checkpoint saved) and #6 (a fixed seed did not reproduce a run).
+- Results: `results/phase0/` (3 seeds, code `2ccda00`), summarised in the README with
+  three caveats: CIFAR-10 Mahalanobis instability, PCA-size sensitivity, and run-to-run
+  variation larger than the seed ranges.
+- Why the notebook's 4.1% and 43.4% were wrong, and the CIFAR-10 investigation:
+  `docs/phase0-note.md`.
+- "Done when" reworded to "within the reported run-to-run variation"; the reported seeds
+  were not rerun.
+- Training is deterministic from code `0427b47` on (test in CI, checked on real data).
 
-## Open decision before Phase 0 can close
+## Waiting on you
 
-PLAN.md's "Done when" says one command **reproduces every number**. It does not, bit for
-bit: a rerun of seed 1 gave balanced accuracy 81.0% instead of 76.5%. Options:
-
-1. Reword to "reproduces every number within the reported run-to-run variation", and
-   report rerun spread alongside seed spread.
-2. Make CPU training deterministic (fixed thread count, deterministic algorithms), verify
-   that two short runs match exactly, then rerun all 3 seeds (about 12 hours).
+- Results of the week 1 Databricks checks (ISIC S3 access, bundles, data quality
+  monitoring) from your Free Edition workspace. Phase 1's design depends on them.
+- OK on the Phase 1 plan.
 
 ## Local files (outside the repo)
 
 - Data: `C:\Users\Erjon\data\cdm` (HAM10000, PathMNIST 224, CIFAR-10).
-- Weights: `C:\Users\Erjon\data\cdm\checkpoints\phase0_seed1_rerun\seed1.pt`.
+- Weights: `C:\Users\Erjon\data\cdm\checkpoints\` (seed 1 rerun, smoke runs).
 - Cached features: `C:\Users\Erjon\data\cdm\features\`.
 - Run logs: `logs\` (gitignored).
