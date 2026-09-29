@@ -70,15 +70,17 @@ reproducible from a seed and pinned by a fingerprint of the chosen image IDs; if
 collection changes, ingestion stops rather than silently choosing different images.
 
 **HAM10000 differs from Phase 0's files.** ISIC serves HAM10000 re-encoded with stronger
-JPEG compression (same 600 × 450 pixels, same picture; mean absolute pixel difference of
-1.7 to 2.9 on a 0–255 scale in the three images compared). The manifest records our own
+JPEG compression. In a seeded sample of 20 images, none was byte-identical, all had the
+same pixel size, and the mean absolute pixel difference was 1.6 to 3.8 on a 0–255 scale
+(`results/phase1/isic_checks.json`). The manifest records our own
 byte count and SHA-256 for every file. Labels and lesion IDs still come from
 `HAM10000_metadata.csv` (checked against Dataverse's MD5), so the Phase 0 split is
 reproduced exactly.
 
 **Diagnoses.** Site labels come from ISIC's diagnosis hierarchy mapped to HAM10000's seven
 classes (`cdm.sources.map_diagnosis`). On HAM10000's own images, the mapping reproduces
-every HAM10000 label. Images whose diagnosis is missing or outside the seven classes keep
+all 10,015 HAM10000 labels (`results/phase1/isic_checks.json`), and a pipeline gate
+re-checks this on every run. Images whose diagnosis is missing or outside the seven classes keep
 a null label and are used for scoring only.
 
 Attribution for the ISIC Archive as a whole: International Skin Imaging Collaboration (ISIC)
