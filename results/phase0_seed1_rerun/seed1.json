@@ -1,0 +1,154 @@
+{
+  "run_key": {
+    "code_version": "06245f4",
+    "split_fingerprint": "cc2b196cd5bf58ad",
+    "metadata_md5": "8f85fb1aa29d80a2797247e434deb79d",
+    "images": {
+      "train": 7044,
+      "val": 1443,
+      "test": 1528
+    },
+    "n_ood": {
+      "pathmnist": 2000,
+      "cifar10": 2000
+    },
+    "config": {
+      "epochs": 12,
+      "batch_size": 64,
+      "lr": 0.0003,
+      "weight_decay": 0.0001,
+      "num_workers": 4,
+      "pretrained": true,
+      "limit": null
+    }
+  },
+  "seed": 1,
+  "best_epoch": 8,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.1428541939366947,
+      "val_bacc": 0.7280645158911795
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.6637110393155705,
+      "val_bacc": 0.7605852899488905
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.4846940738233653,
+      "val_bacc": 0.7486582170502037
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.3519105568528175,
+      "val_bacc": 0.7589754100065298
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.28838990567760037,
+      "val_bacc": 0.7755070807673345
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.2325483962893486,
+      "val_bacc": 0.7446466921120818
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.20455212599851869,
+      "val_bacc": 0.7734188439429791
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.17259484922344034,
+      "val_bacc": 0.7865930687137579
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.15444258017973467,
+      "val_bacc": 0.7699736225119507
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.13402280120009727,
+      "val_bacc": 0.7830011694516863
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.1193868508223783,
+      "val_bacc": 0.7704048935854235
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.10868074443529953,
+      "val_bacc": 0.7682261345259305
+    }
+  ],
+  "test": {
+    "balanced_accuracy": 0.8100304589988215,
+    "accuracy": 0.8344240837696335,
+    "recall": {
+      "akiec": 0.660377358490566,
+      "bcc": 0.75,
+      "bkl": 0.7439024390243902,
+      "df": 0.9523809523809523,
+      "mel": 0.6790123456790124,
+      "nv": 0.8845401174168297,
+      "vasc": 1.0
+    },
+    "support": {
+      "akiec": 53,
+      "bcc": 88,
+      "bkl": 164,
+      "df": 21,
+      "mel": 162,
+      "nv": 1022,
+      "vasc": 18
+    }
+  },
+  "ood": {
+    "pathmnist": {
+      "mahalanobis": {
+        "auroc": 0.9798226439790578,
+        "fpr95": 0.1135
+      },
+      "msp": {
+        "auroc": 0.8553442408376963,
+        "fpr95": 0.61
+      },
+      "energy": {
+        "auroc": 0.952086387434555,
+        "fpr95": 0.2385
+      },
+      "n": {
+        "id": 1528,
+        "ood": 2000
+      }
+    },
+    "cifar10": {
+      "mahalanobis": {
+        "auroc": 0.9568893979057591,
+        "fpr95": 0.213
+      },
+      "msp": {
+        "auroc": 0.9204590968586388,
+        "fpr95": 0.4295
+      },
+      "energy": {
+        "auroc": 0.9706351439790576,
+        "fpr95": 0.15
+      },
+      "n": {
+        "id": 1528,
+        "ood": 2000
+      }
+    }
+  },
+  "checkpoint": {
+    "path": "C:\\Users\\Erjon\\data\\cdm\\checkpoints\\phase0_seed1_rerun\\seed1.pt",
+    "md5": "87491d4a0c14f61a140389bed0acef1d"
+  },
+  "finished_utc": "2026-09-29T02:09:53+00:00"
+}
