@@ -78,15 +78,32 @@ def read_latest_jsonl(folder: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in files[-1].read_text(encoding="utf-8").splitlines()]
 
 
+def previous_manifest(folder: Path) -> dict[str, dict[str, Any]]:
+    """The latest recorded manifest row per image from earlier runs; empty on the first."""
+    rows: dict[str, dict[str, Any]] = {}
+    for f in sorted(folder.glob("*.jsonl")):
+        for line in f.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = json.loads(line)
+                rows[row["isic_id"]] = row
+    return rows
+
+
 def land_all(
-    rows: list[Row], images_dir: Path, tmp_dir: Path, workers: int, opener: Opener = http_bytes
+    rows: list[Row],
+    images_dir: Path,
+    tmp_dir: Path,
+    workers: int,
+    opener: Opener = http_bytes,
+    known: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Land every image; raise after the batch if any failed, listing them, so a partial run
     is never reported as complete."""
+    known = known or {}
 
     def one(row: Row) -> dict[str, Any] | str:
         try:
-            return land(row, images_dir, tmp_dir, opener)
+            return land(row, images_dir, tmp_dir, opener, known.get(row["isic_id"]))
         except OSError as exc:
             return f"{row['isic_id']}: {exc}"
 
@@ -129,7 +146,8 @@ def ingest(
         for row in rows:
             row["run_id"], row["code_version"] = run_id, code_version
         log(f"{source}: {len(rows)} images, landing")
-        manifest = land_all(rows, raw / "images", tmp_dir, workers, opener)
+        known = previous_manifest(raw / "manifest" / source)
+        manifest = land_all(rows, raw / "images", tmp_dir, workers, opener, known)
         write_jsonl(rows, raw / "metadata" / source / f"{run_id}.jsonl", tmp_dir)
         write_jsonl(
             ({**m, "run_id": run_id} for m in manifest),
