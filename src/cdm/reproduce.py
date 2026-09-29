@@ -42,7 +42,7 @@ from cdm.data import (
 )
 from cdm.eval import classification_metrics, detection_metrics, summarize
 from cdm.ood import MahalanobisDetector, energy_score, extract, msp_score
-from cdm.train import TrainConfig, build_model, train
+from cdm.train import TrainConfig, build_model, seed_everything, train, weights_hash
 
 SPLIT_SEED = 0  # the lesion split is fixed; only the training seed varies
 OOD_SUBSET_SEED = 0
@@ -110,13 +110,21 @@ def run_seed(
     With ``checkpoint``, the selected (best-validation) weights are saved there so the
     features behind a result can be re-extracted later.
     """
+    # Seed before building the model: the new classifier head draws its initial weights
+    # here. Seeding only inside training made a seed's result depend on which seeds ran
+    # before it in the same process (docs/silent-failures.md #6).
+    generator = seed_everything(seed, cfg.num_threads)
     model = build_model(pretrained=cfg.pretrained)
-    model, history = train(model, sets["train"], sets["val"], cfg, seed, device, log=log)
+    model, history = train(model, sets["train"], sets["val"], cfg, seed, device, generator, log=log)
     saved: Result | None = None
     if checkpoint is not None:
         checkpoint.parent.mkdir(parents=True, exist_ok=True)
         torch.save(model.state_dict(), checkpoint)
-        saved = {"path": str(checkpoint), "md5": md5sum(checkpoint)}
+        saved = {
+            "path": str(checkpoint),
+            "md5": md5sum(checkpoint),
+            "weights_sha256": weights_hash(model),
+        }
         log(f"seed {seed}: saved weights to {checkpoint}")
 
     def features(ds: ImageSet) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

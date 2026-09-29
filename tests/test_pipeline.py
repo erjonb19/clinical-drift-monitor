@@ -108,3 +108,35 @@ def test_checkpoint_is_saved_and_reloads(result_and_sets: tuple[Result, int]) ->
     path = Path(result["checkpoint"]["path"])
     assert md5sum(path) == result["checkpoint"]["md5"]
     build_model(pretrained=False).load_state_dict(torch.load(path, map_location="cpu"))
+
+
+def test_same_seed_gives_identical_model_whatever_ran_before(tmp_path: Path) -> None:
+    """Seed 0, then seed 1, then seed 0 again: the two seed 0 runs must match exactly.
+
+    Before the fix, the classifier head was initialised before seeding, so a seed's model
+    depended on which seeds had run earlier in the process (silent-failures #6). Two
+    DataLoader workers exercise worker seeding; thread count and deterministic algorithms
+    come from ``seed_everything``.
+    """
+    (tmp_path / "ham").mkdir()
+    frame = fake_ham(tmp_path / "ham", per_class=2)
+    sets = {
+        "train": HamDataset(frame, train_transform()),
+        "train_eval": HamDataset(frame, eval_transform()),
+        "val": HamDataset(frame, eval_transform()),
+        "test": HamDataset(frame, eval_transform()),
+    }
+    noise = TensorDataset(torch.randn(6, 3, 224, 224), torch.zeros(6))
+    ood = {"noise": OODImages(noise, range(6))}  # type: ignore[arg-type]
+    cfg = TrainConfig(epochs=1, batch_size=4, num_workers=2, pretrained=False, num_threads=2)
+    cpu = torch.device("cpu")
+
+    first = run_seed(0, sets, ood, cfg, cpu, tmp_path / "first.pt")
+    other = run_seed(1, sets, ood, cfg, cpu, tmp_path / "other.pt")
+    again = run_seed(0, sets, ood, cfg, cpu, tmp_path / "again.pt")
+
+    # Compare weight values, not file MD5s: torch.save embeds the file name.
+    assert first["checkpoint"]["weights_sha256"] == again["checkpoint"]["weights_sha256"]
+    assert first["checkpoint"]["weights_sha256"] != other["checkpoint"]["weights_sha256"]
+    for key in ("best_epoch", "history", "test", "ood"):
+        assert first[key] == again[key], key
