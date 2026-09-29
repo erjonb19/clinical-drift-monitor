@@ -78,23 +78,67 @@ fine-tuned checks below describe *a* seed 1 model, not the one behind the report
 
 ### Reproducibility: the same seed did not give the same model
 
-| Seed 1 | Reported run | Rerun | Reported 3-seed range |
-| --- | ---: | ---: | --- |
-| Best epoch | 5 | 8 | |
-| Balanced accuracy | 76.5% | 81.0% | 76.4–79.3 |
-| CIFAR-10 Mahalanobis AUROC | 80.1% | 95.7% | 80.1–92.6 |
-| PathMNIST Mahalanobis AUROC | 93.8% | 98.0% | 93.8–95.0 |
-| CIFAR-10 energy AUROC | 96.3% | 97.1% | 87.7–96.8 |
+Run-to-run spread next to seed spread, AUROC and balanced accuracy in percent. "Seed
+spread" is max minus min over the three reported seeds. "Rerun" is seed 1 run a second
+time (`results/phase0_seed1_rerun/`), with the absolute change.
 
-Same seed, data, split and settings. The only code change was saving the weights after
-training. The two runs already differed at epoch 1 (loss 1.1328 vs 1.1429). The likely
-cause is multi-threaded floating-point arithmetic on the CPU, whose summation order can
-change between runs, especially under different machine load. This is not yet confirmed.
+| Metric | Reported 3 seeds | Seed spread | Seed 1: reported → rerun | Rerun change |
+| --- | --- | ---: | --- | ---: |
+| Balanced accuracy | 76.4–79.3 | 2.9 | 76.4 → 81.0 | 4.6 |
+| PathMNIST Mahalanobis AUROC | 93.8–95.0 | 1.2 | 93.8 → 98.0 | 4.2 |
+| PathMNIST max softmax AUROC | 82.4–86.5 | 4.1 | 86.5 → 85.5 | 0.9 |
+| PathMNIST energy AUROC | 83.4–95.6 | 12.2 | 95.6 → 95.2 | 0.4 |
+| CIFAR-10 Mahalanobis AUROC | 80.1–92.6 | 12.5 | 80.1 → 95.7 | 15.6 |
+| CIFAR-10 max softmax AUROC | 81.4–92.5 | 11.2 | 92.5 → 92.0 | 0.5 |
+| CIFAR-10 energy AUROC | 87.7–96.8 | 9.1 | 96.3 → 97.1 | 0.8 |
 
-What it means: a fixed seed does not pin down the model on this machine, and the spread
-between two runs of one seed is as large as the spread between seeds. Three seeds
-therefore understate the true run-to-run variation. See
-[silent-failures #6](silent-failures.md).
+The rerun also picked a different best epoch (8 instead of 5). On balanced accuracy and
+both Mahalanobis results, one rerun moved further than the whole spread across seeds.
+The reported ranges understate how much these numbers can vary. Phase 0's "Done when" is
+therefore stated as reproducing every number within the reported run-to-run variation, and
+this table is that variation.
+
+**The code did not cause the difference.** Between `2ccda00` (the reported run) and
+`06245f4` (the rerun), `git diff 2ccda00 06245f4 -- src pyproject.toml` shows two changes:
+
+- `src/cdm/reproduce.py`: save the selected weights and record their path and MD5. This
+  runs after `train()` returns, so the best epoch has already been chosen. `torch.save` and
+  the MD5 draw no random numbers, and the feature extraction that follows is deterministic
+  (evaluation mode, no shuffling, no augmentation).
+- `pyproject.toml`: add `scripts/` to mypy's file list, which does not affect a run.
+
+Neither touches random draws, data order or epoch selection.
+
+**Cause: the run order did.** The same diff shows the unchanged lines above the new code:
+the model was built, which draws the new classifier head's initial weights at random,
+*before* `train()` called `seed_everything`. The head therefore took whatever random
+state the process was in. In the reported run, seed 1 was built after seed 0 had trained.
+In the rerun, seed 1 ran first in a fresh process. So the two heads started from different
+weights, and the runs differed from epoch 1 (loss 1.1328 vs 1.1429). The reported seeds 1
+and 2 depend on having run after seed 0, not only on their seed number. They were not
+rerun, per the Phase 0 sign-off; the table above is their measured variation.
+
+**Going forward (code `0427b47`):**
+
+- `run_seed` seeds before building the model.
+- `seed_everything` fixes the CPU thread count (`TrainConfig.num_threads`, default 8) and
+  turns on `torch.use_deterministic_algorithms`.
+- DataLoader workers derive their seeds from the seeded generator.
+- Checkpoints record a SHA-256 of the weight values. The file MD5 is not a model identity:
+  `torch.save` embeds the file name, so identical weights saved under two names hash
+  differently.
+
+`test_same_seed_gives_identical_model_whatever_ran_before` trains seed 0, then seed 1, then
+seed 0 again, with two data workers, and requires identical weights and metrics for the
+two seed 0 runs. It passes, and it fails when the old order is put back.
+
+The same check on real data (code `0427b47`, 64 HAM10000 images per split, 1 epoch, 64
+images per OOD set, two data workers, 8 threads): run A trained seed 0 alone; run B, a
+separate process, trained seed 1 and then seed 0. Seed 0's weights hashed to
+`20d62aac6d7291d2` in both runs, and its training history, test metrics and OOD metrics
+were identical; seed 1 differed (`results/phase0/determinism_check/`). Both smoke runs
+exited with code 2 because a model trained for one gradient step scores some OOD sets below 50%.
+That is the plausibility guard working; those metrics are not results.
 
 ### Check 3: score direction per seed — correct
 

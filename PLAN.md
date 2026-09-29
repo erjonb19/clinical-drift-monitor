@@ -79,7 +79,7 @@ Every later phase builds on these numbers, so they have to survive a skeptical r
 - [x] Run 3 seeds per result and report the mean and range.
 - [x] Move from one notebook to PyTorch scripts (data, train, ood, eval) with tests that the splits never share a lesion and that scores point the right way.
 
-**Done when** one command reproduces every number (run locally on CPU), and a short note explains why the old 4.1% AUROC was wrong.
+**Done when** one command reproduces every number within the reported run-to-run variation (run locally on CPU), and a short note explains why the old 4.1% AUROC was wrong.
 
 ## Phase 1: Data engineering (about 1 week)
 

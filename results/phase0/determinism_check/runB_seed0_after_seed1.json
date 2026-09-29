@@ -1,0 +1,101 @@
+{
+  "run_key": {
+    "code_version": "0427b47",
+    "split_fingerprint": "cc2b196cd5bf58ad",
+    "metadata_md5": "8f85fb1aa29d80a2797247e434deb79d",
+    "images": {
+      "train": 64,
+      "val": 64,
+      "test": 64
+    },
+    "n_ood": {
+      "pathmnist": 64,
+      "cifar10": 64
+    },
+    "config": {
+      "epochs": 1,
+      "batch_size": 64,
+      "lr": 0.0003,
+      "weight_decay": 0.0001,
+      "num_workers": 2,
+      "pretrained": true,
+      "num_threads": 8,
+      "limit": 64
+    }
+  },
+  "seed": 0,
+  "best_epoch": 1,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.9275329113006592,
+      "val_bacc": 0.08979591836734693
+    }
+  ],
+  "test": {
+    "balanced_accuracy": 0.09523809523809523,
+    "accuracy": 0.40625,
+    "recall": {
+      "akiec": 0.0,
+      "bcc": 0.0,
+      "bkl": 0.0,
+      "df": 0.0,
+      "mel": 0.0,
+      "nv": 0.6666666666666666,
+      "vasc": 0.0
+    },
+    "support": {
+      "akiec": 4,
+      "bcc": 3,
+      "bkl": 8,
+      "df": 2,
+      "mel": 6,
+      "nv": 39,
+      "vasc": 2
+    }
+  },
+  "ood": {
+    "pathmnist": {
+      "mahalanobis": {
+        "auroc": 0.8251953125,
+        "fpr95": 0.71875
+      },
+      "msp": {
+        "auroc": 0.5322265625,
+        "fpr95": 0.984375
+      },
+      "energy": {
+        "auroc": 0.099609375,
+        "fpr95": 1.0
+      },
+      "n": {
+        "id": 64,
+        "ood": 64
+      }
+    },
+    "cifar10": {
+      "mahalanobis": {
+        "auroc": 0.788818359375,
+        "fpr95": 0.84375
+      },
+      "msp": {
+        "auroc": 0.484130859375,
+        "fpr95": 0.984375
+      },
+      "energy": {
+        "auroc": 0.474853515625,
+        "fpr95": 0.953125
+      },
+      "n": {
+        "id": 64,
+        "ood": 64
+      }
+    }
+  },
+  "checkpoint": {
+    "path": "C:\\Users\\Erjon\\data\\cdm\\checkpoints\\detB\\seed0.pt",
+    "md5": "94f377af6322f5251e125e88854f7b12",
+    "weights_sha256": "20d62aac6d7291d2"
+  },
+  "finished_utc": "2026-09-29T14:56:40+00:00"
+}

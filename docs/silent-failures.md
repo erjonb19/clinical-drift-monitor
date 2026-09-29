@@ -117,19 +117,27 @@ re-extracts features from a saved model.
 **Symptom.** Every Phase 0 seed ran with fixed seeds for Python, NumPy, PyTorch and the
 data loader, and the results say "only the training seed varies". That reads as "rerun
 the command, get the same numbers". Rerunning seed 1 with the same data, split and settings
-gave a different model: balanced accuracy 81.0% instead of 76.5%, and CIFAR-10 Mahalanobis
+gave a different model: balanced accuracy 81.0% instead of 76.4%, and CIFAR-10 Mahalanobis
 AUROC 95.7% instead of 80.1%. Both numbers fall outside the reported 3-seed range. Nothing
 warned that the seed was not controlling the result.
 
-**Cause.** Not yet confirmed. The runs already differed at epoch 1 (loss 1.1328 vs 1.1429).
-The likely cause is multi-threaded floating-point arithmetic on the CPU, whose summation
-order can change with thread scheduling and machine load. The code sets
-`cudnn.deterministic`, which only matters on a GPU, and does not turn on
-`torch.use_deterministic_algorithms` or fix the thread count.
+**Cause.** `run_seed` built the model before `train()` called `seed_everything`. Building
+the model draws the new classifier head's initial weights, so the head came from whatever
+random state the process was in. That state depended on which seeds had already run in
+the same process. The reported seed 1 ran after seed 0; the rerun ran it first. The runs
+differed from epoch 1 on (loss 1.1328 vs 1.1429). An earlier version of this entry guessed
+at CPU threading; reading the diff between the two runs showed the real cause.
 
-**Caught by.** A manual rerun of seed 1 while investigating another result, committed as
-`results/phase0_seed1_rerun/`, with the comparison in [phase0-note.md](phase0-note.md).
-There is no automatic check yet. The permanent check depends on a decision still open:
-either make CPU training deterministic and test that two short runs match exactly, or
-state reproducibility as "within the seed range" and report rerun spread alongside seed
-spread.
+A second trap turned up while testing the fix: `torch.save` embeds the file name in the
+archive, so identical weights saved as `a.pt` and `b.pt` have different MD5s. A file MD5
+cannot answer "same model?".
+
+**Caught by.** `test_same_seed_gives_identical_model_whatever_ran_before` trains seed 0,
+then seed 1, then seed 0 again in one process, on tiny images with two data workers. It
+requires the two seed 0 runs to have identical weights and metrics, and seed 1 to differ.
+It fails when the old order (build, then seed) is put back. The fix, in code `0427b47`:
+seed before building the model, fix the CPU thread count, turn on
+`torch.use_deterministic_algorithms`, seed DataLoader workers from the seeded generator,
+and record a SHA-256 of the weight values with every checkpoint. The reported Phase 0
+seeds were not rerun; their run-to-run variation is reported in
+[phase0-note.md](phase0-note.md).

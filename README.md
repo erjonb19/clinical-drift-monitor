@@ -53,9 +53,22 @@ the OOD sets are real, separate datasets.
    AUROC goes from 82.6% to 99.2% depending on the number of components. 256 is reported
    because it was fixed before any result was seen; picking the best-scoring size would
    be tuning to the test set.
-3. **A fixed seed does not reproduce a run on this CPU.** Rerunning seed 1 gave balanced
-   accuracy 81.0% instead of 76.5%. Run-to-run spread is at least as large as the spread
-   between seeds, so the ranges above understate it.
+3. **The ranges understate run-to-run variation.** The reported seeds were seeded after
+   the classifier head was initialised, so a rerun of seed 1 did not reproduce it
+   (fixed since, with a test; not rerun). One rerun moved some numbers further than the
+   whole seed range:
+
+   | Metric | Seed spread (3 seeds) | Seed 1 rerun change |
+   | --- | ---: | ---: |
+   | Balanced accuracy | 2.9 | 4.6 |
+   | PathMNIST Mahalanobis AUROC | 1.2 | 4.2 |
+   | PathMNIST max softmax AUROC | 4.1 | 0.9 |
+   | PathMNIST energy AUROC | 12.2 | 0.4 |
+   | CIFAR-10 Mahalanobis AUROC | 12.5 | 15.6 |
+   | CIFAR-10 max softmax AUROC | 11.2 | 0.5 |
+   | CIFAR-10 energy AUROC | 9.1 | 0.8 |
+
+   Percentage points. Seed spread is max minus min over the three seeds.
 
 Details and all supporting numbers: [docs/phase0-note.md](docs/phase0-note.md).
 
@@ -75,9 +88,11 @@ pip install -e ".[dev]"
 CDM_DATA=/path/to/data python -m cdm.reproduce   # downloads and checksums all data
 ```
 
-Measured: 2.6 to 4.4 hours per seed on a 14-core laptop CPU, depending on load. Data comes from the sources in
-[docs/DATA_CARD.md](docs/DATA_CARD.md) and never committed. Because of caveat 3, a rerun
-gives numbers close to these, not identical ones.
+Measured: 2.6 to 4.4 hours per seed on a 14-core laptop CPU, depending on load. Data comes
+from the sources in [docs/DATA_CARD.md](docs/DATA_CARD.md) and is never committed. The table
+above came from code `2ccda00`, which seeded after building the model. Current code seeds
+first and runs deterministically, so a rerun is exactly repeatable but gives numbers within
+the variation shown in caveat 3, not these exact numbers.
 
 ## Honesty docs
 
