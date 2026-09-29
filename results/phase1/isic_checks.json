@@ -1,0 +1,318 @@
+{
+  "sites": {
+    "barcelona": {
+      "images": 5000,
+      "lesions": 1448,
+      "images_without_lesion_id": 0,
+      "images_in_ham10000": 0,
+      "labels": {
+        "nv": 1447,
+        "mel": 1138,
+        "bcc": 966,
+        "unmapped": 560,
+        "akiec": 409,
+        "bkl": 391,
+        "vasc": 45,
+        "df": 44
+      },
+      "with_skin_type": 0,
+      "licenses": {
+        "CC-BY-NC": 5000
+      },
+      "missing_attribution": 0,
+      "image_types": {
+        "dermoscopic": 5000
+      },
+      "selection_fingerprint": "0f156bf4e99bb8c2"
+    },
+    "buenos_aires": {
+      "images": 1616,
+      "lesions": 1246,
+      "images_without_lesion_id": 0,
+      "images_in_ham10000": 0,
+      "labels": {
+        "nv": 602,
+        "bcc": 340,
+        "mel": 253,
+        "akiec": 221,
+        "bkl": 88,
+        "df": 61,
+        "vasc": 51
+      },
+      "with_skin_type": 1499,
+      "licenses": {
+        "CC-BY": 1616
+      },
+      "missing_attribution": 0,
+      "image_types": {
+        "dermoscopic": 1270,
+        "clinical: overview": 340,
+        "clinical: close-up": 6
+      },
+      "selection_fingerprint": null
+    },
+    "msk": {
+      "images": 3728,
+      "lesions": 2937,
+      "images_without_lesion_id": 137,
+      "images_in_ham10000": 0,
+      "labels": {
+        "nv": 1413,
+        "mel": 606,
+        "bkl": 547,
+        "unmapped": 363,
+        "bcc": 351,
+        "akiec": 348,
+        "vasc": 65,
+        "df": 35
+      },
+      "with_skin_type": 0,
+      "licenses": {
+        "CC-0": 3728
+      },
+      "missing_attribution": 0,
+      "image_types": {
+        "dermoscopic": 3728
+      },
+      "selection_fingerprint": null
+    },
+    "pad_ufes": {
+      "images": 2298,
+      "lesions": 1891,
+      "images_without_lesion_id": 0,
+      "images_in_ham10000": 0,
+      "labels": {
+        "akiec": 922,
+        "bcc": 845,
+        "nv": 244,
+        "bkl": 235,
+        "mel": 52
+      },
+      "with_skin_type": 1494,
+      "licenses": {
+        "CC-BY": 2298
+      },
+      "missing_attribution": 0,
+      "image_types": {
+        "clinical: close-up": 2298
+      },
+      "selection_fingerprint": null
+    }
+  },
+  "ham10000": {
+    "images": 10015,
+    "mapping_matches_ham_label": 10015,
+    "licenses": {
+      "CC-BY-NC": 10015
+    }
+  },
+  "ham10000_isic_vs_dataverse": {
+    "sample": 20,
+    "identical_bytes": 0,
+    "same_pixel_size": 20,
+    "mean_abs_pixel_diff_min": 1.574,
+    "mean_abs_pixel_diff_max": 3.804,
+    "images": [
+      {
+        "isic_id": "ISIC_0033598",
+        "isic_bytes": 22992,
+        "dataverse_bytes": 251317,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 1.735
+      },
+      {
+        "isic_id": "ISIC_0024615",
+        "isic_bytes": 22533,
+        "dataverse_bytes": 251077,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 1.88
+      },
+      {
+        "isic_id": "ISIC_0027174",
+        "isic_bytes": 30916,
+        "dataverse_bytes": 289269,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.369
+      },
+      {
+        "isic_id": "ISIC_0029212",
+        "isic_bytes": 37419,
+        "dataverse_bytes": 300286,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.768
+      },
+      {
+        "isic_id": "ISIC_0026282",
+        "isic_bytes": 34371,
+        "dataverse_bytes": 315180,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.633
+      },
+      {
+        "isic_id": "ISIC_0034004",
+        "isic_bytes": 21044,
+        "dataverse_bytes": 183813,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 1.642
+      },
+      {
+        "isic_id": "ISIC_0024431",
+        "isic_bytes": 32227,
+        "dataverse_bytes": 303170,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.368
+      },
+      {
+        "isic_id": "ISIC_0029828",
+        "isic_bytes": 26819,
+        "dataverse_bytes": 292312,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.248
+      },
+      {
+        "isic_id": "ISIC_0033439",
+        "isic_bytes": 21325,
+        "dataverse_bytes": 284144,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.019
+      },
+      {
+        "isic_id": "ISIC_0029375",
+        "isic_bytes": 27570,
+        "dataverse_bytes": 284566,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.186
+      },
+      {
+        "isic_id": "ISIC_0028971",
+        "isic_bytes": 21704,
+        "dataverse_bytes": 238105,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 1.713
+      },
+      {
+        "isic_id": "ISIC_0031428",
+        "isic_bytes": 43196,
+        "dataverse_bytes": 367312,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 3.804
+      },
+      {
+        "isic_id": "ISIC_0027499",
+        "isic_bytes": 29053,
+        "dataverse_bytes": 288055,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.245
+      },
+      {
+        "isic_id": "ISIC_0024697",
+        "isic_bytes": 31342,
+        "dataverse_bytes": 263289,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.208
+      },
+      {
+        "isic_id": "ISIC_0030574",
+        "isic_bytes": 32244,
+        "dataverse_bytes": 318391,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.581
+      },
+      {
+        "isic_id": "ISIC_0025204",
+        "isic_bytes": 24941,
+        "dataverse_bytes": 279763,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.1
+      },
+      {
+        "isic_id": "ISIC_0026212",
+        "isic_bytes": 36111,
+        "dataverse_bytes": 298290,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.499
+      },
+      {
+        "isic_id": "ISIC_0029878",
+        "isic_bytes": 21789,
+        "dataverse_bytes": 198186,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 1.574
+      },
+      {
+        "isic_id": "ISIC_0031985",
+        "isic_bytes": 35635,
+        "dataverse_bytes": 317267,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 2.713
+      },
+      {
+        "isic_id": "ISIC_0032092",
+        "isic_bytes": 23710,
+        "dataverse_bytes": 227742,
+        "identical_bytes": false,
+        "same_pixel_size": true,
+        "isic_jpeg_quant_mean": 29.03,
+        "dataverse_jpeg_quant_mean": 1.0,
+        "mean_abs_pixel_diff": 1.787
+      }
+    ]
+  }
+}
