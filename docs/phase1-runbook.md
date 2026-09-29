@@ -73,19 +73,27 @@ After step 4 has succeeded once:
 databricks jobs run-now <cdm-phase1-broken-demo job id>
 ```
 
-**This run must fail**, at the pipeline task, on the `gate_results` expectation. The
-failed gates must be exactly these (written by the ingest task's `--make-broken` log):
+The demo runs on a **small subset**, not a second copy of everything: the
+`make_broken` task copies 30 whole HAM10000 lesions per class (roughly 300 images; the
+task log prints the exact count) and 20 images per site into `raw/broken/`, deleting any earlier copy first. It writes
+`raw/broken/sites.json` with the split fingerprint and class counts of that clean subset,
+so the subset on its own passes every gate. It then adds four faults, and the pipeline
+`cdm-phase1-broken` reads only `raw/broken/` with a full refresh, into
+`workspace.cdm_broken`.
 
-- `split_fingerprint_matches_phase0` (one HAM10000 image moved to another lesion)
-- `no_missing_labels`, `class_counts_as_expected`, `diagnosis_mapping_matches_ham10000`
-  (one HAM10000 label removed)
-- `no_ham10000_image_in_a_site`, `no_duplicate_files` (one HAM10000 image slipped into
-  Barcelona)
+**This run must fail**, at the pipeline task, on the `gate_results` expectation, with
+exactly these gates failing (the `make_broken` task's log lists them too):
 
-and `workspace.cdm_broken.silver_quarantine` must hold the one corrupt JPEG
+- `split_fingerprint_matches_phase0`: one HAM10000 image moved to another lesion
+- `no_missing_labels`, `class_counts_as_expected`, `diagnosis_mapping_matches_ham10000`:
+  one HAM10000 label removed
+- `no_ham10000_image_in_a_site`, `no_duplicate_files`: one HAM10000 image slipped into
+  Barcelona
+
+`workspace.cdm_broken.silver_quarantine` must hold the one corrupt JPEG
 (`ISIC_BROKEN_0000001`) without it failing anything. Because the gate table fails its own
 expectation, read the gate details in the pipeline's event log (the failed flow's
-expectation message), or from `silver_metadata` in `workspace.cdm_broken`.
+expectation message), or recompute them from `workspace.cdm_broken.silver_metadata`.
 
 ## If something fails
 

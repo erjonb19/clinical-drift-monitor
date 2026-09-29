@@ -133,13 +133,21 @@ def test_ingest_lands_everything_once_and_passes_every_gate(
     assert set(frame.loc[frame.source == "barcelona", "split"]) == {"score"}
 
 
-def test_broken_input_fails_the_promised_gates_and_quarantines_the_corrupt_file(
-    world: tuple[Path, dict[str, Any], Any],
+@pytest.mark.parametrize("faults", [False, True])
+def test_broken_demo_uses_a_small_subset_and_fails_only_through_its_faults(
+    world: tuple[Path, dict[str, Any], Any], faults: bool
 ) -> None:
     raw, config, fetch = world
     ingest(config, raw, raw.parent / "tmp", 4, "abc1234", fetch, fake_jpeg)
-    expected = make_broken(raw, raw.parent / "tmp", ["ham10000", "barcelona"])
-    frame = gate_frame(raw, raw / "broken", config, [raw / "images", raw / "broken" / "images"])
-    assert failing(frame, config) == set(expected)
-    with pytest.raises(DecodeError):
-        decode_resize((raw / "broken" / "images" / "barcelona" / f"{CORRUPT_ID}.jpg").read_bytes())
+    expected = make_broken(raw, raw.parent / "tmp", config, lesions_per_class=10, site_images=3,
+                           faults=faults)  # fmt: skip
+    broken_config = json.loads((raw / "broken" / "sites.json").read_text(encoding="utf-8"))
+    copied = list((raw / "broken" / "images").rglob("*.jpg"))
+    assert len(copied) < 80  # 30 lesions x 2 images, 3 site images, plus the faults' files
+    frame = gate_frame(raw, raw / "broken", broken_config, [raw / "broken" / "images"])
+    assert failing(frame, broken_config) == set(expected)
+    assert bool(expected) == faults
+    if faults:
+        corrupt = raw / "broken" / "images" / "barcelona" / f"{CORRUPT_ID}.jpg"
+        with pytest.raises(DecodeError):
+            decode_resize(corrupt.read_bytes())

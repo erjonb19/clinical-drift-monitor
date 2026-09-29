@@ -31,7 +31,7 @@ VALUES = {
     "PIPELINE_NAME": "cdm-phase1-broken",
     "RAW": "/Volumes/workspace/cdm/raw",
     "WEIGHTS": "/Volumes/workspace/cdm/raw/deploy/weights/w.pth",
-    "IMAGES_GLOB": "/Volumes/workspace/cdm/raw/{images,broken/images}/*/*.jpg",
+    "IMAGES_GLOB": "/Volumes/workspace/cdm/raw/broken/images/*/*.jpg",
     "METADATA_PATH": "/Volumes/workspace/cdm/raw/broken/metadata",
     "MANIFEST_PATH": "/Volumes/workspace/cdm/raw/broken/manifest",
     "PIPELINE_ID": "p-1",
@@ -46,11 +46,11 @@ def test_every_definition_renders_with_nothing_left_over(name: str) -> None:
     assert "{{" not in str(spec)
 
 
-def test_pipeline_is_serverless_and_reads_both_image_folders_for_the_broken_demo() -> None:
+def test_broken_pipeline_is_serverless_and_reads_only_the_broken_subset() -> None:
     template = (REPO / "databricks" / "pipeline.json").read_text(encoding="utf-8")
     spec = deploy_module().render(template, VALUES)
     assert spec["serverless"] is True and spec["continuous"] is False
-    assert spec["configuration"]["cdm.images_glob"].endswith("{images,broken/images}/*/*.jpg")
+    assert spec["configuration"]["cdm.images_glob"].endswith("/raw/broken/images/*/*.jpg")
     assert spec["environment"]["dependencies"] == [VALUES["WHEEL"]]
 
 
@@ -65,3 +65,9 @@ def test_a_missing_value_is_refused() -> None:
     template = (REPO / "databricks" / "job.json").read_text(encoding="utf-8")
     with pytest.raises(ValueError, match="PIPELINE_ID"):
         deploy_module().render(template, {k: v for k, v in VALUES.items() if k != "PIPELINE_ID"})
+
+
+def test_broken_demo_job_fully_refreshes_its_pipeline() -> None:
+    template = (REPO / "databricks" / "job_broken.json").read_text(encoding="utf-8")
+    tasks = {t["task_key"]: t for t in deploy_module().render(template, VALUES)["tasks"]}
+    assert tasks["pipeline"]["pipeline_task"]["full_refresh"] is True

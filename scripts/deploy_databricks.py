@@ -172,11 +172,13 @@ def main() -> int:
         "METADATA_PATH": f"{raw}/metadata",
         "MANIFEST_PATH": f"{raw}/manifest",
     }
-    # The broken run reads the real images plus the faulted extras, and the faulted records.
+    # The broken run reads only the small faulted subset that `cdm-ingest --make-broken`
+    # copies into broken/, with that subset's own expected fingerprint and class counts.
     broken = {
         "PIPELINE_NAME": "cdm-phase1-broken",
         "SCHEMA": f"{schema}_broken",
-        "IMAGES_GLOB": f"{raw}/{{images,broken/images}}/*/*.jpg",
+        "CONFIG": f"{raw}/broken/sites.json",
+        "IMAGES_GLOB": f"{raw}/broken/images/*/*.jpg",
         "METADATA_PATH": f"{raw}/broken/metadata",
         "MANIFEST_PATH": f"{raw}/broken/manifest",
     }
