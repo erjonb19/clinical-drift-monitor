@@ -19,7 +19,7 @@ code is written and tested locally; it has not run on Databricks yet.**
 
 1. Install and log in to the Databricks CLI (runbook steps 1 and 2).
 2. Deploy: `scripts\deploy_databricks.py --dry-run`, then without `--dry-run` (step 3).
-3. Run job `cdm-phase1` (step 4); expect about 26,600 images on the first run.
+3. Run job `cdm-phase1` (step 4); expect 22,657 images on the first run.
 4. Run job `cdm-phase1-broken-demo` (step 5); it must fail on `gate_results`.
 5. Report back: task statuses, `gate_results`, row counts per source, and any error text.
 

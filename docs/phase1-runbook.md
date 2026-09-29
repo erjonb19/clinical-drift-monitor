@@ -52,7 +52,7 @@ run them.
 databricks jobs run-now <cdm-phase1 job id>
 ```
 
-The first run downloads about 26,600 images (HAM10000 10,015; Barcelona 5,000; Buenos
+The first run downloads 22,657 images (HAM10000 10,015; Barcelona 5,000; Buenos
 Aires 1,616; MSK 3,728; PAD-UFES-20 2,298). Follow it under **Jobs & Pipelines** in the
 workspace. Later runs download nothing that is already in the volume.
 
