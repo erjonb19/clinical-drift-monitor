@@ -212,23 +212,38 @@ def ham_rows(ham_meta: pd.DataFrame, collection: int, fetch: Fetch = http_json) 
     return sorted(rows, key=lambda r: r["isic_id"])
 
 
-def land(row: Row, images_dir: Path, tmp_dir: Path, opener: Opener = http_bytes) -> dict[str, Any]:
+def land(
+    row: Row,
+    images_dir: Path,
+    tmp_dir: Path,
+    opener: Opener = http_bytes,
+    known: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Download one image to ``tmp_dir``, then copy it into ``images_dir``.
 
     Direct writes into a Unity Catalog volume fail on large files, so the file is written
-    locally first and copied with ``shutil.copyfile``. A file already in ``images_dir`` is
-    kept and re-hashed, never downloaded again. Returns the manifest row.
+    locally first and copied with ``shutil.copyfile``. The SHA-256 is taken from the
+    downloaded bytes, so the volume copy is not read back. A file already in ``images_dir``
+    is never downloaded again: its ``known`` manifest row from an earlier run is reused if
+    given, otherwise the file is hashed. Reading files back from a volume is slow (about six
+    per second), and the pipeline re-hashes every file in bronze and fails the
+    ``files_match_manifest`` gate if one changed, so trusting the earlier row is safe.
+    Returns the manifest row.
     """
     dest = images_dir / row["source"] / f"{row['isic_id']}.jpg"
-    downloaded = not dest.exists()
-    if downloaded:
-        body = opener(row["url"])
+    if dest.exists():
+        if known is not None and known.get("path") == str(dest):
+            return {k: known[k] for k in ("isic_id", "source", "path", "bytes", "sha256")} | {
+                "downloaded": False
+            }
+        data, downloaded = dest.read_bytes(), False
+    else:
+        data, downloaded = opener(row["url"]), True
         local = tmp_dir / f"{row['isic_id']}.jpg"
-        local.write_bytes(body)
+        local.write_bytes(data)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(local, dest)
         local.unlink()
-    data = dest.read_bytes()
     return {
         "isic_id": row["isic_id"],
         "source": row["source"],

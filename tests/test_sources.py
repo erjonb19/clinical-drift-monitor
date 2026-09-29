@@ -161,3 +161,16 @@ def test_committed_config_parses_and_pins_the_barcelona_selection() -> None:
     cap = sites["barcelona"].cap
     assert cap is not None and cap.max_images == 5000 and cap.fingerprint is not None
     assert config["ham10000"]["split_fingerprint"] == "cc2b196cd5bf58ad"
+
+
+def test_land_reuses_a_known_manifest_row_without_reading_the_file(tmp_path: Path) -> None:
+    """Reruns must not re-read every landed file from the volume (about six per second);
+    the pipeline's own hashing and files_match_manifest gate catch a changed file."""
+    row = {"isic_id": "ISIC_1", "source": "s", "url": "https://example.test/ISIC_1.jpg"}
+    (tmp_path / "tmp").mkdir()
+    first = land(row, tmp_path / "vol", tmp_path / "tmp", opener=lambda url: b"original")
+    (tmp_path / "vol" / "s" / "ISIC_1.jpg").write_bytes(b"changed after landing")
+    reused = land(row, tmp_path / "vol", tmp_path / "tmp", opener=lambda url: b"", known=first)
+    assert reused["sha256"] == first["sha256"] and not reused["downloaded"]
+    rehashed = land(row, tmp_path / "vol", tmp_path / "tmp", opener=lambda url: b"")
+    assert rehashed["sha256"] == hashlib.sha256(b"changed after landing").hexdigest()

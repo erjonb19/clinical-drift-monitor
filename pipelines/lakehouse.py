@@ -22,7 +22,7 @@ from dataclasses import asdict
 
 import pandas as pd
 from pyspark import pipelines as dp
-from pyspark.sql import DataFrame, SparkSession, Window
+from pyspark.sql import DataFrame, GroupedData, SparkSession, Window
 from pyspark.sql import functions as F
 
 from cdm.gates import run_all, with_splits
@@ -52,6 +52,15 @@ MANIFEST_COLUMNS = """
 """
 SILVER_METADATA_COLUMNS = METADATA_COLUMNS + ", manifest_sha256 STRING, sha256 STRING, split STRING"
 KEY = ["source", "isic_id"]
+
+
+def _one_group(df: DataFrame) -> GroupedData:
+    """Group every row together for a whole-dataset pandas step.
+
+    The group key must be a named column: Spark reads an integer literal in ``groupBy`` as a
+    column position, so ``groupBy(F.lit(1))`` fails analysis (the first Databricks run).
+    """
+    return df.withColumn("_group", F.lit("all")).groupBy("_group")
 
 
 def _latest(df: DataFrame, order: str) -> DataFrame:
@@ -108,8 +117,8 @@ def silver_metadata() -> DataFrame:
     landed = _latest(spark.read.table("bronze_images"), "modificationTime").select(*KEY, "sha256")
     joined = meta.join(recorded, KEY, "left").join(landed, KEY, "left")
     # One group: the split is a whole-dataset computation (Phase 0's function).
-    return joined.groupBy(F.lit(1)).applyInPandas(
-        lambda pdf: with_splits(pdf, SEED), SILVER_METADATA_COLUMNS
+    return _one_group(joined).applyInPandas(
+        lambda pdf: with_splits(pdf.drop(columns="_group"), SEED), SILVER_METADATA_COLUMNS
     )
 
 
@@ -154,8 +163,7 @@ def _gates(frame: pd.DataFrame) -> pd.DataFrame:
 @dp.materialized_view(comment="One row per Phase 1 gate; any violation fails the update.")
 @dp.expect_all_or_fail({"gate_passes": "violations = 0"})
 def gate_results() -> DataFrame:
-    return (
-        spark.read.table("silver_metadata")
-        .groupBy(F.lit(1))
-        .applyInPandas(_gates, "name STRING, violations BIGINT, detail STRING")
+    return _one_group(spark.read.table("silver_metadata")).applyInPandas(
+        lambda pdf: _gates(pdf.drop(columns="_group")),
+        "name STRING, violations BIGINT, detail STRING",
     )
