@@ -7,26 +7,35 @@ name = "cdm"
 version = "0.1.0"
 description = "Clinical imaging drift monitor: a skin lesion classifier served with an out-of-distribution score."
 requires-python = ">=3.11"
+# The core is what the Databricks ingest task and pipeline need: no torch, so the pipeline
+# does not install a deep learning stack just to decode images.
 dependencies = [
-    # CI and local dev install the CPU wheels from download.pytorch.org; Colab
-    # already ships a CUDA build that satisfies these floors.
-    "torch>=2.4",
-    "torchvision>=0.19",
     "numpy>=1.26",
     "pandas>=2.2",
     "pillow>=10.0",
     "scikit-learn>=1.5",
-    # 3.x is the release that serves the native 224px MedMNIST+ files.
-    "medmnist>=3.0",
 ]
 
 [project.optional-dependencies]
+# Training, OOD scoring and the gold embeddings task.
+train = [
+    # CI and local dev install the CPU wheels from download.pytorch.org.
+    "torch>=2.4",
+    "torchvision>=0.19",
+    # 3.x is the release that serves the native 224px MedMNIST+ files.
+    "medmnist>=3.0",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.6",
     "mypy>=1.11",
     "pandas-stubs",
 ]
+
+[project.scripts]
+# Databricks job tasks run these as python_wheel_task entry points.
+cdm-ingest = "cdm.ingest:main"
+cdm-gold = "cdm.gold:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -41,13 +50,18 @@ extend-exclude = ["reference"]
 select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
 
 [tool.mypy]
-files = ["src", "tests", "scripts"]
+files = ["src", "tests", "scripts", "pipelines"]
 python_version = "3.11"
 strict = true
 # None of these ship type information.
 [[tool.mypy.overrides]]
-module = ["medmnist.*", "sklearn.*", "torchvision.*"]
+module = ["medmnist.*", "sklearn.*", "torchvision.*", "pyspark.*"]
 ignore_missing_imports = true
+
+# The pipeline's decorators come from pyspark, which is not installed outside Databricks.
+[[tool.mypy.overrides]]
+module = ["lakehouse"]
+disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

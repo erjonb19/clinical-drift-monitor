@@ -84,7 +84,7 @@ and each now has a test.
 
 ```bash
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip install -e ".[dev]"
+pip install -e ".[dev,train]"
 CDM_DATA=/path/to/data python -m cdm.reproduce   # downloads and checksums all data
 ```
 
