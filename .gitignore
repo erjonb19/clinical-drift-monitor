@@ -8,6 +8,8 @@ data/
 checkpoints/
 results/smoke/
 logs/
+dist/
+build/
 
 # Secrets
 .env

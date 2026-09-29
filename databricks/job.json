@@ -1,0 +1,35 @@
+{
+  "name": "cdm-phase1",
+  "max_concurrent_runs": 1,
+  "tags": {"code_version": "{{SHA}}"},
+  "environments": [
+    {"environment_key": "core", "spec": {"environment_version": "4", "dependencies": ["{{WHEEL}}"]}},
+    {"environment_key": "torch", "spec": {"environment_version": "4", "dependencies": ["{{WHEEL}}", "torch>=2.4", "torchvision>=0.19"]}}
+  ],
+  "tasks": [
+    {
+      "task_key": "ingest",
+      "environment_key": "core",
+      "python_wheel_task": {
+        "package_name": "cdm",
+        "entry_point": "cdm-ingest",
+        "parameters": ["--config", "{{CONFIG}}", "--raw", "{{RAW}}", "--code-version", "{{SHA}}"]
+      }
+    },
+    {
+      "task_key": "pipeline",
+      "depends_on": [{"task_key": "ingest"}],
+      "pipeline_task": {"pipeline_id": "{{PIPELINE_ID}}"}
+    },
+    {
+      "task_key": "gold",
+      "depends_on": [{"task_key": "pipeline"}],
+      "environment_key": "torch",
+      "python_wheel_task": {
+        "package_name": "cdm",
+        "entry_point": "cdm-gold",
+        "parameters": ["--catalog", "{{CATALOG}}", "--schema", "{{SCHEMA}}", "--weights", "{{WEIGHTS}}"]
+      }
+    }
+  ]
+}

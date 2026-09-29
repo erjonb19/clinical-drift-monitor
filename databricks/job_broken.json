@@ -1,0 +1,24 @@
+{
+  "name": "cdm-phase1-broken-demo",
+  "max_concurrent_runs": 1,
+  "tags": {"code_version": "{{SHA}}"},
+  "environments": [
+    {"environment_key": "core", "spec": {"environment_version": "4", "dependencies": ["{{WHEEL}}"]}}
+  ],
+  "tasks": [
+    {
+      "task_key": "make_broken",
+      "environment_key": "core",
+      "python_wheel_task": {
+        "package_name": "cdm",
+        "entry_point": "cdm-ingest",
+        "parameters": ["--config", "{{CONFIG}}", "--raw", "{{RAW}}", "--make-broken"]
+      }
+    },
+    {
+      "task_key": "pipeline",
+      "depends_on": [{"task_key": "make_broken"}],
+      "pipeline_task": {"pipeline_id": "{{BROKEN_PIPELINE_ID}}"}
+    }
+  ]
+}
