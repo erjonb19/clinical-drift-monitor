@@ -1,0 +1,127 @@
+{
+  "features": "pretrained",
+  "checkpoint": null,
+  "code_version": "ba8bf5f",
+  "split_fingerprint": "cc2b196cd5bf58ad",
+  "n": {
+    "train": 7044,
+    "test": 1528,
+    "pathmnist": 2000,
+    "cifar10": 2000
+  },
+  "by_pca_size": {
+    "32": {
+      "pathmnist": {
+        "auroc": 0.7511,
+        "fpr95": 0.876,
+        "median_score_id": 28.5,
+        "median_score_ood": 37.44
+      },
+      "cifar10": {
+        "auroc": 0.6653,
+        "fpr95": 0.9955,
+        "median_score_id": 28.5,
+        "median_score_ood": 33.64
+      }
+    },
+    "64": {
+      "pathmnist": {
+        "auroc": 0.8724,
+        "fpr95": 0.677,
+        "median_score_id": 57.94,
+        "median_score_ood": 96.61
+      },
+      "cifar10": {
+        "auroc": 0.74,
+        "fpr95": 0.963,
+        "median_score_id": 57.94,
+        "median_score_ood": 75.41
+      }
+    },
+    "128": {
+      "pathmnist": {
+        "auroc": 0.936,
+        "fpr95": 0.4305,
+        "median_score_id": 113.26,
+        "median_score_ood": 243.02
+      },
+      "cifar10": {
+        "auroc": 0.9138,
+        "fpr95": 0.5645,
+        "median_score_id": 113.26,
+        "median_score_ood": 223.4
+      }
+    },
+    "256": {
+      "pathmnist": {
+        "auroc": 0.9737,
+        "fpr95": 0.122,
+        "median_score_id": 222.09,
+        "median_score_ood": 707.16
+      },
+      "cifar10": {
+        "auroc": 0.9867,
+        "fpr95": 0.059,
+        "median_score_id": 222.09,
+        "median_score_ood": 737.28
+      }
+    },
+    "512": {
+      "pathmnist": {
+        "auroc": 0.9908,
+        "fpr95": 0.059,
+        "median_score_id": 446.9,
+        "median_score_ood": 2176.76
+      },
+      "cifar10": {
+        "auroc": 0.999,
+        "fpr95": 0.0,
+        "median_score_id": 446.9,
+        "median_score_ood": 2766.91
+      }
+    },
+    "1280": {
+      "pathmnist": {
+        "auroc": 0.9942,
+        "fpr95": 0.041,
+        "median_score_id": 1359.7,
+        "median_score_ood": 28411.33
+      },
+      "cifar10": {
+        "auroc": 1.0,
+        "fpr95": 0.0,
+        "median_score_id": 1359.7,
+        "median_score_ood": 119843.42
+      }
+    }
+  },
+  "nearest_class_at_pca_256": {
+    "test": {
+      "akiec": 0.0576,
+      "bcc": 0.0681,
+      "bkl": 0.108,
+      "df": 0.0334,
+      "mel": 0.1158,
+      "nv": 0.6054,
+      "vasc": 0.0118
+    },
+    "pathmnist": {
+      "akiec": 0.384,
+      "bcc": 0.099,
+      "bkl": 0.0685,
+      "df": 0.0195,
+      "mel": 0.002,
+      "nv": 0.3505,
+      "vasc": 0.0765
+    },
+    "cifar10": {
+      "akiec": 0.0375,
+      "bcc": 0.0815,
+      "bkl": 0.497,
+      "df": 0.1055,
+      "mel": 0.0475,
+      "nv": 0.1505,
+      "vasc": 0.0805
+    }
+  }
+}

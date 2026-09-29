@@ -1,0 +1,127 @@
+{
+  "features": "seed1_rerun_finetuned",
+  "checkpoint": "C:\\Users\\Erjon\\data\\cdm\\checkpoints\\phase0_seed1_rerun\\seed1.pt",
+  "code_version": "06245f4",
+  "split_fingerprint": "cc2b196cd5bf58ad",
+  "n": {
+    "train": 7044,
+    "test": 1528,
+    "pathmnist": 2000,
+    "cifar10": 2000
+  },
+  "by_pca_size": {
+    "32": {
+      "pathmnist": {
+        "auroc": 0.8773,
+        "fpr95": 0.6725,
+        "median_score_id": 26.94,
+        "median_score_ood": 56.55
+      },
+      "cifar10": {
+        "auroc": 0.8559,
+        "fpr95": 0.754,
+        "median_score_id": 26.94,
+        "median_score_ood": 52.48
+      }
+    },
+    "64": {
+      "pathmnist": {
+        "auroc": 0.8956,
+        "fpr95": 0.6365,
+        "median_score_id": 54.32,
+        "median_score_ood": 115.15
+      },
+      "cifar10": {
+        "auroc": 0.8258,
+        "fpr95": 0.7995,
+        "median_score_id": 54.32,
+        "median_score_ood": 95.6
+      }
+    },
+    "128": {
+      "pathmnist": {
+        "auroc": 0.9533,
+        "fpr95": 0.2865,
+        "median_score_id": 109.31,
+        "median_score_ood": 287.65
+      },
+      "cifar10": {
+        "auroc": 0.9103,
+        "fpr95": 0.4755,
+        "median_score_id": 109.31,
+        "median_score_ood": 252.86
+      }
+    },
+    "256": {
+      "pathmnist": {
+        "auroc": 0.9798,
+        "fpr95": 0.1135,
+        "median_score_id": 215.11,
+        "median_score_ood": 695.5
+      },
+      "cifar10": {
+        "auroc": 0.9569,
+        "fpr95": 0.213,
+        "median_score_id": 215.11,
+        "median_score_ood": 652.69
+      }
+    },
+    "512": {
+      "pathmnist": {
+        "auroc": 0.9913,
+        "fpr95": 0.0315,
+        "median_score_id": 444.13,
+        "median_score_ood": 1690.35
+      },
+      "cifar10": {
+        "auroc": 0.9798,
+        "fpr95": 0.098,
+        "median_score_id": 444.13,
+        "median_score_ood": 1640.25
+      }
+    },
+    "1280": {
+      "pathmnist": {
+        "auroc": 0.9974,
+        "fpr95": 0.0005,
+        "median_score_id": 1506.03,
+        "median_score_ood": 7431.22
+      },
+      "cifar10": {
+        "auroc": 0.992,
+        "fpr95": 0.031,
+        "median_score_id": 1506.03,
+        "median_score_ood": 6840.6
+      }
+    }
+  },
+  "nearest_class_at_pca_256": {
+    "test": {
+      "akiec": 0.0249,
+      "bcc": 0.0399,
+      "bkl": 0.0962,
+      "df": 0.0072,
+      "mel": 0.1001,
+      "nv": 0.7219,
+      "vasc": 0.0098
+    },
+    "pathmnist": {
+      "akiec": 0.0,
+      "bcc": 0.002,
+      "bkl": 0.146,
+      "df": 0.002,
+      "mel": 0.0025,
+      "nv": 0.8455,
+      "vasc": 0.002
+    },
+    "cifar10": {
+      "akiec": 0.0,
+      "bcc": 0.0,
+      "bkl": 0.004,
+      "df": 0.0005,
+      "mel": 0.0,
+      "nv": 0.99,
+      "vasc": 0.0055
+    }
+  }
+}
