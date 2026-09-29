@@ -13,7 +13,7 @@ Last updated: 2026-09-29.
 
 Working, tested, and run on real data. Results in `results/phase0/`.
 
-### Phase 0: fix the science (awaiting sign-off)
+### Phase 0: fix the science (done, signed off 2026-09-29)
 
 - HAM10000 download from Harvard Dataverse with MD5 checks and metadata validation;
   PathMNIST (224 px) and CIFAR-10 as fixed 2,000-image OOD subsets (`src/cdm/data.py`).
@@ -26,11 +26,16 @@ Working, tested, and run on real data. Results in `results/phase0/`.
   (`src/cdm/ood.py`). AUROC, FPR@95TPR, mean and range over seeds (`src/cdm/eval.py`).
 - One command (`python -m cdm.reproduce`) that saves each seed as it finishes, resumes
   from saved seeds, and refuses an AUROC below 50% or uncommitted code.
+- Deterministic CPU training from code `0427b47`: seeded before the model is built, fixed
+  thread count, PyTorch deterministic algorithms, seeded data workers. Tested in CI and
+  checked once on real data.
 - **Measured:** balanced accuracy 78.0% (76.4–79.3) over 3 seeds on CPU. OOD results
   and their caveats in the README.
 
 Known limits, documented rather than fixed:
-- A fixed seed does not reproduce a run on CPU ([silent-failures #6](silent-failures.md)).
+- The reported seeds came from code that seeded after building the model, so their
+  ranges understate run-to-run variation; the measured rerun spread is reported next to
+  them ([silent-failures #6](silent-failures.md)). Not rerun, by decision.
 - Mahalanobis on CIFAR-10 is unstable and sensitive to PCA size
   ([phase0-note.md](phase0-note.md)).
 

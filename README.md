@@ -4,8 +4,8 @@ A skin lesion classifier served with an out-of-distribution (drift) score. See
 [PLAN.md](PLAN.md) for scope and order, and [docs/BUILT_VS_PLANNED.md](docs/BUILT_VS_PLANNED.md)
 for what exists today.
 
-**Status:** Phase 0 (fix the science) has results and is awaiting sign-off. Phases 1 to 6
-have not started.
+**Status:** Phase 0 (fix the science) is done, signed off 2026-09-29. Phases 1 to 6 have
+not started.
 
 ## Phase 0 results
 
