@@ -1,0 +1,101 @@
+{
+  "run_key": {
+    "code_version": "0427b47",
+    "split_fingerprint": "cc2b196cd5bf58ad",
+    "metadata_md5": "8f85fb1aa29d80a2797247e434deb79d",
+    "images": {
+      "train": 64,
+      "val": 64,
+      "test": 64
+    },
+    "n_ood": {
+      "pathmnist": 64,
+      "cifar10": 64
+    },
+    "config": {
+      "epochs": 1,
+      "batch_size": 64,
+      "lr": 0.0003,
+      "weight_decay": 0.0001,
+      "num_workers": 2,
+      "pretrained": true,
+      "num_threads": 8,
+      "limit": 64
+    }
+  },
+  "seed": 1,
+  "best_epoch": 1,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.9458590745925903,
+      "val_bacc": 0.1510204081632653
+    }
+  ],
+  "test": {
+    "balanced_accuracy": 0.2326007326007326,
+    "accuracy": 0.15625,
+    "recall": {
+      "akiec": 1.0,
+      "bcc": 0.0,
+      "bkl": 0.0,
+      "df": 0.0,
+      "mel": 0.0,
+      "nv": 0.1282051282051282,
+      "vasc": 0.5
+    },
+    "support": {
+      "akiec": 4,
+      "bcc": 3,
+      "bkl": 8,
+      "df": 2,
+      "mel": 6,
+      "nv": 39,
+      "vasc": 2
+    }
+  },
+  "ood": {
+    "pathmnist": {
+      "mahalanobis": {
+        "auroc": 0.836669921875,
+        "fpr95": 0.6875
+      },
+      "msp": {
+        "auroc": 0.747314453125,
+        "fpr95": 0.640625
+      },
+      "energy": {
+        "auroc": 0.809326171875,
+        "fpr95": 0.625
+      },
+      "n": {
+        "id": 64,
+        "ood": 64
+      }
+    },
+    "cifar10": {
+      "mahalanobis": {
+        "auroc": 0.815673828125,
+        "fpr95": 0.78125
+      },
+      "msp": {
+        "auroc": 0.66162109375,
+        "fpr95": 0.796875
+      },
+      "energy": {
+        "auroc": 0.640869140625,
+        "fpr95": 0.78125
+      },
+      "n": {
+        "id": 64,
+        "ood": 64
+      }
+    }
+  },
+  "checkpoint": {
+    "path": "C:\\Users\\Erjon\\data\\cdm\\checkpoints\\detB\\seed1.pt",
+    "md5": "e29883d74a9ce92864d1d4a51c420125",
+    "weights_sha256": "e7aaddd5c7b081cb"
+  },
+  "finished_utc": "2026-09-29T14:56:04+00:00"
+}
