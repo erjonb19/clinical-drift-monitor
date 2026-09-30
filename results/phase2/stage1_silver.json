@@ -1,0 +1,400 @@
+{
+  "exported_utc": "2026-09-30T03:23:39+00:00",
+  "run": {
+    "run_id": 338505418387571,
+    "job_id": 143178896044655,
+    "result": "SUCCESS",
+    "start": "2026-09-30T02:44:04+00:00",
+    "end": "2026-09-30T03:22:51+00:00",
+    "tasks": [
+      {
+        "task": "pipeline",
+        "result": "SUCCESS",
+        "start": "2026-09-30T03:00:35+00:00",
+        "end": "2026-09-30T03:08:19+00:00"
+      },
+      {
+        "task": "gold",
+        "result": "SUCCESS",
+        "start": "2026-09-30T03:08:20+00:00",
+        "end": "2026-09-30T03:22:51+00:00"
+      },
+      {
+        "task": "ingest",
+        "result": "SUCCESS",
+        "start": "2026-09-30T02:44:04+00:00",
+        "end": "2026-09-30T03:00:35+00:00"
+      }
+    ]
+  },
+  "gate_results": [
+    {
+      "name": "class_counts_as_expected",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "diagnosis_mapping_matches_ham10000",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "every_client_image_has_a_client",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "every_image_landed",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "files_match_manifest",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "license_and_attribution",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "no_duplicate_files",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "no_ham10000_image_in_a_site",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "no_lesion_in_two_splits",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "no_missing_labels",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "roles_respected",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "site_label_rule_applied",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "split_computed",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "split_fingerprint_matches_phase0",
+      "violations": "0",
+      "detail": "got cc2b196cd5bf58ad, expected cc2b196cd5bf58ad"
+    }
+  ],
+  "clients_by_split": [
+    {
+      "role": "client",
+      "client": "barcelona",
+      "split": "score",
+      "images": "691",
+      "lesions": "219"
+    },
+    {
+      "role": "client",
+      "client": "barcelona",
+      "split": "test",
+      "images": "635",
+      "lesions": "185"
+    },
+    {
+      "role": "client",
+      "client": "barcelona",
+      "split": "train",
+      "images": "3016",
+      "lesions": "860"
+    },
+    {
+      "role": "client",
+      "client": "barcelona",
+      "split": "val",
+      "images": "658",
+      "lesions": "184"
+    },
+    {
+      "role": "client",
+      "client": "ham_queensland",
+      "split": "test",
+      "images": "356",
+      "lesions": "231"
+    },
+    {
+      "role": "client",
+      "client": "ham_queensland",
+      "split": "train",
+      "images": "1596",
+      "lesions": "1096"
+    },
+    {
+      "role": "client",
+      "client": "ham_queensland",
+      "split": "val",
+      "images": "307",
+      "lesions": "225"
+    },
+    {
+      "role": "client",
+      "client": "ham_vienna",
+      "split": "test",
+      "images": "1172",
+      "lesions": "890"
+    },
+    {
+      "role": "client",
+      "client": "ham_vienna",
+      "split": "train",
+      "images": "5448",
+      "lesions": "4133"
+    },
+    {
+      "role": "client",
+      "client": "ham_vienna",
+      "split": "val",
+      "images": "1136",
+      "lesions": "895"
+    },
+    {
+      "role": "client",
+      "client": "msk",
+      "split": "score",
+      "images": "574",
+      "lesions": "517"
+    },
+    {
+      "role": "client",
+      "client": "msk",
+      "split": "test",
+      "images": "460",
+      "lesions": "364"
+    },
+    {
+      "role": "client",
+      "client": "msk",
+      "split": "train",
+      "images": "2229",
+      "lesions": "1694"
+    },
+    {
+      "role": "client",
+      "client": "msk",
+      "split": "val",
+      "images": "465",
+      "lesions": "363"
+    },
+    {
+      "role": "held_out",
+      "client": "buenos_aires",
+      "split": "score",
+      "images": "1616",
+      "lesions": "1246"
+    },
+    {
+      "role": "held_out",
+      "client": "pad_ufes",
+      "split": "score",
+      "images": "2298",
+      "lesions": "1891"
+    }
+  ],
+  "akiec_before_and_after_rule": [
+    {
+      "source": "barcelona",
+      "role": "client",
+      "akiec_by_isic_mapping": "409",
+      "akiec_after_rule": "278",
+      "scc_nos_images": "131",
+      "scc_nos_unlabelled": "131"
+    },
+    {
+      "source": "ham10000",
+      "role": "client",
+      "akiec_by_isic_mapping": "327",
+      "akiec_after_rule": "327",
+      "scc_nos_images": "197",
+      "scc_nos_unlabelled": "0"
+    },
+    {
+      "source": "msk",
+      "role": "client",
+      "akiec_by_isic_mapping": "348",
+      "akiec_after_rule": "137",
+      "scc_nos_images": "211",
+      "scc_nos_unlabelled": "211"
+    },
+    {
+      "source": "buenos_aires",
+      "role": "held_out",
+      "akiec_by_isic_mapping": "221",
+      "akiec_after_rule": "63",
+      "scc_nos_images": "158",
+      "scc_nos_unlabelled": "158"
+    },
+    {
+      "source": "pad_ufes",
+      "role": "held_out",
+      "akiec_by_isic_mapping": "922",
+      "akiec_after_rule": "730",
+      "scc_nos_images": "192",
+      "scc_nos_unlabelled": "192"
+    }
+  ],
+  "labelled_by_client_and_class": [
+    {
+      "client": "barcelona",
+      "label": "akiec",
+      "images": "278"
+    },
+    {
+      "client": "barcelona",
+      "label": "bcc",
+      "images": "966"
+    },
+    {
+      "client": "barcelona",
+      "label": "bkl",
+      "images": "391"
+    },
+    {
+      "client": "barcelona",
+      "label": "df",
+      "images": "44"
+    },
+    {
+      "client": "barcelona",
+      "label": "mel",
+      "images": "1138"
+    },
+    {
+      "client": "barcelona",
+      "label": "nv",
+      "images": "1447"
+    },
+    {
+      "client": "barcelona",
+      "label": "vasc",
+      "images": "45"
+    },
+    {
+      "client": "ham_queensland",
+      "label": "akiec",
+      "images": "295"
+    },
+    {
+      "client": "ham_queensland",
+      "label": "bcc",
+      "images": "296"
+    },
+    {
+      "client": "ham_queensland",
+      "label": "bkl",
+      "images": "490"
+    },
+    {
+      "client": "ham_queensland",
+      "label": "df",
+      "images": "30"
+    },
+    {
+      "client": "ham_queensland",
+      "label": "mel",
+      "images": "342"
+    },
+    {
+      "client": "ham_queensland",
+      "label": "nv",
+      "images": "803"
+    },
+    {
+      "client": "ham_queensland",
+      "label": "vasc",
+      "images": "3"
+    },
+    {
+      "client": "ham_vienna",
+      "label": "akiec",
+      "images": "32"
+    },
+    {
+      "client": "ham_vienna",
+      "label": "bcc",
+      "images": "218"
+    },
+    {
+      "client": "ham_vienna",
+      "label": "bkl",
+      "images": "609"
+    },
+    {
+      "client": "ham_vienna",
+      "label": "df",
+      "images": "85"
+    },
+    {
+      "client": "ham_vienna",
+      "label": "mel",
+      "images": "771"
+    },
+    {
+      "client": "ham_vienna",
+      "label": "nv",
+      "images": "5902"
+    },
+    {
+      "client": "ham_vienna",
+      "label": "vasc",
+      "images": "139"
+    },
+    {
+      "client": "msk",
+      "label": "akiec",
+      "images": "137"
+    },
+    {
+      "client": "msk",
+      "label": "bcc",
+      "images": "351"
+    },
+    {
+      "client": "msk",
+      "label": "bkl",
+      "images": "547"
+    },
+    {
+      "client": "msk",
+      "label": "df",
+      "images": "35"
+    },
+    {
+      "client": "msk",
+      "label": "mel",
+      "images": "606"
+    },
+    {
+      "client": "msk",
+      "label": "nv",
+      "images": "1413"
+    },
+    {
+      "client": "msk",
+      "label": "vasc",
+      "images": "65"
+    }
+  ]
+}
