@@ -205,6 +205,8 @@ def ham_rows(ham_meta: pd.DataFrame, collection: int, fetch: Fetch = http_json) 
             row = flatten(record, "ham10000", collection)
             row["lesion_id"] = by_id.loc[record["isic_id"], "lesion_id"]
             row["label"] = by_id.loc[record["isic_id"], "dx"]
+            # HAM10000's own record of which institution the image came from.
+            row["ham_dataset"] = by_id.loc[record["isic_id"], "dataset"]
             rows.append(row)
     missing = set(by_id.index) - {r["isic_id"] for r in rows}
     if missing:

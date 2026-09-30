@@ -126,7 +126,12 @@ def test_site_rows_deduplicates_and_enforces_the_recorded_selection() -> None:
 
 def test_ham_rows_take_labels_and_lesions_from_ham_metadata() -> None:
     meta = pd.DataFrame(
-        {"image_id": ["ISIC_1", "ISIC_2"], "lesion_id": ["HAM_1", "HAM_1"], "dx": ["nv", "nv"]}
+        {
+            "image_id": ["ISIC_1", "ISIC_2"],
+            "lesion_id": ["HAM_1", "HAM_1"],
+            "dx": ["nv", "nv"],
+            "dataset": ["rosendahl", "rosendahl"],
+        }  # fmt: skip
     )
     pages = {212: [record("ISIC_1", "IL_9"), record("ISIC_2", "IL_9"), record("ISIC_99")]}
     rows = ham_rows(meta, 212, fake_fetch(pages))

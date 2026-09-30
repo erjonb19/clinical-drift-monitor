@@ -13,10 +13,11 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 import pandas as pd
 
-from cdm.splits import SPLITS, assign_splits, split_fingerprint
+from cdm.splits import HAM, SPLITS, assign_splits, site_labels, split_fingerprint
 
 NEEDS_ATTRIBUTION = ("CC-BY", "CC-BY-NC")
 
@@ -56,18 +57,40 @@ def latest_joined(
     return frame.reset_index(drop=True)
 
 
-def with_splits(frame: pd.DataFrame, seed: int) -> pd.DataFrame:
-    """Add the ``split`` column. Shared by the pipeline (inside applyInPandas) and tests."""
+def roles(config: Mapping[str, Any]) -> dict[str, str]:
+    """Source to role: HAM10000 and the configured client sites are ``client``; every other
+    site is ``held_out``."""
+    sites = config.get("sites", {})
+    return {HAM: "client", **{name: spec.get("role", "held_out") for name, spec in sites.items()}}
+
+
+def label_rule(config: Mapping[str, Any]) -> list[str]:
+    return list(config.get("label_policy", {}).get("unlabelled_at_sites", []))
+
+
+def with_splits(frame: pd.DataFrame, config: Mapping[str, Any]) -> pd.DataFrame:
+    """Apply the site label rule, then add ``split``, ``client`` and ``role``.
+
+    Shared by the pipeline (inside applyInPandas) and tests. HAM10000's client is its
+    institution, from HAM10000's own ``dataset`` column (``ham_dataset``).
+    """
     frame = frame.reset_index(drop=True)
-    return frame.assign(split=assign_splits(frame, seed))
+    frame = frame.assign(label=site_labels(frame, label_rule(config)))
+    role = roles(config)
+    clients = [source for source, r in role.items() if r == "client"]
+    frame = frame.assign(split=assign_splits(frame, config["ham10000"]["split_seed"], clients))
+    by_dataset = config["ham10000"].get("clients_by_dataset", {})
+    ham_client = frame.get("ham_dataset", pd.Series(None, index=frame.index)).map(by_dataset)
+    client = frame["source"].where(frame["source"] != HAM, ham_client)
+    return frame.assign(client=client, role=frame["source"].map(role))
 
 
 def silver_frame(
-    metadata: pd.DataFrame, manifest: pd.DataFrame, landed: pd.DataFrame, seed: int
+    metadata: pd.DataFrame, manifest: pd.DataFrame, landed: pd.DataFrame, config: Mapping[str, Any]
 ) -> pd.DataFrame:
     """The frame the gates check: every ingest run's metadata and manifest rows, plus the
-    SHA-256 of each landed file, reduced to the latest row per image and split."""
-    return with_splits(latest_joined(metadata, manifest, landed), seed)
+    SHA-256 of each landed file, reduced to the latest row per image, labelled and split."""
+    return with_splits(latest_joined(metadata, manifest, landed), config)
 
 
 def split_computed(frame: pd.DataFrame) -> Gate:
@@ -152,7 +175,35 @@ def files_match_manifest(frame: pd.DataFrame) -> Gate:
     return Gate("files_match_manifest", len(wrong), _examples(wrong))
 
 
-def run_all(frame: pd.DataFrame, config: Mapping[str, object]) -> list[Gate]:
+def roles_respected(frame: pd.DataFrame) -> Gate:
+    """Held-out sites are never split for training, and every client has train, val and
+    test images. Images with no client are left to every_client_image_has_a_client."""
+    held = frame[(frame["role"] == "held_out") & (frame["split"] != "score")]["isic_id"]
+    clients = frame[frame["role"] == "client"]
+    incomplete = [
+        str(c) for c, g in clients.groupby("client") if not set(SPLITS) <= set(g["split"])
+    ]
+    detail = _examples([*held, *(f"client {c} lacks a split" for c in incomplete)])
+    return Gate("roles_respected", len(held) + len(incomplete), detail)
+
+
+def site_label_rule_applied(frame: pd.DataFrame, unlabelled: Iterable[str]) -> Gate:
+    """No site image whose diagnosis the label rule excludes still carries a label."""
+    bad = frame[
+        (frame["source"] != HAM)
+        & frame.get("diagnosis_3", pd.Series(None, index=frame.index)).isin(list(unlabelled))
+        & frame["label"].notna()
+    ]["isic_id"]
+    return Gate("site_label_rule_applied", len(bad), _examples(bad))
+
+
+def every_client_image_has_a_client(frame: pd.DataFrame) -> Gate:
+    """Every image of a client source maps to a client (for HAM10000, its institution)."""
+    missing = frame[(frame["role"] == "client") & frame["client"].isna()]["isic_id"]
+    return Gate("every_client_image_has_a_client", len(missing), _examples(missing))
+
+
+def run_all(frame: pd.DataFrame, config: Mapping[str, Any]) -> list[Gate]:
     ham_cfg = config["ham10000"]
     assert isinstance(ham_cfg, Mapping)
     allowed = config["license_allowed"]
@@ -170,4 +221,7 @@ def run_all(frame: pd.DataFrame, config: Mapping[str, object]) -> list[Gate]:
         no_duplicate_files(frame[frame["sha256"].notna()]),
         every_image_landed(frame),
         files_match_manifest(frame),
+        roles_respected(frame),
+        site_label_rule_applied(frame, label_rule(config)),
+        every_client_image_has_a_client(frame),
     ]

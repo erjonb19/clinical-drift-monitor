@@ -4,60 +4,66 @@ from __future__ import annotations
 
 import io
 from collections.abc import Callable
+from typing import Any
 
 import pandas as pd
 import pytest
 from PIL import Image
 
-from cdm.gates import run_all
+from cdm.gates import run_all, with_splits
 from cdm.images import SIZE, DecodeError, decode_resize
-from cdm.splits import assign_splits, lesion_split, split_fingerprint
+from cdm.splits import assign_splits, split_fingerprint
+
+SCC = "Squamous cell carcinoma, NOS"
 
 
-def clean_frame() -> tuple[pd.DataFrame, dict[str, object]]:
-    ham_rows = []
-    for dx, n_lesions in {"nv": 12, "mel": 6, "bcc": 6}.items():
-        for k in range(n_lesions):
-            for j in range(2):
-                ham_rows.append(
-                    {"isic_id": f"ISIC_H{dx}{k}{j}", "lesion_id": f"HAM_{dx}{k}", "dx": dx}
-                )
-    ham = pd.DataFrame(ham_rows)
-    split = lesion_split(ham, seed=0)
-    ham = ham.assign(
-        split=split,
-        label=ham["dx"],
-        isic_label=ham["dx"],
-        source="ham10000",
-        license="CC-BY-NC",
-        attribution="MILK study team",
-    ).drop(columns="dx")
+def base_config() -> dict[str, Any]:
+    return {
+        "license_allowed": ["CC-0", "CC-BY", "CC-BY-NC"],
+        "ham10000": {"split_seed": 0, "clients_by_dataset": {"vidir_modern": "ham_vienna"}},
+        "sites": {"barcelona": {"role": "held_out"}},
+        "label_policy": {"unlabelled_at_sites": [SCC]},
+    }
+
+
+def ham_raw(lesions: dict[str, int]) -> pd.DataFrame:
+    rows = [
+        {"isic_id": f"ISIC_H{dx}{k}{j}", "lesion_id": f"HAM_{dx}{k}", "label": dx}
+        for dx, n in lesions.items()
+        for k in range(n)
+        for j in range(2)
+    ]
+    return pd.DataFrame(rows).assign(
+        isic_label=lambda f: f["label"], source="ham10000", license="CC-BY-NC",
+        attribution="MILK study team", ham_dataset="vidir_modern", diagnosis_3=None,
+    )  # fmt: skip
+
+
+def clean_frame() -> tuple[pd.DataFrame, dict[str, Any]]:
     site = pd.DataFrame(
         {
             "isic_id": ["ISIC_S1", "ISIC_S2", "ISIC_S3"],
             "lesion_id": ["IL_1", "IL_1", "IL_2"],
-            "split": "score",
             "label": ["nv", "nv", None],
             "isic_label": ["nv", "nv", None],
             "source": "barcelona",
             "license": ["CC-0", "CC-0", "CC-BY"],
             "attribution": ["Anonymous", "Anonymous", "Hospital"],
+            "diagnosis_3": ["Nevus", "Nevus", None],
         }
     )
-    frame = pd.concat([ham, site], ignore_index=True)
-    frame["sha256"] = [f"{i:064x}" for i in range(len(frame))]
-    frame["manifest_sha256"] = frame["sha256"]
-    config: dict[str, object] = {
-        "license_allowed": ["CC-0", "CC-BY", "CC-BY-NC"],
-        "ham10000": {
-            "split_fingerprint": split_fingerprint(ham, ham["split"]),
-            "class_counts": ham["label"].value_counts().to_dict(),
-        },
-    }
+    raw = pd.concat([ham_raw({"nv": 12, "mel": 6, "bcc": 6}), site], ignore_index=True)
+    raw["sha256"] = [f"{i:064x}" for i in range(len(raw))]
+    raw["manifest_sha256"] = raw["sha256"]
+    config = base_config()
+    frame = with_splits(raw, config)
+    ham = frame[frame["source"] == "ham10000"]
+    config["ham10000"]["split_fingerprint"] = split_fingerprint(ham, ham["split"])
+    config["ham10000"]["class_counts"] = ham["label"].value_counts().to_dict()
     return frame, config
 
 
-def failing(frame: pd.DataFrame, config: dict[str, object]) -> set[str]:
+def failing(frame: pd.DataFrame, config: dict[str, Any]) -> set[str]:
     return {g.name for g in run_all(frame, config) if g.violations}
 
 
@@ -82,6 +88,7 @@ def drop_a_label(f: pd.DataFrame) -> None:
 
 def ham_image_in_a_site(f: pd.DataFrame) -> None:
     f.loc[len(f)] = {**f.loc[_first_ham(f)].to_dict(), "source": "barcelona", "split": "score",
+                     "client": "barcelona", "role": "held_out",
                      "sha256": "f" * 64, "manifest_sha256": "f" * 64}  # fmt: skip
 
 
@@ -106,6 +113,20 @@ def file_changed_after_ingest(f: pd.DataFrame) -> None:
     f.at[len(f) - 1, "sha256"] = "e" * 64
 
 
+def held_out_image_in_training(f: pd.DataFrame) -> None:
+    """A labelled held-out image put into training."""
+    f.at[int(f.index[f["isic_id"] == "ISIC_S1"][0]), "split"] = "train"
+
+
+def scc_keeps_its_label_at_a_site(f: pd.DataFrame) -> None:
+    i = len(f) - 1
+    f.at[i, "diagnosis_3"], f.at[i, "label"] = SCC, "akiec"
+
+
+def ham_image_without_a_client(f: pd.DataFrame) -> None:
+    f.at[_first_ham(f), "client"] = None
+
+
 def wrong_mapping(f: pd.DataFrame) -> None:
     f.at[_first_ham(f), "isic_label"] = "bkl"
 
@@ -125,6 +146,9 @@ def wrong_mapping(f: pd.DataFrame) -> None:
         (wrong_mapping, {"diagnosis_mapping_matches_ham10000"}),
         (file_never_landed, {"every_image_landed"}),
         (file_changed_after_ingest, {"files_match_manifest"}),
+        (held_out_image_in_training, {"roles_respected"}),
+        (scc_keeps_its_label_at_a_site, {"site_label_rule_applied"}),
+        (ham_image_without_a_client, {"every_client_image_has_a_client"}),
     ],
 )
 def test_each_breakage_fails_its_gate(
@@ -164,3 +188,28 @@ def test_a_split_that_cannot_be_stratified_fails_a_named_gate() -> None:
     small = frame.loc[keep + one_bcc].reset_index(drop=True)
     small["split"] = assign_splits(small, seed=0)
     assert "split_computed" in failing(small, config)
+
+
+def test_client_site_split_leaves_ham10000_unchanged_and_applies_the_scc_rule() -> None:
+    ham = ham_raw({"nv": 20, "mel": 10, "bcc": 10})
+    site_rows = [
+        {"isic_id": f"ISIC_B{dx}{k}", "lesion_id": f"IL_B{dx}{k}", "label": dx, "diagnosis_3": d3}
+        for dx, d3, n in (("nv", "Nevus", 20), ("mel", "Melanoma, NOS", 10),
+                          ("akiec", "Solar or actinic keratosis", 10), ("akiec", SCC, 4))
+        for k in range(n)
+    ]  # fmt: skip
+    site = pd.DataFrame(site_rows).assign(source="barcelona", isic_label=lambda f: f["label"])
+    config = base_config()
+    config["sites"] = {"barcelona": {"role": "client"}}
+    alone = with_splits(ham, config)
+    together = with_splits(pd.concat([ham, site], ignore_index=True), config)
+    ham_after = together[together["source"] == "ham10000"]
+    assert split_fingerprint(ham_after, ham_after["split"]) == split_fingerprint(
+        alone, alone["split"]
+    )
+    bcn = together[together["source"] == "barcelona"]
+    assert set(bcn["split"]) >= {"train", "val", "test"}
+    scc = bcn[bcn["diagnosis_3"] == SCC]
+    assert scc["label"].isna().all() and (scc["split"] == "score").all()
+    assert set(together["client"]) == {"ham_vienna", "barcelona"}
+    assert set(together.loc[together["source"] == "barcelona", "role"]) == {"client"}
