@@ -56,6 +56,8 @@ select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
 [tool.mypy]
 files = ["src", "tests", "scripts", "pipelines"]
 python_version = "3.11"
+# Scripts import shared helpers from each other.
+mypy_path = "scripts"
 strict = true
 # None of these ship type information.
 [[tool.mypy.overrides]]
