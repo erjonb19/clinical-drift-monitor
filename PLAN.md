@@ -57,7 +57,7 @@ Databricks Free Edition is the center, lined up with the Data Engineer Associate
 | Storage and ingest | Unity Catalog volumes and Delta tables, Auto Loader for new images |
 | Bronze to gold | Lakeflow Declarative Pipeline in PySpark, with expectations as the data quality gates |
 | Scheduling | Lakeflow Jobs (monthly drift run) |
-| Training | PyTorch on Databricks serverless GPU after LinkedIn verification, Colab Pro as backup |
+| Training | PyTorch on Databricks serverless GPU (1x A10G, confirmed 2026-09-30), Colab Pro as backup |
 | Tracking and registry | MLflow, model registered in Unity Catalog |
 | Federated learning | Flower |
 | Serving | ONNX Runtime behind FastAPI in Docker, public on Render |
@@ -104,16 +104,17 @@ Sources and route, decided after the week 1 Databricks checks:
 
 This is where the project becomes real ML work: proper federated training and OOD detection tested on a realistic shift.
 
-- [ ] Train on Databricks serverless GPU (Colab Pro as backup), logging every run to MLflow and registering the chosen model in Unity Catalog.
+- [ ] Train on Databricks serverless GPU (1x A10G: 981 images/s synthetic and 397 images/s on real silver images in the check run, `results/phase2/gpu_check.json`), with Colab Pro as the backup. Log every run to Databricks MLflow and register the chosen model in Unity Catalog.
 - [ ] Recompute the gold embeddings and baseline score distributions with the registered model.
-- [ ] Federated training with Flower: one client per site, 20 or more rounds, FedAvg against FedProx, compared to the centralized model's accuracy.
-- [ ] OOD on three kinds of shift: held-out sites (real), PathMNIST (near), CIFAR-10 (far).
-- [ ] One results table: 4 detectors (Mahalanobis, Gram, max softmax, energy) by 3 shifts by centralized vs federated, AUROC and FPR@95TPR, mean over 3 seeds.
-- [ ] Accuracy and drift reported per Fitzpatrick skin type, including which types have too few images to judge.
+- [ ] Barcelona and MSK get lesion-level train, validation and test splits in silver, with gates; HAM10000's split must stay at fingerprint `cc2b196cd5bf58ad` (gate shown passing). At every site except HAM10000, "Squamous cell carcinoma, NOS" becomes unlabelled and scoring-only, because it can be invasive SCC, which HAM10000's akiec class does not include; HAM10000 keeps its own labels.
+- [ ] Federated training with Flower: one client per site (HAM10000 Vienna, HAM10000 Queensland, Barcelona, MSK), 20 or more rounds, FedAvg against FedProx. Centralized and federated models are compared on the same pooled test set: the test splits of all four clients.
+- [ ] OOD on held-out sites (real): Buenos Aires (new hospital) and PAD-UFES-20 (new hospital, smartphone photos); PathMNIST and CIFAR-10 as benchmark sets. Held-out accuracy is reported only on classes that map cleanly to HAM10000's (not "SCC, NOS"); PAD-UFES-20 has no df or vasc images.
+- [ ] One results table: 4 detectors (Mahalanobis, Gram, max softmax, energy) by shift by centralized vs federated, AUROC and FPR@95TPR, mean and range over 3 seeds, with the run-to-run spread. Mahalanobis's PCA size is chosen on validation data only.
+- [ ] Accuracy and drift reported per Fitzpatrick skin type where a site has at least 100 images of that type; smaller groups are listed with counts only. Skin type is recorded only at Buenos Aires and PAD-UFES-20, with 98 images of types IV to VI in total, too few to judge darker skin.
 - [ ] Label delay: the monitor watches drift without labels first, then checks accuracy once diagnoses for that batch are released.
 - [ ] Error analysis: confusion matrix, which classes, sites and skin types fail, and a look at the 20 worst misses.
 
-**Done when** the results table is fully logged and you can say which detector to ship and why.
+**Done when** the results table is fully logged and you can say which detector to ship and why. The rule, fixed before any Phase 2 result: ship the detector with the highest mean AUROC on the two real held-out sites, with FPR@95TPR breaking ties; the benchmark sets are secondary.
 
 ## Phase 3: Serving and MLOps (about 1 week)
 
