@@ -163,7 +163,16 @@ def train_transform() -> transforms.Compose:
     )
 
 
-class HamDataset(Dataset[tuple[torch.Tensor, int]]):
+class LabelledImages(Dataset[tuple[torch.Tensor, int]]):
+    """A dataset of (image, label) pairs that also exposes every label, for class weights."""
+
+    labels: list[int]
+
+    def __len__(self) -> int:
+        return len(self.labels)
+
+
+class HamDataset(LabelledImages):
     def __init__(self, frame: pd.DataFrame, transform: transforms.Compose) -> None:
         self.paths = list(frame["image_path"])
         self.labels = [int(x) for x in frame["label"]]

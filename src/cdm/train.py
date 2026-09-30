@@ -18,7 +18,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
 
-from cdm.data import CLASSES, HamDataset
+from cdm.data import CLASSES, LabelledImages
 
 
 @dataclass(frozen=True)
@@ -69,17 +69,21 @@ def weights_hash(model: nn.Module) -> str:
     return digest.hexdigest()[:16]
 
 
-def seed_everything(seed: int, num_threads: int) -> torch.Generator:
+def seed_everything(seed: int, num_threads: int, gpu: bool = False) -> torch.Generator:
     """Make everything after this call repeatable: call it before building the model.
 
     Seeds every random number generator, fixes the CPU thread count and turns on PyTorch's
     deterministic algorithms. Returns the generator that orders training batches; DataLoader
     workers derive their own seeds from it (``_worker_seed``).
+
+    On GPU the deterministic algorithms run in warn-only mode: EfficientNet's adaptive
+    average pooling has no deterministic CUDA backward, and strict mode would stop training.
+    Whether GPU runs repeat exactly is measured, not assumed (results/phase2).
     """
     # Required by deterministic cuBLAS on GPU; harmless on CPU.
     os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
     torch.set_num_threads(num_threads)
-    torch.use_deterministic_algorithms(True)
+    torch.use_deterministic_algorithms(True, warn_only=gpu)
     random.seed(seed)
     np.random.seed(seed)  # noqa: NPY002 - seeds libraries that use the legacy global state
     torch.manual_seed(seed)
@@ -117,8 +121,8 @@ def balanced_accuracy(
 
 def train(
     model: nn.Module,
-    train_set: HamDataset,
-    val_set: HamDataset,
+    train_set: LabelledImages,
+    val_set: LabelledImages,
     cfg: TrainConfig,
     seed: int,
     device: torch.device,

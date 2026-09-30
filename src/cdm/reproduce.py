@@ -113,7 +113,7 @@ def run_seed(
     # Seed before building the model: the new classifier head draws its initial weights
     # here. Seeding only inside training made a seed's result depend on which seeds ran
     # before it in the same process (docs/silent-failures.md #6).
-    generator = seed_everything(seed, cfg.num_threads)
+    generator = seed_everything(seed, cfg.num_threads, gpu=device.type == "cuda")
     model = build_model(pretrained=cfg.pretrained)
     model, history = train(model, sets["train"], sets["val"], cfg, seed, device, generator, log=log)
     saved: Result | None = None
