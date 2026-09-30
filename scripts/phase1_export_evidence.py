@@ -125,30 +125,40 @@ def pipeline_id(name: str) -> str:
     )
 
 
+def _events(pipeline: str, level: str) -> list[dict[str, Any]]:
+    """Events of one level only: the full log exceeds one 250-event page."""
+    got = cli("pipelines", "list-pipeline-events", pipeline, "--filter", f"level='{level}'",
+              "--max-results", "250")  # fmt: skip
+    return list(got if isinstance(got, list) else got.get("events", []))
+
+
 def demo_updates(pipeline: str, run: dict[str, Any]) -> dict[str, Any]:
-    """Pipeline updates that ended during the demo run, and the expectation messages."""
-    events = cli("pipelines", "list-pipeline-events", pipeline, "--max-results", "250")
-    events = events if isinstance(events, list) else events.get("events", [])
+    """Pipeline updates that failed during the demo run's pipeline task, and the expectation
+    messages Databricks reported (it reports only the first violating row)."""
     task = next(t for t in run["tasks"] if t["task"] == "pipeline")
     start, end = task["start"], task["end"] or datetime.now(UTC).isoformat()
-    within = [e for e in events if start <= e["timestamp"][:19] + "+00:00" <= end]
-    ended = [
-        e
-        for e in within
-        if (e.get("details") or {}).get("update_progress", {}).get("state")
-        in ("FAILED", "COMPLETED")
-    ]
-    violations = [
-        x.get("message", "")
-        for e in within
-        if (e.get("origin") or {}).get("flow_name", "").endswith("gate_results")
-        for x in ((e.get("error") or {}).get("exceptions") or [])[:1]
-        if "EXPECTATION_VIOLATION" in x.get("message", "")
-    ]
+
+    def within(e: dict[str, Any]) -> bool:
+        return bool(start <= e["timestamp"][:19] + "+00:00" <= end)
+
+    errors = [e for e in _events(pipeline, "ERROR") if within(e)]
+    failed = sorted(
+        {e["origin"]["update_id"] for e in errors
+         if e.get("event_type") == "update_progress" and "is FAILED" in e.get("message", "")}
+    )  # fmt: skip
+    violations = sorted(
+        {
+            x.get("message", "")
+            for e in errors + [w for w in _events(pipeline, "WARN") if within(w)]
+            if (e.get("origin") or {}).get("flow_name", "").endswith("gate_results")
+            for x in ((e.get("error") or {}).get("exceptions") or [])[:1]
+            if "EXPECTATION_VIOLATION" in x.get("message", "")
+        }
+    )
     return {
-        "updates_ended": len(ended),
-        "update_states": [e["details"]["update_progress"]["state"] for e in ended],
-        "reported_violations": sorted(set(violations)),
+        "failed_updates": len(failed),
+        "failed_update_ids": failed,
+        "reported_violations": violations,
     }
 
 
