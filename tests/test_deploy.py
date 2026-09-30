@@ -71,3 +71,11 @@ def test_broken_demo_job_fully_refreshes_its_pipeline() -> None:
     template = (REPO / "databricks" / "job_broken.json").read_text(encoding="utf-8")
     tasks = {t["task_key"]: t for t in deploy_module().render(template, VALUES)["tasks"]}
     assert tasks["pipeline"]["pipeline_task"]["full_refresh"] is True
+
+
+def test_pipelines_do_not_retry_failed_updates() -> None:
+    """A failed gate is deterministic: retrying repeats the failure and spends quota. The
+    broken demo retried its update 5 times before this was set (run 561727450716511)."""
+    template = (REPO / "databricks" / "pipeline.json").read_text(encoding="utf-8")
+    spec = deploy_module().render(template, VALUES)
+    assert spec["configuration"]["pipelines.numUpdateRetryAttempts"] == "0"

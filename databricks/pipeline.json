@@ -9,6 +9,7 @@
   "libraries": [{"file": {"path": "{{PIPELINE_FILE}}"}}],
   "environment": {"dependencies": ["{{WHEEL}}"]},
   "configuration": {
+    "pipelines.numUpdateRetryAttempts": "0",
     "cdm.config": "{{CONFIG}}",
     "cdm.images_glob": "{{IMAGES_GLOB}}",
     "cdm.metadata_path": "{{METADATA_PATH}}",
