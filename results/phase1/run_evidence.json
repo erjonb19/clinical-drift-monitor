@@ -1,0 +1,540 @@
+{
+  "exported_utc": "2026-09-30T01:26:34+00:00",
+  "successful_run": {
+    "run_id": 606896740511548,
+    "job_id": 143178896044655,
+    "result": "SUCCESS",
+    "start": "2026-09-29T21:19:44+00:00",
+    "end": "2026-09-29T21:54:33+00:00",
+    "tasks": [
+      {
+        "task": "pipeline",
+        "result": "SUCCESS",
+        "start": "2026-09-29T21:32:22+00:00",
+        "end": "2026-09-29T21:39:35+00:00"
+      },
+      {
+        "task": "gold",
+        "result": "SUCCESS",
+        "start": "2026-09-29T21:39:35+00:00",
+        "end": "2026-09-29T21:54:33+00:00"
+      },
+      {
+        "task": "ingest",
+        "result": "SUCCESS",
+        "start": "2026-09-29T21:19:44+00:00",
+        "end": "2026-09-29T21:32:21+00:00"
+      }
+    ]
+  },
+  "gate_results": [
+    {
+      "name": "class_counts_as_expected",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "diagnosis_mapping_matches_ham10000",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "every_image_landed",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "files_match_manifest",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "license_and_attribution",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "no_duplicate_files",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "no_ham10000_image_in_a_site",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "no_lesion_in_two_splits",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "no_missing_labels",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "split_computed",
+      "violations": "0",
+      "detail": ""
+    },
+    {
+      "name": "split_fingerprint_matches_phase0",
+      "violations": "0",
+      "detail": "got cc2b196cd5bf58ad, expected cc2b196cd5bf58ad"
+    }
+  ],
+  "rows_per_source": [
+    {
+      "source": "barcelona",
+      "bronze_files": "5000",
+      "silver_metadata": "5000",
+      "labelled": "4440",
+      "manifest_unique_sha256": "5000",
+      "silver_images": "5000",
+      "quarantined": "0",
+      "gold_embeddings": "5000"
+    },
+    {
+      "source": "buenos_aires",
+      "bronze_files": "1616",
+      "silver_metadata": "1616",
+      "labelled": "1616",
+      "manifest_unique_sha256": "1616",
+      "silver_images": "1616",
+      "quarantined": "0",
+      "gold_embeddings": "1616"
+    },
+    {
+      "source": "ham10000",
+      "bronze_files": "10015",
+      "silver_metadata": "10015",
+      "labelled": "10015",
+      "manifest_unique_sha256": "10015",
+      "silver_images": "10015",
+      "quarantined": "0",
+      "gold_embeddings": "10015"
+    },
+    {
+      "source": "msk",
+      "bronze_files": "3728",
+      "silver_metadata": "3728",
+      "labelled": "3365",
+      "manifest_unique_sha256": "3728",
+      "silver_images": "3728",
+      "quarantined": "0",
+      "gold_embeddings": "3728"
+    },
+    {
+      "source": "pad_ufes",
+      "bronze_files": "2298",
+      "silver_metadata": "2298",
+      "labelled": "2298",
+      "manifest_unique_sha256": "2298",
+      "silver_images": "2298",
+      "quarantined": "0",
+      "gold_embeddings": "2298"
+    }
+  ],
+  "ham10000_split": [
+    {
+      "split": "test",
+      "images": "1528",
+      "lesions": "1121"
+    },
+    {
+      "split": "train",
+      "images": "7044",
+      "lesions": "5229"
+    },
+    {
+      "split": "val",
+      "images": "1443",
+      "lesions": "1120"
+    }
+  ],
+  "images_per_source": [
+    {
+      "source": "barcelona",
+      "jpeg_quant_min": "29.03",
+      "jpeg_quant_max": "29.03",
+      "min_width": "1024",
+      "max_width": "1024"
+    },
+    {
+      "source": "buenos_aires",
+      "jpeg_quant_min": "29.03",
+      "jpeg_quant_max": "29.03",
+      "min_width": "162",
+      "max_width": "4128"
+    },
+    {
+      "source": "ham10000",
+      "jpeg_quant_min": "29.03",
+      "jpeg_quant_max": "29.03",
+      "min_width": "600",
+      "max_width": "600"
+    },
+    {
+      "source": "msk",
+      "jpeg_quant_min": "29.03",
+      "jpeg_quant_max": "29.03",
+      "min_width": "639",
+      "max_width": "6828"
+    },
+    {
+      "source": "pad_ufes",
+      "jpeg_quant_min": "29.03",
+      "jpeg_quant_max": "29.03",
+      "min_width": "147",
+      "max_width": "3474"
+    }
+  ],
+  "gold_baseline": [
+    {
+      "split": "test",
+      "n": "1528",
+      "q05": "96.65874816798048",
+      "q25": "151.1978336750559",
+      "q50": "221.41138575977047",
+      "q75": "311.586097374573",
+      "q95": "489.63561980366035",
+      "q99": "669.8880605011258",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "split": "val",
+      "n": "1443",
+      "q05": "104.14841133734245",
+      "q25": "154.8700189197923",
+      "q50": "216.60747740273945",
+      "q75": "303.8954784780774",
+      "q95": "481.3658073834773",
+      "q99": "660.6002073600271",
+      "model_version": "imagenet-effb0"
+    }
+  ],
+  "gold_feature_stats": [
+    {
+      "source": "barcelona",
+      "skin_type": "all",
+      "n": "5000",
+      "mean_feature_norm": "17.01612102203369",
+      "mahalanobis_median": "529.6764292461237",
+      "mahalanobis_q95": "850.6598118728638",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "barcelona",
+      "skin_type": "not recorded",
+      "n": "5000",
+      "mean_feature_norm": "17.01612102203369",
+      "mahalanobis_median": "529.6764292461237",
+      "mahalanobis_q95": "850.6598118728638",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "buenos_aires",
+      "skin_type": "I",
+      "n": "114",
+      "mean_feature_norm": "16.81296472382127",
+      "mahalanobis_median": "449.2469698428613",
+      "mahalanobis_q95": "869.8884320610788",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "buenos_aires",
+      "skin_type": "II",
+      "n": "1085",
+      "mean_feature_norm": "16.836334893011276",
+      "mahalanobis_median": "499.85913253162613",
+      "mahalanobis_q95": "889.6188299634094",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "buenos_aires",
+      "skin_type": "III",
+      "n": "275",
+      "mean_feature_norm": "16.195246720747516",
+      "mahalanobis_median": "375.8197068078376",
+      "mahalanobis_q95": "812.6037264303503",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "buenos_aires",
+      "skin_type": "IV",
+      "n": "25",
+      "mean_feature_norm": "15.505708770751953",
+      "mahalanobis_median": "301.83129570090256",
+      "mahalanobis_q95": "697.4081948158304",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "buenos_aires",
+      "skin_type": "all",
+      "n": "1616",
+      "mean_feature_norm": "16.694802890319636",
+      "mahalanobis_median": "467.30007135175333",
+      "mahalanobis_q95": "878.3369535735624",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "buenos_aires",
+      "skin_type": "not recorded",
+      "n": "117",
+      "mean_feature_norm": "16.695423639737644",
+      "mahalanobis_median": "502.96121707593505",
+      "mahalanobis_q95": "718.1048047349929",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "ham10000",
+      "skin_type": "all",
+      "n": "10015",
+      "mean_feature_norm": "15.991884722545393",
+      "mahalanobis_median": "218.16770760633625",
+      "mahalanobis_q95": "518.9431056339794",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "ham10000",
+      "skin_type": "not recorded",
+      "n": "10015",
+      "mean_feature_norm": "15.991884722545393",
+      "mahalanobis_median": "218.16770760633625",
+      "mahalanobis_q95": "518.9431056339794",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "msk",
+      "skin_type": "all",
+      "n": "3728",
+      "mean_feature_norm": "16.132842680671185",
+      "mahalanobis_median": "391.0109048383173",
+      "mahalanobis_q95": "740.4227858824255",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "msk",
+      "skin_type": "not recorded",
+      "n": "3728",
+      "mean_feature_norm": "16.132842680671185",
+      "mahalanobis_median": "391.0109048383173",
+      "mahalanobis_q95": "740.4227858824255",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "pad_ufes",
+      "skin_type": "I",
+      "n": "153",
+      "mean_feature_norm": "16.730661791134505",
+      "mahalanobis_median": "584.1372082850968",
+      "mahalanobis_q95": "879.5113570527308",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "pad_ufes",
+      "skin_type": "II",
+      "n": "876",
+      "mean_feature_norm": "16.691915390153998",
+      "mahalanobis_median": "581.4344346466455",
+      "mahalanobis_q95": "950.8205303153289",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "pad_ufes",
+      "skin_type": "III",
+      "n": "392",
+      "mean_feature_norm": "16.523041250754375",
+      "mahalanobis_median": "552.2857024073619",
+      "mahalanobis_q95": "913.5616348474667",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "pad_ufes",
+      "skin_type": "IV",
+      "n": "62",
+      "mean_feature_norm": "16.937558389479115",
+      "mahalanobis_median": "606.2105745885804",
+      "mahalanobis_q95": "1018.2971802915984",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "pad_ufes",
+      "skin_type": "V",
+      "n": "10",
+      "mean_feature_norm": "16.477033042907713",
+      "mahalanobis_median": "620.4281416578007",
+      "mahalanobis_q95": "943.1502065663832",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "pad_ufes",
+      "skin_type": "VI",
+      "n": "1",
+      "mean_feature_norm": "13.671514511108398",
+      "mahalanobis_median": "800.6124597428895",
+      "mahalanobis_q95": "800.6124597428895",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "pad_ufes",
+      "skin_type": "all",
+      "n": "2298",
+      "mean_feature_norm": "16.530532109000767",
+      "mahalanobis_median": "573.518996921691",
+      "mahalanobis_q95": "944.86801010879",
+      "model_version": "imagenet-effb0"
+    },
+    {
+      "source": "pad_ufes",
+      "skin_type": "not recorded",
+      "n": "804",
+      "mean_feature_norm": "16.29309827771353",
+      "mahalanobis_median": "571.3972067339275",
+      "mahalanobis_q95": "938.1862475318053",
+      "model_version": "imagenet-effb0"
+    }
+  ],
+  "broken_demo": {
+    "runs": [
+      {
+        "run_id": 561727450716511,
+        "job_id": 1119799696513742,
+        "result": "FAILED",
+        "start": "2026-09-30T00:48:16+00:00",
+        "end": "2026-09-30T01:10:30+00:00",
+        "tasks": [
+          {
+            "task": "pipeline",
+            "result": "FAILED",
+            "start": "2026-09-30T00:52:02+00:00",
+            "end": "2026-09-30T01:10:29+00:00"
+          },
+          {
+            "task": "make_broken",
+            "result": "SUCCESS",
+            "start": "2026-09-30T00:48:16+00:00",
+            "end": "2026-09-30T00:52:01+00:00"
+          }
+        ],
+        "failed_updates": 6,
+        "failed_update_ids": [
+          "11ef761b-9c0d-40e7-846a-1c3e199facb0",
+          "30e6d7a5-ab94-43ad-bc71-c817b0a187d4",
+          "3752bba5-af10-4776-8856-5619f54415b4",
+          "4a01a85c-7feb-4ddd-b321-eaa714d26581",
+          "541e7dc6-5375-492b-9146-a1269fbbb218",
+          "91fe1423-dffb-4378-8325-f86c91823cfd"
+        ],
+        "reported_violations": [
+          "[EXPECTATION_VIOLATION.VERBOSITY_ALL] Flow 'workspace.cdm_broken.gate_results' failed to meet the expectation. Violated expectations: 'gate_passes'. Input data: 'Input could not be determined from the violating output record.'. Output record: '{\"name\":\"split_fingerprint_matches_phase0\",\"violations\":1,\"detail\":\"got f68c84e0ec16beea, expected db50c5237ef36a16\"}'. Missing input data: true"
+        ]
+      },
+      {
+        "run_id": 161990905473833,
+        "job_id": 1119799696513742,
+        "result": "FAILED",
+        "start": "2026-09-30T01:17:33+00:00",
+        "end": "2026-09-30T01:24:14+00:00",
+        "tasks": [
+          {
+            "task": "pipeline",
+            "result": "FAILED",
+            "start": "2026-09-30T01:21:41+00:00",
+            "end": "2026-09-30T01:24:13+00:00"
+          },
+          {
+            "task": "make_broken",
+            "result": "SUCCESS",
+            "start": "2026-09-30T01:17:33+00:00",
+            "end": "2026-09-30T01:21:41+00:00"
+          }
+        ],
+        "failed_updates": 1,
+        "failed_update_ids": [
+          "a34475c2-20bf-4ed4-8aba-7a15993e7dcb"
+        ],
+        "reported_violations": [
+          "[EXPECTATION_VIOLATION.VERBOSITY_ALL] Flow 'workspace.cdm_broken.gate_results' failed to meet the expectation. Violated expectations: 'gate_passes'. Input data: 'Input could not be determined from the violating output record.'. Output record: '{\"name\":\"split_fingerprint_matches_phase0\",\"violations\":1,\"detail\":\"got f68c84e0ec16beea, expected db50c5237ef36a16\"}'. Missing input data: true"
+        ]
+      }
+    ],
+    "subset": {
+      "lesions_per_class": 30,
+      "site_images": 20,
+      "seed": 0
+    },
+    "silver_metadata_rows_per_source": {
+      "barcelona": 22,
+      "buenos_aires": 20,
+      "ham10000": 335,
+      "msk": 20,
+      "pad_ufes": 20
+    },
+    "gates_recomputed_with_cdm_gates_run_all": [
+      {
+        "name": "split_computed",
+        "violations": 0,
+        "detail": ""
+      },
+      {
+        "name": "no_lesion_in_two_splits",
+        "violations": 0,
+        "detail": ""
+      },
+      {
+        "name": "split_fingerprint_matches_phase0",
+        "violations": 1,
+        "detail": "got f68c84e0ec16beea, expected db50c5237ef36a16"
+      },
+      {
+        "name": "class_counts_as_expected",
+        "violations": 1,
+        "detail": "bcc: got 48, expected 49"
+      },
+      {
+        "name": "no_missing_labels",
+        "violations": 1,
+        "detail": "ISIC_0024331"
+      },
+      {
+        "name": "no_ham10000_image_in_a_site",
+        "violations": 1,
+        "detail": "ISIC_0024332"
+      },
+      {
+        "name": "license_and_attribution",
+        "violations": 0,
+        "detail": ""
+      },
+      {
+        "name": "diagnosis_mapping_matches_ham10000",
+        "violations": 1,
+        "detail": "ISIC_0024331"
+      },
+      {
+        "name": "no_duplicate_files",
+        "violations": 2,
+        "detail": "ISIC_0024332, ISIC_0024332"
+      },
+      {
+        "name": "every_image_landed",
+        "violations": 0,
+        "detail": ""
+      },
+      {
+        "name": "files_match_manifest",
+        "violations": 0,
+        "detail": ""
+      }
+    ],
+    "quarantine": [
+      {
+        "source": "barcelona",
+        "isic_id": "ISIC_BROKEN_0000001",
+        "error": "cannot decode image: Truncated File Read"
+      }
+    ]
+  }
+}
