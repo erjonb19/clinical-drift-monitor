@@ -17,7 +17,15 @@ dbutils.widgets.text("code_version", "")
 
 # COMMAND ----------
 
-# MAGIC %pip install --quiet $wheel
+# Install the pinned cdm wheel. Widget substitution ($wheel) does not work in %pip here
+# (the first run passed "$wheel" to pip literally), so install from Python.
+import subprocess
+import sys
+
+subprocess.run(
+    [sys.executable, "-m", "pip", "install", "--quiet", dbutils.widgets.get("wheel")],
+    check=True,
+)
 
 # COMMAND ----------
 
