@@ -39,22 +39,32 @@ Known limits, documented rather than fixed:
 - Mahalanobis on CIFAR-10 is unstable and sensitive to PCA size
   ([phase0-note.md](phase0-note.md)).
 
+### Phase 1: data engineering (built 2026-09-29, awaiting sign-off)
+
+Run on Databricks Free Edition; evidence in `results/phase1/run_evidence.json`, explained in
+[phase1-note.md](phase1-note.md).
+
+- Ingest job task (`src/cdm/ingest.py`): lands 22,657 images (HAM10000 10,015 from ISIC
+  collection 212; Barcelona 5,000, capped and pinned; Buenos Aires 1,616; MSK 3,728;
+  PAD-UFES-20 2,298) with a manifest and SHA-256 per file. Reruns download nothing already
+  landed and reuse stored hashes.
+- Declarative pipeline (`pipelines/lakehouse.py`): Auto Loader bronze, silver with Phase 0's
+  split reproduced exactly (`cc2b196cd5bf58ad`), a quarantine table, and 11 gates that fail
+  the update. All 11 passed on real data.
+- Gold job task (`src/cdm/gold.py`): embeddings (model version `imagenet-effb0`), per-image
+  scores, the val/test baseline, and per-site and per-skin-type statistics.
+- Broken-input demo: a small faulted copy fails the update on `gate_results`, once (no
+  retries), with exactly the six expected gates failing.
+- Deployment by CLI (`scripts/deploy_databricks.py`, `databricks/*.json`) and the runbook.
+
+Known limits:
+- Auto Loader's incremental pickup of new files has not been exercised: the one successful
+  update read every file. Phase 3's monthly job is its first real test.
+- Databricks reports only the first failing gate; the rest are confirmed by running
+  `cdm.gates.run_all` on silver, as the note describes.
+- Gold embeddings use pretrained ImageNet features; Phase 2 recomputes them.
+
 ## Scaffolded
-
-### Phase 1: data engineering (code written and tested; not yet run on Databricks)
-
-- ISIC sources (`src/cdm/sources.py`, `config/sites.json`): four sites defined by
-  collection, Barcelona capped at 5,000 images by whole lesions and pinned by fingerprint,
-  HAM10000 taken from ISIC by ID and labelled from its MD5-checked metadata. Checked
-  against the live API from a laptop (`results/phase1/isic_checks.json`).
-- Ingest task (`src/cdm/ingest.py`), declarative pipeline (`pipelines/lakehouse.py`),
-  gold task (`src/cdm/gold.py`), gates (`src/cdm/gates.py`), CLI deployment
-  (`scripts/deploy_databricks.py`, `databricks/*.json`), runbook
-  (`docs/phase1-runbook.md`).
-- Tested in CI without Databricks: every gate, the ingest task end to end on a fake ISIC,
-  the broken-input demo's expected gate failures, image decoding, gold calculations, and
-  the deploy templates. The pipeline file, the CLI commands and the job definitions have
-  not run yet; the first Databricks run is their test.
 
 ### Tooling
 

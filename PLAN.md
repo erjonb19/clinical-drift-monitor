@@ -85,11 +85,11 @@ Every later phase builds on these numbers, so they have to survive a skeptical r
 
 Images get the same medallion treatment as reckoner, so the pipeline is the data engineering proof, not a side step.
 
-- [ ] **Bronze:** raw HAM10000 and ISIC images and metadata as delivered, in a Unity Catalog volume, with a manifest and checksums (the reckoner pattern). Auto Loader picks up new images.
-- [ ] **Silver:** decoded, resized to 224, duplicates removed, lesion-level split wherever the data is used for training, site attached, and skin type attached where ISIC records it, as Delta tables built in PySpark. Sites used only for scoring need de-duplication, not a split.
-- [ ] **Gold:** an embeddings table (image, model version, feature vector), per-site and per-skin-type feature statistics, and the baseline score distributions the drift job compares against. Phase 1 computes embeddings with the pretrained ImageNet EfficientNet-B0 (model version `imagenet-effb0`), because no registered model exists yet; Phase 2 recomputes them with the registered model.
-- [ ] Build it as one Lakeflow Declarative Pipeline, with expectations as the gates: no lesion in two splits, class counts within expected ranges, no missing labels, failed decodes quarantined rather than dropped.
-- [ ] Record each image's license and attribution, and keep only images whose license allows this use.
+- [x] **Bronze:** raw HAM10000 and ISIC images and metadata as delivered, in a Unity Catalog volume, with a manifest and checksums (the reckoner pattern). Auto Loader picks up new images. (Built: ingest is a job task that lands files in the volume, and Auto Loader reads them into the three bronze tables; in the one successful update it read all 22,657 image files. Picking up only new files on a later update has not been exercised yet; Phase 3's monthly drift job is its first real test.)
+- [x] **Silver:** decoded, resized to 224, duplicates removed, lesion-level split wherever the data is used for training, site attached, and skin type attached where ISIC records it, as Delta tables built in PySpark. Sites used only for scoring need de-duplication, not a split. (Built: silver keeps the latest row per image ID; a duplicate file under two IDs fails the `no_duplicate_files` gate rather than being silently dropped.)
+- [x] **Gold:** an embeddings table (image, model version, feature vector), per-site and per-skin-type feature statistics, and the baseline score distributions the drift job compares against. Phase 1 computes embeddings with the pretrained ImageNet EfficientNet-B0 (model version `imagenet-effb0`), because no registered model exists yet; Phase 2 recomputes them with the registered model.
+- [x] Build it as one Lakeflow Declarative Pipeline, with expectations as the gates: no lesion in two splits, class counts within expected ranges, no missing labels, failed decodes quarantined rather than dropped. (Built: the pipeline holds bronze, silver and the 11 gates; gold is a job task after it, because it needs torch.)
+- [x] Record each image's license and attribution, and keep only images whose license allows this use.
 
 Sources and route, decided after the week 1 Databricks checks:
 
