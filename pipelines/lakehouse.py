@@ -34,7 +34,6 @@ spark: SparkSession = _spark
 
 with open(spark.conf.get("cdm.config"), encoding="utf-8") as f:
     CONFIG = json.load(f)
-SEED = int(CONFIG["ham10000"]["split_seed"])
 IMAGES_GLOB = spark.conf.get("cdm.images_glob")
 METADATA_PATH = spark.conf.get("cdm.metadata_path")
 MANIFEST_PATH = spark.conf.get("cdm.manifest_path")
@@ -44,13 +43,16 @@ METADATA_COLUMNS = """
     image_type STRING, pixels_x INT, pixels_y INT, isic_lesion_id STRING, patient_id STRING,
     fitzpatrick_skin_type STRING, sex STRING, age_approx DOUBLE, anatom_site_1 STRING,
     diagnosis_1 STRING, diagnosis_2 STRING, diagnosis_3 STRING, isic_label STRING, url STRING,
-    lesion_id STRING, label STRING, run_id STRING, code_version STRING
+    lesion_id STRING, label STRING, run_id STRING, code_version STRING, ham_dataset STRING
 """
 MANIFEST_COLUMNS = """
     isic_id STRING, source STRING, path STRING, bytes BIGINT, sha256 STRING,
     downloaded BOOLEAN, run_id STRING
 """
-SILVER_METADATA_COLUMNS = METADATA_COLUMNS + ", manifest_sha256 STRING, sha256 STRING, split STRING"
+SILVER_METADATA_COLUMNS = (
+    METADATA_COLUMNS
+    + ", manifest_sha256 STRING, sha256 STRING, split STRING, client STRING, role STRING"
+)
 KEY = ["source", "isic_id"]
 
 
@@ -118,7 +120,7 @@ def silver_metadata() -> DataFrame:
     joined = meta.join(recorded, KEY, "left").join(landed, KEY, "left")
     # One group: the split is a whole-dataset computation (Phase 0's function).
     return _one_group(joined).applyInPandas(
-        lambda pdf: with_splits(pdf.drop(columns="_group"), SEED), SILVER_METADATA_COLUMNS
+        lambda pdf: with_splits(pdf.drop(columns="_group"), CONFIG), SILVER_METADATA_COLUMNS
     )
 
 

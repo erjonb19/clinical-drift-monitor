@@ -48,7 +48,12 @@ def fake_jpeg(url: str) -> bytes:
 @pytest.fixture
 def world(tmp_path: Path) -> tuple[Path, dict[str, Any], Any]:
     rows = [
-        {"image_id": f"ISIC_H{dx}{k}{j}", "lesion_id": f"HAM_{dx}{k}", "dx": dx}
+        {
+            "image_id": f"ISIC_H{dx}{k}{j}",
+            "lesion_id": f"HAM_{dx}{k}",
+            "dx": dx,
+            "dataset": "rosendahl" if k % 3 == 0 else "vidir_modern",
+        }  # fmt: skip
         for dx, n in {"nv": 30, "mel": 15, "bcc": 15}.items()
         for k in range(n)
         for j in range(2)
@@ -67,6 +72,7 @@ def world(tmp_path: Path) -> tuple[Path, dict[str, Any], Any]:
             "split_seed": 0,
             "split_fingerprint": split_fingerprint(ham, lesion_split(ham, seed=0)),
             "class_counts": ham["dx"].value_counts().to_dict(),
+            "clients_by_dataset": {"rosendahl": "ham_queensland", "vidir_modern": "ham_vienna"},
         },
         "sites": {"barcelona": {"collections": [249]}},
     }
@@ -107,8 +113,7 @@ def gate_frame(
         for d in image_dirs
         for p in d.glob("*/*.jpg")
     )
-    seed = config["ham10000"]["split_seed"]
-    return silver_frame(read(root / "metadata"), read(root / "manifest"), landed, seed)
+    return silver_frame(read(root / "metadata"), read(root / "manifest"), landed, config)
 
 
 def failing(frame: pd.DataFrame, config: dict[str, Any]) -> set[str]:

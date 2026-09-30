@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterable
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -66,19 +67,26 @@ def split_fingerprint(meta: pd.DataFrame, split: pd.Series) -> str:
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
-def assign_splits(frame: pd.DataFrame, seed: int, trained_source: str = "ham10000") -> pd.Series:
-    """Phase 0's lesion split for the trained source; every other source is ``score``.
+HAM = "ham10000"
 
-    ``frame`` needs ``source``, ``lesion_id`` and ``label`` columns. Phase 1 sites are used
-    only for scoring (PLAN.md), so they get no train, validation or test split yet. Images of
-    the trained source without a label get ``unlabelled``, and a split that cannot be
-    stratified gives ``unsplittable``, so gates report both by name instead of a library
-    error ending the run.
+
+def site_labels(frame: pd.DataFrame, unlabelled_diagnoses: Iterable[str]) -> pd.Series:
+    """Labels after the site label rule: at every source except HAM10000, images whose ISIC
+    ``diagnosis_3`` is in ``unlabelled_diagnoses`` lose their label and become scoring-only.
+
+    "Squamous cell carcinoma, NOS" is the case: ISIC uses it for HAM10000's intraepithelial
+    carcinomas (akiec), but at other sites it can be invasive SCC, which akiec excludes.
+    HAM10000 keeps its own labels, which come from HAM10000's metadata.
     """
-    split = pd.Series("score", index=frame.index, name="split")
-    trained = frame[frame["source"] == trained_source]
-    labelled = trained[trained["label"].notna()]
-    split.loc[trained.index] = "unlabelled"
+    ambiguous = (frame["source"] != HAM) & frame.get(
+        "diagnosis_3", pd.Series(None, index=frame.index)
+    ).isin(list(unlabelled_diagnoses))
+    return frame["label"].where(~ambiguous, None)
+
+
+def _split_source(rows: pd.DataFrame, seed: int, unlabelled: str) -> pd.Series:
+    split = pd.Series(unlabelled, index=rows.index)
+    labelled = rows[rows["label"].notna()]
     if len(labelled):
         try:
             lesions = labelled[["lesion_id", "label"]].rename(columns={"label": "dx"})
@@ -87,4 +95,22 @@ def assign_splits(frame: pd.DataFrame, seed: int, trained_source: str = "ham1000
             # Too few lesions of some class to stratify: the split_computed gate names it.
             assigned = pd.Series("unsplittable", index=labelled.index)
         split.loc[labelled.index] = assigned
+    return split
+
+
+def assign_splits(frame: pd.DataFrame, seed: int, clients: Iterable[str] = (HAM,)) -> pd.Series:
+    """A lesion-level train, val and test split for each client source; ``score`` otherwise.
+
+    Each client source is split on its own rows, so HAM10000's split is exactly Phase 0's
+    whatever other sources are present. Unlabelled HAM10000 images get ``unlabelled`` (an
+    error the missing-label gate names); unlabelled site images get ``score``, because sites
+    have images outside HAM10000's classes by design. A split that cannot be stratified gives
+    ``unsplittable``, which the split_computed gate names.
+    """
+    split = pd.Series("score", index=frame.index, name="split")
+    for source in clients:
+        rows = frame[frame["source"] == source]
+        if len(rows):
+            unlabelled = "unlabelled" if source == HAM else "score"
+            split.loc[rows.index] = _split_source(rows, seed, unlabelled)
     return split
