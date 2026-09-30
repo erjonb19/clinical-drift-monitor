@@ -1,0 +1,24 @@
+{
+  "job_run_id": 643274334576252,
+  "notebook": "databricks/notebooks/gpu_check.py",
+  "code_version": "16f0f6a",
+  "wheel": "/Volumes/workspace/cdm/raw/deploy/c74e24a/cdm-0.1.0-py3-none-any.whl",
+  "compute": {
+    "hardware_accelerator": "GPU_1xA10",
+    "base_environment": "databricks_ai_v6"
+  },
+  "execution_seconds": 199,
+  "setup_seconds": 13,
+  "result": {
+    "torch": "2.11.0+cu130",
+    "cuda_available": true,
+    "gpu": "NVIDIA A10G",
+    "gpu_memory_gb": 23.7,
+    "nvidia_smi": "NVIDIA A10G, 580.126.16, 23028 MiB",
+    "synthetic_train_images_per_s": 981,
+    "same_seed_identical_weights": true,
+    "decode_images_per_s": 365,
+    "real_train_images_per_s": 397,
+    "real_images": 2048
+  }
+}
