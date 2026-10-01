@@ -21,6 +21,7 @@ for name, default in {
     "color_jitter": "false",
     "warmup_epochs": "0",
     "label_smoothing": "0.0",
+    "view": "full",
     "determinism_check": "false",
     "score_test": "false",
 }.items():
@@ -75,6 +76,7 @@ CFG = TrainConfig(
     color_jitter=flag("color_jitter"),
     warmup_epochs=int(dbutils.widgets.get("warmup_epochs")),
     label_smoothing=float(dbutils.widgets.get("label_smoothing")),
+    view=dbutils.widgets.get("view"),
 )
 device = torch.device("cuda")
 user = spark.sql("SELECT current_user()").first()[0]

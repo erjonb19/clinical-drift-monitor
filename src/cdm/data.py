@@ -189,11 +189,40 @@ class RandomRotation:
         return rotated.crop((left, top, left + w, top + h))
 
 
+class CenterSquare:
+    """Crop the centred square whose side is the image's shorter side.
+
+    On silver stored uncropped (shorter side 384), this is the field of view that rung 0's
+    224 px centre-cropped storage had, so ``view="center"`` reproduces rung 0's training view.
+    """
+
+    def __call__(self, img: Image.Image) -> Image.Image:
+        side = min(img.size)
+        left, top = (img.width - side) // 2, (img.height - side) // 2
+        return img.crop((left, top, left + side, top + side))
+
+
+class MixedView:
+    """Half the time the centred square, otherwise the full image (torch's seeded RNG)."""
+
+    def __call__(self, img: Image.Image) -> Image.Image:
+        return CenterSquare()(img) if float(torch.rand(1)) < 0.5 else img
+
+
+VIEWS = ("full", "center", "mix")
+
+
 def train_transform(
-    size: int = IMAGE_SIZE, rotate: bool = False, color_jitter: bool = False
+    size: int = IMAGE_SIZE, rotate: bool = False, color_jitter: bool = False, view: str = "full"
 ) -> transforms.Compose:
-    """Phase 0's augmentation by default; rotations and colour jitter are optional."""
-    steps: list[object] = [RandomRotation()] if rotate else []
+    """Phase 0's augmentation by default; rotations, colour jitter and the field of view
+    the random crops come from (``full``, ``center`` or a 50/50 ``mix``) are optional."""
+    if view not in VIEWS:
+        raise ValueError(f"unknown view {view!r}: use one of {VIEWS}")
+    views: dict[str, list[object]] = {"full": [], "center": [CenterSquare()], "mix": [MixedView()]}
+    steps = views[view]
+    if rotate:
+        steps.append(RandomRotation())
     steps += [
         transforms.RandomResizedCrop(size, scale=(0.5, 1.0)),
         transforms.RandomHorizontalFlip(),

@@ -56,7 +56,7 @@ def split_datasets(
     for split in SPLITS:
         part = frame[frame["split"] == split]
         transform = (
-            train_transform(cfg.image_size, cfg.rotate, cfg.color_jitter)
+            train_transform(cfg.image_size, cfg.rotate, cfg.color_jitter, cfg.view)
             if split == "train"
             else eval_transform(cfg.image_size)
         )
