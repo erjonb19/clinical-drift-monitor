@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
-from sklearn.metrics import balanced_accuracy_score, recall_score, roc_auc_score
+from sklearn.metrics import balanced_accuracy_score, confusion_matrix, recall_score, roc_auc_score
 
 from cdm.data import CLASSES
 
@@ -45,6 +45,12 @@ def classification_metrics(labels: NDArray[np.int64], logits: Array) -> dict[str
         "recall": {c: float(r) for c, r in zip(CLASSES, recalls, strict=True)},
         "support": {c: int(np.sum(labels == i)) for i, c in enumerate(CLASSES)},
     }
+
+
+def confusion(labels: NDArray[np.int64], logits: Array) -> list[list[int]]:
+    """Confusion matrix in CLASSES order: row = true class, column = predicted class."""
+    matrix = confusion_matrix(labels, logits.argmax(axis=1), labels=list(range(len(CLASSES))))
+    return [[int(v) for v in row] for row in matrix]
 
 
 def summarize(values: Sequence[float]) -> dict[str, float]:
