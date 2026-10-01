@@ -1,0 +1,1498 @@
+{
+  "exported_utc": "2026-10-01T14:29:27+00:00",
+  "training": {
+    "run_id": 55487360702205,
+    "result": "SUCCESS",
+    "attempts": [
+      {
+        "task_run_id": 1058992814318799,
+        "attempt": 0,
+        "result": "SUCCESS",
+        "message": "",
+        "execution_ms": 445000,
+        "setup_ms": 25000
+      }
+    ],
+    "output": {
+      "code_version": "96f9f64",
+      "seed": 0,
+      "epochs": 12,
+      "gpu": "NVIDIA A10G",
+      "cpu_count": 16,
+      "num_workers": 8,
+      "torch": "2.11.0+cu130",
+      "load_seconds": 37,
+      "images": {
+        "train": 12289,
+        "val": 2566,
+        "test": 2623
+      },
+      "images_by_client_and_split": {
+        "barcelona/test": 635,
+        "barcelona/train": 3016,
+        "barcelona/val": 658,
+        "ham_queensland/test": 356,
+        "ham_queensland/train": 1596,
+        "ham_queensland/val": 307,
+        "ham_vienna/test": 1172,
+        "ham_vienna/train": 5448,
+        "ham_vienna/val": 1136,
+        "msk/test": 460,
+        "msk/train": 2229,
+        "msk/val": 465
+      },
+      "determinism_one_epoch": {
+        "same_seed_identical_weights": true,
+        "weights": [
+          "861d496670dbed48",
+          "861d496670dbed48"
+        ],
+        "seconds_per_epoch": 47
+      },
+      "mlflow_run_id": "e435fe55797e4f878d47f6552ee8d6d9",
+      "train_seconds": 229,
+      "train_images_per_s": 643,
+      "best_epoch": 5,
+      "history": [
+        {
+          "epoch": 1,
+          "train_loss": 1.2262033817047875,
+          "val_bacc": 0.5971276239723166
+        },
+        {
+          "epoch": 2,
+          "train_loss": 0.807004451751709,
+          "val_bacc": 0.599758846111346
+        },
+        {
+          "epoch": 3,
+          "train_loss": 0.6574093527160585,
+          "val_bacc": 0.6259693994179433
+        },
+        {
+          "epoch": 4,
+          "train_loss": 0.5272781911771744,
+          "val_bacc": 0.6161441369527593
+        },
+        {
+          "epoch": 5,
+          "train_loss": 0.4377678146896263,
+          "val_bacc": 0.678837970188571
+        },
+        {
+          "epoch": 6,
+          "train_loss": 0.3475810824893415,
+          "val_bacc": 0.6671766420141658
+        },
+        {
+          "epoch": 7,
+          "train_loss": 0.2921121099886174,
+          "val_bacc": 0.6683718386274246
+        },
+        {
+          "epoch": 8,
+          "train_loss": 0.24609523627441376,
+          "val_bacc": 0.6351295295859029
+        },
+        {
+          "epoch": 9,
+          "train_loss": 0.21313985367305577,
+          "val_bacc": 0.6268657588719753
+        },
+        {
+          "epoch": 10,
+          "train_loss": 0.1999892422463745,
+          "val_bacc": 0.6214860366667203
+        },
+        {
+          "epoch": 11,
+          "train_loss": 0.1755984511304026,
+          "val_bacc": 0.6303570425505308
+        },
+        {
+          "epoch": 12,
+          "train_loss": 0.18625115510076284,
+          "val_bacc": 0.6339477003523246
+        }
+      ],
+      "test_pooled": {
+        "balanced_accuracy": 0.6335933483194358,
+        "accuracy": 0.6778497903164316,
+        "recall": {
+          "akiec": 0.44144144144144143,
+          "bcc": 0.652014652014652,
+          "bkl": 0.7184466019417476,
+          "df": 0.7878787878787878,
+          "mel": 0.5879629629629629,
+          "nv": 0.7210932025227751,
+          "vasc": 0.5263157894736842
+        },
+        "support": {
+          "akiec": 111,
+          "bcc": 273,
+          "bkl": 309,
+          "df": 33,
+          "mel": 432,
+          "nv": 1427,
+          "vasc": 38
+        }
+      },
+      "test_bacc_by_client": {
+        "barcelona": 0.4555970209247114,
+        "ham_queensland": 0.648291446208113,
+        "ham_vienna": 0.6875842895006657,
+        "msk": 0.5259851916009551
+      },
+      "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/centralized-seed0/model.pt",
+      "weights_sha256": "8548c09c9998b781"
+    }
+  },
+  "re_evaluation": {
+    "run_id": 10233542795545,
+    "result": "SUCCESS",
+    "attempts": [
+      {
+        "task_run_id": 364424178254757,
+        "attempt": 0,
+        "result": "FAILED",
+        "message": "The compute environment for your task failed to start within 900 seconds. This is usually a transient issue. Please retry, and if the problem persists, contact Databricks support. (Cluster: 1001-140858-756e61c2-cnx, driver URL: https://0.0.0.0, start date: 2026-10-01 14:09:10 UTC)",
+        "execution_ms": 900000,
+        "setup_ms": 14000
+      },
+      {
+        "task_run_id": 556192397209065,
+        "attempt": 1,
+        "result": "SUCCESS",
+        "message": "",
+        "execution_ms": 191000,
+        "setup_ms": 13000
+      }
+    ],
+    "output": {
+      "code_version": "5727ba9",
+      "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/centralized-seed0/model.pt",
+      "weights_sha256": "8548c09c9998b781",
+      "evaluation": {
+        "val": {
+          "pooled": {
+            "balanced_accuracy": 0.678837970188571,
+            "accuracy": 0.6745908028059237,
+            "recall": {
+              "akiec": 0.5315315315315315,
+              "bcc": 0.6928571428571428,
+              "bkl": 0.6666666666666666,
+              "df": 0.75,
+              "mel": 0.6015424164524421,
+              "nv": 0.6984572230014026,
+              "vasc": 0.8108108108108109
+            },
+            "support": {
+              "akiec": 111,
+              "bcc": 280,
+              "bkl": 291,
+              "df": 32,
+              "mel": 389,
+              "nv": 1426,
+              "vasc": 37
+            },
+            "confusion": [
+              [
+                59,
+                16,
+                23,
+                5,
+                8,
+                0,
+                0
+              ],
+              [
+                10,
+                194,
+                40,
+                19,
+                13,
+                3,
+                1
+              ],
+              [
+                35,
+                14,
+                194,
+                9,
+                29,
+                9,
+                1
+              ],
+              [
+                0,
+                1,
+                5,
+                24,
+                0,
+                2,
+                0
+              ],
+              [
+                14,
+                9,
+                68,
+                13,
+                234,
+                49,
+                2
+              ],
+              [
+                20,
+                30,
+                154,
+                45,
+                158,
+                996,
+                23
+              ],
+              [
+                0,
+                3,
+                1,
+                1,
+                0,
+                2,
+                30
+              ]
+            ]
+          },
+          "ham10000_both_institutions": {
+            "balanced_accuracy": 0.7436030522517278,
+            "accuracy": 0.7491337491337491,
+            "recall": {
+              "akiec": 0.5365853658536586,
+              "bcc": 0.6666666666666666,
+              "bkl": 0.8012820512820513,
+              "df": 0.9285714285714286,
+              "mel": 0.5833333333333334,
+              "nv": 0.7757390417940877,
+              "vasc": 0.9130434782608695
+            },
+            "support": {
+              "akiec": 41,
+              "bcc": 72,
+              "bkl": 156,
+              "df": 14,
+              "mel": 156,
+              "nv": 981,
+              "vasc": 23
+            },
+            "confusion": [
+              [
+                22,
+                5,
+                8,
+                2,
+                4,
+                0,
+                0
+              ],
+              [
+                2,
+                48,
+                11,
+                7,
+                2,
+                2,
+                0
+              ],
+              [
+                13,
+                3,
+                125,
+                4,
+                7,
+                4,
+                0
+              ],
+              [
+                0,
+                0,
+                1,
+                13,
+                0,
+                0,
+                0
+              ],
+              [
+                3,
+                3,
+                25,
+                7,
+                91,
+                26,
+                1
+              ],
+              [
+                13,
+                12,
+                73,
+                27,
+                78,
+                761,
+                17
+              ],
+              [
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                21
+              ]
+            ]
+          },
+          "barcelona": {
+            "balanced_accuracy": 0.648637282166694,
+            "accuracy": 0.6003039513677811,
+            "recall": {
+              "akiec": 0.68,
+              "bcc": 0.803921568627451,
+              "bkl": 0.21818181818181817,
+              "df": 0.6666666666666666,
+              "mel": 0.722972972972973,
+              "nv": 0.44871794871794873,
+              "vasc": 1.0
+            },
+            "support": {
+              "akiec": 50,
+              "bcc": 153,
+              "bkl": 55,
+              "df": 12,
+              "mel": 148,
+              "nv": 234,
+              "vasc": 6
+            },
+            "confusion": [
+              [
+                34,
+                7,
+                3,
+                2,
+                4,
+                0,
+                0
+              ],
+              [
+                7,
+                123,
+                9,
+                4,
+                9,
+                1,
+                0
+              ],
+              [
+                18,
+                8,
+                12,
+                1,
+                14,
+                2,
+                0
+              ],
+              [
+                0,
+                0,
+                4,
+                8,
+                0,
+                0,
+                0
+              ],
+              [
+                5,
+                5,
+                14,
+                2,
+                107,
+                15,
+                0
+              ],
+              [
+                4,
+                9,
+                56,
+                6,
+                54,
+                105,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                6
+              ]
+            ]
+          },
+          "ham_queensland": {
+            "balanced_accuracy": 0.7222249075068624,
+            "accuracy": 0.5895765472312704,
+            "recall": {
+              "akiec": 0.5789473684210527,
+              "bcc": 0.68,
+              "bkl": 0.746031746031746,
+              "df": 1.0,
+              "mel": 0.5952380952380952,
+              "nv": 0.45535714285714285,
+              "vasc": 1.0
+            },
+            "support": {
+              "akiec": 38,
+              "bcc": 50,
+              "bkl": 63,
+              "df": 1,
+              "mel": 42,
+              "nv": 112,
+              "vasc": 1
+            },
+            "confusion": [
+              [
+                22,
+                5,
+                6,
+                1,
+                4,
+                0,
+                0
+              ],
+              [
+                2,
+                34,
+                8,
+                3,
+                2,
+                1,
+                0
+              ],
+              [
+                9,
+                0,
+                47,
+                0,
+                6,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                11,
+                0,
+                25,
+                5,
+                0
+              ],
+              [
+                4,
+                3,
+                23,
+                3,
+                27,
+                51,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1
+              ]
+            ]
+          },
+          "ham_vienna": {
+            "balanced_accuracy": 0.6718885120810718,
+            "accuracy": 0.7922535211267606,
+            "recall": {
+              "akiec": 0.0,
+              "bcc": 0.6363636363636364,
+              "bkl": 0.8387096774193549,
+              "df": 0.9230769230769231,
+              "mel": 0.5789473684210527,
+              "nv": 0.8170310701956272,
+              "vasc": 0.9090909090909091
+            },
+            "support": {
+              "akiec": 3,
+              "bcc": 22,
+              "bkl": 93,
+              "df": 13,
+              "mel": 114,
+              "nv": 869,
+              "vasc": 22
+            },
+            "confusion": [
+              [
+                0,
+                0,
+                2,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                14,
+                3,
+                4,
+                0,
+                1,
+                0
+              ],
+              [
+                4,
+                3,
+                78,
+                4,
+                1,
+                3,
+                0
+              ],
+              [
+                0,
+                0,
+                1,
+                12,
+                0,
+                0,
+                0
+              ],
+              [
+                2,
+                3,
+                14,
+                7,
+                66,
+                21,
+                1
+              ],
+              [
+                9,
+                9,
+                50,
+                24,
+                51,
+                710,
+                16
+              ],
+              [
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                20
+              ]
+            ]
+          },
+          "msk": {
+            "balanced_accuracy": 0.4564749962889076,
+            "accuracy": 0.5483870967741935,
+            "recall": {
+              "akiec": 0.15,
+              "bcc": 0.41818181818181815,
+              "bkl": 0.7125,
+              "df": 0.5,
+              "mel": 0.4235294117647059,
+              "nv": 0.6161137440758294,
+              "vasc": 0.375
+            },
+            "support": {
+              "akiec": 20,
+              "bcc": 55,
+              "bkl": 80,
+              "df": 6,
+              "mel": 85,
+              "nv": 211,
+              "vasc": 8
+            },
+            "confusion": [
+              [
+                3,
+                4,
+                12,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                23,
+                20,
+                8,
+                2,
+                0,
+                1
+              ],
+              [
+                4,
+                3,
+                57,
+                4,
+                8,
+                3,
+                1
+              ],
+              [
+                0,
+                1,
+                0,
+                3,
+                0,
+                2,
+                0
+              ],
+              [
+                6,
+                1,
+                29,
+                4,
+                36,
+                8,
+                1
+              ],
+              [
+                3,
+                9,
+                25,
+                12,
+                26,
+                130,
+                6
+              ],
+              [
+                0,
+                2,
+                0,
+                1,
+                0,
+                2,
+                3
+              ]
+            ]
+          }
+        },
+        "test": {
+          "pooled": {
+            "balanced_accuracy": 0.6335933483194358,
+            "accuracy": 0.6778497903164316,
+            "recall": {
+              "akiec": 0.44144144144144143,
+              "bcc": 0.652014652014652,
+              "bkl": 0.7184466019417476,
+              "df": 0.7878787878787878,
+              "mel": 0.5879629629629629,
+              "nv": 0.7210932025227751,
+              "vasc": 0.5263157894736842
+            },
+            "support": {
+              "akiec": 111,
+              "bcc": 273,
+              "bkl": 309,
+              "df": 33,
+              "mel": 432,
+              "nv": 1427,
+              "vasc": 38
+            },
+            "confusion": [
+              [
+                49,
+                15,
+                30,
+                2,
+                13,
+                2,
+                0
+              ],
+              [
+                15,
+                178,
+                45,
+                15,
+                10,
+                7,
+                3
+              ],
+              [
+                19,
+                13,
+                222,
+                11,
+                28,
+                16,
+                0
+              ],
+              [
+                2,
+                3,
+                1,
+                26,
+                1,
+                0,
+                0
+              ],
+              [
+                21,
+                20,
+                48,
+                13,
+                254,
+                74,
+                2
+              ],
+              [
+                19,
+                30,
+                141,
+                42,
+                145,
+                1029,
+                21
+              ],
+              [
+                2,
+                8,
+                5,
+                1,
+                2,
+                0,
+                20
+              ]
+            ]
+          },
+          "ham10000_both_institutions": {
+            "balanced_accuracy": 0.7456954778138692,
+            "accuracy": 0.7670157068062827,
+            "recall": {
+              "akiec": 0.5094339622641509,
+              "bcc": 0.7159090909090909,
+              "bkl": 0.8475609756097561,
+              "df": 0.9047619047619048,
+              "mel": 0.6172839506172839,
+              "nv": 0.7915851272015656,
+              "vasc": 0.8333333333333334
+            },
+            "support": {
+              "akiec": 53,
+              "bcc": 88,
+              "bkl": 164,
+              "df": 21,
+              "mel": 162,
+              "nv": 1022,
+              "vasc": 18
+            },
+            "confusion": [
+              [
+                27,
+                3,
+                14,
+                2,
+                6,
+                1,
+                0
+              ],
+              [
+                6,
+                63,
+                9,
+                4,
+                3,
+                2,
+                1
+              ],
+              [
+                5,
+                1,
+                139,
+                2,
+                9,
+                8,
+                0
+              ],
+              [
+                2,
+                0,
+                0,
+                19,
+                0,
+                0,
+                0
+              ],
+              [
+                6,
+                0,
+                16,
+                5,
+                100,
+                33,
+                2
+              ],
+              [
+                10,
+                11,
+                68,
+                25,
+                84,
+                809,
+                15
+              ],
+              [
+                0,
+                0,
+                1,
+                1,
+                1,
+                0,
+                15
+              ]
+            ]
+          },
+          "barcelona": {
+            "balanced_accuracy": 0.4555970209247114,
+            "accuracy": 0.5448818897637795,
+            "recall": {
+              "akiec": 0.5135135135135135,
+              "bcc": 0.6962962962962963,
+              "bkl": 0.5076923076923077,
+              "df": 0.42857142857142855,
+              "mel": 0.6065573770491803,
+              "nv": 0.4365482233502538,
+              "vasc": 0.0
+            },
+            "support": {
+              "akiec": 37,
+              "bcc": 135,
+              "bkl": 65,
+              "df": 7,
+              "mel": 183,
+              "nv": 197,
+              "vasc": 11
+            },
+            "confusion": [
+              [
+                19,
+                12,
+                1,
+                0,
+                4,
+                1,
+                0
+              ],
+              [
+                9,
+                94,
+                12,
+                9,
+                6,
+                3,
+                2
+              ],
+              [
+                14,
+                6,
+                33,
+                2,
+                8,
+                2,
+                0
+              ],
+              [
+                0,
+                2,
+                1,
+                3,
+                1,
+                0,
+                0
+              ],
+              [
+                9,
+                20,
+                14,
+                3,
+                111,
+                26,
+                0
+              ],
+              [
+                5,
+                18,
+                36,
+                12,
+                37,
+                86,
+                3
+              ],
+              [
+                2,
+                6,
+                2,
+                0,
+                1,
+                0,
+                0
+              ]
+            ]
+          },
+          "ham_queensland": {
+            "balanced_accuracy": 0.648291446208113,
+            "accuracy": 0.6460674157303371,
+            "recall": {
+              "akiec": 0.5625,
+              "bcc": 0.7142857142857143,
+              "bkl": 0.875,
+              "df": 0.6,
+              "mel": 0.6296296296296297,
+              "nv": 0.5083333333333333,
+              "vasc": 0.0
+            },
+            "support": {
+              "akiec": 48,
+              "bcc": 49,
+              "bkl": 80,
+              "df": 5,
+              "mel": 54,
+              "nv": 120,
+              "vasc": 0
+            },
+            "confusion": [
+              [
+                27,
+                3,
+                9,
+                2,
+                6,
+                1,
+                0
+              ],
+              [
+                3,
+                35,
+                7,
+                1,
+                0,
+                2,
+                1
+              ],
+              [
+                4,
+                0,
+                70,
+                0,
+                3,
+                3,
+                0
+              ],
+              [
+                2,
+                0,
+                0,
+                3,
+                0,
+                0,
+                0
+              ],
+              [
+                2,
+                0,
+                4,
+                0,
+                34,
+                14,
+                0
+              ],
+              [
+                3,
+                1,
+                19,
+                2,
+                32,
+                61,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          "ham_vienna": {
+            "balanced_accuracy": 0.6875842895006657,
+            "accuracy": 0.8037542662116041,
+            "recall": {
+              "akiec": 0.0,
+              "bcc": 0.717948717948718,
+              "bkl": 0.8214285714285714,
+              "df": 1.0,
+              "mel": 0.6111111111111112,
+              "nv": 0.8292682926829268,
+              "vasc": 0.8333333333333334
+            },
+            "support": {
+              "akiec": 5,
+              "bcc": 39,
+              "bkl": 84,
+              "df": 16,
+              "mel": 108,
+              "nv": 902,
+              "vasc": 18
+            },
+            "confusion": [
+              [
+                0,
+                0,
+                5,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                3,
+                28,
+                2,
+                3,
+                3,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                69,
+                2,
+                6,
+                5,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                16,
+                0,
+                0,
+                0
+              ],
+              [
+                4,
+                0,
+                12,
+                5,
+                66,
+                19,
+                2
+              ],
+              [
+                7,
+                10,
+                49,
+                23,
+                52,
+                748,
+                13
+              ],
+              [
+                0,
+                0,
+                1,
+                1,
+                1,
+                0,
+                15
+              ]
+            ]
+          },
+          "msk": {
+            "balanced_accuracy": 0.5259851916009551,
+            "accuracy": 0.5652173913043478,
+            "recall": {
+              "akiec": 0.14285714285714285,
+              "bcc": 0.42,
+              "bkl": 0.625,
+              "df": 0.8,
+              "mel": 0.4942528735632184,
+              "nv": 0.6442307692307693,
+              "vasc": 0.5555555555555556
+            },
+            "support": {
+              "akiec": 21,
+              "bcc": 50,
+              "bkl": 80,
+              "df": 5,
+              "mel": 87,
+              "nv": 208,
+              "vasc": 9
+            },
+            "confusion": [
+              [
+                3,
+                0,
+                15,
+                0,
+                3,
+                0,
+                0
+              ],
+              [
+                0,
+                21,
+                24,
+                2,
+                1,
+                2,
+                0
+              ],
+              [
+                0,
+                6,
+                50,
+                7,
+                11,
+                6,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                4,
+                0,
+                0,
+                0
+              ],
+              [
+                6,
+                0,
+                18,
+                5,
+                43,
+                15,
+                0
+              ],
+              [
+                4,
+                1,
+                37,
+                5,
+                24,
+                134,
+                3
+              ],
+              [
+                0,
+                2,
+                2,
+                0,
+                0,
+                0,
+                5
+              ]
+            ]
+          }
+        }
+      },
+      "class_order": [
+        "akiec",
+        "bcc",
+        "bkl",
+        "df",
+        "mel",
+        "nv",
+        "vasc"
+      ],
+      "class_mix": {
+        "barcelona/test": {
+          "akiec": 37,
+          "bcc": 135,
+          "bkl": 65,
+          "df": 7,
+          "mel": 183,
+          "nv": 197,
+          "vasc": 11
+        },
+        "barcelona/train": {
+          "akiec": 191,
+          "bcc": 678,
+          "bkl": 271,
+          "df": 25,
+          "mel": 807,
+          "nv": 1016,
+          "vasc": 28
+        },
+        "barcelona/val": {
+          "akiec": 50,
+          "bcc": 153,
+          "bkl": 55,
+          "df": 12,
+          "mel": 148,
+          "nv": 234,
+          "vasc": 6
+        },
+        "ham_queensland/test": {
+          "akiec": 48,
+          "bcc": 49,
+          "bkl": 80,
+          "df": 5,
+          "mel": 54,
+          "nv": 120,
+          "vasc": 0
+        },
+        "ham_queensland/train": {
+          "akiec": 209,
+          "bcc": 197,
+          "bkl": 347,
+          "df": 24,
+          "mel": 246,
+          "nv": 571,
+          "vasc": 2
+        },
+        "ham_queensland/val": {
+          "akiec": 38,
+          "bcc": 50,
+          "bkl": 63,
+          "df": 1,
+          "mel": 42,
+          "nv": 112,
+          "vasc": 1
+        },
+        "ham_vienna/test": {
+          "akiec": 5,
+          "bcc": 39,
+          "bkl": 84,
+          "df": 16,
+          "mel": 108,
+          "nv": 902,
+          "vasc": 18
+        },
+        "ham_vienna/train": {
+          "akiec": 24,
+          "bcc": 157,
+          "bkl": 432,
+          "df": 56,
+          "mel": 549,
+          "nv": 4131,
+          "vasc": 99
+        },
+        "ham_vienna/val": {
+          "akiec": 3,
+          "bcc": 22,
+          "bkl": 93,
+          "df": 13,
+          "mel": 114,
+          "nv": 869,
+          "vasc": 22
+        },
+        "msk/test": {
+          "akiec": 21,
+          "bcc": 50,
+          "bkl": 80,
+          "df": 5,
+          "mel": 87,
+          "nv": 208,
+          "vasc": 9
+        },
+        "msk/train": {
+          "akiec": 96,
+          "bcc": 246,
+          "bkl": 387,
+          "df": 24,
+          "mel": 434,
+          "nv": 994,
+          "vasc": 48
+        },
+        "msk/val": {
+          "akiec": 20,
+          "bcc": 55,
+          "bkl": 80,
+          "df": 6,
+          "mel": 85,
+          "nv": 211,
+          "vasc": 8
+        }
+      },
+      "original_resolution": {
+        "barcelona": {
+          "width": [
+            1024,
+            1024,
+            1024
+          ],
+          "height": [
+            1024,
+            1024,
+            1024
+          ]
+        },
+        "ham_queensland": {
+          "width": [
+            600,
+            600,
+            600
+          ],
+          "height": [
+            450,
+            450,
+            450
+          ]
+        },
+        "ham_vienna": {
+          "width": [
+            600,
+            600,
+            600
+          ],
+          "height": [
+            450,
+            450,
+            450
+          ]
+        },
+        "msk": {
+          "width": [
+            639,
+            4288,
+            6828
+          ],
+          "height": [
+            602,
+            2848,
+            6688
+          ]
+        }
+      },
+      "corner_brightness": {
+        "barcelona": {
+          "median": 53.95,
+          "share_below_20": 0.4528
+        },
+        "ham_queensland": {
+          "median": 164.6,
+          "share_below_20": 0.0004
+        },
+        "ham_vienna": {
+          "median": 166.0,
+          "share_below_20": 0.0001
+        },
+        "msk": {
+          "median": 157.7,
+          "share_below_20": 0.0003
+        }
+      },
+      "diagnoses_behind_labels": {
+        "barcelona": {
+          "akiec <- Solar or actinic keratosis": 278,
+          "bcc <- Basal cell carcinoma": 966,
+          "bkl <- Seborrheic keratosis": 358,
+          "bkl <- Solar lentigo": 33,
+          "df <- Dermatofibroma": 44,
+          "mel <- Melanoma, NOS": 1138,
+          "nv <- Nevus": 1447,
+          "vasc <- nan": 45
+        },
+        "ham_queensland": {
+          "akiec <- Solar or actinic keratosis": 109,
+          "akiec <- Squamous cell carcinoma, NOS": 186,
+          "bcc <- Basal cell carcinoma": 296,
+          "bkl <- Pigmented benign keratosis": 490,
+          "df <- Dermatofibroma": 30,
+          "mel <- Melanoma, NOS": 342,
+          "nv <- Nevus": 803,
+          "vasc <- nan": 3
+        },
+        "ham_vienna": {
+          "akiec <- Solar or actinic keratosis": 21,
+          "akiec <- Squamous cell carcinoma, NOS": 11,
+          "bcc <- Basal cell carcinoma": 218,
+          "bkl <- Pigmented benign keratosis": 609,
+          "df <- Dermatofibroma": 85,
+          "mel <- Melanoma, NOS": 771,
+          "nv <- Nevus": 5902,
+          "vasc <- nan": 139
+        },
+        "msk": {
+          "akiec <- Solar or actinic keratosis": 129,
+          "akiec <- Squamous cell carcinoma in situ": 8,
+          "bcc <- Basal cell carcinoma": 351,
+          "bkl <- Lichen planus like keratosis": 137,
+          "bkl <- Seborrheic keratosis": 355,
+          "bkl <- Solar lentigo": 55,
+          "df <- Dermatofibroma": 35,
+          "mel <- Melanoma Invasive": 107,
+          "mel <- Melanoma in situ": 135,
+          "mel <- Melanoma, NOS": 364,
+          "nv <- Nevus": 1413,
+          "vasc <- Angiokeratoma": 19,
+          "vasc <- Hemangioma": 36,
+          "vasc <- Hemorrhage": 6,
+          "vasc <- Pyogenic granuloma": 2,
+          "vasc <- nan": 2
+        }
+      }
+    }
+  },
+  "gpu_billing_by_job_run": [
+    {
+      "usage_date": "2026-09-30",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
+      "job_run_id": "643274334576252",
+      "dbu": "0.2644",
+      "first_window": "2026-09-30T02:15:00.000Z",
+      "last_window": "2026-09-30T02:25:00.000Z"
+    },
+    {
+      "usage_date": "2026-09-30",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
+      "job_run_id": "304922773145083",
+      "dbu": "0.1344",
+      "first_window": "2026-09-30T03:25:00.000Z",
+      "last_window": "2026-09-30T03:35:00.000Z"
+    },
+    {
+      "usage_date": "2026-09-30",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
+      "job_run_id": "55487360702205",
+      "dbu": "0.6058",
+      "first_window": "2026-09-30T03:30:00.000Z",
+      "last_window": "2026-09-30T03:45:00.000Z"
+    },
+    {
+      "usage_date": "2026-09-30",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
+      "job_run_id": "911992146364689",
+      "dbu": "0.1595",
+      "first_window": "2026-09-30T03:30:00.000Z",
+      "last_window": "2026-09-30T03:35:00.000Z"
+    }
+  ]
+}
