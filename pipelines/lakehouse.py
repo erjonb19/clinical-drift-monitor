@@ -124,16 +124,26 @@ def silver_metadata() -> DataFrame:
     )
 
 
-@F.pandas_udf("png BINARY, width INT, height INT, jpeg_quant_mean DOUBLE, error STRING")
+# Stored image settings (Phase 2 rung 1a); without a "silver" section: 224 px PNG, cropped.
+SILVER = CONFIG.get("silver", {})
+
+
+@F.pandas_udf("image BINARY, width INT, height INT, jpeg_quant_mean DOUBLE, error STRING")
 def _decode(content: pd.Series) -> pd.DataFrame:
     rows: list[tuple[bytes | None, int | None, int | None, float | None, str | None]] = []
     for data in content:
         try:
-            d = decode_resize(bytes(data))
-            rows.append((d.png, d.width, d.height, d.jpeg_quant_mean, None))
+            d = decode_resize(
+                bytes(data),
+                size=int(SILVER.get("shorter_side", 224)),
+                center_crop=bool(SILVER.get("center_crop", True)),
+                fmt=str(SILVER.get("format", "PNG")),
+                quality=int(SILVER.get("quality", 95)),
+            )
+            rows.append((d.image, d.width, d.height, d.jpeg_quant_mean, None))
         except DecodeError as exc:
             rows.append((None, None, None, None, str(exc)))
-    return pd.DataFrame(rows, columns=["png", "width", "height", "jpeg_quant_mean", "error"])
+    return pd.DataFrame(rows, columns=["image", "width", "height", "jpeg_quant_mean", "error"])
 
 
 @dp.materialized_view(comment="Every landed file decoded once; errors kept for quarantine.")
@@ -152,7 +162,7 @@ def silver_images() -> DataFrame:
 
 @dp.materialized_view(comment="Files that failed to decode: kept and reported, never dropped.")
 def silver_quarantine() -> DataFrame:
-    return spark.read.table("silver_decoded").filter("error IS NOT NULL").drop("png")
+    return spark.read.table("silver_decoded").filter("error IS NOT NULL").drop("image")
 
 
 # ---- gates ----------------------------------------------------------------------------------

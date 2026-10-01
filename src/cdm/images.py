@@ -16,7 +16,7 @@ class DecodeError(ValueError):
 
 @dataclass(frozen=True)
 class Decoded:
-    png: bytes  # SIZE x SIZE RGB, lossless so no second round of JPEG artifacts
+    image: bytes  # the stored image (PNG or JPEG, per the silver settings)
     width: int
     height: int
     jpeg_quant_mean: float | None  # mean of the luminance quantisation table; None if not JPEG
@@ -33,8 +33,16 @@ def jpeg_quant_mean(img: Image.Image) -> float | None:
     return round(float(sum(first)) / len(first), 2)
 
 
-def decode_resize(data: bytes) -> Decoded:
-    """Shorter side to SIZE, then centre crop to SIZE x SIZE, as in Phase 0's eval transform."""
+def decode_resize(
+    data: bytes,
+    size: int = SIZE,
+    center_crop: bool = True,
+    fmt: str = "PNG",
+    quality: int = 95,
+) -> Decoded:
+    """Shorter side to ``size``; then, by default, centre crop to ``size`` x ``size`` and store
+    as PNG, as in Phase 0's eval transform. Without the crop the whole field of view is kept,
+    so training crops can come from the full image (Phase 2 tuning rung 1a)."""
     try:
         with Image.open(io.BytesIO(data)) as img:
             img.load()
@@ -43,26 +51,30 @@ def decode_resize(data: bytes) -> Decoded:
             rgb = img.convert("RGB")
     except (UnidentifiedImageError, OSError, SyntaxError) as exc:
         raise DecodeError(f"cannot decode image: {exc}") from exc
-    scale = SIZE / min(width, height)
+    scale = size / min(width, height)
     resized = rgb.resize(
-        (max(SIZE, round(width * scale)), max(SIZE, round(height * scale))),
+        (max(size, round(width * scale)), max(size, round(height * scale))),
         Image.Resampling.BILINEAR,
     )
-    left = (resized.width - SIZE) // 2
-    top = (resized.height - SIZE) // 2
-    cropped = resized.crop((left, top, left + SIZE, top + SIZE))
+    if center_crop:
+        left = (resized.width - size) // 2
+        top = (resized.height - size) // 2
+        resized = resized.crop((left, top, left + size, top + size))
     out = io.BytesIO()
-    cropped.save(out, format="PNG")
+    if fmt == "JPEG":
+        resized.save(out, format="JPEG", quality=quality)
+    else:
+        resized.save(out, format="PNG")
     return Decoded(out.getvalue(), width, height, quant)
 
 
-def corner_brightness(png: bytes, patch: int = 16) -> float:
+def corner_brightness(image: bytes, patch: int = 16) -> float:
     """Mean grey level (0 to 255) of the four corner patches of an image.
 
     Dermoscopy images framed by a black circular vignette have dark corners; images filling
     the frame do not. Used to compare how sites frame their images.
     """
-    with Image.open(io.BytesIO(png)) as img:
+    with Image.open(io.BytesIO(image)) as img:
         grey = img.convert("L")
         w, h = grey.size
         boxes = [(0, 0), (w - patch, 0), (0, h - patch), (w - patch, h - patch)]

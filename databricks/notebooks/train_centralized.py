@@ -1,30 +1,40 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Phase 2: centralized training on serverless GPU
-# MAGIC Trains EfficientNet-B0 on the four clients' pooled training splits from
-# MAGIC `workspace.cdm.silver_images`, evaluates on the pooled test set (all four clients' test
-# MAGIC splits) and per client, logs to MLflow and saves the weights to the volume. With
-# MAGIC `determinism_check`, it first trains one epoch twice with the same seed and compares
-# MAGIC the weights. The result is returned as the notebook's exit value (JSON).
+# MAGIC # Phase 2: centralized training on serverless GPU (one tuning rung per run)
+# MAGIC Trains on the four clients' pooled training splits from `workspace.cdm.silver_images`
+# MAGIC with the settings in the widgets, scores **validation only** (pooled, per client,
+# MAGIC HAM10000 both institutions, Barcelona bordered and non-bordered), logs to MLflow and
+# MAGIC saves the best-validation weights. Test is scored only with `score_test=true`, which
+# MAGIC the tuning ladder uses once, at the end. Returns the result as the exit value (JSON).
 
 # COMMAND ----------
 
-dbutils.widgets.text("wheel", "")
-dbutils.widgets.text("seed", "0")
-dbutils.widgets.text("epochs", "12")
-dbutils.widgets.text("determinism_check", "true")
-dbutils.widgets.text("code_version", "")
+for name, default in {
+    "wheel": "",
+    "code_version": "",
+    "rung": "",
+    "seed": "0",
+    "epochs": "12",
+    "arch": "b0",
+    "image_size": "224",
+    "rotate": "false",
+    "color_jitter": "false",
+    "warmup_epochs": "0",
+    "label_smoothing": "0.0",
+    "determinism_check": "false",
+    "score_test": "false",
+}.items():
+    dbutils.widgets.text(name, default)
 
 # COMMAND ----------
 
 # Install the pinned cdm wheel. Widget substitution ($wheel) does not work in %pip here
-# (the first run passed "$wheel" to pip literally), so install from Python.
+# (run 911992146364689 passed "$wheel" to pip literally), so install from Python.
 import subprocess
 import sys
 
 subprocess.run(
-    [sys.executable, "-m", "pip", "install", "--quiet", dbutils.widgets.get("wheel")],
-    check=True,
+    [sys.executable, "-m", "pip", "install", "--quiet", dbutils.widgets.get("wheel")], check=True
 )
 
 # COMMAND ----------
@@ -35,108 +45,116 @@ import time
 from pathlib import Path
 
 import mlflow
-import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from cdm.eval import classification_metrics
+from cdm.data import eval_transform
+from cdm.images import corner_brightness
 from cdm.ood import extract
-from cdm.silver import split_datasets
+from cdm.report import score_rows, support
+from cdm.silver import EncodedImages, split_datasets
+from cdm.splits import CLASSES
 from cdm.train import TrainConfig, build_model, seed_everything, train, weights_hash
 
+
+def flag(name: str) -> bool:
+    return dbutils.widgets.get(name).lower() == "true"
+
+
+RUNG = dbutils.widgets.get("rung")
 SEED = int(dbutils.widgets.get("seed"))
-EPOCHS = int(dbutils.widgets.get("epochs"))
-CHECK = dbutils.widgets.get("determinism_check").lower() == "true"
-CODE = dbutils.widgets.get("code_version")
 WORKERS = max(1, min(8, (os.cpu_count() or 2) - 1))
+ARCH = dbutils.widgets.get("arch")
+CFG = TrainConfig(
+    epochs=int(dbutils.widgets.get("epochs")),
+    batch_size=32 if ARCH == "b3" else 64,
+    num_workers=WORKERS,
+    arch=ARCH,
+    image_size=int(dbutils.widgets.get("image_size")),
+    rotate=flag("rotate"),
+    color_jitter=flag("color_jitter"),
+    warmup_epochs=int(dbutils.widgets.get("warmup_epochs")),
+    label_smoothing=float(dbutils.widgets.get("label_smoothing")),
+)
 device = torch.device("cuda")
 user = spark.sql("SELECT current_user()").first()[0]
 result: dict[str, object] = {
-    "code_version": CODE,
+    "rung": RUNG,
+    "code_version": dbutils.widgets.get("code_version"),
     "seed": SEED,
-    "epochs": EPOCHS,
+    "config": {k: getattr(CFG, k) for k in CFG.__dataclass_fields__},
     "gpu": torch.cuda.get_device_name(0),
-    "cpu_count": os.cpu_count(),
-    "num_workers": WORKERS,
     "torch": torch.__version__,
 }
 
 # COMMAND ----------
 
 start = time.perf_counter()
+table = spark.read.table("workspace.cdm.silver_images")
+image_col = "image" if "image" in table.columns else "png"  # silver used "png" before rung 1a
 rows = (
-    spark.read.table("workspace.cdm.silver_images")
-    .where("role = 'client' AND split IN ('train', 'val', 'test') AND label IS NOT NULL")
-    .select("isic_id", "client", "split", "label", "png")
+    table.where("role = 'client' AND split IN ('train', 'val', 'test') AND label IS NOT NULL")
+    .select("isic_id", "client", "split", "label", "lesion_id", image_col)
+    .withColumnRenamed(image_col, "image")
     .orderBy("client", "isic_id")
     .toPandas()
 )
-sets = split_datasets(rows)
+rows["bordered"] = [corner_brightness(b) < 20 for b in rows["image"]]
+sets = split_datasets(rows, CFG)
 result["load_seconds"] = round(time.perf_counter() - start)
 result["images"] = {s: len(d) for s, d in sets.items()}
-result["images_by_client_and_split"] = rows.groupby(["client", "split"]).size().to_dict()
-result["images_by_client_and_split"] = {
-    f"{c}/{s}": int(n) for (c, s), n in result["images_by_client_and_split"].items()
-}
-print(json.dumps(result))
+result["support"] = support(rows)
+print(json.dumps({k: result[k] for k in ("rung", "config", "images")}))
 
 # COMMAND ----------
 
 
-def run(epochs: int, seed: int) -> tuple[torch.nn.Module, list[dict[str, float]], float]:
-    cfg = TrainConfig(epochs=epochs, num_workers=WORKERS)
+def run(cfg: TrainConfig, seed: int) -> tuple[torch.nn.Module, list[dict[str, float]], float]:
     generator = seed_everything(seed, cfg.num_threads, gpu=True)
-    model = build_model(pretrained=True)
+    model = build_model(pretrained=True, arch=cfg.arch)
     t0 = time.perf_counter()
     model, history = train(model, sets["train"], sets["val"], cfg, seed, device, generator)
     return model, history, time.perf_counter() - t0
 
 
-if CHECK:
-    a, _, seconds = run(1, SEED)
-    b, _, _ = run(1, SEED)
-    result["determinism_one_epoch"] = {
-        "same_seed_identical_weights": weights_hash(a) == weights_hash(b),
-        "weights": [weights_hash(a), weights_hash(b)],
-        "seconds_per_epoch": round(seconds),
-    }
-    print(json.dumps(result["determinism_one_epoch"]))
+if flag("determinism_check"):
+    one = TrainConfig(**{**result["config"], "epochs": 1})
+    a, _, _ = run(one, SEED)
+    b, _, _ = run(one, SEED)
+    result["determinism_one_epoch"] = {"identical": weights_hash(a) == weights_hash(b)}
 
 # COMMAND ----------
 
+scored_splits = ["val", "test"] if flag("score_test") else ["val"]
 mlflow.set_experiment(f"/Users/{user}/cdm-phase2")
-with mlflow.start_run(run_name=f"centralized-seed{SEED}") as mlrun:
-    mlflow.log_params(
-        {
-            "mode": "centralized",
-            "seed": SEED,
-            "epochs": EPOCHS,
-            "code_version": CODE,
-            "train_images": len(sets["train"]),
-        }
-    )
-    model, history, seconds = run(EPOCHS, SEED)
+with mlflow.start_run(run_name=f"{RUNG}-seed{SEED}") as mlrun:
+    mlflow.log_params({"rung": RUNG, "seed": SEED, **result["config"]})
+    model, history, seconds = run(CFG, SEED)
     for h in history:
         mlflow.log_metrics(
             {"train_loss": h["train_loss"], "val_bacc": h["val_bacc"]}, step=int(h["epoch"])
         )
 
-    test = rows[rows["split"] == "test"].reset_index(drop=True)
-    loader = DataLoader(sets["test"], batch_size=128, num_workers=WORKERS)
-    _, logits, labels = extract(model, loader, device)
-    pooled = classification_metrics(labels, logits)
-    per_client = {}
-    for client, idx in test.groupby("client").groups.items():
-        idx = np.asarray(list(idx))
-        per_client[client] = classification_metrics(labels[idx], logits[idx])["balanced_accuracy"]
+    # One evaluation dataset built from exactly the scored rows: predictions line up with rows.
+    scored = rows[rows["split"].isin(scored_splits)].reset_index(drop=True)
+    index = {c: i for i, c in enumerate(CLASSES)}
+    data = EncodedImages(
+        list(scored["image"]), scored["label"].map(index).tolist(), eval_transform(CFG.image_size)
+    )
+    _, logits, labels = extract(
+        model, DataLoader(data, batch_size=128, num_workers=WORKERS), device
+    )
+    scores = score_rows(scored, logits, labels)
+    pooled_val = scores["val"]["pooled"]
     mlflow.log_metrics(
         {
-            "test_bacc_pooled": pooled["balanced_accuracy"],
-            **{f"test_bacc_{c}": v for c, v in per_client.items()},
+            "val_bacc_pooled": pooled_val["balanced_accuracy"],
+            "val_macro_auroc_pooled": pooled_val["macro_auroc"],
+            "val_melanoma_sensitivity_pooled": pooled_val["melanoma_sensitivity"],
         }
     )
 
-    folder = Path(f"/Volumes/workspace/cdm/raw/checkpoints/phase2/centralized-seed{SEED}")
+    folder = Path(f"/Volumes/workspace/cdm/raw/checkpoints/phase2/{RUNG}-seed{SEED}")
     folder.mkdir(parents=True, exist_ok=True)
     local = Path("/tmp/model.pt")
     torch.save(model.state_dict(), local)
@@ -145,11 +163,11 @@ with mlflow.start_run(run_name=f"centralized-seed{SEED}") as mlrun:
         {
             "mlflow_run_id": mlrun.info.run_id,
             "train_seconds": round(seconds),
-            "train_images_per_s": round(len(sets["train"]) * EPOCHS / seconds),
+            "train_images_per_s": round(len(sets["train"]) * CFG.epochs / seconds),
             "best_epoch": int(max(history, key=lambda h: h["val_bacc"])["epoch"]),
             "history": history,
-            "test_pooled": pooled,
-            "test_bacc_by_client": per_client,
+            "scored_splits": scored_splits,
+            "scores": scores,
             "checkpoint": str(folder / "model.pt"),
             "weights_sha256": weights_hash(model),
         }

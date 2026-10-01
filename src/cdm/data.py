@@ -8,6 +8,7 @@ root outside the repository (``CDM_DATA``, default ``./data``).
 from __future__ import annotations
 
 import hashlib
+import math
 import os
 import urllib.request
 import zipfile
@@ -140,27 +141,68 @@ def load_ham(ham: Path) -> pd.DataFrame:
     return meta
 
 
-def eval_transform() -> transforms.Compose:
+def eval_transform(size: int = IMAGE_SIZE) -> transforms.Compose:
     return transforms.Compose(
         [
-            transforms.Resize(IMAGE_SIZE),
-            transforms.CenterCrop(IMAGE_SIZE),
+            transforms.Resize(size),
+            transforms.CenterCrop(size),
             transforms.ToTensor(),
             transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
         ]
     )
 
 
-def train_transform() -> transforms.Compose:
-    return transforms.Compose(
-        [
-            transforms.RandomResizedCrop(IMAGE_SIZE, scale=(0.5, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
-        ]
-    )
+def inscribed_size(width: int, height: int, degrees: float) -> tuple[int, int]:
+    """Largest axis-aligned rectangle inside a ``width`` x ``height`` image rotated by
+    ``degrees``: cropping to it leaves no fill colour in the corners."""
+    angle = math.radians(abs(degrees))
+    if angle == 0:
+        return width, height
+    long_side, short_side = max(width, height), min(width, height)
+    sin_a, cos_a = math.sin(angle), math.cos(angle)
+    if short_side <= 2 * sin_a * cos_a * long_side or abs(sin_a - cos_a) < 1e-10:
+        x = 0.5 * short_side
+        w, h = (x / sin_a, x / cos_a) if width >= height else (x / cos_a, x / sin_a)
+    else:
+        cos_2a = cos_a * cos_a - sin_a * sin_a
+        w, h = (width * cos_a - height * sin_a) / cos_2a, (height * cos_a - width * sin_a) / cos_2a
+    return int(w), int(h)
+
+
+class RandomRotation:
+    """A random multiple of 90 degrees plus a small random angle, cropped so that no
+    artificial black corners appear (they would mimic Barcelona's dark border).
+
+    Uses torch's random number generator, which DataLoader workers seed.
+    """
+
+    def __init__(self, max_degrees: float = 15.0) -> None:
+        self.max_degrees = max_degrees
+
+    def __call__(self, img: Image.Image) -> Image.Image:
+        quarter = int(torch.randint(0, 4, (1,)))
+        img = img.rotate(90 * quarter, expand=True)
+        degrees = float(torch.empty(1).uniform_(-self.max_degrees, self.max_degrees))
+        w, h = inscribed_size(img.width, img.height, degrees)
+        rotated = img.rotate(degrees, resample=Image.Resampling.BILINEAR, expand=True)
+        left, top = (rotated.width - w) // 2, (rotated.height - h) // 2
+        return rotated.crop((left, top, left + w, top + h))
+
+
+def train_transform(
+    size: int = IMAGE_SIZE, rotate: bool = False, color_jitter: bool = False
+) -> transforms.Compose:
+    """Phase 0's augmentation by default; rotations and colour jitter are optional."""
+    steps: list[object] = [RandomRotation()] if rotate else []
+    steps += [
+        transforms.RandomResizedCrop(size, scale=(0.5, 1.0)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip(),
+    ]
+    if color_jitter:
+        steps.append(transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.02))
+    steps += [transforms.ToTensor(), transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD)]
+    return transforms.Compose(steps)
 
 
 class LabelledImages(Dataset[tuple[torch.Tensor, int]]):

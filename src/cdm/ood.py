@@ -39,6 +39,23 @@ def extract(
     )
 
 
+@torch.no_grad()
+def logits_with_flips(
+    model: nn.Module, loader: DataLoader[tuple[torch.Tensor, int]], device: torch.device
+) -> tuple[Array, NDArray[np.int64]]:
+    """Logits averaged over the original and its horizontal, vertical and double flips."""
+    model.eval()
+    logits, labels = [], []
+    for x, y in loader:
+        x = x.to(device, non_blocking=True)
+        views = [x, x.flip(3), x.flip(2), x.flip(2).flip(3)]
+        logits.append(
+            torch.stack([features_and_logits(model, v)[1].float() for v in views]).mean(0).cpu()
+        )
+        labels.append(y)
+    return torch.cat(logits).double().numpy(), torch.cat(labels).long().numpy()
+
+
 def msp_score(logits: Array) -> Array:
     """Negative maximum softmax probability (Hendrycks & Gimpel, 2017)."""
     shifted = logits - logits.max(axis=1, keepdims=True)

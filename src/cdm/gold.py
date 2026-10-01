@@ -25,7 +25,7 @@ from PIL import Image
 from torch import nn
 from torchvision.models import efficientnet_b0
 
-from cdm.data import IMAGENET_MEAN, IMAGENET_STD
+from cdm.data import eval_transform
 from cdm.ood import MahalanobisDetector
 from cdm.train import features_and_logits
 
@@ -46,19 +46,22 @@ def load_imagenet(weights: Path) -> nn.Module:
     return model.eval()
 
 
-def _tensor(png: bytes) -> torch.Tensor:
-    with Image.open(io.BytesIO(png)) as img:
-        arr = np.asarray(img.convert("RGB"), dtype=np.float32) / 255.0
-    mean, std = np.array(IMAGENET_MEAN, np.float32), np.array(IMAGENET_STD, np.float32)
-    return torch.from_numpy(((arr - mean) / std).transpose(2, 0, 1).copy())
+_EVAL = eval_transform()
+
+
+def _tensor(image: bytes) -> torch.Tensor:
+    """Any stored silver image to a normalised 224 x 224 tensor (resize, centre crop)."""
+    with Image.open(io.BytesIO(image)) as img:
+        tensor: torch.Tensor = _EVAL(img.convert("RGB"))
+    return tensor
 
 
 @torch.no_grad()
-def embed(pngs: Iterable[bytes], model: nn.Module, batch_size: int = 64) -> Iterator[np.ndarray]:
-    """1,280-d pooled features for each 224 x 224 PNG, yielded one batch at a time."""
+def embed(images: Iterable[bytes], model: nn.Module, batch_size: int = 64) -> Iterator[np.ndarray]:
+    """1,280-d pooled features for each stored silver image, yielded one batch at a time."""
     batch: list[torch.Tensor] = []
-    for png in pngs:
-        batch.append(_tensor(png))
+    for image in images:
+        batch.append(_tensor(image))
         if len(batch) == batch_size:
             yield features_and_logits(model, torch.stack(batch))[0].numpy()
             batch = []
@@ -133,12 +136,12 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover - needs Data
 
     spark = SparkSession.builder.getOrCreate()
     table = f"{args.catalog}.{args.schema}"
-    cols = ["isic_id", "source", "split", "label", "fitzpatrick_skin_type", "png"]
+    cols = ["isic_id", "source", "split", "label", "fitzpatrick_skin_type", "image"]
     silver = spark.read.table(f"{table}.silver_images").select(*cols).orderBy("source", "isic_id")
-    meta = silver.drop("png").toPandas()
+    meta = silver.drop("image").toPandas()
     model = load_imagenet(args.weights)
-    pngs = (row["png"] for row in silver.select("png").toLocalIterator())
-    features = np.concatenate(list(embed(pngs, model, args.batch_size)))
+    images = (row["image"] for row in silver.select("image").toLocalIterator())
+    features = np.concatenate(list(embed(images, model, args.batch_size)))
     emb = meta.assign(features=list(features.astype(np.float32)))
     print(f"embedded {len(emb)} images", flush=True)
 
