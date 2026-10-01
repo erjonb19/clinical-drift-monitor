@@ -23,13 +23,18 @@ class EncodedImages(LabelledImages):
     """Images held as encoded bytes (PNG or JPEG) in memory, decoded on access."""
 
     def __init__(
-        self, images: Sequence[bytes], labels: Sequence[int], transform: transforms.Compose
+        self,
+        images: Sequence[bytes],
+        labels: Sequence[int],
+        transform: transforms.Compose,
+        groups: Sequence[str] | None = None,
     ) -> None:
         if len(images) != len(labels):
             raise ValueError(f"{len(images)} images but {len(labels)} labels")
         self.images = list(images)
         self.labels = [int(x) for x in labels]
         self.transform = transform
+        self.groups = list(groups) if groups is not None else None
 
     def __len__(self) -> int:
         return len(self.images)
@@ -56,11 +61,14 @@ def split_datasets(
     for split in SPLITS:
         part = frame[frame["split"] == split]
         transform = (
-            train_transform(cfg.image_size, cfg.rotate, cfg.color_jitter, cfg.view)
+            train_transform(
+                cfg.image_size, cfg.rotate, cfg.color_jitter, cfg.view, cfg.color_constancy
+            )
             if split == "train"
-            else eval_transform(cfg.image_size)
+            else eval_transform(cfg.image_size, cfg.color_constancy)
         )
+        groups = list(part["client"]) if "client" in part else None
         out[split] = EncodedImages(
-            list(part["image"]), part["label"].map(index).tolist(), transform
+            list(part["image"]), part["label"].map(index).tolist(), transform, groups
         )
     return out

@@ -15,7 +15,8 @@ import numpy as np
 import torch
 from sklearn.metrics import balanced_accuracy_score
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.optim.swa_utils import AveragedModel, get_ema_multi_avg_fn
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision.models import (
     EfficientNet_B0_Weights,
     EfficientNet_B3_Weights,
@@ -42,6 +43,9 @@ class TrainConfig:
     rotate: bool = False
     color_jitter: bool = False
     view: str = "full"
+    balanced_sampling: bool = False
+    ema_decay: float = 0.0
+    color_constancy: bool = False
     warmup_epochs: int = 0
     label_smoothing: float = 0.0
 
@@ -136,6 +140,18 @@ def balanced_accuracy(
     return float(balanced_accuracy_score(torch.cat(labels), torch.cat(preds)))
 
 
+def balanced_weights(labels: list[int], groups: list[str], cap: float = 10.0) -> list[float]:
+    """Sampling weight 1 / (images of the same group and class), capped at ``cap`` times the
+    median weight so a cell of two images cannot dominate an epoch."""
+    keys = list(zip(groups, labels, strict=True))
+    counts: dict[tuple[str, int], int] = {}
+    for key in keys:
+        counts[key] = counts.get(key, 0) + 1
+    weights = np.array([1.0 / counts[key] for key in keys])
+    weights = np.minimum(weights, cap * float(np.median(weights)))
+    return [float(w) for w in weights]
+
+
 def lr_schedule(
     optimizer: torch.optim.Optimizer, cfg: TrainConfig, steps_per_epoch: int
 ) -> torch.optim.lr_scheduler.LRScheduler:
@@ -172,20 +188,41 @@ def train(
         "pin_memory": device.type == "cuda",
         "persistent_workers": cfg.num_workers > 0,
     }
-    train_loader = DataLoader(
-        train_set,
-        shuffle=True,
-        drop_last=len(train_set) > cfg.batch_size,
-        generator=generator,
-        worker_init_fn=_worker_seed,
-        **loader_args,  # type: ignore[arg-type]
-    )
+    if cfg.balanced_sampling:
+        if train_set.groups is None:
+            raise ValueError("balanced sampling needs each training image's group (client)")
+        sampler = WeightedRandomSampler(
+            balanced_weights(train_set.labels, train_set.groups),
+            num_samples=len(train_set),
+            replacement=True,
+            generator=generator,
+        )
+        train_loader = DataLoader(
+            train_set,
+            sampler=sampler,
+            drop_last=len(train_set) > cfg.batch_size,
+            worker_init_fn=_worker_seed,
+            **loader_args,  # type: ignore[arg-type]
+        )
+    else:
+        train_loader = DataLoader(
+            train_set,
+            shuffle=True,
+            drop_last=len(train_set) > cfg.batch_size,
+            generator=generator,
+            worker_init_fn=_worker_seed,
+            **loader_args,  # type: ignore[arg-type]
+        )
     val_loader = DataLoader(val_set, shuffle=False, **loader_args)  # type: ignore[arg-type]
 
     model.to(device)
-    criterion = nn.CrossEntropyLoss(
-        weight=class_weights(train_set.labels).to(device), label_smoothing=cfg.label_smoothing
-    )
+    # Balanced sampling already evens out classes; weighting the loss too would count twice.
+    weight = None if cfg.balanced_sampling else class_weights(train_set.labels).to(device)
+    criterion = nn.CrossEntropyLoss(weight=weight, label_smoothing=cfg.label_smoothing)
+    ema = None
+    if cfg.ema_decay > 0:
+        average = get_ema_multi_avg_fn(cfg.ema_decay)  # type: ignore[no-untyped-call]
+        ema = AveragedModel(model, multi_avg_fn=average, use_buffers=True)
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     scheduler = lr_schedule(optimizer, cfg, len(train_loader))
     use_amp = device.type == "cuda"
@@ -205,15 +242,19 @@ def train(
             scaler.step(optimizer)
             scaler.update()
             scheduler.step()
+            if ema is not None:
+                ema.update_parameters(model)
             total, batches = total + loss.item(), batches + 1
-        val_bacc = balanced_accuracy(model, val_loader, device)
+        # With EMA, the averaged weights are the model that is validated and kept.
+        scored = ema.module if ema is not None else model
+        val_bacc = balanced_accuracy(scored, val_loader, device)
         history.append({"epoch": epoch, "train_loss": total / batches, "val_bacc": val_bacc})
         log(
             f"seed {seed} epoch {epoch}/{cfg.epochs}: loss {total / batches:.4f}, "
             f"val bacc {val_bacc:.4f}, {time.monotonic() - started:.0f}s"
         )
         if val_bacc > best_score:
-            best_score, best_state = val_bacc, copy.deepcopy(model.state_dict())
+            best_score, best_state = val_bacc, copy.deepcopy(scored.state_dict())
 
     model.load_state_dict(best_state)
     return model, history

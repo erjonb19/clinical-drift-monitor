@@ -141,15 +141,33 @@ def load_ham(ham: Path) -> pd.DataFrame:
     return meta
 
 
-def eval_transform(size: int = IMAGE_SIZE) -> transforms.Compose:
-    return transforms.Compose(
-        [
-            transforms.Resize(size),
-            transforms.CenterCrop(size),
-            transforms.ToTensor(),
-            transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
-        ]
-    )
+class ShadesOfGray:
+    """Shades of Gray colour constancy (Finlayson and Trezzi, 2004), Minkowski norm ``p``.
+
+    Estimates the light source as the p-norm mean of each channel and rescales channels so
+    the estimate becomes neutral grey, removing camera and lighting colour casts.
+    """
+
+    def __init__(self, p: float = 6.0) -> None:
+        self.p = p
+
+    def __call__(self, img: Image.Image) -> Image.Image:
+        arr = np.asarray(img.convert("RGB"), dtype=np.float64)
+        light = np.power(np.mean(np.power(arr, self.p), axis=(0, 1)), 1.0 / self.p)
+        light = light / max(float(np.linalg.norm(light)), 1e-6)
+        balanced = arr / (light * np.sqrt(3.0) + 1e-6)
+        return Image.fromarray(np.clip(balanced, 0, 255).astype(np.uint8))
+
+
+def eval_transform(size: int = IMAGE_SIZE, color_constancy: bool = False) -> transforms.Compose:
+    steps: list[object] = [ShadesOfGray()] if color_constancy else []
+    steps += [
+        transforms.Resize(size),
+        transforms.CenterCrop(size),
+        transforms.ToTensor(),
+        transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+    ]
+    return transforms.Compose(steps)
 
 
 def inscribed_size(width: int, height: int, degrees: float) -> tuple[int, int]:
@@ -213,14 +231,18 @@ VIEWS = ("full", "center", "mix")
 
 
 def train_transform(
-    size: int = IMAGE_SIZE, rotate: bool = False, color_jitter: bool = False, view: str = "full"
+    size: int = IMAGE_SIZE,
+    rotate: bool = False,
+    color_jitter: bool = False,
+    view: str = "full",
+    color_constancy: bool = False,
 ) -> transforms.Compose:
     """Phase 0's augmentation by default; rotations, colour jitter and the field of view
     the random crops come from (``full``, ``center`` or a 50/50 ``mix``) are optional."""
     if view not in VIEWS:
         raise ValueError(f"unknown view {view!r}: use one of {VIEWS}")
     views: dict[str, list[object]] = {"full": [], "center": [CenterSquare()], "mix": [MixedView()]}
-    steps = views[view]
+    steps = ([ShadesOfGray()] if color_constancy else []) + views[view]
     if rotate:
         steps.append(RandomRotation())
     steps += [
@@ -235,9 +257,11 @@ def train_transform(
 
 
 class LabelledImages(Dataset[tuple[torch.Tensor, int]]):
-    """A dataset of (image, label) pairs that also exposes every label, for class weights."""
+    """A dataset of (image, label) pairs that also exposes every label, for class weights,
+    and optionally each image's group (its client), for site- and class-balanced sampling."""
 
     labels: list[int]
+    groups: list[str] | None = None
 
     def __len__(self) -> int:
         return len(self.labels)
