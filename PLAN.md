@@ -106,6 +106,7 @@ This is where the project becomes real ML work: proper federated training and OO
 
 - [ ] Train on Databricks serverless GPU (1x A10G: 981 images/s synthetic and 397 images/s on real silver images in the check run, `results/phase2/gpu_check.json`), with Colab Pro as the backup. Log every run to Databricks MLflow and register the chosen model in Unity Catalog.
 - [ ] Recompute the gold embeddings and baseline score distributions with the registered model.
+- [ ] Tune the centralized model on validation only (seed 0, one change per run, kept only if pooled validation balanced accuracy rises by at least 1 point without hurting macro AUROC or melanoma sensitivity): larger stored images with random resized crops, rotations and colour jitter; about 25 epochs with warmup, cosine learning rate and label smoothing; EfficientNet-B3 at 300 px; test-time flip averaging. Test is scored once, at the end. Federated runs use the winning configuration.
 - [ ] Barcelona and MSK get lesion-level train, validation and test splits in silver, with gates; HAM10000's split must stay at fingerprint `cc2b196cd5bf58ad` (gate shown passing). At every site except HAM10000, "Squamous cell carcinoma, NOS" becomes unlabelled and scoring-only, because it can be invasive SCC, which HAM10000's akiec class does not include; HAM10000 keeps its own labels.
 - [ ] Federated training with Flower: one client per site (HAM10000 Vienna, HAM10000 Queensland, Barcelona, MSK), 20 or more rounds, FedAvg against FedProx. Centralized and federated models are compared on the same pooled test set: the test splits of all four clients.
 - [ ] OOD on held-out sites (real): Buenos Aires (new hospital) and PAD-UFES-20 (new hospital, smartphone photos); PathMNIST and CIFAR-10 as benchmark sets. Held-out accuracy is reported only on classes that map cleanly to HAM10000's (not "SCC, NOS"); PAD-UFES-20 has no df or vasc images.
@@ -170,7 +171,7 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 | Lane | Unlocked by | Claim once done |
 | --- | --- | --- |
 | Data engineering | Phase 1 | Built a medallion image lakehouse with lesion-level, leak-free splits and write-audit-publish gates, published to Databricks Delta |
-| ML | Phases 0 and 2 | Trained EfficientNet-B0 on HAM10000 and ISIC and federated it across sites with Flower, comparing 4 OOD detectors on a real site shift, with results by skin type (AUROC to fill in) |
+| ML | Phases 0 and 2 | Trained EfficientNet (B0 or B3, chosen on validation) on HAM10000 and ISIC and federated it across sites with Flower, comparing 4 OOD detectors on a real site shift, with results by skin type (AUROC to fill in) |
 | MLOps | Phase 3 | Served the model through ONNX Runtime and FastAPI with a validated abstain threshold, a monthly drift job, and a CI accuracy gate |
 | LLMOps and applied AI | Phase 4 | Generated grounded drift incident reports from an LLM, scored on a scenario eval with cost and latency tracked |
 | Forward deployed | Phases 3 and 5 | Shipped a one-command demo and runbook a clinical ops team could operate |
