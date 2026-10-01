@@ -66,5 +66,11 @@
     "unlabelled_at_sites": [
       "Squamous cell carcinoma, NOS"
     ]
+  },
+  "silver": {
+    "shorter_side": 384,
+    "center_crop": false,
+    "format": "JPEG",
+    "quality": 95
   }
 }
