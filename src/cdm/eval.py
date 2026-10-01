@@ -37,14 +37,36 @@ def detection_metrics(id_scores: Array, ood_scores: Array) -> dict[str, float]:
 
 
 def classification_metrics(labels: NDArray[np.int64], logits: Array) -> dict[str, object]:
+    """Balanced accuracy, macro AUROC, melanoma sensitivity, accuracy, per-class recall and
+    support. Melanoma sensitivity is None when no melanoma is present."""
     preds = logits.argmax(axis=1)
     recalls = recall_score(labels, preds, labels=range(len(CLASSES)), average=None, zero_division=0)
     return {
         "balanced_accuracy": float(balanced_accuracy_score(labels, preds)),
+        "macro_auroc": macro_auroc(labels, logits),
+        "melanoma_sensitivity": float(recalls[CLASSES.index("mel")])
+        if np.any(labels == CLASSES.index("mel"))
+        else None,
         "accuracy": float(np.mean(preds == labels)),
         "recall": {c: float(r) for c, r in zip(CLASSES, recalls, strict=True)},
         "support": {c: int(np.sum(labels == i)) for i, c in enumerate(CLASSES)},
     }
+
+
+def softmax(logits: Array) -> Array:
+    shifted = np.exp(logits - logits.max(axis=1, keepdims=True))
+    return np.asarray(shifted / shifted.sum(axis=1, keepdims=True), dtype=np.float64)
+
+
+def macro_auroc(labels: NDArray[np.int64], logits: Array) -> float | None:
+    """Mean one-vs-rest AUROC over the classes present (each needs positives and negatives)."""
+    probs = softmax(logits)
+    scores = [
+        float(roc_auc_score(labels == c, probs[:, c]))
+        for c in range(len(CLASSES))
+        if 0 < np.sum(labels == c) < len(labels)
+    ]
+    return float(np.mean(scores)) if scores else None
 
 
 def confusion(labels: NDArray[np.int64], logits: Array) -> list[list[int]]:

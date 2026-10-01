@@ -1,4 +1,4 @@
-"""Training datasets from silver rows: 224 x 224 PNGs with label, split and client.
+"""Training datasets from silver rows: stored images (PNG or JPEG) with label, split and client.
 
 Phase 2 trains on Databricks from ``workspace.cdm.silver_images``; the notebook collects the
 rows and this module turns them into datasets. No Spark here, so it is tested in CI.
@@ -16,34 +16,38 @@ from torchvision import transforms
 
 from cdm.data import LabelledImages, eval_transform, train_transform
 from cdm.splits import CLASSES, SPLITS
+from cdm.train import TrainConfig
 
 
-class PngDataset(LabelledImages):
-    """Images held as PNG bytes in memory, decoded on access (in DataLoader workers)."""
+class EncodedImages(LabelledImages):
+    """Images held as encoded bytes (PNG or JPEG) in memory, decoded on access."""
 
     def __init__(
-        self, pngs: Sequence[bytes], labels: Sequence[int], transform: transforms.Compose
+        self, images: Sequence[bytes], labels: Sequence[int], transform: transforms.Compose
     ) -> None:
-        if len(pngs) != len(labels):
-            raise ValueError(f"{len(pngs)} images but {len(labels)} labels")
-        self.pngs = list(pngs)
+        if len(images) != len(labels):
+            raise ValueError(f"{len(images)} images but {len(labels)} labels")
+        self.images = list(images)
         self.labels = [int(x) for x in labels]
         self.transform = transform
 
     def __len__(self) -> int:
-        return len(self.pngs)
+        return len(self.images)
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
-        with Image.open(io.BytesIO(self.pngs[idx])) as img:
+        with Image.open(io.BytesIO(self.images[idx])) as img:
             return self.transform(img.convert("RGB")), self.labels[idx]
 
 
-def split_datasets(frame: pd.DataFrame) -> Mapping[str, PngDataset]:
-    """Train (augmented), val and test datasets from labelled client rows.
+def split_datasets(
+    frame: pd.DataFrame, cfg: TrainConfig | None = None
+) -> Mapping[str, EncodedImages]:
+    """Train (augmented per ``cfg``), val and test datasets from labelled client rows.
 
-    ``frame`` has ``png``, ``label`` and ``split``; rows outside train, val and test, or
+    ``frame`` has ``image``, ``label`` and ``split``; rows outside train, val and test, or
     without a label, are refused rather than dropped.
     """
+    cfg = cfg or TrainConfig()
     bad = frame[~frame["split"].isin(SPLITS) | frame["label"].isna()]
     if len(bad):
         raise ValueError(f"{len(bad)} rows are unlabelled or outside train/val/test")
@@ -51,6 +55,12 @@ def split_datasets(frame: pd.DataFrame) -> Mapping[str, PngDataset]:
     out = {}
     for split in SPLITS:
         part = frame[frame["split"] == split]
-        transform = train_transform() if split == "train" else eval_transform()
-        out[split] = PngDataset(list(part["png"]), part["label"].map(index).tolist(), transform)
+        transform = (
+            train_transform(cfg.image_size, cfg.rotate, cfg.color_jitter)
+            if split == "train"
+            else eval_transform(cfg.image_size)
+        )
+        out[split] = EncodedImages(
+            list(part["image"]), part["label"].map(index).tolist(), transform
+        )
     return out

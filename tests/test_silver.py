@@ -22,7 +22,7 @@ def png(shade: int) -> bytes:
 
 def frame() -> pd.DataFrame:
     rows = [
-        {"png": png(i), "label": CLASSES[i % len(CLASSES)], "split": split}
+        {"image": png(i), "label": CLASSES[i % len(CLASSES)], "split": split}
         for i, split in enumerate(["train"] * 7 + ["val"] * 3 + ["test"] * 3)
     ]
     return pd.DataFrame(rows)

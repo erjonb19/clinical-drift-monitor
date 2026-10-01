@@ -16,7 +16,12 @@ import torch
 from sklearn.metrics import balanced_accuracy_score
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
+from torchvision.models import (
+    EfficientNet_B0_Weights,
+    EfficientNet_B3_Weights,
+    efficientnet_b0,
+    efficientnet_b3,
+)
 
 from cdm.data import CLASSES, LabelledImages
 
@@ -31,14 +36,25 @@ class TrainConfig:
     pretrained: bool = True
     # Fixed so results do not depend on how many cores a machine happens to have.
     num_threads: int = 8
+    # Phase 2 tuning options; every default reproduces the Phase 0 and stage 2 setting.
+    arch: str = "b0"
+    image_size: int = 224
+    rotate: bool = False
+    color_jitter: bool = False
+    warmup_epochs: int = 0
+    label_smoothing: float = 0.0
 
 
-def build_model(pretrained: bool = True) -> nn.Module:
-    """ImageNet EfficientNet-B0 with a new 7-class head."""
-    model = cast(
-        nn.Module,
-        efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1 if pretrained else None),
-    )
+def build_model(pretrained: bool = True, arch: str = "b0") -> nn.Module:
+    """ImageNet EfficientNet (B0, or B3 for tuning rung 3) with a new 7-class head."""
+    if arch == "b0":
+        weights = EfficientNet_B0_Weights.IMAGENET1K_V1 if pretrained else None
+        model = cast(nn.Module, efficientnet_b0(weights=weights))
+    elif arch == "b3":
+        weights_b3 = EfficientNet_B3_Weights.IMAGENET1K_V1 if pretrained else None
+        model = cast(nn.Module, efficientnet_b3(weights=weights_b3))
+    else:
+        raise ValueError(f"unknown arch {arch!r}: use 'b0' or 'b3'")
     classifier = cast(nn.Sequential, model.classifier)
     head = classifier[1]
     assert isinstance(head, nn.Linear)
@@ -119,6 +135,25 @@ def balanced_accuracy(
     return float(balanced_accuracy_score(torch.cat(labels), torch.cat(preds)))
 
 
+def lr_schedule(
+    optimizer: torch.optim.Optimizer, cfg: TrainConfig, steps_per_epoch: int
+) -> torch.optim.lr_scheduler.LRScheduler:
+    """Cosine decay over all steps; with ``warmup_epochs``, a linear warmup first and cosine
+    over the remaining steps."""
+    total = cfg.epochs * steps_per_epoch
+    warmup = cfg.warmup_epochs * steps_per_epoch
+    if warmup == 0:
+        return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total)
+    return torch.optim.lr_scheduler.SequentialLR(
+        optimizer,
+        [
+            torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=0.01, total_iters=warmup),
+            torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total - warmup),
+        ],
+        milestones=[warmup],
+    )
+
+
 def train(
     model: nn.Module,
     train_set: LabelledImages,
@@ -147,11 +182,11 @@ def train(
     val_loader = DataLoader(val_set, shuffle=False, **loader_args)  # type: ignore[arg-type]
 
     model.to(device)
-    criterion = nn.CrossEntropyLoss(weight=class_weights(train_set.labels).to(device))
-    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=cfg.epochs * len(train_loader)
+    criterion = nn.CrossEntropyLoss(
+        weight=class_weights(train_set.labels).to(device), label_smoothing=cfg.label_smoothing
     )
+    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
+    scheduler = lr_schedule(optimizer, cfg, len(train_loader))
     use_amp = device.type == "cuda"
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 

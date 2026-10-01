@@ -167,7 +167,7 @@ def jpeg(width: int, height: int, quality: int) -> bytes:
 
 def test_decode_resize_centre_crops_and_records_compression() -> None:
     strong, light = decode_resize(jpeg(600, 450, 50)), decode_resize(jpeg(600, 450, 100))
-    with Image.open(io.BytesIO(strong.png)) as img:
+    with Image.open(io.BytesIO(strong.image)) as img:
         assert img.size == (SIZE, SIZE) and img.format == "PNG"
     assert (strong.width, strong.height) == (600, 450)
     assert strong.jpeg_quant_mean is not None and light.jpeg_quant_mean is not None
