@@ -110,3 +110,28 @@ def test_report_splits_barcelona_by_border_and_flags_small_test_classes() -> Non
     sup = support(frame)
     assert sup["by_split_client_class"]["val/barcelona"]["akiec"] == {"images": 6, "lesions": 6}
     assert "nv" in sup["test_classes_under_20_images"]["pooled"]
+
+
+def test_center_view_reproduces_the_old_centre_crop_field() -> None:
+    from cdm.data import CenterSquare
+
+    img = Image.new("RGB", (512, 384))
+    assert CenterSquare()(img).size == (384, 384)
+
+
+def test_mixed_view_uses_both_fields_of_view_with_a_seeded_coin() -> None:
+    from cdm.data import MixedView
+
+    img = Image.new("RGB", (512, 384))
+    torch.manual_seed(0)
+    sizes = {MixedView()(img).size for _ in range(40)}
+    assert sizes == {(384, 384), (512, 384)}
+    torch.manual_seed(0)
+    again = [MixedView()(img).size for _ in range(40)]
+    torch.manual_seed(0)
+    assert again == [MixedView()(img).size for _ in range(40)]
+
+
+def test_unknown_view_is_refused() -> None:
+    with pytest.raises(ValueError, match="unknown view"):
+        train_transform(view="zoom")

@@ -41,6 +41,7 @@ class TrainConfig:
     image_size: int = 224
     rotate: bool = False
     color_jitter: bool = False
+    view: str = "full"
     warmup_epochs: int = 0
     label_smoothing: float = 0.0
 
