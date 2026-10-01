@@ -1,0 +1,1222 @@
+{
+  "exported_utc": "2026-10-01T15:38:43+00:00",
+  "run_id": 588772241530190,
+  "result": "SUCCESS",
+  "attempts": [
+    {
+      "task_run_id": 770705416056901,
+      "attempt": 0,
+      "result": "SUCCESS",
+      "message": "",
+      "execution_ms": 430000,
+      "setup_ms": 35000
+    }
+  ],
+  "output": {
+    "rung": "rung1a-stored384",
+    "code_version": "3cea6e3",
+    "seed": 0,
+    "config": {
+      "epochs": 12,
+      "batch_size": 64,
+      "lr": 0.0003,
+      "weight_decay": 0.0001,
+      "num_workers": 8,
+      "pretrained": true,
+      "num_threads": 8,
+      "arch": "b0",
+      "image_size": 224,
+      "rotate": false,
+      "color_jitter": false,
+      "warmup_epochs": 0,
+      "label_smoothing": 0.0
+    },
+    "gpu": "NVIDIA A10G",
+    "torch": "2.11.0+cu130",
+    "load_seconds": 56,
+    "images": {
+      "train": 12289,
+      "val": 2566,
+      "test": 2623
+    },
+    "support": {
+      "by_split_client_class": {
+        "test/barcelona": {
+          "akiec": {
+            "images": 37,
+            "lesions": 12
+          },
+          "bcc": {
+            "images": 135,
+            "lesions": 53
+          },
+          "bkl": {
+            "images": 65,
+            "lesions": 20
+          },
+          "df": {
+            "images": 7,
+            "lesions": 2
+          },
+          "mel": {
+            "images": 183,
+            "lesions": 29
+          },
+          "nv": {
+            "images": 197,
+            "lesions": 67
+          },
+          "vasc": {
+            "images": 11,
+            "lesions": 2
+          }
+        },
+        "test/ham_queensland": {
+          "akiec": {
+            "images": 48,
+            "lesions": 33
+          },
+          "bcc": {
+            "images": 49,
+            "lesions": 31
+          },
+          "bkl": {
+            "images": 80,
+            "lesions": 54
+          },
+          "df": {
+            "images": 5,
+            "lesions": 2
+          },
+          "mel": {
+            "images": 54,
+            "lesions": 36
+          },
+          "nv": {
+            "images": 120,
+            "lesions": 75
+          },
+          "vasc": {
+            "images": 0,
+            "lesions": 0
+          }
+        },
+        "test/ham_vienna": {
+          "akiec": {
+            "images": 5,
+            "lesions": 2
+          },
+          "bcc": {
+            "images": 39,
+            "lesions": 18
+          },
+          "bkl": {
+            "images": 84,
+            "lesions": 55
+          },
+          "df": {
+            "images": 16,
+            "lesions": 9
+          },
+          "mel": {
+            "images": 108,
+            "lesions": 56
+          },
+          "nv": {
+            "images": 902,
+            "lesions": 736
+          },
+          "vasc": {
+            "images": 18,
+            "lesions": 14
+          }
+        },
+        "test/msk": {
+          "akiec": {
+            "images": 21,
+            "lesions": 18
+          },
+          "bcc": {
+            "images": 50,
+            "lesions": 48
+          },
+          "bkl": {
+            "images": 80,
+            "lesions": 69
+          },
+          "df": {
+            "images": 5,
+            "lesions": 4
+          },
+          "mel": {
+            "images": 87,
+            "lesions": 61
+          },
+          "nv": {
+            "images": 208,
+            "lesions": 158
+          },
+          "vasc": {
+            "images": 9,
+            "lesions": 6
+          }
+        },
+        "train/barcelona": {
+          "akiec": {
+            "images": 191,
+            "lesions": 57
+          },
+          "bcc": {
+            "images": 678,
+            "lesions": 245
+          },
+          "bkl": {
+            "images": 271,
+            "lesions": 91
+          },
+          "df": {
+            "images": 25,
+            "lesions": 11
+          },
+          "mel": {
+            "images": 807,
+            "lesions": 135
+          },
+          "nv": {
+            "images": 1016,
+            "lesions": 312
+          },
+          "vasc": {
+            "images": 28,
+            "lesions": 9
+          }
+        },
+        "train/ham_queensland": {
+          "akiec": {
+            "images": 209,
+            "lesions": 147
+          },
+          "bcc": {
+            "images": 197,
+            "lesions": 143
+          },
+          "bkl": {
+            "images": 347,
+            "lesions": 248
+          },
+          "df": {
+            "images": 24,
+            "lesions": 13
+          },
+          "mel": {
+            "images": 246,
+            "lesions": 162
+          },
+          "nv": {
+            "images": 571,
+            "lesions": 382
+          },
+          "vasc": {
+            "images": 2,
+            "lesions": 1
+          }
+        },
+        "train/ham_vienna": {
+          "akiec": {
+            "images": 24,
+            "lesions": 12
+          },
+          "bcc": {
+            "images": 157,
+            "lesions": 86
+          },
+          "bkl": {
+            "images": 432,
+            "lesions": 261
+          },
+          "df": {
+            "images": 56,
+            "lesions": 38
+          },
+          "mel": {
+            "images": 549,
+            "lesions": 268
+          },
+          "nv": {
+            "images": 4131,
+            "lesions": 3400
+          },
+          "vasc": {
+            "images": 99,
+            "lesions": 68
+          }
+        },
+        "train/msk": {
+          "akiec": {
+            "images": 96,
+            "lesions": 82
+          },
+          "bcc": {
+            "images": 246,
+            "lesions": 225
+          },
+          "bkl": {
+            "images": 387,
+            "lesions": 322
+          },
+          "df": {
+            "images": 24,
+            "lesions": 21
+          },
+          "mel": {
+            "images": 434,
+            "lesions": 280
+          },
+          "nv": {
+            "images": 994,
+            "lesions": 735
+          },
+          "vasc": {
+            "images": 48,
+            "lesions": 29
+          }
+        },
+        "val/barcelona": {
+          "akiec": {
+            "images": 50,
+            "lesions": 13
+          },
+          "bcc": {
+            "images": 153,
+            "lesions": 52
+          },
+          "bkl": {
+            "images": 55,
+            "lesions": 19
+          },
+          "df": {
+            "images": 12,
+            "lesions": 3
+          },
+          "mel": {
+            "images": 148,
+            "lesions": 29
+          },
+          "nv": {
+            "images": 234,
+            "lesions": 66
+          },
+          "vasc": {
+            "images": 6,
+            "lesions": 2
+          }
+        },
+        "val/ham_queensland": {
+          "akiec": {
+            "images": 38,
+            "lesions": 31
+          },
+          "bcc": {
+            "images": 50,
+            "lesions": 37
+          },
+          "bkl": {
+            "images": 63,
+            "lesions": 47
+          },
+          "df": {
+            "images": 1,
+            "lesions": 1
+          },
+          "mel": {
+            "images": 42,
+            "lesions": 27
+          },
+          "nv": {
+            "images": 112,
+            "lesions": 81
+          },
+          "vasc": {
+            "images": 1,
+            "lesions": 1
+          }
+        },
+        "val/ham_vienna": {
+          "akiec": {
+            "images": 3,
+            "lesions": 3
+          },
+          "bcc": {
+            "images": 22,
+            "lesions": 12
+          },
+          "bkl": {
+            "images": 93,
+            "lesions": 62
+          },
+          "df": {
+            "images": 13,
+            "lesions": 10
+          },
+          "mel": {
+            "images": 114,
+            "lesions": 65
+          },
+          "nv": {
+            "images": 869,
+            "lesions": 729
+          },
+          "vasc": {
+            "images": 22,
+            "lesions": 14
+          }
+        },
+        "val/msk": {
+          "akiec": {
+            "images": 20,
+            "lesions": 18
+          },
+          "bcc": {
+            "images": 55,
+            "lesions": 48
+          },
+          "bkl": {
+            "images": 80,
+            "lesions": 69
+          },
+          "df": {
+            "images": 6,
+            "lesions": 5
+          },
+          "mel": {
+            "images": 85,
+            "lesions": 60
+          },
+          "nv": {
+            "images": 211,
+            "lesions": 157
+          },
+          "vasc": {
+            "images": 8,
+            "lesions": 6
+          }
+        }
+      },
+      "test_classes_under_20_images": {
+        "pooled": [],
+        "barcelona": [
+          "df",
+          "vasc"
+        ],
+        "ham_queensland": [
+          "df",
+          "vasc"
+        ],
+        "ham_vienna": [
+          "akiec",
+          "df",
+          "vasc"
+        ],
+        "msk": [
+          "df",
+          "vasc"
+        ]
+      }
+    },
+    "mlflow_run_id": "a9231241ef0148d7a17ccebae6881d1b",
+    "train_seconds": 256,
+    "train_images_per_s": 577,
+    "best_epoch": 7,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 1.2220066601100068,
+        "val_bacc": 0.6371938614452409
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.808119056901584,
+        "val_bacc": 0.6406734030080372
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.6102448746872445,
+        "val_bacc": 0.6415631520488393
+      },
+      {
+        "epoch": 4,
+        "train_loss": 0.5281965245182315,
+        "val_bacc": 0.6435024550016496
+      },
+      {
+        "epoch": 5,
+        "train_loss": 0.44550450673947734,
+        "val_bacc": 0.6389737941569962
+      },
+      {
+        "epoch": 6,
+        "train_loss": 0.3214238025636102,
+        "val_bacc": 0.6436326463635734
+      },
+      {
+        "epoch": 7,
+        "train_loss": 0.29062505974434316,
+        "val_bacc": 0.6500094559837294
+      },
+      {
+        "epoch": 8,
+        "train_loss": 0.23532357020303607,
+        "val_bacc": 0.6317870303080974
+      },
+      {
+        "epoch": 9,
+        "train_loss": 0.2057373012842921,
+        "val_bacc": 0.6326682434176643
+      },
+      {
+        "epoch": 10,
+        "train_loss": 0.1845763191813603,
+        "val_bacc": 0.6263752118432465
+      },
+      {
+        "epoch": 11,
+        "train_loss": 0.1705774991423823,
+        "val_bacc": 0.6359784479472739
+      },
+      {
+        "epoch": 12,
+        "train_loss": 0.17388552863849327,
+        "val_bacc": 0.6371976935136983
+      }
+    ],
+    "scored_splits": [
+      "val"
+    ],
+    "scores": {
+      "val": {
+        "pooled": {
+          "balanced_accuracy": 0.6500094559837294,
+          "macro_auroc": 0.9194245331216662,
+          "melanoma_sensitivity": 0.6760925449871465,
+          "accuracy": 0.7236944660950896,
+          "recall": {
+            "akiec": 0.4954954954954955,
+            "bcc": 0.7928571428571428,
+            "bkl": 0.570446735395189,
+            "df": 0.5625,
+            "mel": 0.6760925449871465,
+            "nv": 0.7769985974754559,
+            "vasc": 0.6756756756756757
+          },
+          "support": {
+            "akiec": 111,
+            "bcc": 280,
+            "bkl": 291,
+            "df": 32,
+            "mel": 389,
+            "nv": 1426,
+            "vasc": 37
+          },
+          "confusion": [
+            [
+              55,
+              25,
+              14,
+              1,
+              14,
+              2,
+              0
+            ],
+            [
+              8,
+              222,
+              20,
+              1,
+              19,
+              7,
+              3
+            ],
+            [
+              23,
+              24,
+              166,
+              2,
+              59,
+              16,
+              1
+            ],
+            [
+              4,
+              2,
+              4,
+              18,
+              1,
+              3,
+              0
+            ],
+            [
+              16,
+              7,
+              28,
+              0,
+              263,
+              70,
+              5
+            ],
+            [
+              12,
+              32,
+              79,
+              4,
+              183,
+              1108,
+              8
+            ],
+            [
+              0,
+              9,
+              1,
+              0,
+              2,
+              0,
+              25
+            ]
+          ],
+          "images": 2566
+        },
+        "ham10000_both_institutions": {
+          "balanced_accuracy": 0.7914428533241153,
+          "macro_auroc": 0.9671155457513443,
+          "melanoma_sensitivity": 0.6730769230769231,
+          "accuracy": 0.814968814968815,
+          "recall": {
+            "akiec": 0.7560975609756098,
+            "bcc": 0.8194444444444444,
+            "bkl": 0.7435897435897436,
+            "df": 0.7857142857142857,
+            "mel": 0.6730769230769231,
+            "nv": 0.8491335372069317,
+            "vasc": 0.9130434782608695
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "confusion": [
+            [
+              31,
+              6,
+              3,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              3,
+              59,
+              7,
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              10,
+              4,
+              116,
+              1,
+              18,
+              7,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              11,
+              1,
+              1,
+              0
+            ],
+            [
+              2,
+              4,
+              11,
+              0,
+              105,
+              31,
+              3
+            ],
+            [
+              5,
+              11,
+              40,
+              1,
+              86,
+              833,
+              5
+            ],
+            [
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              21
+            ]
+          ],
+          "images": 1443
+        },
+        "barcelona": {
+          "balanced_accuracy": 0.5155358949476597,
+          "macro_auroc": 0.8691536575536756,
+          "melanoma_sensitivity": 0.7432432432432432,
+          "accuracy": 0.6276595744680851,
+          "recall": {
+            "akiec": 0.4,
+            "bcc": 0.8104575163398693,
+            "bkl": 0.12727272727272726,
+            "df": 0.5833333333333334,
+            "mel": 0.7432432432432432,
+            "nv": 0.6111111111111112,
+            "vasc": 0.3333333333333333
+          },
+          "support": {
+            "akiec": 50,
+            "bcc": 153,
+            "bkl": 55,
+            "df": 12,
+            "mel": 148,
+            "nv": 234,
+            "vasc": 6
+          },
+          "confusion": [
+            [
+              20,
+              13,
+              5,
+              1,
+              10,
+              1,
+              0
+            ],
+            [
+              4,
+              124,
+              7,
+              0,
+              13,
+              5,
+              0
+            ],
+            [
+              8,
+              10,
+              7,
+              0,
+              26,
+              3,
+              1
+            ],
+            [
+              3,
+              1,
+              1,
+              7,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              3,
+              6,
+              0,
+              110,
+              24,
+              0
+            ],
+            [
+              2,
+              10,
+              16,
+              3,
+              60,
+              143,
+              0
+            ],
+            [
+              0,
+              4,
+              0,
+              0,
+              0,
+              0,
+              2
+            ]
+          ],
+          "images": 658
+        },
+        "ham_queensland": {
+          "balanced_accuracy": 0.7944089390142022,
+          "macro_auroc": 0.9345411213964526,
+          "melanoma_sensitivity": 0.6904761904761905,
+          "accuracy": 0.6807817589576547,
+          "recall": {
+            "akiec": 0.7894736842105263,
+            "bcc": 0.82,
+            "bkl": 0.6984126984126984,
+            "df": 1.0,
+            "mel": 0.6904761904761905,
+            "nv": 0.5625,
+            "vasc": 1.0
+          },
+          "support": {
+            "akiec": 38,
+            "bcc": 50,
+            "bkl": 63,
+            "df": 1,
+            "mel": 42,
+            "nv": 112,
+            "vasc": 1
+          },
+          "confusion": [
+            [
+              30,
+              5,
+              2,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              3,
+              41,
+              3,
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              9,
+              2,
+              44,
+              0,
+              7,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              7,
+              0,
+              29,
+              4,
+              0
+            ],
+            [
+              3,
+              4,
+              14,
+              0,
+              27,
+              63,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ]
+          ],
+          "images": 307
+        },
+        "ham_vienna": {
+          "balanced_accuracy": 0.7366818563225259,
+          "macro_auroc": 0.9747709838213889,
+          "melanoma_sensitivity": 0.6666666666666666,
+          "accuracy": 0.8512323943661971,
+          "recall": {
+            "akiec": 0.3333333333333333,
+            "bcc": 0.8181818181818182,
+            "bkl": 0.7741935483870968,
+            "df": 0.7692307692307693,
+            "mel": 0.6666666666666666,
+            "nv": 0.8860759493670886,
+            "vasc": 0.9090909090909091
+          },
+          "support": {
+            "akiec": 3,
+            "bcc": 22,
+            "bkl": 93,
+            "df": 13,
+            "mel": 114,
+            "nv": 869,
+            "vasc": 22
+          },
+          "confusion": [
+            [
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              18,
+              4,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              2,
+              72,
+              1,
+              11,
+              6,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              10,
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              4,
+              4,
+              0,
+              76,
+              27,
+              3
+            ],
+            [
+              2,
+              7,
+              26,
+              1,
+              59,
+              770,
+              4
+            ],
+            [
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              20
+            ]
+          ],
+          "images": 1136
+        },
+        "msk": {
+          "balanced_accuracy": 0.41241274407220885,
+          "macro_auroc": 0.8189185209499136,
+          "melanoma_sensitivity": 0.5647058823529412,
+          "accuracy": 0.5763440860215053,
+          "recall": {
+            "akiec": 0.2,
+            "bcc": 0.7090909090909091,
+            "bkl": 0.5375,
+            "df": 0.0,
+            "mel": 0.5647058823529412,
+            "nv": 0.6255924170616114,
+            "vasc": 0.25
+          },
+          "support": {
+            "akiec": 20,
+            "bcc": 55,
+            "bkl": 80,
+            "df": 6,
+            "mel": 85,
+            "nv": 211,
+            "vasc": 8
+          },
+          "confusion": [
+            [
+              4,
+              6,
+              6,
+              0,
+              3,
+              1,
+              0
+            ],
+            [
+              1,
+              39,
+              6,
+              1,
+              5,
+              1,
+              2
+            ],
+            [
+              5,
+              10,
+              43,
+              1,
+              15,
+              6,
+              0
+            ],
+            [
+              1,
+              1,
+              2,
+              0,
+              0,
+              2,
+              0
+            ],
+            [
+              9,
+              0,
+              11,
+              0,
+              48,
+              15,
+              2
+            ],
+            [
+              5,
+              11,
+              23,
+              0,
+              37,
+              132,
+              3
+            ],
+            [
+              0,
+              3,
+              1,
+              0,
+              2,
+              0,
+              2
+            ]
+          ],
+          "images": 465
+        },
+        "barcelona_bordered": {
+          "balanced_accuracy": 0.5950023979105274,
+          "macro_auroc": 0.8766774391695024,
+          "melanoma_sensitivity": 0.7941176470588235,
+          "accuracy": 0.5963302752293578,
+          "recall": {
+            "akiec": 0.4358974358974359,
+            "bcc": 0.7865168539325843,
+            "bkl": 0.18181818181818182,
+            "df": 1.0,
+            "mel": 0.7941176470588235,
+            "nv": 0.4666666666666667,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 39,
+            "bcc": 89,
+            "bkl": 33,
+            "df": 4,
+            "mel": 68,
+            "nv": 90,
+            "vasc": 4
+          },
+          "confusion": [
+            [
+              17,
+              10,
+              4,
+              0,
+              7,
+              1,
+              0
+            ],
+            [
+              2,
+              70,
+              2,
+              0,
+              10,
+              5,
+              0
+            ],
+            [
+              8,
+              6,
+              6,
+              0,
+              12,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              4,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              2,
+              5,
+              0,
+              54,
+              7,
+              0
+            ],
+            [
+              0,
+              8,
+              7,
+              3,
+              30,
+              42,
+              0
+            ],
+            [
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              2
+            ]
+          ],
+          "images": 327
+        },
+        "barcelona_not_bordered": {
+          "balanced_accuracy": 0.41976010101010097,
+          "macro_auroc": 0.8589486205364373,
+          "melanoma_sensitivity": 0.7,
+          "accuracy": 0.6586102719033232,
+          "recall": {
+            "akiec": 0.2727272727272727,
+            "bcc": 0.84375,
+            "bkl": 0.045454545454545456,
+            "df": 0.375,
+            "mel": 0.7,
+            "nv": 0.7013888888888888,
+            "vasc": 0.0
+          },
+          "support": {
+            "akiec": 11,
+            "bcc": 64,
+            "bkl": 22,
+            "df": 8,
+            "mel": 80,
+            "nv": 144,
+            "vasc": 2
+          },
+          "confusion": [
+            [
+              3,
+              3,
+              1,
+              1,
+              3,
+              0,
+              0
+            ],
+            [
+              2,
+              54,
+              5,
+              0,
+              3,
+              0,
+              0
+            ],
+            [
+              0,
+              4,
+              1,
+              0,
+              14,
+              3,
+              0
+            ],
+            [
+              3,
+              1,
+              1,
+              3,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              1,
+              1,
+              0,
+              56,
+              17,
+              0
+            ],
+            [
+              2,
+              2,
+              9,
+              0,
+              30,
+              101,
+              0
+            ],
+            [
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "images": 331
+        }
+      }
+    },
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/rung1a-stored384-seed0/model.pt",
+    "weights_sha256": "e0fa8b79b2e4fae2"
+  }
+}
