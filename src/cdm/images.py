@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 from dataclasses import dataclass
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageStat, UnidentifiedImageError
 
 SIZE = 224
 
@@ -54,3 +54,17 @@ def decode_resize(data: bytes) -> Decoded:
     out = io.BytesIO()
     cropped.save(out, format="PNG")
     return Decoded(out.getvalue(), width, height, quant)
+
+
+def corner_brightness(png: bytes, patch: int = 16) -> float:
+    """Mean grey level (0 to 255) of the four corner patches of an image.
+
+    Dermoscopy images framed by a black circular vignette have dark corners; images filling
+    the frame do not. Used to compare how sites frame their images.
+    """
+    with Image.open(io.BytesIO(png)) as img:
+        grey = img.convert("L")
+        w, h = grey.size
+        boxes = [(0, 0), (w - patch, 0), (0, h - patch), (w - patch, h - patch)]
+        means = [ImageStat.Stat(grey.crop((x, y, x + patch, y + patch))).mean[0] for x, y in boxes]
+    return round(float(sum(means) / len(means)), 1)

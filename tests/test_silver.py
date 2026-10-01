@@ -51,3 +51,30 @@ def test_seed_everything_is_strict_on_cpu_and_warn_only_on_gpu() -> None:
     seed_everything(0, 2)
     assert not torch.is_deterministic_algorithms_warn_only_enabled()
     assert torch.are_deterministic_algorithms_enabled()
+
+
+def test_confusion_rows_are_true_classes_in_class_order() -> None:
+    import numpy as np
+
+    from cdm.eval import confusion
+
+    labels = np.array([0, 0, 1, 6])
+    logits = np.zeros((4, len(CLASSES)))
+    logits[[0, 1, 2, 3], [0, 1, 1, 6]] = 1.0
+    matrix = confusion(labels, logits)
+    assert len(matrix) == len(CLASSES) and matrix[0][:2] == [1, 1] and matrix[1][1] == 1
+    assert matrix[6][6] == 1 and sum(map(sum, matrix)) == 4
+
+
+def test_corner_brightness_separates_vignetted_from_full_frame_images() -> None:
+    from PIL import ImageDraw
+
+    from cdm.images import corner_brightness
+
+    full = io.BytesIO()
+    Image.new("RGB", (224, 224), (200, 160, 140)).save(full, format="PNG")
+    vignette = Image.new("RGB", (224, 224), (0, 0, 0))
+    ImageDraw.Draw(vignette).ellipse((0, 0, 223, 223), fill=(200, 160, 140))
+    framed = io.BytesIO()
+    vignette.save(framed, format="PNG")
+    assert corner_brightness(framed.getvalue()) < 20 < corner_brightness(full.getvalue())
