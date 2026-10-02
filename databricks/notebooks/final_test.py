@@ -6,7 +6,11 @@
 # MAGIC per-client and Barcelona bordered/non-bordered scores, mean and range over seeds,
 # MAGIC bootstrap 95% intervals by lesion, and calibration (ECE, NLL) before and after a
 # MAGIC temperature fitted on validation. Lesion-level averaging is reported as a separately
-# MAGIC labelled supplementary row: it was not selected by the tuning ladder.
+# MAGIC labelled supplementary row: it was not selected by the tuning ladder. Federated
+# MAGIC models (FedAvg, FedProx), if listed, are scored by the same code in the same look.
+# MAGIC
+# MAGIC Models come from the manifests the overnight GPU task writes; the run stops unless all
+# MAGIC three control seeds are listed.
 # MAGIC
 # MAGIC A marker file in the volume records that test was looked at; a second run stops
 # MAGIC unless `allow_second_look=true`, which is then recorded in the output.
@@ -17,7 +21,8 @@ for name, default in {
     "wheel": "",
     "code_version": "",
     "config": "{}",
-    "models": "[]",
+    "models_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/final_models.json",
+    "federated_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/federated_models.json",
     "bootstrap": "1000",
     "allow_second_look": "false",
 }.items():
@@ -54,7 +59,16 @@ from cdm.splits import CLASSES
 from cdm.train import build_model, weights_hash
 
 CONFIG = json.loads(dbutils.widgets.get("config"))
-MODELS = json.loads(dbutils.widgets.get("models"))
+MODELS_FILE, FED_FILE = (
+    Path(dbutils.widgets.get("models_file")),
+    Path(dbutils.widgets.get("federated_file")),
+)
+if not MODELS_FILE.exists():
+    raise RuntimeError(f"no control-seed manifest at {MODELS_FILE}: the GPU task did not finish")
+MODELS = json.loads(MODELS_FILE.read_text())
+if sorted(m["seed"] for m in MODELS) != [0, 1, 2]:
+    raise RuntimeError(f"need control seeds 0, 1 and 2; manifest has {[m['seed'] for m in MODELS]}")
+FEDERATED = json.loads(FED_FILE.read_text()) if FED_FILE.exists() else []
 N_BOOT = int(dbutils.widgets.get("bootstrap"))
 SECOND_LOOK = dbutils.widgets.get("allow_second_look").lower() == "true"
 MARKER = Path("/Volumes/workspace/cdm/raw/checkpoints/phase2/test_looked_at.json")
@@ -68,6 +82,7 @@ result: dict[str, object] = {
     "code_version": dbutils.widgets.get("code_version"),
     "config": CONFIG,
     "models": MODELS,
+    "federated_models": FEDERATED,
     "device": str(device),
     "previous_look": MARKER.read_text() if MARKER.exists() else None,
 }
@@ -102,15 +117,23 @@ def logits_for(model: torch.nn.Module, split: str) -> tuple[np.ndarray, np.ndarr
 
 # Validation logits first (temperature fitting needs them); the marker is written just
 # before the first test image is scored.
+def load(m: dict[str, object]) -> torch.nn.Module:
+    model = build_model(pretrained=False, arch=CONFIG.get("arch", "b0"))
+    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu"))
+    assert weights_hash(model) == m["weights_sha256"], f"{m} checkpoint mismatch"
+    return model.to(device).eval()
+
+
 val_logits, test_logits = [], []
 models = []
 for m in MODELS:
-    model = build_model(pretrained=False, arch=CONFIG.get("arch", "b0"))
-    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu"))
-    assert weights_hash(model) == m["weights_sha256"], f"seed {m['seed']} checkpoint mismatch"
-    models.append(model.to(device).eval())
+    models.append(load(m))
     logits, val_labels = logits_for(models[-1], "val")
     val_logits.append(logits)
+fed_models, fed_val = [], []
+for m in FEDERATED:
+    fed_models.append(load(m))
+    fed_val.append(logits_for(fed_models[-1], "val")[0])
 
 MARKER.parent.mkdir(parents=True, exist_ok=True)
 MARKER.write_text(json.dumps({"utc": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -118,6 +141,7 @@ MARKER.write_text(json.dumps({"utc": datetime.now(UTC).isoformat(timespec="secon
 for model in models:
     logits, test_labels = logits_for(model, "test")
     test_logits.append(logits)
+fed_test = [logits_for(model, "test")[0] for model in fed_models]
 
 # COMMAND ----------
 
@@ -168,6 +192,22 @@ result["supplementary_lesion_average_not_selected"] = {
         "bootstrap_95": bootstrap_by_lesion(avg_ens, test_labels, lesions, n=N_BOOT),
     },
 }
+
+# Federated models, same scoring code: per seed, then mean and range per method.
+federated: dict[str, object] = {}
+for method in ("fedavg", "fedprox"):
+    entries = [
+        {"seed": m["seed"], **report(v, t)}
+        for m, v, t in zip(FEDERATED, fed_val, fed_test, strict=True)
+        if m["kind"] == method
+    ]
+    if entries:
+        federated[method] = {
+            "seeds": [e["seed"] for e in entries],
+            "per_seed": entries,
+            "over_seeds": {k: summarize([pooled(e, k) for e in entries]) for k in KEYS},
+        }
+result["federated"] = federated
 
 print("FINAL_TEST_RESULT " + json.dumps(result))
 dbutils.notebook.exit(json.dumps(result))

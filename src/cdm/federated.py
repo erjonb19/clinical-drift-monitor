@@ -150,9 +150,9 @@ def run_federated(
     val_loader = DataLoader(
         val_set,
         batch_size=cfg.batch_size,
-        num_workers=cfg.num_workers,
+        num_workers=min(2, cfg.num_workers),  # 4 client loaders already hold workers
         pin_memory=pin,
-        persistent_workers=cfg.num_workers > 0,
+        persistent_workers=min(2, cfg.num_workers) > 0,
     )
     pooled_labels = [label for n in names for label in client_sets[n].labels]
     criterion = nn.CrossEntropyLoss(

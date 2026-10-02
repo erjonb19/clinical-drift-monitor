@@ -114,3 +114,25 @@ def test_federated_rounds_learn_and_keep_the_best_round(method: str) -> None:
     assert best > 0.6
     kept = balanced_accuracy(model, DataLoader(val, batch_size=64), torch.device("cpu"))
     assert kept == pytest.approx(best)
+
+
+def test_fedprox_changes_training_when_clients_take_several_steps() -> None:
+    clients = {f"c{i}": Points(200, seed=i, shift=0.5 * i) for i in range(3)}
+    val = Points(100, seed=9)
+    cfg = TrainConfig(batch_size=32, num_workers=0, lr=0.02)
+    weights = {}
+    for method in ("fedavg", "fedprox"):
+        torch.manual_seed(0)
+        model, _ = run_federated(
+            tiny(),
+            clients,  # type: ignore[arg-type]
+            val,  # type: ignore[arg-type]
+            cfg,
+            FedConfig(method, rounds=2, proximal_mu=1.0),
+            seed=0,
+            device=torch.device("cpu"),
+            generator=torch.Generator().manual_seed(0),
+            log=lambda _: None,
+        )
+        weights[method] = torch.cat([p.detach().flatten() for p in model.parameters()])
+    assert not torch.allclose(weights["fedavg"], weights["fedprox"])
