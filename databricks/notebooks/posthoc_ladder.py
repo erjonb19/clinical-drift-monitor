@@ -49,8 +49,10 @@ from cdm.train import build_model, weights_hash
 
 SEED = int(dbutils.widgets.get("seed"))
 REFERENCE = json.loads(dbutils.widgets.get("reference"))
-WORKERS = max(1, min(8, (os.cpu_count() or 2) - 1))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Serverless CPU has too little shared memory for DataLoader workers (run 1054615825269973
+# failed with "unable to allocate shared memory"), so CPU loads in the main process.
+WORKERS = max(1, min(8, (os.cpu_count() or 2) - 1)) if device.type == "cuda" else 0
 cfg = REFERENCE["config"]
 model = build_model(pretrained=False, arch=cfg.get("arch", "b0"))
 model.load_state_dict(torch.load(REFERENCE["checkpoint"], map_location="cpu"))
