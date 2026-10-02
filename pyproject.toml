@@ -25,6 +25,10 @@ train = [
     # 3.x is the release that serves the native 224px MedMNIST+ files.
     "medmnist>=3.0",
 ]
+# Federated training (cdm.federated): Flower's FedAvg and FedProx strategies.
+federated = [
+    "flwr==1.39.0",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.6",

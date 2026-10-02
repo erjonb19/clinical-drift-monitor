@@ -54,5 +54,5 @@ def test_bootstrap_interval_brackets_the_estimate_and_resamples_whole_lesions() 
     out = bootstrap_by_lesion(logits, labels, ids, n=200)
     point = classification_metrics(labels, logits)
     for m in ("balanced_accuracy", "macro_auroc"):
-        assert out[m]["low"] <= point[m] <= out[m]["high"]  # type: ignore[operator]
+        assert out[m]["low"] <= point[m] <= out[m]["high"]
         assert out[m]["high"] - out[m]["low"] < 0.2

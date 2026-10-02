@@ -16,6 +16,10 @@ from cdm.posthoc import (
 )
 
 
+def bacc(labels: np.ndarray, logits: np.ndarray) -> float:
+    return float(classification_metrics(labels, logits)["balanced_accuracy"])  # type: ignore[arg-type]
+
+
 def test_lesion_average_shares_probabilities_within_a_lesion_only() -> None:
     logits = np.array([[2.0, 0.0], [0.0, 2.0], [1.0, 0.0]])
     out = softmax(lesion_average(logits, ["a", "a", "b"]))
@@ -30,9 +34,9 @@ def test_offsets_fix_a_class_the_model_under_predicts() -> None:
     logits = rng.normal(0, 1, (600, 3))
     logits[np.arange(600), labels] += 2.0
     logits[:, 2] -= 3.0  # class 2 is almost never predicted
-    before = classification_metrics(labels, logits)["balanced_accuracy"]
+    before = bacc(labels, logits)
     offsets = fit_offsets(logits, labels)
-    after = classification_metrics(labels, apply_offsets(logits, offsets))["balanced_accuracy"]
+    after = bacc(labels, apply_offsets(logits, offsets))
     assert offsets[2] - offsets[[0, 1]].max() > 1.5
     assert after > before + 0.2
 
