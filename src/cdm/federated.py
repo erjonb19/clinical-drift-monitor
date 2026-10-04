@@ -127,12 +127,16 @@ def run_federated(
     device: torch.device,
     generator: torch.Generator,
     log: Callable[[str], None] = print,
+    pin_memory: bool = True,
 ) -> tuple[nn.Module, list[dict[str, object]]]:
-    """Federated training; returns the model at its best validation round and the history."""
+    """Federated training; returns the model at its best validation round and the history.
+
+    ``pin_memory=False`` (with fewer ``cfg.num_workers``) is the hardened loader setting,
+    used only to retry a run whose image loading failed."""
     names = sorted(client_sets)
     strategy = make_strategy(fcfg, len(names))
     mu = float(getattr(strategy, "proximal_mu", 0.0))
-    pin = device.type == "cuda"
+    pin = pin_memory and device.type == "cuda"
     loaders = {
         n: DataLoader(
             client_sets[n],
