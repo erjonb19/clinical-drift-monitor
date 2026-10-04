@@ -118,6 +118,9 @@ This is where the project becomes real ML work: proper federated training and OO
 - [ ] Label delay: the monitor watches drift without labels first, then checks accuracy once diagnoses for that batch are released.
 - [ ] Error analysis: confusion matrix, which classes, sites and skin types fail, and a look at the 20 worst misses.
 - [ ] Risk-coverage and abstain workload: for the shipped model and detector, accuracy and balanced accuracy against coverage when the least confident or most out-of-distribution images are abstained on, per site, and the share of images sent to human review at the abstain threshold Phase 3 will use. Computed on validation to set the threshold, then reported once on test and the held-out sites.
+- [ ] Triage operating point (triage framing, not a clinical claim): for the shipped model, the melanoma-probability threshold set on validation for at least 95% melanoma sensitivity, committed before test; then, once on test (own lock per model), melanoma sensitivity, specificity and referral rate with bootstrap intervals by lesion, per client and on Buenos Aires and PAD-UFES-20.
+- [ ] Batch-level drift detection (decided 2026-10-04, CPU, from saved scores): for the shipped Mahalanobis detector (Gram as secondary), reference = validation scores; batches of 25, 50, 100 and 200 images with 0%, 10%, 25%, 50% and 100% new-site images (Buenos Aires or PAD-UFES-20; the rest from the in-distribution test split); a two-sample KS test at alpha 0.01; 1,000 random batches per cell. Reports the detection rate per site, batch size and share, and the false-alarm rate on 0% batches. The spec is committed before it runs.
+- [ ] Label provenance: from ISIC's diagnosis_confirm_type and HAM10000's dx_type, the share of diagnoses confirmed by histopathology vs other methods, per site and class.
 
 **Done when** the results table is fully logged and you can say which detector to ship and why. The rule, fixed before any Phase 2 result: ship the detector with the highest mean AUROC on the two real held-out sites, with FPR@95TPR breaking ties; the benchmark sets are secondary.
 
@@ -129,10 +132,12 @@ The model becomes a service with a threshold, a schedule and a CI gate, which is
 - [ ] FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
 - [ ] Docker image, deployed free on Render.
 - [ ] Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
+- [ ] Gram as a backup detector (decided 2026-10-04): the monthly job scores Gram alongside the shipped Mahalanobis detector and logs both, because Phase 2's ship rule picked Mahalanobis by 0.18 AUROC points, within the seed spread, and Gram had the lower false-alarm rate on the real sites.
 - [ ] Per-skin-type drift alerts: the monthly job also computes PSI and KS per Fitzpatrick type wherever that month has at least 100 images of the type (the Phase 2 rule); smaller groups are logged with counts only and never alert.
 - [ ] Prediction audit table: every prediction from the monthly job and the API is written to a gold audit table (request ID, model version and registry URI, input SHA-256, label, class probabilities, OOD score, abstain flag, timestamp). The API appends to a volume file that Auto Loader ingests, so the free Render tier needs no database connection.
 - [ ] Unity Catalog lineage shown end to end: bronze → silver → gold → registered model → audit table, with a screenshot and the lineage query in the runbook.
 - [ ] Per-run cost tracking: GPU DBU and run time for every job run, read from the system billing and jobs tables and written to a gold cost table, so each result can be traced to what it cost.
+- [ ] Ingest stores ISIC's diagnosis_confirm_type in bronze and silver (schema change, with a bronze metadata refresh), so label provenance is tracked monthly.
 - [ ] Staged shifts scored for time to detect and false alarm rate.
 - [ ] Retraining loop: a confirmed drift trains a challenger, which replaces the current model in the Unity Catalog registry only if it wins on held-out data.
 - [ ] CI: pytest on every push plus a small eval gate that fails the build if AUROC drops, copied from the governed agent's setup.
@@ -156,8 +161,10 @@ This phase makes the project easy for someone else to pick up and run, which is 
 
 - [ ] One-command demo (`docker compose up`) with a sample batch that trips the drift alarm.
 - [ ] Runbook in 8D steps: containment when the alarm fires, who reviews the report, root cause, retraining as the permanent fix, and the check that prevents a repeat.
-- [ ] Model card in the CHAI Applied Model Card format, plus the data card: intended use, data provenance, per-site and per-skin-type results, known failure modes, and the drift monitoring that applies.
-- [ ] One-page change-control plan mapped to FDA's final guidance "Marketing Submission Recommendations for a Predetermined Change Control Plan for Artificial Intelligence-Enabled Device Software Functions" (December 2024; Federal Register notice of availability, December 4, 2024): the description of modifications (which retraining triggers are allowed), the modification protocol (data, retraining, the champion/challenger test from Phase 3, update and rollback), and the impact assessment. Labelled as a portfolio exercise, not a regulatory submission.
+- [ ] docs/model-card.md in CHAI Applied Model Card v0.2 format (mc-schema v0.2), covering all 9 HTI-1 predictive DSI source-attribute categories (§170.315(b)(11)) and HTI-1's risk areas (validity, reliability, robustness, fairness, intelligibility, safety, security, privacy), with internal performance on the client test set and external performance on Buenos Aires and PAD-UFES-20; plus the data card.
+- [ ] docs/change-control-plan.md in the FDA PCCP structure, mapped to FDA's final guidance "Marketing Submission Recommendations for a Predetermined Change Control Plan for Artificial Intelligence-Enabled Device Software Functions" (December 2024; Federal Register notice of availability, December 4, 2024): the description of modifications (which retraining triggers are allowed), the modification protocol (data, retraining, the champion/challenger test from Phase 3, update and rollback), and the impact assessment. Labelled as a portfolio exercise, not a regulatory submission.
+- [ ] docs/standards-alignment.md: GMLP's 10 guiding principles, TRIPOD+AI's 27 items and the IMDRF three evidence pillars, each mapped to repo evidence or a stated gap.
+- [ ] Every standards document states "structured after, not compliant with" and that the model is not for clinical use. The three documents are drafted after Phase 2's analyses, with serving, monitoring and audit sections marked as stated gaps until Phase 5.
 - [ ] README in the reckoner style: results table first, real vs staged drift labeled, a silent-failures list, and a built vs planned page.
 - [ ] Optional: a 3-minute demo recording.
 
