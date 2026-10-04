@@ -115,6 +115,7 @@ This is where the project becomes real ML work: proper federated training and OO
 - [ ] Accuracy and drift reported per Fitzpatrick skin type where a site has at least 100 images of that type; smaller groups are listed with counts only. Skin type is recorded only at Buenos Aires and PAD-UFES-20, with 98 images of types IV to VI in total, too few to judge darker skin.
 - [ ] Label delay: the monitor watches drift without labels first, then checks accuracy once diagnoses for that batch are released.
 - [ ] Error analysis: confusion matrix, which classes, sites and skin types fail, and a look at the 20 worst misses.
+- [ ] Risk-coverage and abstain workload: for the shipped model and detector, accuracy and balanced accuracy against coverage when the least confident or most out-of-distribution images are abstained on, per site, and the share of images sent to human review at the abstain threshold Phase 3 will use. Computed on validation to set the threshold, then reported once on test and the held-out sites.
 
 **Done when** the results table is fully logged and you can say which detector to ship and why. The rule, fixed before any Phase 2 result: ship the detector with the highest mean AUROC on the two real held-out sites, with FPR@95TPR breaking ties; the benchmark sets are secondary.
 
@@ -126,6 +127,10 @@ The model becomes a service with a threshold, a schedule and a CI gate, which is
 - [ ] FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
 - [ ] Docker image, deployed free on Render.
 - [ ] Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
+- [ ] Per-skin-type drift alerts: the monthly job also computes PSI and KS per Fitzpatrick type wherever that month has at least 100 images of the type (the Phase 2 rule); smaller groups are logged with counts only and never alert.
+- [ ] Prediction audit table: every prediction from the monthly job and the API is written to a gold audit table (request ID, model version and registry URI, input SHA-256, label, class probabilities, OOD score, abstain flag, timestamp). The API appends to a volume file that Auto Loader ingests, so the free Render tier needs no database connection.
+- [ ] Unity Catalog lineage shown end to end: bronze → silver → gold → registered model → audit table, with a screenshot and the lineage query in the runbook.
+- [ ] Per-run cost tracking: GPU DBU and run time for every job run, read from the system billing and jobs tables and written to a gold cost table, so each result can be traced to what it cost.
 - [ ] Staged shifts scored for time to detect and false alarm rate.
 - [ ] Retraining loop: a confirmed drift trains a challenger, which replaces the current model in the Unity Catalog registry only if it wins on held-out data.
 - [ ] CI: pytest on every push plus a small eval gate that fails the build if AUROC drops, copied from the governed agent's setup.
@@ -149,11 +154,14 @@ This phase makes the project easy for someone else to pick up and run, which is 
 
 - [ ] One-command demo (`docker compose up`) with a sample batch that trips the drift alarm.
 - [ ] Runbook in 8D steps: containment when the alarm fires, who reviews the report, root cause, retraining as the permanent fix, and the check that prevents a repeat.
-- [ ] Model card and data card: what the model is for, what data it saw, per-skin-type results, and where it fails.
+- [ ] Model card in the CHAI Applied Model Card format, plus the data card: intended use, data provenance, per-site and per-skin-type results, known failure modes, and the drift monitoring that applies.
+- [ ] One-page change-control plan mapped to FDA's final guidance "Marketing Submission Recommendations for a Predetermined Change Control Plan for Artificial Intelligence-Enabled Device Software Functions" (December 2024; Federal Register notice of availability, December 4, 2024): the description of modifications (which retraining triggers are allowed), the modification protocol (data, retraining, the champion/challenger test from Phase 3, update and rollback), and the impact assessment. Labelled as a portfolio exercise, not a regulatory submission.
 - [ ] README in the reckoner style: results table first, real vs staged drift labeled, a silent-failures list, and a built vs planned page.
 - [ ] Optional: a 3-minute demo recording.
 
-## Phase 6: A second model on tabular healthcare data (about 1 week, after Phase 5)
+## Phase 6: CMS readmission drift (committed, about 1 week, after Phase 5)
+
+This phase is part of the project, not optional: the project is done only when Phase 6's "Done when" is met.
 
 The drift monitor is built to work with any model, and a second model on real monthly CMS data ties the project to your healthcare data background.
 
@@ -176,6 +184,7 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 | MLOps | Phase 3 | Served the model through ONNX Runtime and FastAPI with a validated abstain threshold, a monthly drift job, and a CI accuracy gate |
 | LLMOps and applied AI | Phase 4 | Generated grounded drift incident reports from an LLM, scored on a scenario eval with cost and latency tracked |
 | Forward deployed | Phases 3 and 5 | Shipped a one-command demo and runbook a clinical ops team could operate |
+| Healthcare data | Phase 6 | Pointed the same drift monitor at a CMS readmission model on monthly public hospital data, with feature drift each month and performance checked once the next refresh arrives |
 
 ## Open questions
 
