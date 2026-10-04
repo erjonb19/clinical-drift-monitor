@@ -31,3 +31,24 @@ selected on pooled validation, which a real federated deployment could not see (
 so these federated numbers are, if anything, optimistic. Evidence:
 `results/phase2/overnight/final_test.json`, `results/phase2/overnight/rerun-fedprox-seed1/`,
 `results/phase2/v2/test/final_test.json`, `results/phase2/v2/training/data_summary.json`.
+
+## Drift detector: Mahalanobis shipped, a near tie with Gram
+
+The ship rule, fixed before any Phase 2 result, ranks detectors by mean AUROC on the two real
+held-out sites (Buenos Aires and PAD-UFES-20) for the centralized models, with FPR@95TPR only
+breaking ties. Mahalanobis (PCA size by method D) scored 75.05% and Gram
+74.87%: a margin of 0.18 points, smaller than the seed-to-seed range (Mahalanobis at
+Buenos Aires alone spans 66.35% to 69.46%). The rule picked Mahalanobis and it is kept.
+Gram has the lower false-alarm rate: mean FPR@95TPR on the real sites 75.09% against
+82.02% for Mahalanobis. The two split the real sites: Gram is better at Buenos Aires,
+Mahalanobis at PAD-UFES-20. Gram therefore runs alongside Mahalanobis as a backup detector in
+Phase 3 monitoring (PLAN.md). Evidence: `results/phase2/drift/v2/table.json`, `table.md`.
+
+## Limitation: method C's PCA search topped out
+
+Method C (the sensitivity row: the PCA size with the best mean AUROC on benchmark selection
+draws, from 16 to 512 components) chose 512, the largest candidate, for every one of the nine
+models, so its search range was too small to find a peak. Method D, the primary rule, chose
+517 to 631 components. The method C row stays within about 0.5 AUROC points of method D
+everywhere, and it never enters the ship rule, so it is not rerun; it is reported as a
+limitation. Evidence: `pca_components` in `results/phase2/drift/v2/table.json`.
