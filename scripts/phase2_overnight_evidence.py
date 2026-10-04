@@ -48,12 +48,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True)
     parser.add_argument("--out", type=Path, default=OUT, help="folder for this run's evidence")
+    parser.add_argument("--volume", default=VOLUME, help="volume folder the GPU task wrote to")
     args = parser.parse_args()
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
     evidence = task_outputs(args.run)
     stamp = datetime.now(UTC).isoformat(timespec="seconds")
-    test = evidence["outputs"].pop("cpu_test")
+    test = evidence["outputs"].pop("cpu_test", None)
     (out / "job_run.json").write_text(
         json.dumps({"exported_utc": stamp, **evidence}, indent=2) + "\n", encoding="utf-8"
     )
@@ -62,11 +63,11 @@ def main() -> None:
             json.dumps({"exported_utc": stamp, "job_run_id": evidence["run_id"], **test},
                        indent=2) + "\n", encoding="utf-8"
         )  # fmt: skip
-    listing = cli("fs", "ls", VOLUME)
+    listing = cli("fs", "ls", args.volume)
     names = [e["name"] for e in listing]
     for name in names:
-        if name.endswith(".json"):
-            text = cli_text("fs", "cat", f"{VOLUME}/{name}")
+        if name.endswith(".json") and not name.endswith("/"):
+            text = cli_text("fs", "cat", f"{args.volume}/{name}")
             (out / name).write_text(json.dumps(json.loads(text), indent=2) + "\n", encoding="utf-8")
     print(f"wrote {out} ({len(names)} volume files)")
 
