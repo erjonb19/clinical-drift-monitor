@@ -48,7 +48,9 @@
           "control_seed0": "{\"checkpoint\": \"/Volumes/workspace/cdm/raw/checkpoints/phase2/control-center384-seed0/model.pt\", \"weights_sha256\": \"67f7618e3f32e23b\"}",
           "rounds": "20",
           "proximal_mu": "0.01",
-          "deadline_minutes": "100"
+          "deadline_minutes": "100",
+          "job_run_id": "{{job.run_id}}",
+          "pause_when_done": ""
         }
       }
     },

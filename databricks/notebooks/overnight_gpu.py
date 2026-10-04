@@ -7,8 +7,11 @@
 # MAGIC as it finishes; a run whose result file already exists is skipped, so a retry resumes.
 # MAGIC A failed run is recorded in `summary.json` and the next one starts; the task itself
 # MAGIC does not fail for it, so the job's one retry is spent only on infrastructure failures
-# MAGIC (no GPU, a crashed process). A deadline counted from the first attempt's start caps
-# MAGIC GPU time across attempts: no run starts after `deadline_minutes`.
+# MAGIC (no GPU, a crashed process). A deadline per job run, counted from the first task
+# MAGIC attempt of that job run, caps GPU time across its attempts: no training run starts
+# MAGIC after `deadline_minutes`. A later job run gets a fresh deadline and resumes by skipping
+# MAGIC finished results. When every planned run has finished, the job IDs in
+# MAGIC `pause_when_done` (the later scheduled attempts) have their schedules paused.
 # MAGIC Writes the manifests the CPU test task reads: `final_models.json` (control seeds 0-2)
 # MAGIC and `federated_models.json`.
 
@@ -22,6 +25,8 @@ for name, default in {
     "rounds": "20",
     "proximal_mu": "0.01",
     "deadline_minutes": "100",
+    "job_run_id": "",  # the job passes {{job.run_id}}: the same for a task's retries
+    "pause_when_done": "",  # comma-separated job IDs
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -68,8 +73,10 @@ CKPT = Path("/Volumes/workspace/cdm/raw/checkpoints/phase2")
 OUT = Path("/Volumes/workspace/cdm/raw/results/phase2/overnight")
 OUT.mkdir(parents=True, exist_ok=True)
 device = torch.device("cuda")
-# The deadline counts from the first attempt that reached this cell, before data loading.
-first_start = OUT / "first_code_start.txt"
+# The deadline counts from the first attempt of this job run that reached this cell, before
+# data loading. Keyed by job run, so a new job run is not stopped by an old run's clock.
+JOB_RUN = dbutils.widgets.get("job_run_id") or "manual"
+first_start = OUT / f"first_code_start-{JOB_RUN}.txt"
 if not first_start.exists():
     first_start.write_text(str(time.time()))
 DEADLINE = float(first_start.read_text()) + 60 * float(dbutils.widgets.get("deadline_minutes"))
@@ -188,6 +195,22 @@ finals = [{"kind": "final", "seed": 0, **CONTROL0}] + manifest(("final",))
 summary = {"code_version": CODE, "plan": [f"{k}-seed{s}" for k, s in PLAN],
            "finished": sorted(f.stem for f in OUT.glob("*-seed*.json")), "failed": failed,
            "not_started_deadline": not_started}  # fmt: skip
+(OUT / "summary.json").write_text(json.dumps(summary))
+pause = [j.strip() for j in dbutils.widgets.get("pause_when_done").split(",") if j.strip()]
+if pause and not summary["failed"] and set(summary["plan"]) <= set(summary["finished"]):
+    from databricks.sdk import WorkspaceClient
+    from databricks.sdk.service.jobs import CronSchedule, JobSettings, PauseStatus
+
+    w = WorkspaceClient()
+    for job_id in pause:
+        schedule = w.jobs.get(int(job_id)).settings.schedule
+        if schedule is not None:
+            paused = CronSchedule(quartz_cron_expression=schedule.quartz_cron_expression,
+                                  timezone_id=schedule.timezone_id,
+                                  pause_status=PauseStatus.PAUSED)  # fmt: skip
+            w.jobs.update(int(job_id), new_settings=JobSettings(schedule=paused))
+    summary["paused_jobs"] = pause
+summary["job_run_id"] = JOB_RUN
 (OUT / "summary.json").write_text(json.dumps(summary))
 print("OVERNIGHT_SUMMARY " + json.dumps(summary), flush=True)
 dbutils.notebook.exit(json.dumps(summary))
