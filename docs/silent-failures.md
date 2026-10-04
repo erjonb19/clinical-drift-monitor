@@ -159,5 +159,30 @@ computed on the current silver, so those scores are consistent with each other.
 
 **Caught by.** The v2 data summary, which counts bordered training images per client on the
 silver the models actually train on. Bordered counts are now always reported with the silver
-format they were measured on; site-level counts for all sources, held-out sites included, are
-recomputed on current silver in the drift-table run.
+format they were measured on. Recomputed on current silver for every source
+(`results/phase2/drift/borders.json`, drift run 802132583124668): Barcelona 4,771 of 9,999
+(47.7%), Buenos Aires 513 of 1,616 (31.7%, not 27), HAM10000 328 of 10,015 (3.3%), MSK 44 of
+3,728 (1.2%), PAD-UFES-20 0 of 2,298. Buenos Aires, a held-out site, is far more bordered
+than the old count said, which matters when reading its drift scores.
+
+## 8. A detection look whose results were never saved
+
+**What looked right.** Drift-table run 802132583124668 scored eight of the nine final models,
+about eight minutes each, and wrote a scores file per model to the volume. The job was still
+"RUNNING" with no error showing.
+
+**Cause.** `np.savez_compressed` wrote straight into the Unity Catalog volume. A zip writer
+needs to seek back into the file, which volumes do not support, so each write failed after
+about 24 KB, leaving an unreadable file. The per-model result JSON was written after the
+scores file, so it was never written either; the error was caught and recorded as a failed
+model, and the loop moved on. Each model's detection lock had already been written, so every
+model's one detection look was used up with nothing saved. No metric was printed or saved, so
+no one saw any detection result. Phase 1 had hit the same volume limit for large files and
+works around it with a local copy first; the drift-table notebook did not.
+
+**Caught by.** A one-off status check that listed the volume: score files of 24 KB, no result
+JSON, all nine locks present. The run was cancelled during the ninth model. The fix
+(`a421c55`) writes each scores file locally, checks it reads back with every array, then
+copies it into the volume, and writes the metrics JSON before the scores file, so a failure
+saving per-image scores cannot lose the metrics. The dry run had passed because a local disk
+can seek; a volume cannot, so only the real run could show it.
