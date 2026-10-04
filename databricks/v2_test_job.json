@@ -1,0 +1,46 @@
+{
+  "name": "cdm-phase2-v2-test",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "erjonbrucaj@gmail.com"
+    ],
+    "on_success": [
+      "erjonbrucaj@gmail.com"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/ceb83b0/cdm-0.1.0-py3-none-any.whl",
+          "torch>=2.4",
+          "torchvision>=0.19"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "cpu_test",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "timeout_seconds": 7200,
+      "notebook_task": {
+        "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/final_test",
+        "base_parameters": {
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/ceb83b0/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "ceb83b0",
+          "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
+          "bootstrap": "1000",
+          "allow_second_look": "false",
+          "version": "v2",
+          "models_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/v2/final_models.json",
+          "federated_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/v2/federated_models.json"
+        }
+      }
+    }
+  ]
+}
