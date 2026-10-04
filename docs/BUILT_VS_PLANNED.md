@@ -58,8 +58,10 @@ Run on Databricks Free Edition; evidence in `results/phase1/run_evidence.json`, 
 - Deployment by CLI (`scripts/deploy_databricks.py`, `databricks/*.json`) and the runbook.
 
 Known limits:
-- Auto Loader's incremental pickup of new files has not been exercised: the one successful
-  update read every file. Phase 3's monthly job is its first real test.
+- Auto Loader's incremental pickup of new files: exercised on 2026-10-04 by the v2 data
+  update (job run 708528812450324). bronze_images grew by exactly the 4,999 new Barcelona
+  files (22,657 to 27,656), confirmed by the update's flow metrics; every gate passed,
+  including frozen_splits_kept. Evidence: `results/phase2/v2/data_checks.json`.
 - Databricks reports only the first failing gate; the rest are confirmed by running
   `cdm.gates.run_all` on silver, as the note describes.
 - Gold embeddings use pretrained ImageNet features; Phase 2 recomputes them.

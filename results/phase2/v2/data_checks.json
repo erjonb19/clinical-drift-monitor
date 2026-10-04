@@ -1,0 +1,208 @@
+{
+  "exported_utc": "2026-10-04T16:48:44+00:00",
+  "job_run": {
+    "run_id": 708528812450324,
+    "job_id": 143178896044655,
+    "result": "SUCCESS",
+    "start": "2026-10-04T14:22:21+00:00",
+    "end": "2026-10-04T15:22:31+00:00",
+    "tasks": [
+      {
+        "task": "pipeline",
+        "result": "SUCCESS",
+        "start": "2026-10-04T14:57:41+00:00",
+        "end": "2026-10-04T15:03:45+00:00"
+      },
+      {
+        "task": "gold",
+        "result": "SUCCESS",
+        "start": "2026-10-04T15:03:45+00:00",
+        "end": "2026-10-04T15:22:30+00:00"
+      },
+      {
+        "task": "ingest",
+        "result": "SUCCESS",
+        "start": "2026-10-04T14:22:22+00:00",
+        "end": "2026-10-04T14:57:41+00:00"
+      }
+    ]
+  },
+  "checks": {
+    "job_succeeded": true,
+    "all_gates_pass": true,
+    "frozen_splits_kept_present_and_passing": true,
+    "ham_fingerprint_gate_passing": true,
+    "bronze_grew_by_new_images": true,
+    "update_flow_added_only_new_files": true,
+    "v1_scoring_lesions_still_scoring": true
+  },
+  "passed": true,
+  "gates": [
+    {
+      "name": "split_computed",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "no_lesion_in_two_splits",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "split_fingerprint_matches_phase0",
+      "violations": 0,
+      "detail": "got cc2b196cd5bf58ad, expected cc2b196cd5bf58ad"
+    },
+    {
+      "name": "class_counts_as_expected",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "no_missing_labels",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "no_ham10000_image_in_a_site",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "license_and_attribution",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "diagnosis_mapping_matches_ham10000",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "no_duplicate_files",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "every_image_landed",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "files_match_manifest",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "roles_respected",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "site_label_rule_applied",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "every_client_image_has_a_client",
+      "violations": 0,
+      "detail": ""
+    },
+    {
+      "name": "frozen_splits_kept",
+      "violations": 0,
+      "detail": "3650 lesions kept"
+    }
+  ],
+  "bronze_images_before": {
+    "bronze_images": 22657,
+    "barcelona": 5000
+  },
+  "bronze_images_after": {
+    "total": 27656,
+    "ham10000": 10015,
+    "barcelona": 9999,
+    "buenos_aires": 1616,
+    "msk": 3728,
+    "pad_ufes": 2298
+  },
+  "bronze_rows_added_by_update_flow_metrics": 4999,
+  "v1_scoring_only_barcelona": {
+    "lesions": "219",
+    "still_score": "691",
+    "missing": "0",
+    "images": "691"
+  },
+  "silver_client_images_by_split": [
+    {
+      "client": "barcelona",
+      "split": "score",
+      "n": "1419"
+    },
+    {
+      "client": "barcelona",
+      "split": "test",
+      "n": "1274"
+    },
+    {
+      "client": "barcelona",
+      "split": "train",
+      "n": "6004"
+    },
+    {
+      "client": "barcelona",
+      "split": "val",
+      "n": "1302"
+    },
+    {
+      "client": "ham_queensland",
+      "split": "test",
+      "n": "356"
+    },
+    {
+      "client": "ham_queensland",
+      "split": "train",
+      "n": "1596"
+    },
+    {
+      "client": "ham_queensland",
+      "split": "val",
+      "n": "307"
+    },
+    {
+      "client": "ham_vienna",
+      "split": "test",
+      "n": "1172"
+    },
+    {
+      "client": "ham_vienna",
+      "split": "train",
+      "n": "5448"
+    },
+    {
+      "client": "ham_vienna",
+      "split": "val",
+      "n": "1136"
+    },
+    {
+      "client": "msk",
+      "split": "score",
+      "n": "574"
+    },
+    {
+      "client": "msk",
+      "split": "test",
+      "n": "460"
+    },
+    {
+      "client": "msk",
+      "split": "train",
+      "n": "2229"
+    },
+    {
+      "client": "msk",
+      "split": "val",
+      "n": "465"
+    }
+  ]
+}

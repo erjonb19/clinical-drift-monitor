@@ -19,25 +19,25 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from phase1_export_evidence import Sql, _events, job_run, pipeline_id  # noqa: E402
+from phase1_export_evidence import Sql, job_run, pipeline_id  # noqa: E402
 
 BEFORE = {"bronze_images": 22657, "barcelona": 5000}
 NEW_IMAGES = 4999  # 9,999 selected by the 10,000 cap minus v1's 5,000
 OUT = Path("results/phase2/v2/data_checks.json")
 
 
-def flow_rows_added(pipeline: str, flow: str, since: str) -> int | None:
-    """Rows the bronze flow wrote in updates that started after ``since`` (flow metrics)."""
-    total, seen = 0, False
-    for e in _events(pipeline, "METRICS") + _events(pipeline, "INFO"):
-        origin = e.get("origin") or {}
-        if origin.get("flow_name", "").split(".")[-1] != flow or e["timestamp"] < since:
-            continue
-        progress = (e.get("details") or {}).get("flow_progress") or {}
-        rows = (progress.get("metrics") or {}).get("num_output_rows")
-        if progress.get("status") == "COMPLETED" and rows is not None:
-            total, seen = total + int(rows), True
-    return total if seen else None
+def flow_rows_added(sql: Sql, pipeline: str, flow: str, since: str) -> int | None:
+    """Rows the flow wrote in its micro-batches after ``since``, from the pipeline's event
+    log (the CLI's event listing leaves out flow metrics)."""
+    got = sql(
+        f"""SELECT sum(CAST(details:flow_progress.metrics.num_output_rows AS BIGINT)) AS n
+            FROM event_log('{pipeline}')
+            WHERE event_type = 'flow_progress' AND origin.flow_name = 'workspace.cdm.{flow}'
+              AND timestamp > '{since}Z'
+              AND details:flow_progress.metrics.num_output_rows IS NOT NULL"""
+    )
+    value = got["n"][0]
+    return None if value is None else int(value)
 
 
 def main() -> None:
@@ -52,7 +52,7 @@ def main() -> None:
     counts = {r["source"]: int(r["n"]) for r in by_source.to_dict("records")}
     total = sum(counts.values())
     start = min(t["start"] for t in run["tasks"] if t.get("start"))
-    added = flow_rows_added(pipeline_id("cdm-phase1"), "bronze_images", start[:19])
+    added = flow_rows_added(sql, pipeline_id("cdm-phase1"), "bronze_images", start[:19])
     stayed = sql(
         """SELECT count(DISTINCT v.lesion_id) lesions,
              sum(CASE WHEN s.split = 'score' THEN 1 ELSE 0 END) still_score,
