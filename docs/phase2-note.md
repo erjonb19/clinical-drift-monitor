@@ -52,3 +52,47 @@ models, so its search range was too small to find a peak. Method D, the primary 
 517 to 631 components. The method C row stays within about 0.5 AUROC points of method D
 everywhere, and it never enters the ship rule, so it is not rerun; it is reported as a
 limitation. Evidence: `pca_components` in `results/phase2/drift/v2/table.json`.
+
+## Main finding: the triage operating point loses 14 to 17 points of sensitivity at new sites
+
+The triage operating point (triage framing, not a clinical claim) refers an image when the
+shipped ensemble's melanoma probability is at or above 0.0638, the highest threshold
+reaching 95% melanoma sensitivity on v2 validation (553 melanoma images in
+208 lesions, of 3,210 images). The threshold was committed before any test image was
+scored, and each model had one triage look. On the clients' test split it holds: melanoma
+sensitivity 96.2% [93.6, 98.2]. At the two held-out sites it does not: 81.8%
+at Buenos Aires and 78.8% at PAD-UFES-20, drops of 14.3 and 17.3 points. This is
+the failure the drift monitor exists to catch: a model whose numbers look right where it was
+built, and that quietly misses more melanomas at a new site. Evidence:
+`results/phase2/triage/threshold.json`, `results/phase2/triage/test.json`.
+
+| Group | Images | Melanomas (prevalence) | Specificity | Sensitivity | Referral rate |
+| --- | ---: | ---: | --- | --- | ---: |
+| Client test, pooled | 3,262 | 599 (18.4%) | 52.3% [49.7, 55.2] | 96.2% [93.6, 98.2] | 56.6% |
+| Barcelona | 1,274 | 350 (27.5%) | 47.1% [41.3, 52.6] | 95.4% [91.3, 98.3] | 64.6% |
+| HAM Queensland | 356 | 54 (15.2%) | 40.7% [34.1, 47.4] | 98.1% [94.0, 100.0] | 65.2% |
+| HAM Vienna | 1,172 | 108 (9.2%) | 64.8% [61.2, 68.8] | 96.3% [91.3, 100.0] | 40.8% |
+| MSK | 460 | 87 (18.9%) | 39.1% [33.5, 44.4] | 97.7% [93.8, 100.0] | 67.8% |
+| Buenos Aires (external) | 1,458 | 253 (17.4%) | 59.1% [56.4, 62.1] | 81.8% [76.7, 86.3] | 48.0% |
+| PAD-UFES-20 (external) | 2,106 | 52 (2.5%) | 62.5% [60.2, 64.7] | 78.8% [65.5, 89.5] | 38.6% |
+
+**Specificity is the metric that carries between settings; the referral rate is not.**
+Specificity (the share of non-melanoma images not referred) does not depend on how common
+melanoma is. The referral rate does: melanoma prevalence is about 18% in these datasets (599
+of 3,262 client test images), far above what a primary-care population would see, so the
+referral rates above describe these datasets only and would be much lower, and mostly made of
+false referrals, in primary care. No comparison is made with any marketed device. As context
+for why checks in new populations matter after release: when FDA authorized DermaSensor, an
+AI-enabled skin cancer device for primary care, in January 2024, it required further
+post-market clinical validation in patients from demographic groups representative of the
+U.S. population, including groups with limited melanoma representation in the premarket
+studies (FDA Roundup, January 16, 2024).
+
+**Part of the drop at the external sites may come from imaging type, not only the site.** All
+images at the four training clients are dermoscopic. PAD-UFES-20 is entirely clinical
+close-up photographs taken with smartphones (Pacheco et al., 2020, "PAD-UFES-20: a skin lesion
+dataset composed of patient data and clinical images collected from smartphones", Mendeley
+Data, doi:10.17632/zr7vgbcyr2.1; all 2,298 images recorded as "clinical: close-up" in ISIC).
+Buenos Aires is mixed: 1,270 dermoscopic and 346 clinical images (ISIC `image_type`). With
+only 52 melanomas, PAD-UFES-20's interval is also wide. Site and imaging type are not
+separated here.
