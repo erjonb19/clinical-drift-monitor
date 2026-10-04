@@ -66,7 +66,7 @@ mypy_path = "scripts"
 strict = true
 # None of these ship type information.
 [[tool.mypy.overrides]]
-module = ["medmnist.*", "sklearn.*", "torchvision.*", "pyspark.*"]
+module = ["medmnist.*", "sklearn.*", "torchvision.*", "pyspark.*", "scipy.*"]
 ignore_missing_imports = true
 
 # The pipeline's decorators come from pyspark, which is not installed outside Databricks.
