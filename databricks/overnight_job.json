@@ -1,0 +1,83 @@
+{
+  "name": "cdm-phase2-overnight",
+  "schedule": {
+    "quartz_cron_expression": "0 0 1 3 10 ? 2026",
+    "timezone_id": "America/New_York",
+    "pause_status": "UNPAUSED"
+  },
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "erjonbrucaj@gmail.com"
+    ],
+    "on_success": [
+      "erjonbrucaj@gmail.com"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "gpu",
+      "spec": {
+        "base_environment": "databricks_ai_v6"
+      }
+    },
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/78db759/cdm-0.1.0-py3-none-any.whl",
+          "torch>=2.4",
+          "torchvision>=0.19"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "gpu_train",
+      "environment_key": "gpu",
+      "compute": {
+        "hardware_accelerator": "GPU_1xA10"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 7200,
+      "notebook_task": {
+        "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/overnight_gpu",
+        "base_parameters": {
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/78db759/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "78db759",
+          "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
+          "control_seed0": "{\"checkpoint\": \"/Volumes/workspace/cdm/raw/checkpoints/phase2/control-center384-seed0/model.pt\", \"weights_sha256\": \"67f7618e3f32e23b\"}",
+          "rounds": "20",
+          "proximal_mu": "0.01",
+          "deadline_minutes": "100"
+        }
+      }
+    },
+    {
+      "task_key": "cpu_test",
+      "depends_on": [
+        {
+          "task_key": "gpu_train"
+        }
+      ],
+      "run_if": "ALL_DONE",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "timeout_seconds": 7200,
+      "notebook_task": {
+        "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/final_test",
+        "base_parameters": {
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/78db759/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "78db759",
+          "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
+          "bootstrap": "1000",
+          "allow_second_look": "false"
+        }
+      }
+    }
+  ]
+}
