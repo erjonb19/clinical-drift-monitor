@@ -1,0 +1,672 @@
+{
+  "stage": "test",
+  "code_version": "9605bfa",
+  "target_sensitivity": 0.95,
+  "thresholds": {
+    "v2-ensemble-final-seeds0-1-2": 0.0637611411378433,
+    "v2-final-seed0": 0.04233320973085598,
+    "v2-final-seed1": 0.04255901819499685,
+    "v2-final-seed2": 0.029218959685598307
+  },
+  "threshold_set_on": {
+    "set_on": "v2 validation (all four clients)",
+    "validation_images": 3210,
+    "validation_melanoma_images": 553,
+    "validation_melanoma_lesions": 208
+  },
+  "framing": "triage operating point, not a clinical claim",
+  "models": {
+    "v2-ensemble-final-seeds0-1-2": {
+      "client_test_pooled": {
+        "images": 3262,
+        "melanoma_images": 599,
+        "sensitivity": 0.9616026711185309,
+        "specificity": 0.5234697709350357,
+        "referral_rate": 0.5656039239730227,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9364526668168797,
+            "high": 0.9816737915685991
+          },
+          "specificity": {
+            "low": 0.4967341312267364,
+            "high": 0.5520381642082816
+          },
+          "referral_rate": {
+            "low": 0.537720957641457,
+            "high": 0.5923255780113605
+          }
+        }
+      },
+      "client_test_barcelona": {
+        "images": 1274,
+        "melanoma_images": 350,
+        "sensitivity": 0.9542857142857143,
+        "specificity": 0.4707792207792208,
+        "referral_rate": 0.6459968602825745,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9130186942359438,
+            "high": 0.9830110953729934
+          },
+          "specificity": {
+            "low": 0.41290786825950737,
+            "high": 0.5257404283924927
+          },
+          "referral_rate": {
+            "low": 0.5938030817548889,
+            "high": 0.6982695730178401
+          }
+        }
+      },
+      "client_test_ham_queensland": {
+        "images": 356,
+        "melanoma_images": 54,
+        "sensitivity": 0.9814814814814815,
+        "specificity": 0.40728476821192056,
+        "referral_rate": 0.651685393258427,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.94,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.34131483654313,
+            "high": 0.4735286482194124
+          },
+          "referral_rate": {
+            "low": 0.5942383540372671,
+            "high": 0.7114872364039956
+          }
+        }
+      },
+      "client_test_ham_vienna": {
+        "images": 1172,
+        "melanoma_images": 108,
+        "sensitivity": 0.9629629629629629,
+        "specificity": 0.6484962406015038,
+        "referral_rate": 0.40784982935153585,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9130434782608695,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.6124824309889245,
+            "high": 0.6876819972187056
+          },
+          "referral_rate": {
+            "low": 0.3702234473051434,
+            "high": 0.4435075887448281
+          }
+        }
+      },
+      "client_test_msk": {
+        "images": 460,
+        "melanoma_images": 87,
+        "sensitivity": 0.9770114942528736,
+        "specificity": 0.3914209115281501,
+        "referral_rate": 0.6782608695652174,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9375,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.3351567184001822,
+            "high": 0.44387116625522016
+          },
+          "referral_rate": {
+            "low": 0.6297096986121377,
+            "high": 0.7258585548152338
+          }
+        }
+      },
+      "external_buenos_aires": {
+        "images": 1458,
+        "melanoma_images": 253,
+        "sensitivity": 0.8181818181818182,
+        "specificity": 0.5908713692946058,
+        "referral_rate": 0.48010973936899864,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.7665100540002842,
+            "high": 0.8630749725148066
+          },
+          "specificity": {
+            "low": 0.5637126761454063,
+            "high": 0.6210284053604443
+          },
+          "referral_rate": {
+            "low": 0.45178337649155387,
+            "high": 0.5090056150356596
+          }
+        }
+      },
+      "external_pad_ufes": {
+        "images": 2106,
+        "melanoma_images": 52,
+        "sensitivity": 0.7884615384615384,
+        "specificity": 0.624634858812074,
+        "referral_rate": 0.3855650522317189,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.6551567398119122,
+            "high": 0.8947642543859649
+          },
+          "specificity": {
+            "low": 0.6016320466422393,
+            "high": 0.64675087310988
+          },
+          "referral_rate": {
+            "low": 0.36324461343472747,
+            "high": 0.40800752895752895
+          }
+        }
+      }
+    },
+    "v2-final-seed0": {
+      "client_test_pooled": {
+        "images": 3262,
+        "melanoma_images": 599,
+        "sensitivity": 0.9582637729549248,
+        "specificity": 0.4769057453999249,
+        "referral_rate": 0.6030042918454935,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.930850564969204,
+            "high": 0.9791031553533083
+          },
+          "specificity": {
+            "low": 0.45063380556298194,
+            "high": 0.5052938825518561
+          },
+          "referral_rate": {
+            "low": 0.5752638723311914,
+            "high": 0.6283370207294604
+          }
+        }
+      },
+      "client_test_barcelona": {
+        "images": 1274,
+        "melanoma_images": 350,
+        "sensitivity": 0.9428571428571428,
+        "specificity": 0.43722943722943725,
+        "referral_rate": 0.6671899529042387,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.8973487253923614,
+            "high": 0.9778430373351452
+          },
+          "specificity": {
+            "low": 0.3829437326927568,
+            "high": 0.4944401041666666
+          },
+          "referral_rate": {
+            "low": 0.6140195442498995,
+            "high": 0.7177584826343709
+          }
+        }
+      },
+      "client_test_ham_queensland": {
+        "images": 356,
+        "melanoma_images": 54,
+        "sensitivity": 1.0,
+        "specificity": 0.38741721854304634,
+        "referral_rate": 0.6713483146067416,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 1.0,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.3166942645127249,
+            "high": 0.45238471971066907
+          },
+          "referral_rate": {
+            "low": 0.6106288476393343,
+            "high": 0.7348248938404639
+          }
+        }
+      },
+      "client_test_ham_vienna": {
+        "images": 1172,
+        "melanoma_images": 108,
+        "sensitivity": 0.9722222222222222,
+        "specificity": 0.5770676691729323,
+        "referral_rate": 0.4735494880546075,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9083911045334164,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.5416981480825033,
+            "high": 0.6155558497003925
+          },
+          "referral_rate": {
+            "low": 0.43678061315962474,
+            "high": 0.5087741505662892
+          }
+        }
+      },
+      "client_test_msk": {
+        "images": 460,
+        "melanoma_images": 87,
+        "sensitivity": 0.9770114942528736,
+        "specificity": 0.36193029490616624,
+        "referral_rate": 0.7021739130434783,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9418604651162791,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.3095841216983274,
+            "high": 0.4166721635883905
+          },
+          "referral_rate": {
+            "low": 0.6529985058091905,
+            "high": 0.7488991551766883
+          }
+        }
+      },
+      "external_buenos_aires": {
+        "images": 1458,
+        "melanoma_images": 253,
+        "sensitivity": 0.8142292490118577,
+        "specificity": 0.5045643153526971,
+        "referral_rate": 0.5507544581618655,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.7614686192468619,
+            "high": 0.8636440940012369
+          },
+          "specificity": {
+            "low": 0.47431350407318074,
+            "high": 0.533952074845919
+          },
+          "referral_rate": {
+            "low": 0.5243977881397307,
+            "high": 0.5790700341570966
+          }
+        }
+      },
+      "external_pad_ufes": {
+        "images": 2106,
+        "melanoma_images": 52,
+        "sensitivity": 0.8653846153846154,
+        "specificity": 0.6285296981499513,
+        "referral_rate": 0.38366571699905033,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.7550924143242203,
+            "high": 0.9523995535714285
+          },
+          "specificity": {
+            "low": 0.6056254878669608,
+            "high": 0.6488090570453796
+          },
+          "referral_rate": {
+            "low": 0.3630277216253918,
+            "high": 0.40664486739663736
+          }
+        }
+      }
+    },
+    "v2-final-seed1": {
+      "client_test_pooled": {
+        "images": 3262,
+        "melanoma_images": 599,
+        "sensitivity": 0.9649415692821369,
+        "specificity": 0.48479158843409687,
+        "referral_rate": 0.5977927651747394,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9420700947718363,
+            "high": 0.9834905858367813
+          },
+          "specificity": {
+            "low": 0.4593053000225945,
+            "high": 0.5141715381665568
+          },
+          "referral_rate": {
+            "low": 0.5706655164852863,
+            "high": 0.6231312107126992
+          }
+        }
+      },
+      "client_test_barcelona": {
+        "images": 1274,
+        "melanoma_images": 350,
+        "sensitivity": 0.9485714285714286,
+        "specificity": 0.4491341991341991,
+        "referral_rate": 0.6601255886970173,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9102482678983833,
+            "high": 0.97682662262298
+          },
+          "specificity": {
+            "low": 0.39741847826086957,
+            "high": 0.505208484212051
+          },
+          "referral_rate": {
+            "low": 0.6081937035162182,
+            "high": 0.7076676831820965
+          }
+        }
+      },
+      "client_test_ham_queensland": {
+        "images": 356,
+        "melanoma_images": 54,
+        "sensitivity": 1.0,
+        "specificity": 0.2814569536423841,
+        "referral_rate": 0.7612359550561798,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 1.0,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.22371892655367231,
+            "high": 0.3447128398258209
+          },
+          "referral_rate": {
+            "low": 0.7070172960841974,
+            "high": 0.8131914046955829
+          }
+        }
+      },
+      "client_test_ham_vienna": {
+        "images": 1172,
+        "melanoma_images": 108,
+        "sensitivity": 0.9722222222222222,
+        "specificity": 0.6174812030075187,
+        "referral_rate": 0.43686006825938567,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9306930693069307,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.5816217512646084,
+            "high": 0.6559827675473935
+          },
+          "referral_rate": {
+            "low": 0.40051699264089063,
+            "high": 0.4705399584076055
+          }
+        }
+      },
+      "client_test_msk": {
+        "images": 460,
+        "melanoma_images": 87,
+        "sensitivity": 1.0,
+        "specificity": 0.35924932975871315,
+        "referral_rate": 0.7086956521739131,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 1.0,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.30140845070422534,
+            "high": 0.4202589648230919
+          },
+          "referral_rate": {
+            "low": 0.6579318394024276,
+            "high": 0.7573871353289509
+          }
+        }
+      },
+      "external_buenos_aires": {
+        "images": 1458,
+        "melanoma_images": 253,
+        "sensitivity": 0.83399209486166,
+        "specificity": 0.5485477178423237,
+        "referral_rate": 0.5178326474622771,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.7885458607676883,
+            "high": 0.8740841469084147
+          },
+          "specificity": {
+            "low": 0.5172951707993758,
+            "high": 0.5759883980225758
+          },
+          "referral_rate": {
+            "low": 0.49041569615495023,
+            "high": 0.5450424904550426
+          }
+        }
+      },
+      "external_pad_ufes": {
+        "images": 2106,
+        "melanoma_images": 52,
+        "sensitivity": 0.7884615384615384,
+        "specificity": 0.6056475170399221,
+        "referral_rate": 0.40408357075023743,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.6606737012987013,
+            "high": 0.9069767441860465
+          },
+          "specificity": {
+            "low": 0.5825207889970839,
+            "high": 0.6286144437497733
+          },
+          "referral_rate": {
+            "low": 0.38087553576059957,
+            "high": 0.42729485251668164
+          }
+        }
+      }
+    },
+    "v2-final-seed2": {
+      "client_test_pooled": {
+        "images": 3262,
+        "melanoma_images": 599,
+        "sensitivity": 0.9565943238731218,
+        "specificity": 0.4836650394292152,
+        "referral_rate": 0.5971796443899449,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9287019295004024,
+            "high": 0.9785683087807088
+          },
+          "specificity": {
+            "low": 0.45723675766732663,
+            "high": 0.511565650128185
+          },
+          "referral_rate": {
+            "low": 0.5690232750162797,
+            "high": 0.6230961833900844
+          }
+        }
+      },
+      "client_test_barcelona": {
+        "images": 1274,
+        "melanoma_images": 350,
+        "sensitivity": 0.9514285714285714,
+        "specificity": 0.3971861471861472,
+        "referral_rate": 0.6985871271585558,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9049090777541964,
+            "high": 0.9857483877080077
+          },
+          "specificity": {
+            "low": 0.34677483062708764,
+            "high": 0.4484400391457275
+          },
+          "referral_rate": {
+            "low": 0.6508273221343874,
+            "high": 0.7429162243453644
+          }
+        }
+      },
+      "client_test_ham_queensland": {
+        "images": 356,
+        "melanoma_images": 54,
+        "sensitivity": 0.9814814814814815,
+        "specificity": 0.3708609271523179,
+        "referral_rate": 0.6825842696629213,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.939969387755102,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.29933443687595196,
+            "high": 0.4391891891891892
+          },
+          "referral_rate": {
+            "low": 0.6249819364161849,
+            "high": 0.7450639715785075
+          }
+        }
+      },
+      "client_test_ham_vienna": {
+        "images": 1172,
+        "melanoma_images": 108,
+        "sensitivity": 0.9444444444444444,
+        "specificity": 0.6409774436090225,
+        "referral_rate": 0.4129692832764505,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.8737864077669902,
+            "high": 0.9916001111188277
+          },
+          "specificity": {
+            "low": 0.6042954189957425,
+            "high": 0.6792368981386083
+          },
+          "referral_rate": {
+            "low": 0.3756341590873713,
+            "high": 0.447141739737232
+          }
+        }
+      },
+      "client_test_msk": {
+        "images": 460,
+        "melanoma_images": 87,
+        "sensitivity": 0.9770114942528736,
+        "specificity": 0.34048257372654156,
+        "referral_rate": 0.7195652173913043,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.9374802215189874,
+            "high": 1.0
+          },
+          "specificity": {
+            "low": 0.2857142857142857,
+            "high": 0.3962300811418516
+          },
+          "referral_rate": {
+            "low": 0.6726038326929196,
+            "high": 0.7642324183303085
+          }
+        }
+      },
+      "external_buenos_aires": {
+        "images": 1458,
+        "melanoma_images": 253,
+        "sensitivity": 0.8379446640316206,
+        "specificity": 0.4838174273858921,
+        "referral_rate": 0.5720164609053497,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.7888803230543319,
+            "high": 0.8838331028123558
+          },
+          "specificity": {
+            "low": 0.4558841008932907,
+            "high": 0.5109626075399434
+          },
+          "referral_rate": {
+            "low": 0.5455810239804483,
+            "high": 0.6000033156498673
+          }
+        }
+      },
+      "external_pad_ufes": {
+        "images": 2106,
+        "melanoma_images": 52,
+        "sensitivity": 0.8461538461538461,
+        "specificity": 0.46007789678675753,
+        "referral_rate": 0.5474833808167141,
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "sensitivity": {
+            "low": 0.717948717948718,
+            "high": 0.9565882874889086
+          },
+          "specificity": {
+            "low": 0.43776842065553395,
+            "high": 0.4820431525392084
+          },
+          "referral_rate": {
+            "low": 0.5250333866840651,
+            "high": 0.570233629276265
+          }
+        }
+      }
+    }
+  }
+}
