@@ -77,9 +77,19 @@ def main() -> None:
                                       for size in runs[0]["detection_rate"][site]}
                                for site in SITES},
         }  # fmt: skip
+    # Spec's false-alarm rule: more than 2% of 0% batches flagged, for any model and
+    # detector, is a finding (validation baseline vs in-distribution test); no new baseline.
+    findings = [
+        {"model": k, "detector": det, "batch_size": size, "false_alarm_rate": rate}
+        for k in MODELS for det in DETECTORS
+        for size, rate in per_model[k][det]["false_alarm_rate"].items() if rate > 0.02
+    ]  # fmt: skip
     result = {"spec": spec, "reference_check": check, "per_model": per_model,
-              "over_seeds": summary}  # fmt: skip
+              "over_seeds": summary, "false_alarm_findings": findings,
+              "gram_normalizer_fit_on": "validation: Gram's reference scores come from the same "
+              "validation images its per-layer normalizer was fitted on"}  # fmt: skip
     OUT.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    print("false-alarm findings (>2%):", findings or "none")
     for det in DETECTORS:
         s = summary[det]
         print(

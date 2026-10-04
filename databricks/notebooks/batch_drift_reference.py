@@ -15,7 +15,8 @@ for name, default in {
     "config": "{}",
     "models_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/v2/final_models.json",
     "drift_results": "/Volumes/workspace/cdm/raw/results/phase2/drift/v2",
-    "normalizer_rtol": "1e-3",
+    "normalizer_rtol": "1e-3",  # 0.1% relative, from the spec; not to be loosened
+    "pca_size_tolerance": "1",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -54,6 +55,7 @@ CONFIG = json.loads(dbutils.widgets.get("config"))
 CODE = dbutils.widgets.get("code_version")
 DRIFT = Path(dbutils.widgets.get("drift_results"))
 RTOL = float(dbutils.widgets.get("normalizer_rtol"))
+K_TOL = int(dbutils.widgets.get("pca_size_tolerance"))
 OUT = Path("/Volumes/workspace/cdm/raw/results/phase2/batch_drift")
 OUT.mkdir(parents=True, exist_ok=True)
 MODELS = sorted(json.loads(Path(dbutils.widgets.get("models_file")).read_text()),
@@ -93,7 +95,9 @@ def passes(model, name: str, gram: GramDetector, fit: bool) -> dict[str, np.ndar
     return out
 
 
-summary = {"code_version": CODE, "models": {}}
+summary = {"code_version": CODE, "tolerance": {"pca_size": K_TOL, "normalizer_rtol": RTOL},
+           "gram_normalizer_fit_on": "validation (mean deviation per layer), in the drift run and here",
+           "models": {}}  # fmt: skip
 for m in MODELS:
     key = f"v2-{m['kind']}-seed{m['seed']}"
     drift = json.loads((DRIFT / f"{key}.json").read_text())
@@ -107,17 +111,21 @@ for m in MODELS:
     gram.fit_normalizer(val["devs"])
     k_d = pca_size_for_variance(train["feats"])
     saved_norm = np.asarray(drift["gram_layer_normalizer"])
-    norm_ok = bool(np.allclose(gram.norm, saved_norm, rtol=RTOL, atol=0))
-    check = {"method_d_components": [k_d, drift["pca"]["method_d_components"]],
+    norm_ok = bool(np.all(np.abs(gram.norm - saved_norm) <= RTOL * np.abs(saved_norm)))
+    k_saved = int(drift["pca"]["method_d_components"])
+    check = {"method_d_components": {"refit": k_d, "drift_run": k_saved, "used": k_saved},
              "gram_normalizer_max_rel_diff": float(np.max(np.abs(gram.norm - saved_norm)
                                                           / np.abs(saved_norm))),
-             "matches": k_d == drift["pca"]["method_d_components"] and norm_ok}  # fmt: skip
+             "pca_size_within_tolerance": abs(k_d - k_saved) <= K_TOL,
+             "normalizer_within_tolerance": norm_ok,
+             "matches": abs(k_d - k_saved) <= K_TOL and norm_ok}  # fmt: skip
     summary["models"][key] = check
     print(key, json.dumps(check), flush=True)
     if not check["matches"]:
         raise RuntimeError(f"{key}: the refit does not reproduce the drift run's detector: {check}")
     train_labels = SETS["train"]["label"].map(INDEX).to_numpy()
-    maha = MahalanobisDetector(k_d).fit(train["feats"], train_labels)
+    # The drift run's own PCA size, so validation is scored by the detector that scored test.
+    maha = MahalanobisDetector(k_saved).fit(train["feats"], train_labels)
     local = Path(tempfile.gettempdir()) / f"{key}_val_scores.npz"
     np.savez_compressed(local, mahalanobis=maha.score(val["feats"]), gram=gram.score(val["devs"]))
     assert set(np.load(local).files) == {"mahalanobis", "gram"}

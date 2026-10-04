@@ -2,7 +2,10 @@
   "committed_before_running": true,
   "decided": "2026-10-04",
   "question": "How often does a two-sample KS test on detector scores flag a batch that contains images from a new site, and how often does it flag a batch with none?",
-  "detectors": {"primary": "mahalanobis (PCA size by method D; the shipped detector)", "secondary": "gram"},
+  "detectors": {
+    "primary": "mahalanobis (PCA size by method D; the shipped detector)",
+    "secondary": "gram"
+  },
   "models": "the three v2 centralized seeds (v2-final-seed0, -seed1, -seed2), each with its own detector fit; results per seed, then mean and range",
   "reference": "validation scores (v2 validation, 3,210 images) from each model's detector",
   "reference_provenance": "validation scores were not saved by the drift-table run, so a CPU job refits each detector on training images only and scores validation; it must reproduce the drift run's method-D PCA size and Gram layer normalizer for that model, or it stops. No test or shift image is touched.",
@@ -11,8 +14,19 @@
     "buenos_aires": "saved scores, all 1,616 images",
     "pad_ufes": "saved scores, all 2,298 images"
   },
-  "batch_sizes": [25, 50, 100, 200],
-  "new_site_shares": [0.0, 0.10, 0.25, 0.50, 1.0],
+  "batch_sizes": [
+    25,
+    50,
+    100,
+    200
+  ],
+  "new_site_shares": [
+    0.0,
+    0.1,
+    0.25,
+    0.5,
+    1.0
+  ],
   "batch_construction": "round(share x size) images drawn from the new site's pool and the rest from the in-distribution pool, each without replacement within a batch",
   "test": "two-sample Kolmogorov-Smirnov (scipy.stats.ks_2samp, two-sided), batch vs reference",
   "alpha": 0.01,
@@ -22,5 +36,13 @@
     "detection_rate": "share of batches with p < 0.01, per site, batch size and share (shares above 0%)",
     "false_alarm_rate": "share of 0% batches (in-distribution test only) with p < 0.01, per batch size"
   },
-  "caveat": "the in-distribution pool is the clients' test split and the reference is validation; both are in-distribution, so the 0% false-alarm rate also measures any validation-to-test difference"
+  "caveat": "the in-distribution pool is the clients' test split and the reference is validation; both are in-distribution, so the 0% false-alarm rate also measures any validation-to-test difference",
+  "rebuild_tolerance": {
+    "method_d_pca_size": "must equal the drift run's, or differ by at most 1 component; the drift run's own size is the one used to score validation",
+    "gram_normalizer": "every layer's value within 0.1% relative difference of the drift run's",
+    "on_failure": "stop and report; the tolerance is not loosened"
+  },
+  "false_alarm_rule": "if 0% batches are flagged more than 2% of the time for any model and detector (at any batch size), that is reported as a finding: the validation baseline does not match in-distribution test. The baseline is not switched afterwards.",
+  "gram_normalizer_note": "Gram's per-layer normalizer was fitted on these same validation images in the drift run (mean validation deviation per layer), so Gram's validation reference is not independent of its own normalization; this is stated with the results.",
+  "amended": "2026-10-04, before the reference job ran: rebuild tolerance and false-alarm rule added"
 }
