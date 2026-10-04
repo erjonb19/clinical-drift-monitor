@@ -7,7 +7,8 @@
 # MAGIC selection draws), Gram matrices, max softmax and energy. The in-distribution side is
 # MAGIC the clients' pooled test split; the shifts are Buenos Aires and PAD-UFES-20 (real) and
 # MAGIC PathMNIST and CIFAR-10 (benchmark). Every statistic is fitted on training data only
-# MAGIC (Gram's normalizer on validation). A detection lock per model is written before its
+# MAGIC (Gram's normalizer on validation). A detection lock per model ("started", then
+# MAGIC "completed" once its result JSON and scores file are confirmed saved) is written before its
 # MAGIC first test or shift image is scored; finished models are skipped on a retry. Also counts
 # MAGIC bordered images per source on the current silver, held-out sites included.
 
@@ -25,6 +26,8 @@ for name, default in {
     "deadline_minutes": "100",
     "job_run_id": "",
     "allow_second_look": "false",
+    # Recorded in every lock and result, e.g. an archived earlier attempt that saved nothing.
+    "previous_attempt": "",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -44,6 +47,7 @@ import hashlib
 import io
 import json
 import os
+import tempfile
 import time
 import zipfile
 from datetime import UTC, datetime
@@ -76,6 +80,7 @@ VERSION = dbutils.widgets.get("version")
 PREFIX = f"{VERSION}-" if VERSION else ""
 CODE = dbutils.widgets.get("code_version")
 SECOND_LOOK = dbutils.widgets.get("allow_second_look").lower() == "true"
+PREVIOUS = dbutils.widgets.get("previous_attempt")
 WORKERS = max(1, min(8, (os.cpu_count() or 2) - 1))
 OUT = Path("/Volumes/workspace/cdm/raw/results/phase2/drift") / VERSION
 LOCKS = Path("/Volumes/workspace/cdm/raw/checkpoints/phase2/detection_looks")
@@ -178,15 +183,28 @@ SHIFTS = {"buenos_aires": "real", "pad_ufes": "real", "pathmnist_eval": "benchma
           "cifar10_eval": "benchmark"}  # fmt: skip
 
 
+def verify(key: str) -> None:
+    """The saved result JSON parses and the saved scores file loads, from the volume."""
+    result = json.loads((OUT / f"{key}.json").read_text())
+    with np.load(OUT / f"{key}_scores.npz") as z:
+        n = len(z.files)
+    expected = (1 + len(SHIFTS)) * len(result["metrics"])
+    if n != expected:
+        raise RuntimeError(f"{key}: scores file has {n} arrays, expected {expected}")
+
+
 def run(m: dict[str, object]) -> None:
     key = f"{PREFIX}{m['kind']}-seed{m['seed']}"
     out_file = OUT / f"{key}.json"
-    if out_file.exists():
-        print(f"{key}: result exists, skipped", flush=True)
-        return
     lock = LOCKS / f"{key}.json"
-    if lock.exists() and not SECOND_LOOK:
-        raise RuntimeError(f"{key} already had its detection look: {lock.read_text()}")
+    status = json.loads(lock.read_text()).get("status") if lock.exists() else None
+    if status == "completed" and out_file.exists():
+        print(f"{key}: completed earlier, skipped", flush=True)
+        return
+    if status is not None and not SECOND_LOOK:
+        # A started look without a completed result: the look happened, so it is not
+        # silently repeated. allow_second_look=true reruns it and records that it did.
+        raise RuntimeError(f"{key} has a detection look with status {status!r}: {lock.read_text()}")
     t0 = time.perf_counter()
     model = build_model(pretrained=False, arch=CONFIG.get("arch", "b0"))
     model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu"))
@@ -198,9 +216,10 @@ def run(m: dict[str, object]) -> None:
     gram.fit_normalizer(got["val"]["devs"])
     for name in ("pathmnist_select", "cifar10_select"):  # selection draws: method C only
         got[name] = passes(model, name, gram, fit=False)
-    second = lock.exists()
-    lock.write_text(json.dumps({"utc": datetime.now(UTC).isoformat(timespec="seconds"),
-                                "code_version": CODE, "second_look": second}))  # fmt: skip
+    look = {"status": "started", "started_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+            "code_version": CODE, "job_run_id": JOB_RUN, "second_look": status is not None,
+            "previous_attempt": PREVIOUS or None}  # fmt: skip
+    lock.write_text(json.dumps(look))
     for name in ("test", *SHIFTS):
         got[name] = passes(model, name, gram, fit=False)
 
@@ -235,17 +254,21 @@ def run(m: dict[str, object]) -> None:
         "metrics": metrics, "shift_kind": SHIFTS,
         "gram_layer_normalizer": gram.norm.tolist(),
         "test_accuracy_check": test_acc, "seconds": round(time.perf_counter() - t0),
+        "previous_attempt": PREVIOUS or None,
     }  # fmt: skip
     # The metrics are written first, so a failure saving the per-image scores cannot lose them.
     out_file.write_text(json.dumps(result))
     # Volumes do not support the seeks a zip writer needs (run 802132583124668 left 24 KB of
     # unreadable npz per model), so write locally, check the file reads back, then copy.
-    local = Path(f"/tmp/{key}_scores.npz")
+    local = Path(tempfile.gettempdir()) / f"{key}_scores.npz"
     np.savez_compressed(
         local, **{f"{n}__{d}": v for n, ds in scores.items() for d, v in ds.items()}
     )
     assert len(np.load(local).files) == len(scores) * len(scores["test"]), "npz did not read back"
     (OUT / local.name).write_bytes(local.read_bytes())
+    verify(key)
+    lock.write_text(json.dumps({**look, "status": "completed",
+                                "completed_utc": datetime.now(UTC).isoformat(timespec="seconds")}))  # fmt: skip
     summary = {d: round(metrics[d]["buenos_aires"]["auroc"], 4) for d in metrics}
     print(json.dumps({"model": key, "k_d": k_d, "k_c": k_c, "ba_auroc": summary}), flush=True)
 
@@ -253,10 +276,19 @@ def run(m: dict[str, object]) -> None:
 # COMMAND ----------
 
 failed, not_started = {}, []
+first = True
 for m in MODELS:
     key = f"{PREFIX}{m['kind']}-seed{m['seed']}"
     if time.time() > DEADLINE and not (OUT / f"{key}.json").exists():
         not_started.append(key)
+        continue
+    if first:
+        # The first model runs outside the catch-all, and its files are checked from the
+        # volume before any other model starts: a saving bug stops the job here.
+        run(m)
+        verify(key)
+        print(f"{key}: result JSON and scores file confirmed on the volume", flush=True)
+        first = False
         continue
     try:
         run(m)

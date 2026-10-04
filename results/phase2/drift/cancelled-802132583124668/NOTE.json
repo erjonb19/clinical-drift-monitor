@@ -1,0 +1,10 @@
+{
+  "archived_utc": "2026-10-04",
+  "run_id": 802132583124668,
+  "job_id": 144921606000493,
+  "what_broke": "np.savez_compressed wrote straight into the Unity Catalog volume; volumes cannot seek, so each scores file failed after about 24 KB ([Errno 5] Input/output error). The per-model result JSON was written after the scores file, so it was never written. The run was cancelled during the ninth model.",
+  "results_saved": "none: no result JSON, no readable scores file, for any model",
+  "detection_numbers_printed": "none: the job output contains only border counts, set sizes and one FAILED line per model (saved in the repo as results/phase2/drift/cancelled-802132583124668/stdout.txt)",
+  "why_archived": "these locks recorded detection looks that produced no saved or printed result; the rerun gets fresh locks with a started/completed status, and each new lock and result references this archive",
+  "silent_failure": "docs/silent-failures.md entry 8"
+}
