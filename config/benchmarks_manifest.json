@@ -1,0 +1,44 @@
+{
+  "file": "benchmarks.zip",
+  "sha256": "a9be34908815d4f48ef22fbadaaaa3fec7ad0127f9fdc4fe1c0d6de53d605ab8",
+  "bytes": 278656695,
+  "sets": [
+    {
+      "dataset": "pathmnist",
+      "split": "test",
+      "use": "eval",
+      "seed": 0,
+      "images": 2000,
+      "indices_sha256": "386e46d5896a80e4"
+    },
+    {
+      "dataset": "pathmnist",
+      "split": "val",
+      "use": "select",
+      "seed": 1,
+      "images": 1000,
+      "indices_sha256": "ed1c7a85dce03b92"
+    },
+    {
+      "dataset": "cifar10",
+      "split": "test",
+      "use": "eval",
+      "seed": 0,
+      "images": 2000,
+      "indices_sha256": "f70fe060a8a59147"
+    },
+    {
+      "dataset": "cifar10",
+      "split": "train",
+      "use": "select",
+      "seed": 1,
+      "images": 1000,
+      "indices_sha256": "d7ca45d9671c2c3f"
+    }
+  ],
+  "licenses": {
+    "pathmnist": "CC BY 4.0 (MedMNIST v2; source NCT-CRC-HE-100K)",
+    "cifar10": "CIFAR-10 (Krizhevsky, 2009); no explicit licence, used for research"
+  },
+  "eval_overlaps_select": false
+}
