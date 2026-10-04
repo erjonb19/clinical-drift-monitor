@@ -1,0 +1,18 @@
+{
+  "exported_utc": "2026-10-04T18:51:38+00:00",
+  "run_id": 549220296100982,
+  "job_id": 778954396717951,
+  "result": "SUCCESS",
+  "attempts": [
+    {
+      "task": "cpu_test",
+      "task_run_id": 565426676893772,
+      "attempt": 0,
+      "result": "SUCCESS",
+      "message": "",
+      "execution_ms": 2322000,
+      "setup_ms": 4000
+    }
+  ],
+  "outputs": {}
+}
