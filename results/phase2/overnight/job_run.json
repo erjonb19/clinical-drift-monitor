@@ -1,0 +1,55 @@
+{
+  "exported_utc": "2026-10-04T04:25:00+00:00",
+  "run_id": 643634709565235,
+  "job_id": 409896132564474,
+  "result": "SUCCESS",
+  "attempts": [
+    {
+      "task": "cpu_test",
+      "task_run_id": 324193114775433,
+      "attempt": 0,
+      "result": "SUCCESS",
+      "message": "",
+      "execution_ms": 1643000,
+      "setup_ms": 4000
+    },
+    {
+      "task": "gpu_train",
+      "task_run_id": 907840168091198,
+      "attempt": 0,
+      "result": "SUCCESS",
+      "message": "",
+      "execution_ms": 3281000,
+      "setup_ms": 13000
+    }
+  ],
+  "outputs": {
+    "gpu_train": {
+      "code_version": "f57740f",
+      "plan": [
+        "final-seed1",
+        "final-seed2",
+        "fedavg-seed0",
+        "fedprox-seed0",
+        "fedavg-seed1",
+        "fedprox-seed1",
+        "fedavg-seed2",
+        "fedprox-seed2"
+      ],
+      "finished": [
+        "fedavg-seed0",
+        "fedavg-seed1",
+        "fedavg-seed2",
+        "fedprox-seed0",
+        "fedprox-seed2",
+        "final-seed1",
+        "final-seed2"
+      ],
+      "failed": {
+        "fedprox-seed1": "Traceback (most recent call last):\n  File \"/home/spark-aa6f0518-d57d-4019-b403-ce/.ipykernel/38471/command-5367661970394530-2524808936\", line 8, in <module>\n    run(kind, seed)\n  File \"/home/spark-aa6f0518-d57d-4019-b403-ce/.ipykernel/38471/command-5367661970394529-995876315\", line 32, in run\n    model, history = run_federated(\n                     ^^^^^^^^^^^^^^\n  File \"/local_disk0/.ephemeral_nfs/envs/pythonEnv-aa6f0518-d57d-4019-b403-ce4e546e436b/lib/python3.12/site-packages/cdm/federated.py\", line 172, in run_federated\n    losses[n] = local_train(\n                ^^^^^^^^^^^^\n  File \"/local_disk0/.ephemeral_nfs/envs/pythonEnv-aa6f0518-d57d-4019-b403-ce4e546e436b/lib/python3.12/site-packages/cdm/federated.py\", line 102, in local_train\n    for x, y in loader:\n  File \"/opt/databricks-environments/databricks-ai/lib/python3.12/site-packages/torch/utils/data/dataloader.py\", line 741, in __next__\n    data = self._next_data()\n           ^^^^^^^^^^^^^^^^^\n  File \"/opt/databricks-environments/databricks-ai/lib/python3.12/site-packages/torch/utils/data/dataloader.py\", line 1524, in _next_data\n    idx, data = self._get_data()\n                ^^^^^^^^^^^^^^^^\n  File \"/opt/databricks-environments/databricks-ai/lib/python3.12/site-packages/torch/utils/data/dataloader.py\", line 1478, in _get_data\n    raise RuntimeError(\"Pin memory thread exited unexpectedly\")\nRuntimeError: Pin memory thread exited unexpectedly\n"
+      },
+      "not_started_deadline": [],
+      "job_run_id": "643634709565235"
+    }
+  }
+}
