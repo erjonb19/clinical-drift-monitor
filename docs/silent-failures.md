@@ -141,3 +141,23 @@ seed before building the model, fix the CPU thread count, turn on
 and record a SHA-256 of the weight values with every checkpoint. The reported Phase 0
 seeds were not rerun; their run-to-run variation is reported in
 [phase0-note.md](phase0-note.md).
+
+## 7. Bordered-image counts measured on a silver format that no longer exists
+
+**What looked right.** The tuning ladder's rung 0 evaluation (`results/phase2/ladder/rung0-baseline.json`,
+code `050dd70`) counted "bordered" images (dark corners, `corner_brightness < 20`) per source:
+Barcelona 2,264 of 5,000, Buenos Aires 27, HAM10000 2, MSK 1, PAD-UFES-20 0. Those counts were
+quoted afterwards as the sites' border rates, including "HAM10000 has almost no bordered images".
+
+**Cause.** Rung 0 ran on the old silver: 224 px, centre-cropped. The crop removes the corners
+the test looks at. From rung 1a on, silver stores the full frame at 384 px, so many more images
+show dark corners. On v2 silver the same test flags 2,974 of 15,277 training images: Barcelona
+2,705, HAM Vienna 212, MSK 33, HAM Queensland 24 (`results/phase2/v2/training/data_summary.json`).
+The rung 0 counts were right for the data they measured but were reused as if they described
+the current silver. Every per-client bordered and non-bordered score from rung 1a on was
+computed on the current silver, so those scores are consistent with each other.
+
+**Caught by.** The v2 data summary, which counts bordered training images per client on the
+silver the models actually train on. Bordered counts are now always reported with the silver
+format they were measured on; site-level counts for all sources, held-out sites included, are
+recomputed on current silver in the drift-table run.
