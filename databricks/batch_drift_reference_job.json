@@ -1,0 +1,40 @@
+{
+  "name": "cdm-phase2-batch-drift-reference",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "erjonbrucaj@gmail.com"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/48270f6/cdm-0.1.0-py3-none-any.whl",
+          "torch>=2.4",
+          "torchvision>=0.19"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "reference",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "timeout_seconds": 14400,
+      "notebook_task": {
+        "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/batch_drift_reference",
+        "base_parameters": {
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/48270f6/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "48270f6",
+          "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
+          "normalizer_rtol": "1e-3",
+          "pca_size_tolerance": "1"
+        }
+      }
+    }
+  ]
+}
