@@ -29,6 +29,10 @@ for name, default in {
     "federated_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/federated_models.json",
     "bootstrap": "1000",
     "allow_second_look": "false",
+    # "" is v1. "v2" prefixes every lock and reports on v1's exact test images (main) and on
+    # the full v2 test set (second row).
+    "version": "",
+    "v1_snapshot": "workspace.cdm.silver_images_v1_snapshot",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -81,11 +85,15 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 WORKERS = 0  # serverless CPU has too little shared memory for DataLoader workers
 
 
+VERSION = dbutils.widgets.get("version")
+PREFIX = f"{VERSION}-" if VERSION else ""
+
+
 def key(m: dict[str, object]) -> str:
-    return f"{m['kind']}-seed{m['seed']}"
+    return f"{PREFIX}{m['kind']}-seed{m['seed']}"
 
 
-ENSEMBLE = "ensemble-final-seeds0-1-2"
+ENSEMBLE = f"{PREFIX}ensemble-final-seeds0-1-2"
 locked = {f.stem for f in LOCKS.glob("*.json")} if LOCKS.exists() else set()
 fresh = lambda k: SECOND_LOOK or k not in locked  # noqa: E731
 score_seeds = [m for m in MODELS if fresh(key(m))]
@@ -121,6 +129,12 @@ index = {c: i for i, c in enumerate(CLASSES)}
 frames = {s: rows[rows["split"] == s].reset_index(drop=True) for s in ("val", "test")}
 lesions = frames["test"]["lesion_id"].fillna(frames["test"]["isic_id"]).tolist()
 result["test_images"], result["test_lesions"] = len(frames["test"]), len(set(lesions))
+V1_IDS: set[str] = set()
+if VERSION:
+    V1_IDS = {
+        r[0]
+        for r in spark.read.table(dbutils.widgets.get("v1_snapshot")).select("isic_id").collect()
+    }
 
 
 def logits_for(model: torch.nn.Module, split: str) -> tuple[np.ndarray, np.ndarray]:
@@ -168,85 +182,96 @@ fed_test = [logits_for(model, "test")[0] for model in fed_models]
 # COMMAND ----------
 
 
-def report(val: np.ndarray, test: np.ndarray) -> dict[str, object]:
-    return {
-        "val_pooled": {k: classification_metrics(val_labels, val)[k] for k in KEYS},
-        "scores": score_rows(frames["test"], test, test_labels)["test"],
-        "bootstrap_95": bootstrap_by_lesion(test, test_labels, lesions, n=N_BOOT),
-        "calibration": calibration(val, val_labels, test, test_labels),
-    }
+def build(mask: np.ndarray) -> dict[str, object]:
+    """Every test report, on the test rows selected by ``mask``."""
+    t_frame = frames["test"][mask].reset_index(drop=True)
+    t_labels = test_labels[mask]
+    t_lesions = [lesions[i] for i in np.flatnonzero(mask)]
+    out: dict[str, object] = {"test_images": int(mask.sum()), "test_lesions": len(set(t_lesions))}
 
+    def report(val: np.ndarray, test: np.ndarray) -> dict[str, object]:
+        test = test[mask]
+        return {
+            "val_pooled": {k: classification_metrics(val_labels, val)[k] for k in KEYS},
+            "scores": score_rows(t_frame, test, t_labels)["test"],
+            "bootstrap_95": bootstrap_by_lesion(test, t_labels, t_lesions, n=N_BOOT),
+            "calibration": calibration(val, val_labels, test, t_labels),
+        }
 
-now = {key(m) for m in score_seeds}
-per_seed = []
-for m, val, test in zip(MODELS, val_logits, test_logits, strict=False):
-    if key(m) in now:
-        per_seed.append({"seed": m["seed"], **report(val, test)})
-result["single_model_per_seed"] = per_seed
+    now = {key(m) for m in score_seeds}
+    per_seed = []
+    for m, val, test in zip(MODELS, val_logits, test_logits, strict=False):
+        if key(m) in now:
+            per_seed.append({"seed": m["seed"], **report(val, test)})
+    out["single_model_per_seed"] = per_seed
 
+    def pooled(entry: dict[str, object], k: str) -> float:
+        return entry["scores"]["pooled"][k]
 
-def pooled(entry: dict[str, object], key: str) -> float:
-    return entry["scores"]["pooled"][key]
+    if per_seed:
+        out["single_model_over_seeds"] = {
+            "seeds": [e["seed"] for e in per_seed],
+            **{k: summarize([pooled(e, k) for e in per_seed]) for k in KEYS},
+            **{
+                f"calibration_{k}": summarize([e["calibration"][k] for e in per_seed])
+                for k in ("ece_before", "ece_after", "nll_before", "nll_after")
+            },
+        }
+    if score_ensemble:
+        out["ensemble_3_seeds"] = report(ensemble_logits(val_logits), ensemble_logits(test_logits))
 
-
-if per_seed:
-    result["single_model_over_seeds"] = {
-        "seeds": [e["seed"] for e in per_seed],
-        **{k: summarize([pooled(e, k) for e in per_seed]) for k in KEYS},
-        **{
-            f"calibration_{k}": summarize([e["calibration"][k] for e in per_seed])
-            for k in ("ece_before", "ece_after", "nll_before", "nll_after")
-        },
-    }
-if score_ensemble:
-    result["ensemble_3_seeds"] = report(ensemble_logits(val_logits), ensemble_logits(test_logits))
-
-# Supplementary, not selected: lesion averaging failed the keep rule on validation.
-avg_pairs = (
-    []
-    if not test_logits
-    else [
-        (m, lesion_average(t, lesions))
-        for m, t in zip(MODELS, test_logits, strict=True)
+    # Supplementary, not selected: lesion averaging failed the keep rule on validation.
+    avg_pairs = [
+        (m, lesion_average(t[mask], t_lesions))
+        for m, t in zip(MODELS, test_logits, strict=False)
         if key(m) in now
     ]
-)
-avg_seeds = [a for _, a in avg_pairs]
-avg_ens = lesion_average(ensemble_logits(test_logits), lesions) if score_ensemble else None
-supplementary: dict[str, object] = {
-    "note": "Not the selected configuration: lesion averaging missed the keep rule on "
-    "validation (+0.83 points balanced accuracy). Shown for reference only.",
-    "single_model_per_seed": [
-        {"seed": m["seed"], **{k: classification_metrics(test_labels, a)[k] for k in KEYS}}
-        for m, a in avg_pairs
-    ],
-}
-if avg_seeds:
-    supplementary["single_model_over_seeds"] = {
-        k: summarize([classification_metrics(test_labels, a)[k] for a in avg_seeds]) for k in KEYS
+    avg_seeds = [a for _, a in avg_pairs]
+    supplementary: dict[str, object] = {
+        "note": "Not the selected configuration: lesion averaging missed the keep rule on "
+        "validation (+0.83 points balanced accuracy). Shown for reference only.",
+        "single_model_per_seed": [
+            {"seed": m["seed"], **{k: classification_metrics(t_labels, a)[k] for k in KEYS}}
+            for m, a in avg_pairs
+        ],
     }
-if score_ensemble:
-    supplementary["ensemble_3_seeds"] = {
-        **{k: classification_metrics(test_labels, avg_ens)[k] for k in KEYS},
-        "bootstrap_95": bootstrap_by_lesion(avg_ens, test_labels, lesions, n=N_BOOT),
-    }
-result["supplementary_lesion_average_not_selected"] = supplementary
-
-# Federated models, same scoring code: per seed, then mean and range per method.
-federated: dict[str, object] = {}
-for method in ("fedavg", "fedprox"):
-    entries = [
-        {"seed": m["seed"], **report(v, t)}
-        for m, v, t in zip(FEDERATED, fed_val, fed_test, strict=True)
-        if m["kind"] == method
-    ]
-    if entries:
-        federated[method] = {
-            "seeds": [e["seed"] for e in entries],
-            "per_seed": entries,
-            "over_seeds": {k: summarize([pooled(e, k) for e in entries]) for k in KEYS},
+    if avg_seeds:
+        supplementary["single_model_over_seeds"] = {
+            k: summarize([classification_metrics(t_labels, a)[k] for a in avg_seeds]) for k in KEYS
         }
-result["federated"] = federated
+    if score_ensemble:
+        avg_ens = lesion_average(ensemble_logits(test_logits)[mask], t_lesions)
+        supplementary["ensemble_3_seeds"] = {
+            **{k: classification_metrics(t_labels, avg_ens)[k] for k in KEYS},
+            "bootstrap_95": bootstrap_by_lesion(avg_ens, t_labels, t_lesions, n=N_BOOT),
+        }
+    out["supplementary_lesion_average_not_selected"] = supplementary
+
+    # Federated models, same scoring code: per seed, then mean and range per method.
+    federated: dict[str, object] = {}
+    for method in ("fedavg", "fedprox"):
+        entries = [
+            {"seed": m["seed"], **report(v, t)}
+            for m, v, t in zip(FEDERATED, fed_val, fed_test, strict=True)
+            if m["kind"] == method
+        ]
+        if entries:
+            federated[method] = {
+                "seeds": [e["seed"] for e in entries],
+                "per_seed": entries,
+                "over_seeds": {k: summarize([pooled(e, k) for e in entries]) for k in KEYS},
+            }
+    out["federated"] = federated
+    return out
+
+
+everything = np.ones(len(frames["test"]), dtype=bool)
+if VERSION:
+    # Main comparison: v1's exact test images; the full v2 test set is a second row.
+    v1_test = frames["test"]["isic_id"].isin(V1_IDS).to_numpy()
+    result["views"] = {"test_v1_images": build(v1_test), "test_full_v2": build(everything)}
+else:
+    result.update(build(everything))
 
 print("FINAL_TEST_RESULT " + json.dumps(result))
 dbutils.notebook.exit(json.dumps(result))
