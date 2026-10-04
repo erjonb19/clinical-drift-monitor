@@ -225,8 +225,6 @@ def run(m: dict[str, object]) -> None:
         det: {shift: detection_metrics(scores["test"][det], scores[shift][det]) for shift in SHIFTS}
         for det in scores["test"]
     }
-    np.savez_compressed(OUT / f"{key}_scores.npz",
-                        **{f"{n}__{d}": v for n, ds in scores.items() for d, v in ds.items()})  # fmt: skip
     test_acc = float((got["test"]["logits"].argmax(1) == np.asarray(LABELS["test"])).mean())
     result = {
         "model": key, "kind": m["kind"], "seed": m["seed"], "code_version": CODE,
@@ -238,7 +236,16 @@ def run(m: dict[str, object]) -> None:
         "gram_layer_normalizer": gram.norm.tolist(),
         "test_accuracy_check": test_acc, "seconds": round(time.perf_counter() - t0),
     }  # fmt: skip
+    # The metrics are written first, so a failure saving the per-image scores cannot lose them.
     out_file.write_text(json.dumps(result))
+    # Volumes do not support the seeks a zip writer needs (run 802132583124668 left 24 KB of
+    # unreadable npz per model), so write locally, check the file reads back, then copy.
+    local = Path(f"/tmp/{key}_scores.npz")
+    np.savez_compressed(
+        local, **{f"{n}__{d}": v for n, ds in scores.items() for d, v in ds.items()}
+    )
+    assert len(np.load(local).files) == len(scores) * len(scores["test"]), "npz did not read back"
+    (OUT / local.name).write_bytes(local.read_bytes())
     summary = {d: round(metrics[d]["buenos_aires"]["auroc"], 4) for d in metrics}
     print(json.dumps({"model": key, "k_d": k_d, "k_c": k_c, "ba_auroc": summary}), flush=True)
 
