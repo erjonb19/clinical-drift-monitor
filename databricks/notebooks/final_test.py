@@ -12,8 +12,12 @@
 # MAGIC Models come from the manifests the overnight GPU task writes; the run stops unless all
 # MAGIC three control seeds are listed.
 # MAGIC
-# MAGIC A marker file in the volume records that test was looked at; a second run stops
-# MAGIC unless `allow_second_look=true`, which is then recorded in the output.
+# MAGIC Test is locked per model: each control seed, the ensemble, and each FedAvg and FedProx
+# MAGIC run gets exactly one look. A lock file per model is written just before its first
+# MAGIC test image is scored; a later run scores only models without a lock (for example a
+# MAGIC federated run that finished late), unless `allow_second_look=true`, which is recorded.
+# MAGIC The ensemble is scored only while its own lock is absent; it reuses the seeds' test
+# MAGIC outputs, and per-seed results are reported only for seeds scored in this run.
 
 # COMMAND ----------
 
@@ -71,20 +75,35 @@ if sorted(m["seed"] for m in MODELS) != [0, 1, 2]:
 FEDERATED = json.loads(FED_FILE.read_text()) if FED_FILE.exists() else []
 N_BOOT = int(dbutils.widgets.get("bootstrap"))
 SECOND_LOOK = dbutils.widgets.get("allow_second_look").lower() == "true"
-MARKER = Path("/Volumes/workspace/cdm/raw/checkpoints/phase2/test_looked_at.json")
+LOCKS = Path("/Volumes/workspace/cdm/raw/checkpoints/phase2/test_looks")
 KEYS = ("balanced_accuracy", "macro_auroc", "melanoma_sensitivity", "accuracy")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 WORKERS = 0  # serverless CPU has too little shared memory for DataLoader workers
 
-if MARKER.exists() and not SECOND_LOOK:
-    raise RuntimeError(f"test was already scored: {MARKER.read_text()}")
+
+def key(m: dict[str, object]) -> str:
+    return f"{m['kind']}-seed{m['seed']}"
+
+
+ENSEMBLE = "ensemble-final-seeds0-1-2"
+locked = {f.stem for f in LOCKS.glob("*.json")} if LOCKS.exists() else set()
+fresh = lambda k: SECOND_LOOK or k not in locked  # noqa: E731
+score_seeds = [m for m in MODELS if fresh(key(m))]
+score_ensemble = fresh(ENSEMBLE)
+FEDERATED = [m for m in FEDERATED if fresh(key(m))]
+if not score_seeds and not score_ensemble and not FEDERATED:
+    raise RuntimeError(f"every listed model already had its test look: {sorted(locked)}")
 result: dict[str, object] = {
     "code_version": dbutils.widgets.get("code_version"),
     "config": CONFIG,
     "models": MODELS,
     "federated_models": FEDERATED,
     "device": str(device),
-    "previous_look": MARKER.read_text() if MARKER.exists() else None,
+    "locked_before_this_run": sorted(locked),
+    "second_look_allowed": SECOND_LOOK,
+    "scored_now": [key(m) for m in score_seeds]
+    + ([ENSEMBLE] if score_ensemble else [])
+    + [key(m) for m in FEDERATED],
 }
 
 # COMMAND ----------
@@ -115,7 +134,7 @@ def logits_for(model: torch.nn.Module, split: str) -> tuple[np.ndarray, np.ndarr
     return logits, labels
 
 
-# Validation logits first (temperature fitting needs them); the marker is written just
+# Validation logits first (temperature fitting needs them); the locks are written just
 # before the first test image is scored.
 def load(m: dict[str, object]) -> torch.nn.Module:
     model = build_model(pretrained=False, arch=CONFIG.get("arch", "b0"))
@@ -128,19 +147,22 @@ val_logits, test_logits = [], []
 models = []
 for m in MODELS:
     models.append(load(m))
-    logits, val_labels = logits_for(models[-1], "val")
-    val_logits.append(logits)
+    val_logits.append(logits_for(models[-1], "val")[0])
+val_labels = frames["val"]["label"].map(index).to_numpy()
 fed_models, fed_val = [], []
 for m in FEDERATED:
     fed_models.append(load(m))
     fed_val.append(logits_for(fed_models[-1], "val")[0])
 
-MARKER.parent.mkdir(parents=True, exist_ok=True)
-MARKER.write_text(json.dumps({"utc": datetime.now(UTC).isoformat(timespec="seconds"),
-                              "code_version": result["code_version"]}))  # fmt: skip
-for model in models:
-    logits, test_labels = logits_for(model, "test")
-    test_logits.append(logits)
+LOCKS.mkdir(parents=True, exist_ok=True)
+for k in result["scored_now"]:
+    (LOCKS / f"{k}.json").write_text(json.dumps({
+        "utc": datetime.now(UTC).isoformat(timespec="seconds"),
+        "code_version": result["code_version"], "second_look": k in locked}))  # fmt: skip
+test_labels = frames["test"]["label"].map(index).to_numpy()
+if score_seeds or score_ensemble:  # locked seeds are re-run only to build a fresh ensemble
+    for model in models:
+        test_logits.append(logits_for(model, "test")[0])
 fed_test = [logits_for(model, "test")[0] for model in fed_models]
 
 # COMMAND ----------
@@ -155,9 +177,11 @@ def report(val: np.ndarray, test: np.ndarray) -> dict[str, object]:
     }
 
 
+now = {key(m) for m in score_seeds}
 per_seed = []
-for m, val, test in zip(MODELS, val_logits, test_logits, strict=True):
-    per_seed.append({"seed": m["seed"], **report(val, test)})
+for m, val, test in zip(MODELS, val_logits, test_logits or [None] * len(MODELS), strict=True):
+    if key(m) in now and test is not None:
+        per_seed.append({"seed": m["seed"], **report(val, test)})
 result["single_model_per_seed"] = per_seed
 
 
@@ -165,33 +189,48 @@ def pooled(entry: dict[str, object], key: str) -> float:
     return entry["scores"]["pooled"][key]
 
 
-result["single_model_over_seeds"] = {
-    **{k: summarize([pooled(e, k) for e in per_seed]) for k in KEYS},
-    **{
-        f"calibration_{k}": summarize([e["calibration"][k] for e in per_seed])
-        for k in ("ece_before", "ece_after", "nll_before", "nll_after")
-    },
-}
-result["ensemble_3_seeds"] = report(ensemble_logits(val_logits), ensemble_logits(test_logits))
+if per_seed:
+    result["single_model_over_seeds"] = {
+        "seeds": [e["seed"] for e in per_seed],
+        **{k: summarize([pooled(e, k) for e in per_seed]) for k in KEYS},
+        **{
+            f"calibration_{k}": summarize([e["calibration"][k] for e in per_seed])
+            for k in ("ece_before", "ece_after", "nll_before", "nll_after")
+        },
+    }
+if score_ensemble:
+    result["ensemble_3_seeds"] = report(ensemble_logits(val_logits), ensemble_logits(test_logits))
 
 # Supplementary, not selected: lesion averaging failed the keep rule on validation.
-avg_seeds = [lesion_average(t, lesions) for t in test_logits]
-avg_ens = lesion_average(ensemble_logits(test_logits), lesions)
-result["supplementary_lesion_average_not_selected"] = {
+avg_pairs = (
+    []
+    if not test_logits
+    else [
+        (m, lesion_average(t, lesions))
+        for m, t in zip(MODELS, test_logits, strict=True)
+        if key(m) in now
+    ]
+)
+avg_seeds = [a for _, a in avg_pairs]
+avg_ens = lesion_average(ensemble_logits(test_logits), lesions) if score_ensemble else None
+supplementary: dict[str, object] = {
     "note": "Not the selected configuration: lesion averaging missed the keep rule on "
     "validation (+0.83 points balanced accuracy). Shown for reference only.",
     "single_model_per_seed": [
         {"seed": m["seed"], **{k: classification_metrics(test_labels, a)[k] for k in KEYS}}
-        for m, a in zip(MODELS, avg_seeds, strict=True)
+        for m, a in avg_pairs
     ],
-    "single_model_over_seeds": {
+}
+if avg_seeds:
+    supplementary["single_model_over_seeds"] = {
         k: summarize([classification_metrics(test_labels, a)[k] for a in avg_seeds]) for k in KEYS
-    },
-    "ensemble_3_seeds": {
+    }
+if score_ensemble:
+    supplementary["ensemble_3_seeds"] = {
         **{k: classification_metrics(test_labels, avg_ens)[k] for k in KEYS},
         "bootstrap_95": bootstrap_by_lesion(avg_ens, test_labels, lesions, n=N_BOOT),
-    },
-}
+    }
+result["supplementary_lesion_average_not_selected"] = supplementary
 
 # Federated models, same scoring code: per seed, then mean and range per method.
 federated: dict[str, object] = {}
