@@ -186,3 +186,14 @@ JSON, all nine locks present. The run was cancelled during the ninth model. The 
 copies it into the volume, and writes the metrics JSON before the scores file, so a failure
 saving per-image scores cannot lose the metrics. The dry run had passed because a local disk
 can seek; a volume cannot, so only the real run could show it.
+
+Two more changes keep a crash from leaving used-up looks with nothing to show. Each lock now
+has a status: `started` before the first test or shift image is scored, `completed` only after
+the result JSON and scores file have been read back from the volume; a `started` lock without
+a result stops a rerun instead of being repeated silently. And the first model of a job runs
+outside the per-model error handler, with its files checked on the volume before any other
+model starts. The temporary file uses Python's `tempfile` folder, not a hardcoded `/tmp`. The
+nine used-up locks were not deleted: they are archived with a note (run ID, what broke, no
+results saved) in `checkpoints/phase2/detection_looks_archive/802132583124668/`, and the
+cancelled run's printed output, which has no detection numbers, is in
+`results/phase2/drift/cancelled-802132583124668/stdout.txt`.
