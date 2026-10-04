@@ -27,6 +27,9 @@ for name, default in {
     "deadline_minutes": "100",
     "job_run_id": "",  # the job passes {{job.run_id}}: the same for a task's retries
     "pause_when_done": "",  # comma-separated job IDs
+    # A federated run whose image loading fails is retried at once, in the same session,
+    # with this many loader workers and pin_memory off; "" turns the retry off.
+    "hardened_workers": "2",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -43,6 +46,7 @@ subprocess.run(
 
 # COMMAND ----------
 
+import gc
 import json
 import os
 import time
@@ -116,7 +120,14 @@ def val_scores(model: torch.nn.Module) -> dict[str, object]:
     return score_rows(val, logits, labels)
 
 
-def run(kind: str, seed: int) -> None:
+LOADER_ERRORS = (
+    "Pin memory thread exited",
+    "DataLoader worker",
+    "unable to allocate shared memory",
+)
+
+
+def run(kind: str, seed: int, hardened: bool = False, previous_failure: str = "") -> None:
     name = f"{kind}-seed{seed}"
     out_file = OUT / f"{name}.json"
     if out_file.exists():
@@ -128,6 +139,13 @@ def run(kind: str, seed: int) -> None:
         generator = seed_everything(seed, cfg.num_threads, gpu=True)
         model = build_model(pretrained=True, arch=cfg.arch)
         t0 = time.perf_counter()
+        run_cfg = cfg
+        if hardened:
+            run_cfg = TrainConfig(
+                **{**cfg.__dict__, "num_workers": int(dbutils.widgets.get("hardened_workers"))}
+            )
+        loader = {"version": "hardened" if hardened else "default",
+                  "num_workers": run_cfg.num_workers, "pin_memory": not hardened}  # fmt: skip
         if kind == "final":
             model, history = train(model, pooled["train"], pooled["val"], cfg, seed, device,
                                    generator)  # fmt: skip
@@ -135,8 +153,9 @@ def run(kind: str, seed: int) -> None:
         else:
             fcfg = FedConfig(method=kind, rounds=ROUNDS, proximal_mu=MU)
             model, history = run_federated(
-                model, clients, pooled["val"], cfg, fcfg, seed, device, generator
-            )
+                model, clients, pooled["val"], run_cfg, fcfg, seed, device, generator,
+                pin_memory=not hardened,
+            )  # fmt: skip
             extra = {
                 "fed_config": fcfg.__dict__,
                 "clients": {c: len(d) for c, d in clients.items()},
@@ -159,6 +178,7 @@ def run(kind: str, seed: int) -> None:
             "scores": scores, "history": history,
             "checkpoint": str(folder / "model.pt"), "weights_sha256": weights_hash(model),
             "mlflow_run_id": mlrun.info.run_id, "gpu": torch.cuda.get_device_name(0),
+            "loader": loader, "previous_failure": previous_failure or None,
         }  # fmt: skip
     out_file.write_text(json.dumps(result))
     print(json.dumps({"run": name, "metrics": result["metrics"], "seconds": round(seconds)}),
@@ -185,9 +205,25 @@ for kind, seed in PLAN:
     try:
         run(kind, seed)
     except Exception:
-        failed[f"{kind}-seed{seed}"] = traceback.format_exc()[-3000:]
-        print(f"{kind}-seed{seed} FAILED\n{failed[f'{kind}-seed{seed}']}", flush=True)
+        error = traceback.format_exc()[-3000:]
+        print(f"{kind}-seed{seed} FAILED\n{error}", flush=True)
+        gc.collect()
         torch.cuda.empty_cache()
+        retry = (kind != "final" and dbutils.widgets.get("hardened_workers")
+                 and any(e in error for e in LOADER_ERRORS))  # fmt: skip
+        if not retry:
+            failed[f"{kind}-seed{seed}"] = error
+            continue
+        print(f"{kind}-seed{seed}: loader error, retrying with the hardened loader", flush=True)
+        try:
+            run(kind, seed, hardened=True, previous_failure=error)
+        except Exception:
+            failed[f"{kind}-seed{seed}"] = (
+                error + "\n--- hardened retry ---\n" + traceback.format_exc()[-3000:]
+            )
+            print(f"{kind}-seed{seed} hardened retry FAILED", flush=True)
+            gc.collect()
+            torch.cuda.empty_cache()
 
 finals = [{"kind": "final", "seed": 0, **CONTROL0}] + manifest(("final",))
 (OUT / "final_models.json").write_text(json.dumps(finals))

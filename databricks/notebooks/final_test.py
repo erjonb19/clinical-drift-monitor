@@ -145,7 +145,7 @@ def load(m: dict[str, object]) -> torch.nn.Module:
 
 val_logits, test_logits = [], []
 models = []
-for m in MODELS:
+for m in MODELS if (score_seeds or score_ensemble) else []:  # skip fully locked controls
     models.append(load(m))
     val_logits.append(logits_for(models[-1], "val")[0])
 val_labels = frames["val"]["label"].map(index).to_numpy()
@@ -179,8 +179,8 @@ def report(val: np.ndarray, test: np.ndarray) -> dict[str, object]:
 
 now = {key(m) for m in score_seeds}
 per_seed = []
-for m, val, test in zip(MODELS, val_logits, test_logits or [None] * len(MODELS), strict=True):
-    if key(m) in now and test is not None:
+for m, val, test in zip(MODELS, val_logits, test_logits, strict=False):
+    if key(m) in now:
         per_seed.append({"seed": m["seed"], **report(val, test)})
 result["single_model_per_seed"] = per_seed
 
