@@ -62,17 +62,18 @@ def confirm_types(collection: int) -> dict[str, str | None]:
 
 def table(frame: pd.DataFrame, column: str) -> dict[str, Any]:
     out: dict[str, Any] = {}
-    for (source, label), g in frame.groupby(["source", "label"], dropna=False):
+    for keys, g in frame.groupby(["source", "label"], dropna=False):
+        source, label = str(keys[0]), keys[1]
         counts = Counter(g[column].fillna("not recorded"))
         n = len(g)
-        out.setdefault(source, {})[str(label) if pd.notna(label) else "unlabelled"] = {
+        out.setdefault(source, {})[str(label) if isinstance(label, str) else "unlabelled"] = {
             "images": n,
             "by_method": dict(counts.most_common()),
             "histopathology_share": round(counts.get("histopathology", 0) / n, 4),
         }
-    for source, g in frame.groupby("source"):
+    for source_key, g in frame.groupby("source"):
         counts = Counter(g[column].fillna("not recorded"))
-        out[source]["all"] = {"images": len(g), "by_method": dict(counts.most_common()),
+        out[str(source_key)]["all"] = {"images": len(g), "by_method": dict(counts.most_common()),
                               "histopathology_share": round(counts.get("histopathology", 0)
                                                             / len(g), 4)}  # fmt: skip
     return out
@@ -97,7 +98,7 @@ def main() -> None:
     is_ham = silver["source"] == "ham10000"
     silver.loc[is_ham, "method"] = silver.loc[is_ham, "isic_id"].map(ham)
     missing = int(silver["isic_id"].map(lambda i: i not in isic).sum())
-    result = {
+    result: dict[str, Any] = {
         "sources": {"isic_sites": "ISIC metadata clinical.diagnosis_confirm_type",
                     "ham10000": "HAM10000_metadata.csv dx_type"},
         "silver_images": len(silver),
