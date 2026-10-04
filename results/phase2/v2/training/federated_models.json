@@ -1,0 +1,38 @@
+[
+  {
+    "kind": "fedavg",
+    "seed": 0,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-fedavg-seed0/model.pt",
+    "weights_sha256": "d634ca47277a1ad8"
+  },
+  {
+    "kind": "fedavg",
+    "seed": 1,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-fedavg-seed1/model.pt",
+    "weights_sha256": "a26acffc69d59161"
+  },
+  {
+    "kind": "fedavg",
+    "seed": 2,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-fedavg-seed2/model.pt",
+    "weights_sha256": "ab1d571f6855dca5"
+  },
+  {
+    "kind": "fedprox",
+    "seed": 0,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-fedprox-seed0/model.pt",
+    "weights_sha256": "12ce251c578f557b"
+  },
+  {
+    "kind": "fedprox",
+    "seed": 1,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-fedprox-seed1/model.pt",
+    "weights_sha256": "2a340a946ce16e47"
+  },
+  {
+    "kind": "fedprox",
+    "seed": 2,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-fedprox-seed2/model.pt",
+    "weights_sha256": "e1c30819ec7ed6de"
+  }
+]

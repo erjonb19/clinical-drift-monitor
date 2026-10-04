@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "final",
+    "seed": 0,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-final-seed0/model.pt",
+    "weights_sha256": "538b9a8188528706"
+  },
+  {
+    "kind": "final",
+    "seed": 1,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-final-seed1/model.pt",
+    "weights_sha256": "b8092ff952d4db13"
+  },
+  {
+    "kind": "final",
+    "seed": 2,
+    "checkpoint": "/Volumes/workspace/cdm/raw/checkpoints/phase2/v2-final-seed2/model.pt",
+    "weights_sha256": "5e1b02ef8638c5e9"
+  }
+]
