@@ -21,7 +21,7 @@
       "spec": {
         "environment_version": "4",
         "dependencies": [
-          "/Volumes/workspace/cdm/raw/deploy/f57740f/cdm-0.1.0-py3-none-any.whl",
+          "/Volumes/workspace/cdm/raw/deploy/932865b/cdm-0.1.0-py3-none-any.whl",
           "torch>=2.4",
           "torchvision>=0.19"
         ]
@@ -42,15 +42,16 @@
       "notebook_task": {
         "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/overnight_gpu",
         "base_parameters": {
-          "wheel": "/Volumes/workspace/cdm/raw/deploy/f57740f/cdm-0.1.0-py3-none-any.whl",
-          "code_version": "f57740f",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/932865b/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "932865b",
           "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
           "control_seed0": "{\"checkpoint\": \"/Volumes/workspace/cdm/raw/checkpoints/phase2/control-center384-seed0/model.pt\", \"weights_sha256\": \"67f7618e3f32e23b\"}",
           "rounds": "20",
           "proximal_mu": "0.01",
           "deadline_minutes": "100",
           "job_run_id": "{{job.run_id}}",
-          "pause_when_done": ""
+          "pause_when_done": "",
+          "hardened_workers": "2"
         }
       }
     },
@@ -68,8 +69,8 @@
       "notebook_task": {
         "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/final_test",
         "base_parameters": {
-          "wheel": "/Volumes/workspace/cdm/raw/deploy/f57740f/cdm-0.1.0-py3-none-any.whl",
-          "code_version": "f57740f",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/932865b/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "932865b",
           "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
           "bootstrap": "1000",
           "allow_second_look": "false"
