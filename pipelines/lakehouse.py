@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
+from pathlib import Path
 
 import pandas as pd
 from pyspark import pipelines as dp
@@ -27,6 +28,7 @@ from pyspark.sql import functions as F
 
 from cdm.gates import run_all, with_splits
 from cdm.images import DecodeError, decode_resize
+from cdm.splits import load_frozen
 
 _spark = SparkSession.getActiveSession()
 assert _spark is not None, "run inside a Databricks pipeline"
@@ -34,6 +36,10 @@ spark: SparkSession = _spark
 
 with open(spark.conf.get("cdm.config"), encoding="utf-8") as f:
     CONFIG = json.load(f)
+# Frozen lesion splits (v2 data: earlier lesions keep their split) sit next to sites.json.
+if "frozen_splits" in CONFIG:
+    _frozen_file = Path(spark.conf.get("cdm.config")).parent / CONFIG["frozen_splits"]["file"]
+    CONFIG["frozen_splits"]["lesions"] = load_frozen(_frozen_file)
 IMAGES_GLOB = spark.conf.get("cdm.images_glob")
 METADATA_PATH = spark.conf.get("cdm.metadata_path")
 MANIFEST_PATH = spark.conf.get("cdm.manifest_path")

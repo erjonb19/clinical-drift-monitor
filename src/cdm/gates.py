@@ -64,6 +64,12 @@ def roles(config: Mapping[str, Any]) -> dict[str, str]:
     return {HAM: "client", **{name: spec.get("role", "held_out") for name, spec in sites.items()}}
 
 
+def frozen_splits(config: Mapping[str, Any]) -> dict[str, dict[str, str]]:
+    """Frozen lesion splits (source -> lesion -> split) that the caller loaded into
+    ``config["frozen_splits"]["lesions"]`` from the file the config names; empty if none."""
+    return dict(config.get("frozen_splits", {}).get("lesions", {}))
+
+
 def label_rule(config: Mapping[str, Any]) -> list[str]:
     return list(config.get("label_policy", {}).get("unlabelled_at_sites", []))
 
@@ -78,7 +84,11 @@ def with_splits(frame: pd.DataFrame, config: Mapping[str, Any]) -> pd.DataFrame:
     frame = frame.assign(label=site_labels(frame, label_rule(config)))
     role = roles(config)
     clients = [source for source, r in role.items() if r == "client"]
-    frame = frame.assign(split=assign_splits(frame, config["ham10000"]["split_seed"], clients))
+    frame = frame.assign(
+        split=assign_splits(
+            frame, config["ham10000"]["split_seed"], clients, frozen_splits(config) or None
+        )
+    )
     by_dataset = config["ham10000"].get("clients_by_dataset", {})
     ham_client = frame.get("ham_dataset", pd.Series(None, index=frame.index)).map(by_dataset)
     client = frame["source"].where(frame["source"] != HAM, ham_client)
@@ -97,6 +107,26 @@ def split_computed(frame: pd.DataFrame) -> Gate:
     """The lesion split could be computed (stratification needs enough lesions per class)."""
     bad = frame[frame["split"] == "unsplittable"]["isic_id"]
     return Gate("split_computed", len(bad), _examples(bad))
+
+
+def frozen_splits_kept(frame: pd.DataFrame, frozen: Mapping[str, Mapping[str, str]]) -> Gate:
+    """Every frozen (v1) lesion is still present and every labelled image of it keeps its
+    split, so adding data never moves an earlier lesion between train, val and test."""
+    if not frozen:
+        return Gate("frozen_splits_kept", 0, "no frozen splits configured")
+    bad: list[str] = []
+    for source, lesions in frozen.items():
+        rows = frame[(frame["source"] == source) & frame["label"].notna()]
+        got: dict[str, set[str]] = {}
+        for lesion, split in zip(rows["lesion_id"], rows["split"], strict=True):
+            got.setdefault(str(lesion), set()).add(str(split))
+        for lesion, split in lesions.items():
+            if lesion not in got:
+                bad.append(f"{source}/{lesion} missing")
+            elif got[lesion] != {split}:
+                bad.append(f"{source}/{lesion} {sorted(got[lesion])} != {split}")
+    kept = sum(len(v) for v in frozen.values())
+    return Gate("frozen_splits_kept", len(bad), _examples(bad) or f"{kept} lesions kept")
 
 
 def lesions_in_one_split(frame: pd.DataFrame) -> Gate:
@@ -224,4 +254,5 @@ def run_all(frame: pd.DataFrame, config: Mapping[str, Any]) -> list[Gate]:
         roles_respected(frame),
         site_label_rule_applied(frame, label_rule(config)),
         every_client_image_has_a_client(frame),
+        frozen_splits_kept(frame, frozen_splits(config)),
     ]

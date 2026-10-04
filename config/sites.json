@@ -35,10 +35,10 @@
         249
       ],
       "cap": {
-        "max_images": 5000,
+        "max_images": 10000,
         "seed": 0,
-        "fingerprint": "0f156bf4e99bb8c2",
-        "n_images": 5000
+        "fingerprint": "4129a90a0e5f3aed",
+        "n_images": 9999
       },
       "role": "client"
     },
@@ -72,5 +72,9 @@
     "center_crop": false,
     "format": "JPEG",
     "quality": 95
+  },
+  "frozen_splits": {
+    "file": "splits_v1.csv",
+    "note": "v1 lesion splits for Barcelona and MSK (2026-10-04); every listed lesion keeps its split, only new lesions are assigned"
   }
 }

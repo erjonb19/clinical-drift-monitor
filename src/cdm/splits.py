@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import csv
 import hashlib
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from pathlib import Path
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -84,9 +86,30 @@ def site_labels(frame: pd.DataFrame, unlabelled_diagnoses: Iterable[str]) -> pd.
     return frame["label"].where(~ambiguous, None)
 
 
-def _split_source(rows: pd.DataFrame, seed: int, unlabelled: str) -> pd.Series:
+Frozen = Mapping[str, Mapping[str, str]]  # source -> lesion ID -> split
+
+
+def load_frozen(path: Path) -> dict[str, dict[str, str]]:
+    """Frozen lesion splits from a ``source,lesion_id,split`` CSV (config/splits_v1.csv)."""
+    frozen: dict[str, dict[str, str]] = {}
+    with path.open(encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            if row["split"] not in SPLITS:
+                raise DataError(f"{path}: lesion {row['lesion_id']} has split {row['split']!r}")
+            frozen.setdefault(row["source"], {})[row["lesion_id"]] = row["split"]
+    return frozen
+
+
+def _split_source(
+    rows: pd.DataFrame, seed: int, unlabelled: str, frozen: Mapping[str, str] | None = None
+) -> pd.Series:
     split = pd.Series(unlabelled, index=rows.index)
     labelled = rows[rows["label"].notna()]
+    if frozen:
+        # Lesions in the frozen list keep their split; only the rest are split, by lesion.
+        kept = labelled["lesion_id"].map(frozen)
+        split.loc[kept.dropna().index] = kept.dropna()
+        labelled = labelled[kept.isna()]
     if len(labelled):
         try:
             lesions = labelled[["lesion_id", "label"]].rename(columns={"label": "dx"})
@@ -98,7 +121,9 @@ def _split_source(rows: pd.DataFrame, seed: int, unlabelled: str) -> pd.Series:
     return split
 
 
-def assign_splits(frame: pd.DataFrame, seed: int, clients: Iterable[str] = (HAM,)) -> pd.Series:
+def assign_splits(
+    frame: pd.DataFrame, seed: int, clients: Iterable[str] = (HAM,), frozen: Frozen | None = None
+) -> pd.Series:
     """A lesion-level train, val and test split for each client source; ``score`` otherwise.
 
     Each client source is split on its own rows, so HAM10000's split is exactly Phase 0's
@@ -106,11 +131,18 @@ def assign_splits(frame: pd.DataFrame, seed: int, clients: Iterable[str] = (HAM,
     error the missing-label gate names); unlabelled site images get ``score``, because sites
     have images outside HAM10000's classes by design. A split that cannot be stratified gives
     ``unsplittable``, which the split_computed gate names.
+
+    ``frozen`` (source -> lesion -> split) pins earlier lesions: a frozen lesion keeps its split
+    and only lesions not in it are split, among themselves. HAM10000 is never frozen, so its
+    split stays Phase 0's.
     """
+    if frozen and HAM in frozen:
+        raise DataError("HAM10000's split is fixed by its seed and fingerprint, not frozen")
     split = pd.Series("score", index=frame.index, name="split")
     for source in clients:
         rows = frame[frame["source"] == source]
         if len(rows):
             unlabelled = "unlabelled" if source == HAM else "score"
-            split.loc[rows.index] = _split_source(rows, seed, unlabelled)
+            pinned = (frozen or {}).get(source)
+            split.loc[rows.index] = _split_source(rows, seed, unlabelled, pinned)
     return split
