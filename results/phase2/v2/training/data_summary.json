@@ -1,0 +1,31 @@
+{
+  "version": "v2",
+  "code_version": "ceb83b0",
+  "images": {
+    "train": 15277,
+    "val": 3210,
+    "test": 3262
+  },
+  "train_images_by_client": {
+    "barcelona": 6004,
+    "ham_vienna": 5448,
+    "msk": 2229,
+    "ham_queensland": 1596
+  },
+  "train_share_by_client": {
+    "barcelona": 0.393,
+    "ham_vienna": 0.3566,
+    "msk": 0.1459,
+    "ham_queensland": 0.1045
+  },
+  "bordered_share_of_train": 0.1947,
+  "bordered_train_by_client": {
+    "barcelona": 2705,
+    "ham_queensland": 24,
+    "ham_vienna": 212,
+    "msk": 33
+  },
+  "v1_images_in_silver": 17478,
+  "v1_val_images": 2566,
+  "v1_test_images": 2623
+}

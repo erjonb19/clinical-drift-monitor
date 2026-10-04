@@ -1,0 +1,28 @@
+{
+  "code_version": "ceb83b0",
+  "plan": [
+    "v2-final-seed0",
+    "v2-final-seed1",
+    "v2-final-seed2",
+    "v2-fedavg-seed0",
+    "v2-fedprox-seed0",
+    "v2-fedavg-seed1",
+    "v2-fedprox-seed1",
+    "v2-fedavg-seed2",
+    "v2-fedprox-seed2"
+  ],
+  "finished": [
+    "v2-fedavg-seed0",
+    "v2-fedavg-seed1",
+    "v2-fedavg-seed2",
+    "v2-fedprox-seed0",
+    "v2-fedprox-seed1",
+    "v2-fedprox-seed2",
+    "v2-final-seed0",
+    "v2-final-seed1",
+    "v2-final-seed2"
+  ],
+  "failed": {},
+  "not_started_deadline": [],
+  "job_run_id": "962121238567298"
+}

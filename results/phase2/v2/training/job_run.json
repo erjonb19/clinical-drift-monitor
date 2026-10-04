@@ -1,0 +1,47 @@
+{
+  "exported_utc": "2026-10-04T18:11:32+00:00",
+  "run_id": 962121238567298,
+  "job_id": 403273250846193,
+  "result": "SUCCESS",
+  "attempts": [
+    {
+      "task": "gpu_train",
+      "task_run_id": 754833158937308,
+      "attempt": 0,
+      "result": "SUCCESS",
+      "message": "",
+      "execution_ms": 4835000,
+      "setup_ms": 13000
+    }
+  ],
+  "outputs": {
+    "gpu_train": {
+      "code_version": "ceb83b0",
+      "plan": [
+        "v2-final-seed0",
+        "v2-final-seed1",
+        "v2-final-seed2",
+        "v2-fedavg-seed0",
+        "v2-fedprox-seed0",
+        "v2-fedavg-seed1",
+        "v2-fedprox-seed1",
+        "v2-fedavg-seed2",
+        "v2-fedprox-seed2"
+      ],
+      "finished": [
+        "v2-fedavg-seed0",
+        "v2-fedavg-seed1",
+        "v2-fedavg-seed2",
+        "v2-fedprox-seed0",
+        "v2-fedprox-seed1",
+        "v2-fedprox-seed2",
+        "v2-final-seed0",
+        "v2-final-seed1",
+        "v2-final-seed2"
+      ],
+      "failed": {},
+      "not_started_deadline": [],
+      "job_run_id": "962121238567298"
+    }
+  }
+}

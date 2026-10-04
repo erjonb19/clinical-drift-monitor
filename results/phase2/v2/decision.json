@@ -1,0 +1,112 @@
+{
+  "exported_utc": "2026-10-04T18:11:49+00:00",
+  "rule": {
+    "min_pooled_gain_points": 1.0,
+    "max_client_drop_points": 3.0,
+    "models": "centralized, seeds 0-2, mean",
+    "images": "v1's exact validation images"
+  },
+  "centralized": {
+    "seeds": [
+      3,
+      3
+    ],
+    "v1_mean": {
+      "pooled": 0.6767645695103867,
+      "ham_vienna": 0.7281834215061526,
+      "ham_queensland": 0.6771592672156581,
+      "barcelona": 0.6036776136776137,
+      "msk": 0.49283690784945317
+    },
+    "v2_mean": {
+      "pooled": 0.6872648742099053,
+      "ham_vienna": 0.7542554131709749,
+      "ham_queensland": 0.6920565302144249,
+      "barcelona": 0.6148779278191042,
+      "msk": 0.5327900404740383
+    },
+    "change_points": {
+      "pooled": 1.050030469951868,
+      "ham_vienna": 2.6071991664822325,
+      "ham_queensland": 1.4897262998766814,
+      "barcelona": 1.1200314141490475,
+      "msk": 3.9953132624585166
+    },
+    "pooled_gain_ok": true,
+    "worst_client_change_points": 1.1200314141490475,
+    "clients_ok": true,
+    "keep_v2": true
+  },
+  "decision": "v2",
+  "federated_for_information": {
+    "fedavg": {
+      "seeds": [
+        3,
+        3
+      ],
+      "v1_mean": {
+        "pooled": 0.5988112343317019,
+        "ham_vienna": 0.7662853516692891,
+        "ham_queensland": 0.5382171699088992,
+        "barcelona": 0.5910410204527853,
+        "msk": 0.3725535151587563
+      },
+      "v2_mean": {
+        "pooled": 0.5970759547333849,
+        "ham_vienna": 0.7576463590948558,
+        "ham_queensland": 0.6823824442057523,
+        "barcelona": 0.560815899639429,
+        "msk": 0.40474514450329896
+      },
+      "change_points": {
+        "pooled": -0.17352795983169855,
+        "ham_vienna": -0.8638992574433346,
+        "ham_queensland": 14.41652742968531,
+        "barcelona": -3.0225120813356265,
+        "msk": 3.219162934454267
+      },
+      "pooled_gain_ok": false,
+      "worst_client_change_points": -3.0225120813356265,
+      "clients_ok": false
+    },
+    "fedprox": {
+      "seeds": [
+        3,
+        3
+      ],
+      "v1_mean": {
+        "pooled": 0.6012288641802778,
+        "ham_vienna": 0.7735270026323303,
+        "ham_queensland": 0.5945912400047738,
+        "barcelona": 0.580742249565779,
+        "msk": 0.36956907278206413
+      },
+      "v2_mean": {
+        "pooled": 0.6095066960857313,
+        "ham_vienna": 0.7807971079446009,
+        "ham_queensland": 0.6807367625412738,
+        "barcelona": 0.5926287243934302,
+        "msk": 0.41389884547815964
+      },
+      "change_points": {
+        "pooled": 0.8277831905453503,
+        "ham_vienna": 0.7270105312270569,
+        "ham_queensland": 8.614552253649999,
+        "barcelona": 1.188647482765115,
+        "msk": 4.43297726960955
+      },
+      "pooled_gain_ok": false,
+      "worst_client_change_points": 0.7270105312270569,
+      "clients_ok": true
+    }
+  },
+  "v2_centralized_mean_on_full_v2_validation": {
+    "pooled": 0.6550298705020378,
+    "ham_vienna": 0.7542554131709749,
+    "ham_queensland": 0.6920565302144249,
+    "barcelona": 0.5590758435628912,
+    "msk": 0.5327900404740383
+  },
+  "v1_validation_images": 2566,
+  "v2_validation_images_v1_subset": 2566
+}
