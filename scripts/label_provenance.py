@@ -2,7 +2,9 @@
 
 ISIC sites: ISIC's ``clinical.diagnosis_confirm_type`` (for example ``histopathology``), read
 from the public metadata API in pages of 100 records per collection (no per-image calls). The
-raw pages are cached, gzipped, in results/phase2/label_provenance/raw/ and reused on a rerun.
+raw pages are cached, gzipped, in results/phase2/label_provenance/raw/ (gitignored: they stay
+local) and reused on a rerun; only label_provenance.json, with the source and fetch date, is
+committed.
 HAM10000: its own ``dx_type`` column from HAM10000_metadata.csv (histo, follow_up, consensus,
 confocal), with ISIC's field for the same images reported beside it as a cross-check.
 Labels, roles and splits come from the current silver table, so the counts describe exactly
@@ -19,6 +21,7 @@ import json
 import sys
 import urllib.parse
 from collections import Counter
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -99,6 +102,9 @@ def main() -> None:
     silver.loc[is_ham, "method"] = silver.loc[is_ham, "isic_id"].map(ham)
     missing = int(silver["isic_id"].map(lambda i: i not in isic).sum())
     result: dict[str, Any] = {
+        "fetched_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+        "fetched_from": API + " (public metadata, paged 100 records per request)",
+        "raw_pages_kept_local": str(RAW) + " (gitignored)",
         "sources": {"isic_sites": "ISIC metadata clinical.diagnosis_confirm_type",
                     "ham10000": "HAM10000_metadata.csv dx_type"},
         "silver_images": len(silver),
@@ -107,7 +113,9 @@ def main() -> None:
         "ham10000_isic_field_cross_check": table(silver[is_ham], "isic_confirm_type"),
         "raw_cache": sorted(p.name for p in RAW.glob("*.json.gz")),
     }  # fmt: skip
-    (OUT / "provenance.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    (OUT / "label_provenance.json").write_text(
+        json.dumps(result, indent=2) + "\n", encoding="utf-8"
+    )
     print(json.dumps({s: v["all"] for s, v in result["by_site_and_class"].items()}, indent=1))
 
 
