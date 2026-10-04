@@ -31,8 +31,8 @@
       "notebook_task": {
         "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/overnight_gpu",
         "base_parameters": {
-          "wheel": "/Volumes/workspace/cdm/raw/deploy/932865b/cdm-0.1.0-py3-none-any.whl",
-          "code_version": "932865b",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/ceb83b0/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "ceb83b0",
           "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
           "rounds": "20",
           "proximal_mu": "0.01",
