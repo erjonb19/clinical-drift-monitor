@@ -47,16 +47,18 @@ def task_outputs(run_id: str) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True)
+    parser.add_argument("--out", type=Path, default=OUT, help="folder for this run's evidence")
     args = parser.parse_args()
-    OUT.mkdir(parents=True, exist_ok=True)
+    out = args.out
+    out.mkdir(parents=True, exist_ok=True)
     evidence = task_outputs(args.run)
     stamp = datetime.now(UTC).isoformat(timespec="seconds")
     test = evidence["outputs"].pop("cpu_test")
-    (OUT / "job_run.json").write_text(
+    (out / "job_run.json").write_text(
         json.dumps({"exported_utc": stamp, **evidence}, indent=2) + "\n", encoding="utf-8"
     )
     if test is not None:
-        (OUT / "final_test.json").write_text(
+        (out / "final_test.json").write_text(
             json.dumps({"exported_utc": stamp, "job_run_id": evidence["run_id"], **test},
                        indent=2) + "\n", encoding="utf-8"
         )  # fmt: skip
@@ -65,8 +67,8 @@ def main() -> None:
     for name in names:
         if name.endswith(".json"):
             text = cli_text("fs", "cat", f"{VOLUME}/{name}")
-            (OUT / name).write_text(json.dumps(json.loads(text), indent=2) + "\n", encoding="utf-8")
-    print(f"wrote {OUT} ({len(names)} volume files)")
+            (out / name).write_text(json.dumps(json.loads(text), indent=2) + "\n", encoding="utf-8")
+    print(f"wrote {out} ({len(names)} volume files)")
 
 
 if __name__ == "__main__":

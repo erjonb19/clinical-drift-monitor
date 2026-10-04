@@ -1,0 +1,26 @@
+{
+  "code_version": "932865b",
+  "plan": [
+    "final-seed1",
+    "final-seed2",
+    "fedavg-seed0",
+    "fedprox-seed0",
+    "fedavg-seed1",
+    "fedprox-seed1",
+    "fedavg-seed2",
+    "fedprox-seed2"
+  ],
+  "finished": [
+    "fedavg-seed0",
+    "fedavg-seed1",
+    "fedavg-seed2",
+    "fedprox-seed0",
+    "fedprox-seed1",
+    "fedprox-seed2",
+    "final-seed1",
+    "final-seed2"
+  ],
+  "failed": {},
+  "not_started_deadline": [],
+  "job_run_id": "796409623903112"
+}
