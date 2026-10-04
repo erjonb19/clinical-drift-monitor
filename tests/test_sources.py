@@ -164,8 +164,17 @@ def test_committed_config_parses_and_pins_the_barcelona_selection() -> None:
     sites = {s.name: s for s in load_sites(config)}
     assert set(sites) == {"barcelona", "buenos_aires", "msk", "pad_ufes"}
     cap = sites["barcelona"].cap
-    assert cap is not None and cap.max_images == 5000 and cap.fingerprint is not None
+    # v2 (2026-10-04): the cap rose from 5,000 (fingerprint 0f156bf4e99bb8c2) to 10,000.
+    assert cap is not None and cap.max_images == 10000 and cap.fingerprint == "4129a90a0e5f3aed"
     assert config["ham10000"]["split_fingerprint"] == "cc2b196cd5bf58ad"
+
+
+def test_a_larger_cap_keeps_every_image_the_smaller_cap_chose() -> None:
+    """Same seed, larger cap: the lesion order is the same, so v1's selection is a prefix."""
+    rows = [{"isic_id": f"ISIC_{i:04d}", "isic_lesion_id": f"IL_{i // 3}"} for i in range(900)]
+    small = {r["isic_id"] for r in select_whole_lesions(rows, 200, seed=0)}
+    large = {r["isic_id"] for r in select_whole_lesions(rows, 500, seed=0)}
+    assert small < large and len(large) <= 500
 
 
 def test_land_reuses_a_known_manifest_row_without_reading_the_file(tmp_path: Path) -> None:

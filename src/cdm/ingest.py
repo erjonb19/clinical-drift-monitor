@@ -212,6 +212,8 @@ def make_broken(
     clean = pd.DataFrame(meta[HAM_SOURCE])
     split = assign_splits(clean.assign(source=HAM_SOURCE), seed=config["ham10000"]["split_seed"])
     broken_config = json.loads(json.dumps(config))
+    # The demo subset is not the v1 data, so it has no frozen lesions to keep.
+    broken_config.pop("frozen_splits", None)
     broken_config["ham10000"]["split_fingerprint"] = split_fingerprint(clean, split)
     broken_config["ham10000"]["class_counts"] = clean["label"].value_counts().to_dict()
     broken_config["broken_demo"] = {"lesions_per_class": lesions_per_class,

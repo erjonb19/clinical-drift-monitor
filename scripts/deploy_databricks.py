@@ -139,6 +139,7 @@ def main() -> int:
     uploads = {
         REPO / "dist" / WHEEL: f"{deploy}/{WHEEL}",
         REPO / "config" / "sites.json": f"{deploy}/sites.json",
+        REPO / "config" / "splits_v1.csv": f"{deploy}/splits_v1.csv",
         ham_csv: f"{raw}/uploads/{ham_csv.name}",
         weights: f"{raw}/deploy/weights/{WEIGHTS_FILE}",
     }
