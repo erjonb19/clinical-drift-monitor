@@ -1,0 +1,88 @@
+{
+  "silver": "current silver (384 px shorter side, full frame, JPEG q95)",
+  "by_source": {
+    "barcelona": {
+      "images": 9999,
+      "bordered": 4771,
+      "share": 0.4771
+    },
+    "buenos_aires": {
+      "images": 1616,
+      "bordered": 513,
+      "share": 0.3175
+    },
+    "ham10000": {
+      "images": 10015,
+      "bordered": 328,
+      "share": 0.0328
+    },
+    "msk": {
+      "images": 3728,
+      "bordered": 44,
+      "share": 0.0118
+    },
+    "pad_ufes": {
+      "images": 2298,
+      "bordered": 0,
+      "share": 0.0
+    }
+  },
+  "by_client_split": {
+    "barcelona/score": {
+      "images": 1419,
+      "bordered": 777
+    },
+    "barcelona/test": {
+      "images": 1274,
+      "bordered": 639
+    },
+    "barcelona/train": {
+      "images": 6004,
+      "bordered": 2705
+    },
+    "barcelona/val": {
+      "images": 1302,
+      "bordered": 650
+    },
+    "ham_queensland/test": {
+      "images": 356,
+      "bordered": 5
+    },
+    "ham_queensland/train": {
+      "images": 1596,
+      "bordered": 24
+    },
+    "ham_queensland/val": {
+      "images": 307,
+      "bordered": 5
+    },
+    "ham_vienna/test": {
+      "images": 1172,
+      "bordered": 45
+    },
+    "ham_vienna/train": {
+      "images": 5448,
+      "bordered": 212
+    },
+    "ham_vienna/val": {
+      "images": 1136,
+      "bordered": 37
+    },
+    "msk/score": {
+      "images": 574,
+      "bordered": 0
+    },
+    "msk/test": {
+      "images": 460,
+      "bordered": 9
+    },
+    "msk/train": {
+      "images": 2229,
+      "bordered": 33
+    },
+    "msk/val": {
+      "images": 465,
+      "bordered": 2
+    }
+  }
+}

@@ -1,0 +1,2 @@
+{"barcelona": {"images": 9999, "bordered": 4771, "share": 0.4771}, "buenos_aires": {"images": 1616, "bordered": 513, "share": 0.3175}, "ham10000": {"images": 10015, "bordered": 328, "share": 0.0328}, "msk": {"images": 3728, "bordered": 44, "share": 0.0118}, "pad_ufes": {"images": 2298, "bordered": 0, "share": 0.0}}
+{'train': 15277, 'val': 3210, 'test': 3262, 'buenos_aires': 1616, 'pad_ufes': 2298, 'pathmnist_eval': 2000, 'cifar10_eval': 2000, 'pathmnist_select': 1000, 'cifar10_select': 1000}
