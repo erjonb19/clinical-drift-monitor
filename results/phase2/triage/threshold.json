@@ -1,0 +1,45 @@
+{
+  "stage": "threshold",
+  "code_version": "9605bfa",
+  "target_sensitivity": 0.95,
+  "set_on": "v2 validation (all four clients)",
+  "validation_images": 3210,
+  "validation_melanoma_images": 553,
+  "validation_melanoma_lesions": 208,
+  "thresholds": {
+    "v2-ensemble-final-seeds0-1-2": 0.0637611411378433,
+    "v2-final-seed0": 0.04233320973085598,
+    "v2-final-seed1": 0.04255901819499685,
+    "v2-final-seed2": 0.029218959685598307
+  },
+  "validation_at_threshold": {
+    "v2-ensemble-final-seeds0-1-2": {
+      "images": 3210,
+      "melanoma_images": 553,
+      "sensitivity": 0.9511754068716094,
+      "specificity": 0.5238991343620625,
+      "referral_rate": 0.5579439252336449
+    },
+    "v2-final-seed0": {
+      "images": 3210,
+      "melanoma_images": 553,
+      "sensitivity": 0.9511754068716094,
+      "specificity": 0.4824990590891983,
+      "referral_rate": 0.5922118380062306
+    },
+    "v2-final-seed1": {
+      "images": 3210,
+      "melanoma_images": 553,
+      "sensitivity": 0.9511754068716094,
+      "specificity": 0.48739179525780957,
+      "referral_rate": 0.5881619937694704
+    },
+    "v2-final-seed2": {
+      "images": 3210,
+      "melanoma_images": 553,
+      "sensitivity": 0.9511754068716094,
+      "specificity": 0.47986450884456155,
+      "referral_rate": 0.594392523364486
+    }
+  }
+}
