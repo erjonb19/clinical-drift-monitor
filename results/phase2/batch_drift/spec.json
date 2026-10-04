@@ -1,0 +1,26 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-04",
+  "question": "How often does a two-sample KS test on detector scores flag a batch that contains images from a new site, and how often does it flag a batch with none?",
+  "detectors": {"primary": "mahalanobis (PCA size by method D; the shipped detector)", "secondary": "gram"},
+  "models": "the three v2 centralized seeds (v2-final-seed0, -seed1, -seed2), each with its own detector fit; results per seed, then mean and range",
+  "reference": "validation scores (v2 validation, 3,210 images) from each model's detector",
+  "reference_provenance": "validation scores were not saved by the drift-table run, so a CPU job refits each detector on training images only and scores validation; it must reproduce the drift run's method-D PCA size and Gram layer normalizer for that model, or it stops. No test or shift image is touched.",
+  "pools": {
+    "in_distribution": "the drift run's saved scores for the clients' test split (3,262 images)",
+    "buenos_aires": "saved scores, all 1,616 images",
+    "pad_ufes": "saved scores, all 2,298 images"
+  },
+  "batch_sizes": [25, 50, 100, 200],
+  "new_site_shares": [0.0, 0.10, 0.25, 0.50, 1.0],
+  "batch_construction": "round(share x size) images drawn from the new site's pool and the rest from the in-distribution pool, each without replacement within a batch",
+  "test": "two-sample Kolmogorov-Smirnov (scipy.stats.ks_2samp, two-sided), batch vs reference",
+  "alpha": 0.01,
+  "batches_per_cell": 1000,
+  "random_seed": 0,
+  "reported": {
+    "detection_rate": "share of batches with p < 0.01, per site, batch size and share (shares above 0%)",
+    "false_alarm_rate": "share of 0% batches (in-distribution test only) with p < 0.01, per batch size"
+  },
+  "caveat": "the in-distribution pool is the clients' test split and the reference is validation; both are in-distribution, so the 0% false-alarm rate also measures any validation-to-test difference"
+}
