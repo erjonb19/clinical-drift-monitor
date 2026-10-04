@@ -30,6 +30,10 @@ for name, default in {
     # A federated run whose image loading fails is retried at once, in the same session,
     # with this many loader workers and pin_memory off; "" turns the retry off.
     "hardened_workers": "2",
+    # "" is v1. "v2" writes to overnight/v2 with v2- checkpoints, trains centralized seed 0
+    # too, and also scores v1's exact validation images (from the v1 snapshot table).
+    "version": "",
+    "v1_snapshot": "workspace.cdm.silver_images_v1_snapshot",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -73,8 +77,10 @@ ROUNDS = int(dbutils.widgets.get("rounds"))
 MU = float(dbutils.widgets.get("proximal_mu"))
 CODE = dbutils.widgets.get("code_version")
 WORKERS = max(1, min(8, (os.cpu_count() or 2) - 1))
+VERSION = dbutils.widgets.get("version")
+PREFIX = f"{VERSION}-" if VERSION else ""
 CKPT = Path("/Volumes/workspace/cdm/raw/checkpoints/phase2")
-OUT = Path("/Volumes/workspace/cdm/raw/results/phase2/overnight")
+OUT = Path("/Volumes/workspace/cdm/raw/results/phase2/overnight") / VERSION
 OUT.mkdir(parents=True, exist_ok=True)
 device = torch.device("cuda")
 # The deadline counts from the first attempt of this job run that reached this cell, before
@@ -104,6 +110,28 @@ clients = {
 }
 val = rows[rows["split"] == "val"].reset_index(drop=True)
 print({c: len(d) for c, d in clients.items()}, flush=True)
+V1_IDS: set[str] = set()
+if VERSION:
+    V1_IDS = {
+        r[0]
+        for r in spark.read.table(dbutils.widgets.get("v1_snapshot")).select("isic_id").collect()
+    }
+    train_rows = rows[rows["split"] == "train"]
+    n_train = len(train_rows)
+    (OUT / "data_summary.json").write_text(json.dumps({
+        "version": VERSION, "code_version": CODE,
+        "images": {s: int((rows["split"] == s).sum()) for s in ("train", "val", "test")},
+        "train_images_by_client": {c: int(n) for c, n in train_rows["client"].value_counts().items()},
+        # FedAvg weights each client by its training images, so these are also the
+        # aggregation weights.
+        "train_share_by_client": {c: round(n / n_train, 4)
+                                  for c, n in train_rows["client"].value_counts().items()},
+        "bordered_share_of_train": round(float(train_rows["bordered"].mean()), 4),
+        "bordered_train_by_client": {c: int(g["bordered"].sum()) for c, g in train_rows.groupby("client")},
+        "v1_images_in_silver": int(rows["isic_id"].isin(V1_IDS).sum()),
+        "v1_val_images": int(val["isic_id"].isin(V1_IDS).sum()),
+        "v1_test_images": int(((rows["split"] == "test") & rows["isic_id"].isin(V1_IDS)).sum()),
+    }, indent=2))  # fmt: skip
 
 # COMMAND ----------
 
@@ -117,7 +145,12 @@ def val_scores(model: torch.nn.Module) -> dict[str, object]:
     _, logits, labels = extract(
         model, DataLoader(data, batch_size=128, num_workers=WORKERS), device
     )
-    return score_rows(val, logits, labels)
+    scores = score_rows(val, logits, labels)
+    if VERSION:  # the same predictions, restricted to v1's exact validation images
+        v1 = val["isic_id"].isin(V1_IDS).to_numpy()
+        scores["val_v1_images"] = score_rows(val[v1].reset_index(drop=True), logits[v1],
+                                             labels[v1])["val"]  # fmt: skip
+    return scores
 
 
 LOADER_ERRORS = (
@@ -128,7 +161,7 @@ LOADER_ERRORS = (
 
 
 def run(kind: str, seed: int, hardened: bool = False, previous_failure: str = "") -> None:
-    name = f"{kind}-seed{seed}"
+    name = f"{PREFIX}{kind}-seed{seed}"
     out_file = OUT / f"{name}.json"
     if out_file.exists():
         print(f"{name}: result exists, skipped", flush=True)
@@ -196,39 +229,45 @@ def manifest(kinds: tuple[str, ...]) -> list[dict[str, object]]:
 
 # COMMAND ----------
 
-PLAN = [("final", 1), ("final", 2)] + [(k, s) for s in (0, 1, 2) for k in ("fedavg", "fedprox")]
+FINAL_SEEDS = [0, 1, 2] if VERSION else [1, 2]  # v1's seed 0 came from the tuning ladder
+PLAN = [("final", s) for s in FINAL_SEEDS] + [
+    (k, s) for s in (0, 1, 2) for k in ("fedavg", "fedprox")
+]
 failed, not_started = {}, []
 for kind, seed in PLAN:
-    if time.time() > DEADLINE and not (OUT / f"{kind}-seed{seed}.json").exists():
-        not_started.append(f"{kind}-seed{seed}")
+    if time.time() > DEADLINE and not (OUT / f"{PREFIX}{kind}-seed{seed}.json").exists():
+        not_started.append(f"{PREFIX}{kind}-seed{seed}")
         continue
     try:
         run(kind, seed)
     except Exception:
         error = traceback.format_exc()[-3000:]
-        print(f"{kind}-seed{seed} FAILED\n{error}", flush=True)
+        print(f"{PREFIX}{kind}-seed{seed} FAILED\n{error}", flush=True)
         gc.collect()
         torch.cuda.empty_cache()
         retry = (kind != "final" and dbutils.widgets.get("hardened_workers")
                  and any(e in error for e in LOADER_ERRORS))  # fmt: skip
         if not retry:
-            failed[f"{kind}-seed{seed}"] = error
+            failed[f"{PREFIX}{kind}-seed{seed}"] = error
             continue
-        print(f"{kind}-seed{seed}: loader error, retrying with the hardened loader", flush=True)
+        print(
+            f"{PREFIX}{kind}-seed{seed}: loader error, retrying with the hardened loader",
+            flush=True,
+        )
         try:
             run(kind, seed, hardened=True, previous_failure=error)
         except Exception:
-            failed[f"{kind}-seed{seed}"] = (
+            failed[f"{PREFIX}{kind}-seed{seed}"] = (
                 error + "\n--- hardened retry ---\n" + traceback.format_exc()[-3000:]
             )
-            print(f"{kind}-seed{seed} hardened retry FAILED", flush=True)
+            print(f"{PREFIX}{kind}-seed{seed} hardened retry FAILED", flush=True)
             gc.collect()
             torch.cuda.empty_cache()
 
-finals = [{"kind": "final", "seed": 0, **CONTROL0}] + manifest(("final",))
+finals = ([] if VERSION else [{"kind": "final", "seed": 0, **CONTROL0}]) + manifest(("final",))
 (OUT / "final_models.json").write_text(json.dumps(finals))
 (OUT / "federated_models.json").write_text(json.dumps(manifest(("fedavg", "fedprox"))))
-summary = {"code_version": CODE, "plan": [f"{k}-seed{s}" for k, s in PLAN],
+summary = {"code_version": CODE, "plan": [f"{PREFIX}{k}-seed{s}" for k, s in PLAN],
            "finished": sorted(f.stem for f in OUT.glob("*-seed*.json")), "failed": failed,
            "not_started_deadline": not_started}  # fmt: skip
 (OUT / "summary.json").write_text(json.dumps(summary))

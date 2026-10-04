@@ -1,0 +1,48 @@
+{
+  "name": "cdm-phase2-v2",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "erjonbrucaj@gmail.com"
+    ],
+    "on_success": [
+      "erjonbrucaj@gmail.com"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "gpu",
+      "spec": {
+        "base_environment": "databricks_ai_v6"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "gpu_train",
+      "environment_key": "gpu",
+      "compute": {
+        "hardware_accelerator": "GPU_1xA10"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 9000,
+      "notebook_task": {
+        "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/overnight_gpu",
+        "base_parameters": {
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/932865b/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "932865b",
+          "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
+          "rounds": "20",
+          "proximal_mu": "0.01",
+          "deadline_minutes": "115",
+          "job_run_id": "{{job.run_id}}",
+          "pause_when_done": "",
+          "hardened_workers": "2",
+          "version": "v2"
+        }
+      }
+    }
+  ]
+}

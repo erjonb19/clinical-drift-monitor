@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+from typing import Any
 
 import numpy as np
 import pytest
@@ -10,7 +11,14 @@ import torch
 from PIL import Image
 
 from cdm.data import ShadesOfGray, eval_transform
-from cdm.ladder import combination_needed, deltas, drift_preserved, merge, passes
+from cdm.ladder import (
+    combination_needed,
+    deltas,
+    drift_preserved,
+    keep_data_version,
+    merge,
+    passes,
+)
 from cdm.silver import EncodedImages
 from cdm.splits import CLASSES
 from cdm.train import TrainConfig, balanced_weights, build_model, seed_everything, train
@@ -107,3 +115,39 @@ def test_balanced_sampling_without_groups_is_refused() -> None:
             torch.device("cpu"),
             seed_everything(0, 2),
         )
+
+
+def _runs(pooled: float, clients: dict[str, float], n: int = 3) -> list[dict[str, Any]]:
+    return [
+        {"pooled": {"balanced_accuracy": pooled}, **{c: {"balanced_accuracy": v}
+                                                      for c, v in clients.items()}}
+        for _ in range(n)
+    ]  # fmt: skip
+
+
+CLIENTS = ("ham_vienna", "barcelona")
+
+
+@pytest.mark.parametrize(
+    ("v2_pooled", "v2_clients", "keep"),
+    [
+        (0.6900, {"ham_vienna": 0.70, "barcelona": 0.60}, True),  # +1.00, no client drop
+        (0.6899, {"ham_vienna": 0.70, "barcelona": 0.60}, False),  # +0.99
+        (0.7000, {"ham_vienna": 0.67, "barcelona": 0.65}, True),  # Vienna -3.00 allowed
+        (0.7000, {"ham_vienna": 0.6699, "barcelona": 0.65}, False),  # Vienna -3.01
+    ],
+)
+def test_data_version_rule_edges(
+    v2_pooled: float, v2_clients: dict[str, float], keep: bool
+) -> None:
+    v1 = _runs(0.68, {"ham_vienna": 0.70, "barcelona": 0.60})
+    out = keep_data_version(v1, _runs(v2_pooled, v2_clients), CLIENTS)
+    assert out["keep_v2"] is keep
+
+
+def test_data_version_rule_uses_the_mean_over_seeds() -> None:
+    v1 = _runs(0.68, {"ham_vienna": 0.70, "barcelona": 0.60})
+    v2 = [_runs(0.66, {"ham_vienna": 0.70, "barcelona": 0.60}, 1)[0],
+          _runs(0.72, {"ham_vienna": 0.70, "barcelona": 0.60}, 1)[0]]  # fmt: skip
+    out = keep_data_version(v1, v2, CLIENTS)
+    assert out["change_points"]["pooled"] == pytest.approx(1.0) and out["keep_v2"]
