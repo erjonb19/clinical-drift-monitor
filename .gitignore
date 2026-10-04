@@ -21,3 +21,6 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Raw ISIC metadata pages cached by scripts/label_provenance.py stay local (no data in git).
+results/phase2/label_provenance/raw/
