@@ -80,8 +80,9 @@ built, and that quietly misses more melanomas at a new site. Evidence:
 Specificity (the share of non-melanoma images not referred) does not depend on how common
 melanoma is. The referral rate does: melanoma prevalence is about 18% in these datasets (599
 of 3,262 client test images), far above what a primary-care population would see, so the
-referral rates above describe these datasets only and would be much lower, and mostly made of
-false referrals, in primary care. No comparison is made with any marketed device. As context
+referral rates above describe these datasets only. At low prevalence the referral rate tends to
+1 − specificity (about 48% at the pooled specificity of 52.3%): only somewhat lower than here,
+and made almost entirely of false referrals. No comparison is made with any marketed device. As context
 for why checks in new populations matter after release: when FDA authorized DermaSensor, an
 AI-enabled skin cancer device for primary care, in January 2024, it required further
 post-market clinical validation in patients from demographic groups representative of the
