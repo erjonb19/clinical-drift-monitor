@@ -1,0 +1,49 @@
+{
+  "name": "cdm-phase2-drift-table",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "erjonbrucaj@gmail.com"
+    ],
+    "on_success": [
+      "erjonbrucaj@gmail.com"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "gpu",
+      "spec": {
+        "base_environment": "databricks_ai_v6"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "gpu_train",
+      "environment_key": "gpu",
+      "compute": {
+        "hardware_accelerator": "GPU_1xA10"
+      },
+      "max_retries": 1,
+      "min_retry_interval_millis": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 7200,
+      "notebook_task": {
+        "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/drift_table",
+        "base_parameters": {
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/43db6bc/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "43db6bc",
+          "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
+          "models_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/v2/final_models.json",
+          "federated_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/v2/federated_models.json",
+          "version": "v2",
+          "benchmarks": "/Volumes/workspace/cdm/raw/benchmarks/benchmarks.zip",
+          "benchmarks_sha256": "a9be34908815d4f48ef22fbadaaaa3fec7ad0127f9fdc4fe1c0d6de53d605ab8",
+          "deadline_minutes": "100",
+          "job_run_id": "{{job.run_id}}",
+          "allow_second_look": "false"
+        }
+      }
+    }
+  ]
+}
