@@ -57,6 +57,8 @@ select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
 # Databricks notebooks get `spark` and `dbutils` from the runtime, and import after
 # their widget and %pip cells.
 "databricks/notebooks/*" = ["F821", "E501", "E402"]
+# Document templates: long lines are the documents' own prose and tables.
+"scripts/build_docs.py" = ["E501"]
 
 [tool.mypy]
 files = ["src", "tests", "scripts", "pipelines"]
