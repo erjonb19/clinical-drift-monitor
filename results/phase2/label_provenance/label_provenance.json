@@ -1,0 +1,437 @@
+{
+  "fetched_utc": "2026-10-05T03:28:41+00:00",
+  "fetched_from": "https://api.isic-archive.com/api/v2/images/search/ (public metadata, paged 100 records per request)",
+  "raw_pages_kept_local": "results\\phase2\\label_provenance\\raw (gitignored)",
+  "sources": {
+    "isic_sites": "ISIC metadata clinical.diagnosis_confirm_type",
+    "ham10000": "HAM10000_metadata.csv dx_type"
+  },
+  "silver_images": 27656,
+  "images_missing_from_isic_metadata": 0,
+  "by_site_and_class": {
+    "barcelona": {
+      "akiec": {
+        "images": 625,
+        "by_method": {
+          "histopathology": 413,
+          "not recorded": 135,
+          "confocal microscopy with consensus dermoscopy": 77
+        },
+        "histopathology_share": 0.6608
+      },
+      "bcc": {
+        "images": 1916,
+        "by_method": {
+          "histopathology": 1406,
+          "not recorded": 433,
+          "confocal microscopy with consensus dermoscopy": 77
+        },
+        "histopathology_share": 0.7338
+      },
+      "bkl": {
+        "images": 790,
+        "by_method": {
+          "histopathology": 552,
+          "not recorded": 178,
+          "confocal microscopy with consensus dermoscopy": 60
+        },
+        "histopathology_share": 0.6987
+      },
+      "df": {
+        "images": 89,
+        "by_method": {
+          "histopathology": 74,
+          "confocal microscopy with consensus dermoscopy": 12,
+          "not recorded": 3
+        },
+        "histopathology_share": 0.8315
+      },
+      "mel": {
+        "images": 2067,
+        "by_method": {
+          "histopathology": 2067
+        },
+        "histopathology_share": 1.0
+      },
+      "nv": {
+        "images": 3002,
+        "by_method": {
+          "histopathology": 1939,
+          "not recorded": 742,
+          "confocal microscopy with consensus dermoscopy": 321
+        },
+        "histopathology_share": 0.6459
+      },
+      "vasc": {
+        "images": 91,
+        "by_method": {
+          "histopathology": 72,
+          "not recorded": 15,
+          "confocal microscopy with consensus dermoscopy": 4
+        },
+        "histopathology_share": 0.7912
+      },
+      "unlabelled": {
+        "images": 1419,
+        "by_method": {
+          "histopathology": 1001,
+          "not recorded": 361,
+          "confocal microscopy with consensus dermoscopy": 57
+        },
+        "histopathology_share": 0.7054
+      },
+      "all": {
+        "images": 9999,
+        "by_method": {
+          "histopathology": 7524,
+          "not recorded": 1867,
+          "confocal microscopy with consensus dermoscopy": 608
+        },
+        "histopathology_share": 0.7525
+      }
+    },
+    "buenos_aires": {
+      "akiec": {
+        "images": 63,
+        "by_method": {
+          "not recorded": 32,
+          "histopathology": 31
+        },
+        "histopathology_share": 0.4921
+      },
+      "bcc": {
+        "images": 340,
+        "by_method": {
+          "histopathology": 340
+        },
+        "histopathology_share": 1.0
+      },
+      "bkl": {
+        "images": 88,
+        "by_method": {
+          "not recorded": 50,
+          "histopathology": 38
+        },
+        "histopathology_share": 0.4318
+      },
+      "df": {
+        "images": 61,
+        "by_method": {
+          "not recorded": 43,
+          "histopathology": 18
+        },
+        "histopathology_share": 0.2951
+      },
+      "mel": {
+        "images": 253,
+        "by_method": {
+          "histopathology": 253
+        },
+        "histopathology_share": 1.0
+      },
+      "nv": {
+        "images": 602,
+        "by_method": {
+          "not recorded": 412,
+          "histopathology": 189,
+          "single image expert consensus": 1
+        },
+        "histopathology_share": 0.314
+      },
+      "vasc": {
+        "images": 51,
+        "by_method": {
+          "not recorded": 41,
+          "histopathology": 9,
+          "single image expert consensus": 1
+        },
+        "histopathology_share": 0.1765
+      },
+      "unlabelled": {
+        "images": 158,
+        "by_method": {
+          "histopathology": 158
+        },
+        "histopathology_share": 1.0
+      },
+      "all": {
+        "images": 1616,
+        "by_method": {
+          "histopathology": 1036,
+          "not recorded": 578,
+          "single image expert consensus": 2
+        },
+        "histopathology_share": 0.6411
+      }
+    },
+    "ham10000": {
+      "akiec": {
+        "images": 327,
+        "by_method": {
+          "histopathology": 327
+        },
+        "histopathology_share": 1.0
+      },
+      "bcc": {
+        "images": 514,
+        "by_method": {
+          "histopathology": 514
+        },
+        "histopathology_share": 1.0
+      },
+      "bkl": {
+        "images": 1099,
+        "by_method": {
+          "histopathology": 766,
+          "expert consensus": 264,
+          "confocal microscopy": 69
+        },
+        "histopathology_share": 0.697
+      },
+      "df": {
+        "images": 115,
+        "by_method": {
+          "expert consensus": 60,
+          "histopathology": 55
+        },
+        "histopathology_share": 0.4783
+      },
+      "mel": {
+        "images": 1113,
+        "by_method": {
+          "histopathology": 1113
+        },
+        "histopathology_share": 1.0
+      },
+      "nv": {
+        "images": 6705,
+        "by_method": {
+          "serial imaging (follow-up)": 3704,
+          "histopathology": 2498,
+          "expert consensus": 503
+        },
+        "histopathology_share": 0.3726
+      },
+      "vasc": {
+        "images": 142,
+        "by_method": {
+          "expert consensus": 75,
+          "histopathology": 67
+        },
+        "histopathology_share": 0.4718
+      },
+      "all": {
+        "images": 10015,
+        "by_method": {
+          "histopathology": 5340,
+          "serial imaging (follow-up)": 3704,
+          "expert consensus": 902,
+          "confocal microscopy": 69
+        },
+        "histopathology_share": 0.5332
+      }
+    },
+    "msk": {
+      "akiec": {
+        "images": 137,
+        "by_method": {
+          "histopathology": 137
+        },
+        "histopathology_share": 1.0
+      },
+      "bcc": {
+        "images": 351,
+        "by_method": {
+          "histopathology": 351
+        },
+        "histopathology_share": 1.0
+      },
+      "bkl": {
+        "images": 547,
+        "by_method": {
+          "histopathology": 542,
+          "single image expert consensus": 5
+        },
+        "histopathology_share": 0.9909
+      },
+      "df": {
+        "images": 35,
+        "by_method": {
+          "histopathology": 35
+        },
+        "histopathology_share": 1.0
+      },
+      "mel": {
+        "images": 606,
+        "by_method": {
+          "histopathology": 606
+        },
+        "histopathology_share": 1.0
+      },
+      "nv": {
+        "images": 1413,
+        "by_method": {
+          "histopathology": 1347,
+          "single image expert consensus": 66
+        },
+        "histopathology_share": 0.9533
+      },
+      "vasc": {
+        "images": 65,
+        "by_method": {
+          "histopathology": 59,
+          "single image expert consensus": 6
+        },
+        "histopathology_share": 0.9077
+      },
+      "unlabelled": {
+        "images": 574,
+        "by_method": {
+          "histopathology": 564,
+          "single image expert consensus": 10
+        },
+        "histopathology_share": 0.9826
+      },
+      "all": {
+        "images": 3728,
+        "by_method": {
+          "histopathology": 3641,
+          "single image expert consensus": 87
+        },
+        "histopathology_share": 0.9767
+      }
+    },
+    "pad_ufes": {
+      "akiec": {
+        "images": 730,
+        "by_method": {
+          "single image expert consensus": 552,
+          "histopathology": 178
+        },
+        "histopathology_share": 0.2438
+      },
+      "bcc": {
+        "images": 845,
+        "by_method": {
+          "histopathology": 845
+        },
+        "histopathology_share": 1.0
+      },
+      "bkl": {
+        "images": 235,
+        "by_method": {
+          "single image expert consensus": 220,
+          "histopathology": 15
+        },
+        "histopathology_share": 0.0638
+      },
+      "mel": {
+        "images": 52,
+        "by_method": {
+          "histopathology": 52
+        },
+        "histopathology_share": 1.0
+      },
+      "nv": {
+        "images": 244,
+        "by_method": {
+          "single image expert consensus": 184,
+          "histopathology": 60
+        },
+        "histopathology_share": 0.2459
+      },
+      "unlabelled": {
+        "images": 192,
+        "by_method": {
+          "histopathology": 192
+        },
+        "histopathology_share": 1.0
+      },
+      "all": {
+        "images": 2298,
+        "by_method": {
+          "histopathology": 1342,
+          "single image expert consensus": 956
+        },
+        "histopathology_share": 0.584
+      }
+    }
+  },
+  "ham10000_isic_field_cross_check": {
+    "ham10000": {
+      "akiec": {
+        "images": 327,
+        "by_method": {
+          "histopathology": 327
+        },
+        "histopathology_share": 1.0
+      },
+      "bcc": {
+        "images": 514,
+        "by_method": {
+          "histopathology": 514
+        },
+        "histopathology_share": 1.0
+      },
+      "bkl": {
+        "images": 1099,
+        "by_method": {
+          "histopathology": 766,
+          "single image expert consensus": 264,
+          "confocal microscopy with consensus dermoscopy": 69
+        },
+        "histopathology_share": 0.697
+      },
+      "df": {
+        "images": 115,
+        "by_method": {
+          "single image expert consensus": 60,
+          "histopathology": 55
+        },
+        "histopathology_share": 0.4783
+      },
+      "mel": {
+        "images": 1113,
+        "by_method": {
+          "histopathology": 1113
+        },
+        "histopathology_share": 1.0
+      },
+      "nv": {
+        "images": 6705,
+        "by_method": {
+          "serial imaging showing no change": 3704,
+          "histopathology": 2498,
+          "single image expert consensus": 503
+        },
+        "histopathology_share": 0.3726
+      },
+      "vasc": {
+        "images": 142,
+        "by_method": {
+          "single image expert consensus": 75,
+          "histopathology": 67
+        },
+        "histopathology_share": 0.4718
+      },
+      "all": {
+        "images": 10015,
+        "by_method": {
+          "histopathology": 5340,
+          "serial imaging showing no change": 3704,
+          "single image expert consensus": 902,
+          "confocal microscopy with consensus dermoscopy": 69
+        },
+        "histopathology_share": 0.5332
+      }
+    }
+  },
+  "raw_cache": [
+    "collection_212.json.gz",
+    "collection_249.json.gz",
+    "collection_251.json.gz",
+    "collection_287.json.gz",
+    "collection_289.json.gz",
+    "collection_406.json.gz"
+  ]
+}
