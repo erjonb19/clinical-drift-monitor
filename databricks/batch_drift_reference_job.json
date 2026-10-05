@@ -12,7 +12,7 @@
       "spec": {
         "environment_version": "4",
         "dependencies": [
-          "/Volumes/workspace/cdm/raw/deploy/48270f6/cdm-0.1.0-py3-none-any.whl",
+          "/Volumes/workspace/cdm/raw/deploy/3c2eed0/cdm-0.1.0-py3-none-any.whl",
           "torch>=2.4",
           "torchvision>=0.19"
         ]
@@ -28,11 +28,11 @@
       "notebook_task": {
         "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/batch_drift_reference",
         "base_parameters": {
-          "wheel": "/Volumes/workspace/cdm/raw/deploy/48270f6/cdm-0.1.0-py3-none-any.whl",
-          "code_version": "48270f6",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/3c2eed0/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "3c2eed0",
           "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
-          "normalizer_rtol": "1e-3",
-          "pca_size_tolerance": "1"
+          "pca_size_tolerance": "1",
+          "benchmarks_sha256": "a9be34908815d4f48ef22fbadaaaa3fec7ad0127f9fdc4fe1c0d6de53d605ab8"
         }
       }
     }
