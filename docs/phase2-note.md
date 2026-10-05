@@ -134,3 +134,23 @@ MSK's benign cases may be harder to tell from melanoma than benign cases confirm
 follow-up elsewhere. That may explain MSK's low triage specificity (39.1% against 52.3%
 pooled). Nothing here tests it. Evidence: `results/phase2/label_provenance/label_provenance.json`
 (fetched 2026-10-05 from the ISIC public API; HAM10000's own `dx_type`).
+
+## Finding: Mahalanobis scores also differ between GPU and CPU
+
+The second batch-drift reference job (run 186825054715071, CPU, spec amendment 2) refit the
+shipped Mahalanobis detector on CPU training features for v2-final-seed0 and compared its
+scores with the drift run's GPU scores on 300 benchmark evaluation images (scores only; no
+metric). The method-D PCA size reproduced exactly (541), but the scores did not meet the check
+committed in advance: Spearman rank correlation 0.9988 (CIFAR-10) and 0.9988 (PathMNIST) against
+a required 0.999; only 61% of images within 1% relative difference against a required 99%;
+largest difference 5.0%. The job stopped as specified and the check was not loosened.
+Batch-level drift detection was moved to Phase 3, where the baseline and the batches are both
+scored on the same CPU setup.
+
+The images are ranked almost identically, but individual scores move by up to about 5%, which
+is enough to matter for a test that compares score distributions directly. Together with
+Gram's 11.8% normalizer difference, this means a drift baseline and the batches compared with
+it must be scored on the same hardware and settings. The cause is still an unverified
+hypothesis (TF32 convolution arithmetic on the A10 GPU against CPU float32). Every Phase 2
+detection metric compares scores from one GPU run, so none is affected. Evidence:
+`results/phase2/batch_drift/reference-186825054715071/v2-final-seed0_check.json`.
