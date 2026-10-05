@@ -24,7 +24,7 @@ SPEC = Path("results/phase2/batch_drift/spec.json")
 OUT = Path("results/phase2/batch_drift/results.json")
 VOLUME = "dbfs:/Volumes/workspace/cdm/raw/results/phase2"
 MODELS = ("v2-final-seed0", "v2-final-seed1", "v2-final-seed2")
-DETECTORS = ("mahalanobis", "gram")
+DETECTORS = ("mahalanobis",)  # Gram dropped by spec amendment 2
 SITES = ("buenos_aires", "pad_ufes")
 
 
@@ -48,10 +48,11 @@ def main() -> None:
     per_model: dict[str, Any] = {}
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
-        check = json.loads(fetch(f"{VOLUME}/batch_drift/reference_check.json",
-                                 folder / "check.json").read_text())  # fmt: skip
+        check = {}
         for key in MODELS:
-            assert check["models"][key]["matches"], f"{key}: reference refit did not match"
+            check[key] = json.loads(fetch(f"{VOLUME}/batch_drift/{key}_check.json",
+                                          folder / f"{key}_check.json").read_text())  # fmt: skip
+            assert check[key]["passed"], f"{key}: the reference check did not pass"
             shifts = np.load(fetch(f"{VOLUME}/drift/v2/{key}_scores.npz", folder / f"{key}.npz"))
             ref = np.load(fetch(f"{VOLUME}/batch_drift/{key}_val_scores.npz",
                                 folder / f"{key}_val.npz"))  # fmt: skip
@@ -86,8 +87,10 @@ def main() -> None:
     ]  # fmt: skip
     result = {"spec": spec, "reference_check": check, "per_model": per_model,
               "over_seeds": summary, "false_alarm_findings": findings,
-              "gram_normalizer_fit_on": "validation: Gram's reference scores come from the same "
-              "validation images its per-layer normalizer was fitted on"}  # fmt: skip
+              "gram": "dropped by spec amendment 2 (CPU refit missed the GPU normalizer by 11.8%)",
+              "setup_tested": "reference scores were recomputed on CPU from a CPU refit of the "
+              "detector and checked against the GPU scores, so these results also test "
+              "computing the shipped detector on CPU"}  # fmt: skip
     OUT.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print("false-alarm findings (>2%):", findings or "none")
     for det in DETECTORS:
