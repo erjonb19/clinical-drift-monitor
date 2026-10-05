@@ -1,0 +1,40 @@
+{
+  "name": "cdm-phase2-ba-recalibration",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "erjonbrucaj@gmail.com"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/070e976/cdm-0.1.0-py3-none-any.whl",
+          "torch>=2.4",
+          "torchvision>=0.19"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "recalibration",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "timeout_seconds": 5400,
+      "notebook_task": {
+        "notebook_path": "/Users/erjonbrucaj@gmail.com/cdm/ba_recalibration",
+        "base_parameters": {
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/070e976/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "070e976",
+          "config": "{\"arch\": \"b0\", \"image_size\": 224, \"view\": \"center\", \"epochs\": 12}",
+          "splits": "20",
+          "bootstrap": "1000"
+        }
+      }
+    }
+  ]
+}
