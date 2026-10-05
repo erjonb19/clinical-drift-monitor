@@ -57,5 +57,14 @@
     },
     "record": "each model's check record (PCA sizes, normalizer not applicable, numerical check) is saved as soon as it is computed; finished models are skipped on a rerun",
     "phase3_relevance": "this tests recomputing the detector on CPU against the GPU fit; Phase 3 plans to fit on GPU and serve on CPU, where the GPU-fitted detector would be applied to CPU features"
+  },
+  "status": {
+    "date": "2026-10-05",
+    "phase2": "not run: the CPU reference failed the amendment-2 score check for v2-final-seed0 (run 186825054715071)",
+    "moved_to": "Phase 3 (PLAN.md), same spec, with baseline and batches scored on the same CPU setup",
+    "added_rules": [
+      "CPU re-scoring of test and new-site images does not reopen the detector choice; Mahalanobis stays shipped",
+      "any AUROC from CPU scores is reported only as a reproducibility check against the Phase 2 GPU table, never as a replacement"
+    ]
   }
 }
