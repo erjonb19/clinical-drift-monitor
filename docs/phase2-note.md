@@ -114,3 +114,23 @@ those differences, and then takes per-class minimums and maximums, which are sen
 them. Whatever the cause, Gram scores are only comparable to a fit made on the same hardware
 and settings, which matters for running Gram as a backup detector (PLAN.md, Phase 3). Evidence:
 the failed run's error output, recorded in `results/phase2/batch_drift/spec.json`.
+
+## Label provenance
+
+Every melanoma label at every site is confirmed by histopathology, so melanoma sensitivity
+rests on biopsy-proven labels. Specificity rests partly on benign labels confirmed without
+biopsy (serial imaging, single-image expert consensus or confocal microscopy), especially
+outside MSK: histopathology confirms 95.3% of MSK's nevi but 64.6% of
+Barcelona's, 37.3% of HAM10000's and 31.4% of Buenos Aires'. Overall
+histopathology shares: MSK 97.7%, Barcelona 75.2%, Buenos Aires
+64.1%, PAD-UFES-20 58.4%, HAM10000 53.3%.
+
+**Provenance gap.** 578 of Buenos Aires' 1,616 images have no confirmation method
+recorded in ISIC's metadata.
+
+**Hypothesis, not tested.** MSK biopsied nearly every lesion (97.7% histopathology, nevi
+included). Benign lesions that were biopsied were presumably suspicious enough to biopsy, so
+MSK's benign cases may be harder to tell from melanoma than benign cases confirmed by
+follow-up elsewhere. That may explain MSK's low triage specificity (39.1% against 52.3%
+pooled). Nothing here tests it. Evidence: `results/phase2/label_provenance/label_provenance.json`
+(fetched 2026-10-05 from the ISIC public API; HAM10000's own `dx_type`).
