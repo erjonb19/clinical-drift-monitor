@@ -1,0 +1,31 @@
+{
+  "model": "v2-final-seed0",
+  "code_version": "3c2eed0",
+  "pca_size": {
+    "refit": 541,
+    "drift_run": 541,
+    "used": 541,
+    "within_tolerance": true
+  },
+  "cpu_vs_gpu_scores": {
+    "per_set": {
+      "cifar10_eval": {
+        "images": 150,
+        "spearman": 0.9987519445308681,
+        "share_within_1pct": 0.5866666666666667,
+        "max_relative_difference": 0.050089429941096726
+      },
+      "pathmnist_eval": {
+        "images": 150,
+        "spearman": 0.9988230588026136,
+        "share_within_1pct": 0.64,
+        "max_relative_difference": 0.04107252524756753
+      }
+    },
+    "spearman_min": 0.9987519445308681,
+    "share_within_1pct_all_300": 0.6133333333333333,
+    "passed": false
+  },
+  "note": "scores only: no metric was computed on the benchmark images",
+  "passed": false
+}
