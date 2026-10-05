@@ -97,3 +97,20 @@ Data, doi:10.17632/zr7vgbcyr2.1; all 2,298 images recorded as "clinical: close-u
 Buenos Aires is mixed: 1,270 dermoscopic and 346 clinical images (ISIC `image_type`). With
 only 52 melanomas, PAD-UFES-20's interval is also wide. Site and imaging type are not
 separated here.
+
+## Finding: Gram did not reproduce between GPU and CPU
+
+The batch-drift reference job (run 828284284699299, CPU) refit each centralized model's
+detectors on training images to rebuild validation scores, and had to reproduce the drift
+run's (GPU) fit within a tolerance committed in advance. For v2-final-seed0, Mahalanobis's
+method-D PCA size reproduced exactly (541 components), but Gram's per-layer normalizer differed
+from the GPU fit by up to 11.8%, against a tolerance of 0.1%. The job stopped as specified and
+the tolerance was not loosened. Gram was then dropped from batch-level drift (a recorded spec
+change, made before any batch-drift result existed).
+
+Hypothesis, not verified: on the A10 GPU, PyTorch's default convolution arithmetic (TF32)
+differs slightly from CPU float32; Gram raises activations to powers up to 10, which magnifies
+those differences, and then takes per-class minimums and maximums, which are sensitive to
+them. Whatever the cause, Gram scores are only comparable to a fit made on the same hardware
+and settings, which matters for running Gram as a backup detector (PLAN.md, Phase 3). Evidence:
+the failed run's error output, recorded in `results/phase2/batch_drift/spec.json`.
