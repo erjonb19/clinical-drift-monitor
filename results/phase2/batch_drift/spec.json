@@ -4,7 +4,7 @@
   "question": "How often does a two-sample KS test on detector scores flag a batch that contains images from a new site, and how often does it flag a batch with none?",
   "detectors": {
     "primary": "mahalanobis (PCA size by method D; the shipped detector)",
-    "secondary": "gram"
+    "secondary": "dropped by amendment 2"
   },
   "models": "the three v2 centralized seeds (v2-final-seed0, -seed1, -seed2), each with its own detector fit; results per seed, then mean and range",
   "reference": "validation scores (v2 validation, 3,210 images) from each model's detector",
@@ -44,5 +44,18 @@
   },
   "false_alarm_rule": "if 0% batches are flagged more than 2% of the time for any model and detector (at any batch size), that is reported as a finding: the validation baseline does not match in-distribution test. The baseline is not switched afterwards.",
   "gram_normalizer_note": "Gram's per-layer normalizer was fitted on these same validation images in the drift run (mean validation deviation per layer), so Gram's validation reference is not independent of its own normalization; this is stated with the results.",
-  "amended": "2026-10-04, before the reference job ran: rebuild tolerance and false-alarm rule added"
+  "amended": "2026-10-04, before the reference job ran: rebuild tolerance and false-alarm rule added",
+  "amendment_2": {
+    "date": "2026-10-05, before any batch-drift result existed",
+    "reason": "the reference job (run 828284284699299) stopped on the rebuild tolerance: v2-final-seed0's Gram normalizer differed from the GPU fit by up to 11.8% (tolerance 0.1%); its method-D PCA size matched exactly (541)",
+    "change": "Gram is dropped from batch-level drift; only the shipped Mahalanobis detector (method D) is run",
+    "numerical_check": {
+      "what": "per centralized model, Mahalanobis scores recomputed on CPU (detector refit on CPU training features at the drift run's PCA size) for 300 benchmark evaluation images, 150 PathMNIST and 150 CIFAR-10, chosen by a seeded draw (seed 0) of positions in the drift run's saved arrays, compared with the drift run's saved GPU scores for the same images",
+      "scores_only": "no AUROC or any other metric is computed from these images; it is a numerical comparison of scores",
+      "pass": "Spearman rank correlation >= 0.999 and at least 99% of images within 1% relative difference",
+      "on_failure": "stop and report; not loosened"
+    },
+    "record": "each model's check record (PCA sizes, normalizer not applicable, numerical check) is saved as soon as it is computed; finished models are skipped on a rerun",
+    "phase3_relevance": "this tests recomputing the detector on CPU against the GPU fit; Phase 3 plans to fit on GPU and serve on CPU, where the GPU-fitted detector would be applied to CPU features"
+  }
 }
