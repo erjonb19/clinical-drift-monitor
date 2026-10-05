@@ -63,3 +63,40 @@ def bootstrap_triage(
     return {"resamples": n, "seed": seed,
             **{k: {"low": float(np.percentile(v, 2.5)), "high": float(np.percentile(v, 97.5))}
                for k, v in draws.items() if v}}  # fmt: skip
+
+
+def local_recalibration(
+    p_mel: Array,
+    is_mel: NDArray[np.bool_],
+    lesions: Sequence[str],
+    shipped_threshold: float,
+    seeds: Sequence[int],
+    target: float = 0.95,
+    n_boot: int = 1000,
+) -> list[dict[str, Any]]:
+    """Per seed: split lesions 50/50, set the target-sensitivity threshold on half A, and
+    report half B with the local threshold and, for reference, the shipped one."""
+    ids = np.asarray(lesions, dtype=object)
+    unique = np.unique(ids)
+    out = []
+    for seed in seeds:
+        rng = np.random.default_rng(seed)
+        half_a = set(rng.permutation(unique)[: len(unique) // 2])
+        a = np.array([i in half_a for i in ids])
+        b = ~a
+        local = threshold_for_sensitivity(p_mel[a], is_mel[a], target)
+        lb = [str(x) for x in ids[b]]
+        out.append({
+            "seed": seed,
+            "half_a": {"images": int(a.sum()), "melanoma_images": int(is_mel[a].sum()),
+                       "melanoma_lesions": len(set(ids[a & is_mel]))},
+            "half_b": {"images": int(b.sum()), "melanoma_images": int(is_mel[b].sum()),
+                       "melanoma_lesions": len(set(ids[b & is_mel]))},
+            "local_threshold": local,
+            "local": {**triage_metrics(p_mel[b], is_mel[b], local),
+                      "bootstrap_95": bootstrap_triage(p_mel[b], is_mel[b], lb, local, n=n_boot)},
+            "shipped": {**triage_metrics(p_mel[b], is_mel[b], shipped_threshold),
+                        "bootstrap_95": bootstrap_triage(p_mel[b], is_mel[b], lb,
+                                                         shipped_threshold, n=n_boot)},
+        })  # fmt: skip
+    return out
