@@ -1,0 +1,13 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-05",
+  "framing": "evidence for the change-control plan's modification protocol (site-level recalibration of the triage threshold); not a change to the shipped model or its threshold; triage framing, not a clinical claim",
+  "site": "Buenos Aires, labelled images only (PAD-UFES-20 excluded: 52 melanomas)",
+  "model": "the shipped 3-seed ensemble, uncalibrated: melanoma probability = mean of the three v2 centralized models' softmax probability for mel",
+  "scoring": "Buenos Aires images re-scored on CPU exactly as the triage test run did (its per-image probabilities were not saved); no model, threshold or detector choice is reopened",
+  "reproduction_check": "at the committed threshold (results/phase2/triage/threshold.json), the re-scored probabilities must reproduce the triage test run's Buenos Aires sensitivity, specificity and referral rate exactly (to 1e-12), or the job stops and reports",
+  "splits": "Buenos Aires lesions (lesion_id, else isic_id) split 50/50 at random, seeds 0 to 19 (20 splits); every image of a lesion goes to the same half",
+  "per_split": "threshold = highest melanoma-probability threshold reaching 95% melanoma sensitivity on half A (cdm.triage.threshold_for_sensitivity); on half B, sensitivity, specificity and referral rate with 95% bootstrap intervals by lesion (1,000 resamples, seed 0); for reference, the shipped threshold's results on the same half B",
+  "reported": "per split, then mean and range over the 20 splits of each metric for the local threshold and for the shipped threshold; melanoma images and lesions per half",
+  "not_reported_as": "a performance claim for any site or a replacement threshold"
+}
