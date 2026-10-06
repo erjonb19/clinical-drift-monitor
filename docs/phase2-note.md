@@ -154,3 +154,23 @@ it must be scored on the same hardware and settings. The cause is still an unver
 hypothesis (TF32 convolution arithmetic on the A10 GPU against CPU float32). Every Phase 2
 detection metric compares scores from one GPU run, so none is affected. Evidence:
 `results/phase2/batch_drift/reference-186825054715071/v2-final-seed0_check.json`.
+
+## Simulated local recalibration at Buenos Aires (evidence for the change-control plan)
+
+Spec committed before running (`results/phase2/ba_recalibration/spec.json`); not a change to the
+shipped model or threshold; triage framing, not a clinical claim. Buenos Aires' 1,458 labelled
+images (253 melanomas, 1,155 lesions) were re-scored with the shipped ensemble on CPU, which
+reproduced the triage run's Buenos Aires numbers exactly. Over 20 random 50/50 lesion splits, a
+threshold set on one half for 95% sensitivity, reported on the other half:
+
+| Threshold | Sensitivity | Specificity | Referral rate |
+| --- | --- | --- | --- |
+| Local (set on half A; mean 0.0154) | 94.6% (range 88.9%–97.8%) | 23.7% (range 19.0%–32.0%) | 79.5% (range 71.6%–84.1%) |
+| Shipped (0.0638, set on client validation) | 81.7% (range 77.3%–88.1%) | 59.1% (range 56.6%–63.1%) | 48.0% (range 44.8%–49.5%) |
+
+Lowering the threshold at the new site brings sensitivity back near the target (below 95% in
+10 of 20 splits), but specificity falls from about 59.1% to about 23.7%: the model ranks
+Buenos Aires melanomas poorly, so recovering them by threshold alone means referring about four
+in five images. For the change-control plan, site-level recalibration is therefore not enough on
+its own at a site like this; retraining with the site's data is the modification that could
+address it. Evidence: `results/phase2/ba_recalibration/results.json`.
