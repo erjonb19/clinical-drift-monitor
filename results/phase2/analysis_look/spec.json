@@ -18,16 +18,41 @@
       "saved": "per-image class probabilities for every scored image and model (isic_id, source, split, label, the seven probabilities), committed as results so later error analysis needs no new look",
       "external_seven_class_mapping": {
         "rule": "silver's label (cdm.sources.map_diagnosis plus the site label rule), fixed before running",
-        "buenos_aires": {"nv": "Nevus", "bcc": "Basal cell carcinoma", "mel": "Melanoma, NOS", "bkl": "Seborrheic keratosis, Solar lentigo, Lichen planus like keratosis", "akiec": "Solar or actinic keratosis", "df": "Dermatofibroma", "vasc": "vascular lesions (ISIC diagnosis_2 vascular, no diagnosis_3)"},
-        "pad_ufes": {"bcc": "Basal cell carcinoma", "akiec": "Solar or actinic keratosis", "nv": "Nevus", "bkl": "Seborrheic keratosis", "mel": "Melanoma, NOS"},
-        "excluded_not_clean": {"Squamous cell carcinoma, NOS": "may be invasive SCC, which HAM10000's akiec does not include (158 Buenos Aires, 192 PAD-UFES-20 images)"},
-        "absent": {"pad_ufes": ["df", "vasc"]}
+        "buenos_aires": {
+          "nv": "Nevus",
+          "bcc": "Basal cell carcinoma",
+          "mel": "Melanoma, NOS",
+          "bkl": "Seborrheic keratosis, Solar lentigo, Lichen planus like keratosis",
+          "akiec": "Solar or actinic keratosis",
+          "df": "Dermatofibroma",
+          "vasc": "vascular lesions (ISIC diagnosis_2 vascular, no diagnosis_3)"
+        },
+        "pad_ufes": {
+          "bcc": "Basal cell carcinoma",
+          "akiec": "Solar or actinic keratosis",
+          "nv": "Nevus",
+          "bkl": "Seborrheic keratosis",
+          "mel": "Melanoma, NOS"
+        },
+        "excluded_not_clean": {
+          "Squamous cell carcinoma, NOS": "may be invasive SCC, which HAM10000's akiec does not include (158 Buenos Aires, 192 PAD-UFES-20 images)"
+        },
+        "absent": {
+          "pad_ufes": [
+            "df",
+            "vasc"
+          ]
+        }
       },
       "external_metrics": "per site: balanced accuracy over the classes present at that site, per-class recall, macro AUROC over present classes, melanoma sensitivity, with 95% bootstrap intervals by lesion (1,000 resamples)",
       "skin_type": "within each site separately, never pooled; types with at least 100 labelled images; balanced accuracy over present classes and melanoma sensitivity; any group with fewer than 20 melanomas is flagged too small to interpret (expected: Buenos Aires III 19, PAD-UFES-20 I 3, PAD-UFES-20 III 10); types IV to VI counts only, stated as a gap",
       "confounding_note": "skin type is mixed up with site and imaging type (PAD-UFES-20 is smartphone clinical photos; Buenos Aires is partly clinical), so no skin-type effect is claimed",
       "worst_misses": "defined in advance: client-test melanomas the ensemble misses (its predicted class is not mel), ranked by lowest ensemble melanoma probability, top 20; descriptive only, no model or threshold change afterwards; image IDs and metadata committed (isic_id, client, predicted class, melanoma probability, bordered flag, image type, anatomical site, age, sex), never images",
-      "reproducibility_check": "CPU client-test balanced accuracy and melanoma sensitivity for the ensemble and each single model, compared with the reported GPU numbers (results/phase2/v2/test/final_test.json, test_full_v2); any difference is reported; the reported numbers are not replaced"
+      "reproducibility_check": "CPU client-test balanced accuracy and melanoma sensitivity for the ensemble and each single model, compared with the reported numbers (results/phase2/v2/test/final_test.json, test_full_v2); any difference is reported; the reported numbers are not replaced"
     }
+  },
+  "amendment_1": {
+    "date": "2026-10-05, before part B ran",
+    "correction": "the reported client-test numbers were computed on CPU (the v2 test look, run 549220296100982, was a CPU task scoring GPU-trained models), not on GPU, so this check compares two CPU scorings and is expected to reproduce exactly; the comparison data are in results/phase2/analysis_look/reported_test.json"
   }
 }

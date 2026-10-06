@@ -1,0 +1,19 @@
+{
+  "v2-ensemble-final-seeds0-1-2": {
+    "balanced_accuracy": 0.6646288355327806,
+    "melanoma_sensitivity": 0.7161936560934892
+  },
+  "v2-final-seed0": {
+    "balanced_accuracy": 0.6220509467561675,
+    "melanoma_sensitivity": 0.664440734557596
+  },
+  "v2-final-seed1": {
+    "balanced_accuracy": 0.6247790220564775,
+    "melanoma_sensitivity": 0.7011686143572621
+  },
+  "v2-final-seed2": {
+    "balanced_accuracy": 0.6427729825239854,
+    "melanoma_sensitivity": 0.6894824707846411
+  },
+  "_source": "results/phase2/v2/test/final_test.json views.test_full_v2 (GPU-trained models, CPU test task 549220296100982)"
+}
