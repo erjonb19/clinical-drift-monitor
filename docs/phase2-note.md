@@ -155,6 +155,24 @@ hypothesis (TF32 convolution arithmetic on the A10 GPU against CPU float32). Eve
 detection metric compares scores from one GPU run, so none is affected. Evidence:
 `results/phase2/batch_drift/reference-186825054715071/v2-final-seed0_check.json`.
 
+## Limitation: splits are by lesion, not by patient
+
+Splits keep every lesion in one split, but a patient's different lesions can land in train and
+test. Patient IDs exist at only some sources:
+- MSK collection 289 is the only training-client collection that records them. There, 47
+  patients span splits, and 30 of the 130 MSK test lesions with a patient ID share a patient
+  with train.
+- HAM10000, Barcelona and MSK collection 287 cannot be checked.
+
+The effect on the reported test numbers is small. Dropping the 55 affected images moves the
+ensemble's pooled balanced accuracy from 66.46% to 66.09%, from saved predictions with no new
+look.
+
+The Buenos Aires recalibration is affected the same way: it split lesions 50/50, and 199 of the
+623 Buenos Aires patients have more than one lesion. Its local-threshold sensitivity on the
+held-out half is therefore, if anything, optimistic. Details: `docs/silent-failures.md` #9.
+Evidence: `results/phase2/patient_overlap/patient_overlap.json`.
+
 ## Simulated local recalibration at Buenos Aires (evidence for the change-control plan)
 
 Spec committed before running (`results/phase2/ba_recalibration/spec.json`); not a change to the

@@ -197,3 +197,42 @@ nine used-up locks were not deleted: they are archived with a note (run ID, what
 results saved) in `checkpoints/phase2/detection_looks_archive/802132583124668/`, and the
 cancelled run's printed output, which has no detection numbers, is in
 `results/phase2/drift/cancelled-802132583124668/stdout.txt`.
+
+## 9. Lesion-level splits passed every gate while patients spanned train and test
+
+**What looked right.** The `no_lesion_in_two_splits` gate passed on every pipeline update, and
+the tests prove no lesion's images sit in two splits. The splits were reported as leak-free.
+
+**Cause.** Leak-free by lesion is not leak-free by patient. One patient can have several lesions,
+and the split assigns lesions, not patients. ISIC records `patient_id` for only some collections.
+Among the training clients, only MSK collection 289 does, and there 47 patients have lesions in
+more than one split (139 lesions). 30 of the 130 MSK test lesions that carry a patient ID
+(55 images) belong to a patient who also has a train lesion. HAM10000, Barcelona and MSK
+collection 287 record no patient ID, so patient-level overlap there **cannot be checked at all**.
+The overlap is a weaker leak than the same lesion in two splits, but it is real: same skin, often
+the same camera session, and the same age and sex. Two places where intervals or splits were
+built by lesion at sites with patient IDs are affected:
+- The Buenos Aires local recalibration split lesions 50/50, and 199 of its 623 patients have more
+  than one lesion, so a patient's lesions can sit in both halves.
+- Bootstrap intervals resampled by lesion treat a patient's lesions as independent.
+
+**How much it moved the numbers.** This was measured on the analysis look's saved predictions,
+with no new test look. For the shipped ensemble on the pooled client test split, dropping the 55
+shared-patient images moves:
+- balanced accuracy from 66.46% to 66.09%;
+- melanoma sensitivity from 71.62% to 71.72%;
+- macro AUROC from 90.90% to 90.76%.
+
+Resampling by patient where known, and by lesion elsewhere, gives a balanced-accuracy interval of
+[60.66, 73.01], against [60.24, 72.85] by lesion. On MSK alone (460 test images, 405 without) the
+single seeds move by up to 4.2 points (seed 0: 59.04% to 54.80%). That is within the seed spread
+there, and dropping images also changes MSK's class mix, so leakage and sample removal cannot be
+separated. Evidence: `results/phase2/patient_overlap/patient_overlap.json`.
+
+**Caught by.** The `patients_in_one_split` gate checks every pipeline update. Any patient with
+lesions in two splits fails it unless it is one of the 47 documented in
+`config/patient_overlap_v1.csv`. The splits were not changed, because re-splitting MSK would move
+frozen v1 lesions and invalidate every Phase 2 result. `scripts/patient_overlap.py` recomputes the
+counts from silver. From the research extension on:
+- intervals resample by patient where ISIC records one;
+- test results carry a row without these lesions.
