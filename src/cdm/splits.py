@@ -100,6 +100,20 @@ def load_frozen(path: Path) -> dict[str, dict[str, str]]:
     return frozen
 
 
+def load_patient_overlap(path: Path) -> dict[str, set[str]]:
+    """Documented patients whose lesions sit in more than one split, from a
+    ``source,patient_id,splits`` CSV (config/patient_overlap_v1.csv): source -> patient IDs.
+
+    Splits are by lesion, so a patient with several lesions can be in train and test. The
+    known cases are listed so the gate fails on any new one instead of on the known ones.
+    """
+    documented: dict[str, set[str]] = {}
+    with path.open(encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            documented.setdefault(row["source"], set()).add(row["patient_id"])
+    return documented
+
+
 def _split_source(
     rows: pd.DataFrame, seed: int, unlabelled: str, frozen: Mapping[str, str] | None = None
 ) -> pd.Series:

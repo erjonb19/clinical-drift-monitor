@@ -28,7 +28,7 @@ from pyspark.sql import functions as F
 
 from cdm.gates import run_all, with_splits
 from cdm.images import DecodeError, decode_resize
-from cdm.splits import load_frozen
+from cdm.splits import load_frozen, load_patient_overlap
 
 _spark = SparkSession.getActiveSession()
 assert _spark is not None, "run inside a Databricks pipeline"
@@ -40,6 +40,10 @@ with open(spark.conf.get("cdm.config"), encoding="utf-8") as f:
 if "frozen_splits" in CONFIG:
     _frozen_file = Path(spark.conf.get("cdm.config")).parent / CONFIG["frozen_splits"]["file"]
     CONFIG["frozen_splits"]["lesions"] = load_frozen(_frozen_file)
+# Documented patients with lesions in two splits (lesion-level splits), also next to sites.json.
+if "patient_overlap" in CONFIG:
+    _overlap_file = Path(spark.conf.get("cdm.config")).parent / CONFIG["patient_overlap"]["file"]
+    CONFIG["patient_overlap"]["patients"] = load_patient_overlap(_overlap_file)
 IMAGES_GLOB = spark.conf.get("cdm.images_glob")
 METADATA_PATH = spark.conf.get("cdm.metadata_path")
 MANIFEST_PATH = spark.conf.get("cdm.manifest_path")
