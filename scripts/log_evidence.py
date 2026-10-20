@@ -91,8 +91,9 @@ def main() -> None:
                        "file_sha256": digest, "file_commit": commit, "metrics": len(metrics),
                        "logged_after_the_fact": args.after_the_fact,
                        "databricks_job_run": args.job_run}  # fmt: skip
+        # Written after every file, so a failure later in the list cannot orphan this run.
+        (REPO / INDEX).write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", "utf-8")
         print(f"{name}: run {run.info.run_id} ({len(metrics)} metrics)")
-    (REPO / INDEX).write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", "utf-8")
 
 
 if __name__ == "__main__":
