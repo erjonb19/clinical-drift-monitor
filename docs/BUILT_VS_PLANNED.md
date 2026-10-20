@@ -7,7 +7,7 @@ runs and is reproducible from the repository.
 **This is a personal portfolio project.** No patients, clinicians or business decisions
 depend on it.
 
-Last updated: 2026-09-29.
+Last updated: 2026-10-20.
 
 ## Built
 
@@ -39,7 +39,7 @@ Known limits, documented rather than fixed:
 - Mahalanobis on CIFAR-10 is unstable and sensitive to PCA size
   ([phase0-note.md](phase0-note.md)).
 
-### Phase 1: data engineering (built 2026-09-29, awaiting sign-off)
+### Phase 1: data engineering (built 2026-09-29)
 
 Run on Databricks Free Edition; evidence in `results/phase1/run_evidence.json`, explained in
 [phase1-note.md](phase1-note.md).
@@ -66,6 +66,40 @@ Known limits:
   `cdm.gates.run_all` on silver, as the note describes.
 - Gold embeddings use pretrained ImageNet features; Phase 2 recomputes them.
 
+### Phase 2: ML (built 2026-09-29 to 2026-10-06)
+
+Run on Databricks serverless GPU (1x A10G) and serverless CPU; training runs in MLflow
+(experiment `cdm-phase2`). Every committed result is also an MLflow run in `cdm-evidence`
+(`results/mlflow_runs.json`; Phase 0 to 2 files were logged after the fact on 2026-10-20 and are
+tagged so). Record: [phase2-note.md](phase2-note.md).
+
+- Silver splits for Barcelona and MSK by lesion, with HAM10000's Phase 0 split pinned and v1
+  lesions frozen in v2 (`config/splits_v1.csv`, gate `frozen_splits_kept`).
+- v2 data: Barcelona to 9,999 images. Auto Loader picked up only the new files.
+- Tuning ladder on validation only: no rung beat the control (`results/phase2/ladder/`).
+- 3 centralized and 6 federated models (Flower FedAvg and FedProx, clients trained in sequence in
+  one process). One test look per model (`results/phase2/v2/test/final_test.json`).
+- Drift table: 4 detectors × 3 setups × 2 real held-out sites + 2 benchmark sets
+  (`results/phase2/drift/v2/`). Mahalanobis was shipped by the pre-set rule.
+- Triage operating point, committed before test (`results/phase2/triage/`).
+- Label provenance, the Buenos Aires local recalibration, and the analysis look (seven-class
+  external accuracy, results by skin type, worst misses; `results/phase2/analysis_look/`).
+- Patient-level split check and gate (`results/phase2/patient_overlap/`, silent-failures #9).
+
+Known limits:
+- Splits are by lesion. 47 MSK patients span splits, and HAM10000 and Barcelona cannot be
+  checked. The measured test effect is small.
+- Detector scores do not reproduce between GPU and CPU, so batch-level drift and the gold
+  recompute moved to Phase 3.
+- Error analysis is partly done: the confusion matrices by site and skin type and the review
+  worksheet are research Phase D.
+- Nothing is registered in Unity Catalog yet (Phase 3).
+
+### Tooling
+
+- `scripts/log_evidence.py`: committed results file to MLflow run, refusing uncommitted files.
+  CI checks every indexed file still matches its logged hash.
+
 ## Scaffolded
 
 ### Tooling
@@ -75,5 +109,6 @@ Known limits:
 
 ## Not started
 
-- Phases 2 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
+- Research extension Phases A to F ([research_extension_plan.md](research_extension_plan.md)).
+- Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.
