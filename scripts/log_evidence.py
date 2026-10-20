@@ -45,6 +45,8 @@ def main() -> None:
     args = parser.parse_args()
 
     os.environ.setdefault("MLFLOW_DISABLE_AGENT_HINT", "1")
+    # MLflow prints an emoji with each run URL; a Windows console's code page cannot encode it.
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
     import mlflow  # optional dependency: the "evidence" extra
     from mlflow.entities import Metric
 
