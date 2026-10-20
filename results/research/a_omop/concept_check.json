@@ -1,0 +1,34 @@
+{
+  "checked_utc": "2026-10-20T23:55:43+00:00",
+  "code_version": "24a3f90",
+  "vocabulary_release": {
+    "None": "v5.0 29-AUG-26",
+    "SNOMED": "2026-02-01 SNOMED CT International Edition; 2026-03-01 SNOMED CT US Edition; 2026-04-08 SNOMED CT UK Edition",
+    "Type Concept": "Type Concept 20260202"
+  },
+  "citation": "https://athena.ohdsi.org/search-terms/terms/<concept_id>",
+  "map_rows": 93,
+  "rows_by_match": {
+    "approximate": 9,
+    "broader": 7,
+    "class_lca": 4,
+    "exact": 57,
+    "none": 12,
+    "source_specific": 1,
+    "synonym": 3
+  },
+  "rows_by_field": {
+    "anatom_site_1": 5,
+    "anatom_site_2": 18,
+    "condition_type": 1,
+    "diagnosis_3": 36,
+    "diagnosis_confirm_type": 4,
+    "ham_dx_type": 4,
+    "ham_localization": 15,
+    "image_type": 3,
+    "label": 7
+  },
+  "distinct_concepts": 63,
+  "problems": [],
+  "passed": true
+}
