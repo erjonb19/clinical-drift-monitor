@@ -1,6 +1,6 @@
 {
-  "computed_utc": "2026-10-20T23:08:27+00:00",
-  "code_version": "deb9cc1",
+  "computed_utc": "2026-10-20T23:10:35+00:00",
+  "code_version": "4f6db44",
   "table": "workspace.cdm.silver_metadata",
   "rule": "splits are by lesion; a patient is counted once per source by ISIC patient_id",
   "silver_images": 27656,
