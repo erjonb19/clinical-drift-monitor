@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 
 from cdm.gates import frozen_splits_kept, with_splits
-from cdm.splits import HAM, SPLITS, DataError, assign_splits, load_frozen
+from cdm.splits import HAM, SPLITS, DataError, assign_splits, load_frozen, load_patient_overlap
 
 REPO = Path(__file__).resolve().parents[1]
 CLASSES = ("nv", "mel", "bcc")
@@ -112,3 +112,10 @@ def test_committed_v1_splits_match_v1_and_the_config_points_to_them() -> None:
     cap = config["sites"]["barcelona"]["cap"]
     assert (cap["max_images"], cap["fingerprint"]) == (10000, "4129a90a0e5f3aed")
     assert config["ham10000"]["split_fingerprint"] == "cc2b196cd5bf58ad"
+
+
+def test_committed_patient_overlap_is_the_documented_msk_list() -> None:
+    config = json.loads((REPO / "config" / "sites.json").read_text(encoding="utf-8"))
+    documented = load_patient_overlap(REPO / "config" / config["patient_overlap"]["file"])
+    # results/phase2/patient_overlap/patient_overlap.json: 47 MSK patients, no other source.
+    assert {s: len(v) for s, v in documented.items()} == {"msk": 47}

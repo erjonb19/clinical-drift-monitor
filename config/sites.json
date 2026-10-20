@@ -76,5 +76,9 @@
   "frozen_splits": {
     "file": "splits_v1.csv",
     "note": "v1 lesion splits for Barcelona and MSK (2026-10-04); every listed lesion keeps its split, only new lesions are assigned"
+  },
+  "patient_overlap": {
+    "file": "patient_overlap_v1.csv",
+    "note": "patients whose lesions sit in more than one split (splits are by lesion); documented, not re-split (2026-10-20, docs/silent-failures.md #9); any other patient fails the patients_in_one_split gate"
   }
 }
