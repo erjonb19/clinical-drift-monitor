@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import io
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import pytest
 from PIL import Image
 
-from cdm.gates import run_all, with_splits
+from cdm.gates import patients_across_splits, patients_in_one_split, run_all, with_splits
 from cdm.images import SIZE, DecodeError, decode_resize
-from cdm.splits import assign_splits, split_fingerprint
+from cdm.splits import assign_splits, load_patient_overlap, split_fingerprint
 
 SCC = "Squamous cell carcinoma, NOS"
 
@@ -213,3 +214,37 @@ def test_client_site_split_leaves_ham10000_unchanged_and_applies_the_scc_rule() 
     assert scc["label"].isna().all() and (scc["split"] == "score").all()
     assert set(together["client"]) == {"ham_vienna", "barcelona"}
     assert set(together.loc[together["source"] == "barcelona", "role"]) == {"client"}
+
+
+def patient_frame() -> pd.DataFrame:
+    """MSK-like rows: patient P1 has a lesion in train and one in test; P2 only in train."""
+    return pd.DataFrame(
+        {
+            "source": "msk",
+            "lesion_id": ["L1", "L2", "L3", "L4"],
+            "patient_id": ["P1", "P1", "P2", None],
+            "split": ["train", "test", "train", "val"],
+        }
+    )
+
+
+def test_patient_gate_fails_on_an_undocumented_cross_split_patient_only() -> None:
+    frame = patient_frame()
+    assert patients_across_splits(frame) == {("msk", "P1"): ["test", "train"]}
+    assert patients_in_one_split(frame, {}).violations == 1
+    assert patients_in_one_split(frame, {"msk": {"P1"}}).violations == 0
+    # Documented under another source: still a new case here.
+    assert patients_in_one_split(frame, {"barcelona": {"P1"}}).violations == 1
+
+
+def test_patient_gate_ignores_scoring_rows_and_sources_without_patient_ids() -> None:
+    frame = patient_frame()
+    frame.loc[1, "split"] = "score"  # scoring-only images are not in a split
+    assert patients_in_one_split(frame, {}).violations == 0
+    assert patients_in_one_split(frame.drop(columns="patient_id"), {}).violations == 0
+
+
+def test_load_patient_overlap_reads_the_documented_patients(tmp_path: Path) -> None:
+    path = tmp_path / "overlap.csv"
+    path.write_text("source,patient_id,splits\nmsk,IP_1,test|train\nmsk,IP_2,train|val\n")
+    assert load_patient_overlap(path) == {"msk": {"IP_1", "IP_2"}}
