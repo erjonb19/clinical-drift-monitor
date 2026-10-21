@@ -905,3 +905,38 @@ def data_dictionary(cmap: pd.DataFrame, build: Mapping[str, Any] | None) -> str:
     for r in cmap[cmap["concept_id"] == 0].itertuples():
         lines.append(f"| {r.source_field} | {r.scope} | {_md(r.source_value)} | {_md(r.note)} |")
     return "\n".join(lines) + "\n"
+
+
+# ---- public extracts ------------------------------------------------------------------------
+
+
+def public_concepts(cmap: pd.DataFrame) -> pd.DataFrame:
+    """A concept table without SNOMED text, for anything outside the workspace (quickstart,
+    demo): each mapped concept ID with its expected domain and an Athena link for the name."""
+    used = cmap[cmap["concept_id"] != 0].drop_duplicates("concept_id")
+    return pd.DataFrame(
+        {
+            "concept_id": used["concept_id"].astype(str).tolist(),
+            "concept_name": [
+                f"https://athena.ohdsi.org/search-terms/terms/{c}" for c in used["concept_id"]
+            ],
+            "domain_id": used["expected_domain"].tolist(),
+            "vocabulary_id": "see Athena",
+            "concept_class_id": "see Athena",
+            "standard_concept": "S",
+            "concept_code": "not published",
+            "valid_start_date": "19700101",
+            "valid_end_date": "20991231",
+            "invalid_reason": "",
+        }
+    )
+
+
+def silver_from_isic(rows: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
+    """Rows from :func:`cdm.sources.flatten` (public ISIC metadata), shaped like silver: the
+    lesion is ISIC's lesion ID, else the image, and the label is ISIC's mapped label. The
+    pipeline's site label rule is not applied here."""
+    frame = pd.DataFrame(list(rows))
+    return frame.assign(
+        lesion_id=frame["isic_lesion_id"].fillna(frame["isic_id"]), label=frame["isic_label"]
+    )
