@@ -115,7 +115,7 @@ workspace; the repository holds concept IDs only.
 | procedure_occurrence | 37,514 |
 | image_occurrence | 27,656 |
 
-Build `cf10fee`, pipeline update `61686b98`, all seven gates passed:
+Build `0239a19`, pipeline update `5992b755`, all seven gates passed:
 `results/research/a_omop/build.json`. Concepts: `results/research/a_omop/concept_check.json`.
 Column-by-column definitions, null rates and caveats are in
 [docs/data_dictionary.md](docs/data_dictionary.md).
@@ -124,7 +124,8 @@ Column-by-column definitions, null rates and caveats are in
 - Dates are placeholders, because the sources record none.
 - A person is a real patient only where ISIC records a patient ID: 2,776 people at MSK
   collection 289, Buenos Aires and PAD-UFES-20. Elsewhere, one person is one lesion.
-- Sex and modality are concept 0 until the Gender and DICOM vocabularies are downloaded.
+- Sex is mapped to OMOP Gender concepts. 746 people have no sex recorded and are concept 0.
+- Modality is concept 0, because the Athena downloads offered no DICOM vocabulary.
 
 Full Phase 2 record: [docs/phase2-note.md](docs/phase2-note.md). Data engineering:
 [docs/phase1-note.md](docs/phase1-note.md).
