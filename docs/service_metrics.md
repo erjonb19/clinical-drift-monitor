@@ -15,7 +15,7 @@ No audit log committed yet (`results/research/g2_cohort/audit.jsonl`).
 
 ## Output quality
 
-OMOP build: not yet recorded (`results/research/a_omop/build.json`).
+OMOP build `cf10fee`: 7 of 7 gates passed.
 
 Concept map: 107 source values; approximate 17, broader 7, class_lca 4, exact 58, none 17, source_specific 1, synonym 3 (match types, `config/omop_concepts.csv`).
 
