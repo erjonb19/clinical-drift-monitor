@@ -95,6 +95,21 @@ Known limits:
   worksheet are research Phase D.
 - Nothing is registered in Unity Catalog yet (Phase 3).
 
+### Research Phase A: OMOP tables (built 2026-10-21)
+
+- `config/omop_concepts.csv`: 107 source values mapped to 65 OMOP concepts, each checked
+  against an Athena download (`scripts/omop_concepts.py`). 17 values have no verified
+  concept (0, with reasons), including sex and modality until the Gender and DICOM
+  vocabularies are downloaded.
+- `cdm.omop`: person, observation_period, condition_occurrence, procedure_occurrence,
+  image_occurrence, cdm_source and concept, plus seven gates. The pipeline publishes them as
+  `workspace.cdm.omop_*`, with `omop_gate_results` (fails the update) and `omop_profile`.
+  The first build (update `61686b98`, code `cf10fee`) passed every gate.
+- `docs/data_dictionary.md` is generated from the column definitions and the build, and a
+  test keeps it current.
+- Not done: the Unity Catalog lineage edges into the OMOP tables had not reached
+  `system.access.table_lineage` when the build was recorded (the table lags).
+
 ### Tooling
 
 - `scripts/log_evidence.py`: committed results file to MLflow run, refusing uncommitted files.
@@ -109,6 +124,6 @@ Known limits:
 
 ## Not started
 
-- Research extension Phases A to F ([research_extension_plan.md](research_extension_plan.md)).
+- Research extension Phases B to F and G ([research_extension_plan.md](research_extension_plan.md)).
 - Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.
