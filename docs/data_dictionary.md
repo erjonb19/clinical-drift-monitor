@@ -195,8 +195,6 @@ These map to concept 0 on purpose. Each gives its reason. Values that need a voc
 | diagnosis_confirm_type | sites | serial imaging showing no change | no procedure concept found |
 | diagnosis_confirm_type | sites | single image expert consensus | expert consensus; not a procedure |
 | diagnosis_confirm_type | sites | confocal microscopy with consensus dermoscopy | no procedure concept found |
-| sex | all | male | Gender vocabulary not in the Athena download yet; not entered from memory |
-| sex | all | female | Gender vocabulary not in the Athena download yet; not entered from memory |
-| modality | all | dermoscopic | DICOM vocabulary not in the Athena download yet; not entered from memory |
-| modality | all | clinical: close-up | DICOM vocabulary not in the Athena download yet; not entered from memory |
-| modality | all | clinical: overview | DICOM vocabulary not in the Athena download yet; not entered from memory |
+| modality | all | dermoscopic | no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory |
+| modality | all | clinical: close-up | no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory |
+| modality | all | clinical: overview | no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory |
