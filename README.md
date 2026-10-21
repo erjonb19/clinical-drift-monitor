@@ -4,12 +4,13 @@ A skin lesion classifier trained across hospitals, with an out-of-distribution (
 tested on real new hospitals. Built on Databricks Free Edition at zero cost. A personal
 portfolio project and research prototype: **not for clinical use**.
 
-**Status (2026-10-20):**
+**Status (2026-10-21):**
 - Phases 0 to 2 are done: fix the science, data engineering, and ML. The one Phase 2 item left,
   error analysis, moved to research Phase D.
 - The research extension (Phases A to F: OMOP data, a vision-language baseline, subgroups,
   interpretability, fusion) is planned in
-  [docs/research_extension_plan.md](docs/research_extension_plan.md). Phase A is next.
+  [docs/research_extension_plan.md](docs/research_extension_plan.md). Phase A (OMOP tables)
+  is built; Phase G (research data services) is in progress.
 - Phases 3 to 6 have not started.
 
 [PLAN.md](PLAN.md) has scope and order. [docs/BUILT_VS_PLANNED.md](docs/BUILT_VS_PLANNED.md)
@@ -93,6 +94,37 @@ About the detectors:
    Phase 2 note, with no skin-type effect claimed.
 4. **Site and imaging type are confounded.** PAD-UFES-20 is all smartphone photos, and Buenos
    Aires is mixed, so part of the drop may come from imaging type rather than the hospital.
+
+## Research data: OMOP tables (Phase A)
+
+The lakehouse also publishes **OMOP CDM v5.4-style tables** from silver:
+- person, observation_period, condition_occurrence, procedure_occurrence;
+- image_occurrence, following the OHDSI medical imaging extension proposal;
+- cdm_source and concept.
+
+Seven quality gates fail the pipeline update on any violation: keys, foreign keys, every
+source value mapped, concepts resolve, row counts, one label per lesion, required columns.
+Every source value maps to an OMOP concept ID looked up in an Athena download, never from
+memory, or to concept 0 with a stated reason. SNOMED codes and names stay inside the
+workspace; the repository holds concept IDs only.
+
+| Table | Rows |
+| --- | ---: |
+| person | 15,196 |
+| condition_occurrence | 16,238 |
+| procedure_occurrence | 37,514 |
+| image_occurrence | 27,656 |
+
+Build `cf10fee`, pipeline update `61686b98`, all seven gates passed:
+`results/research/a_omop/build.json`. Concepts: `results/research/a_omop/concept_check.json`.
+Column-by-column definitions, null rates and caveats are in
+[docs/data_dictionary.md](docs/data_dictionary.md).
+
+**Caveats**
+- Dates are placeholders, because the sources record none.
+- A person is a real patient only where ISIC records a patient ID: 2,776 people at MSK
+  collection 289, Buenos Aires and PAD-UFES-20. Elsewhere, one person is one lesion.
+- Sex and modality are concept 0 until the Gender and DICOM vocabularies are downloaded.
 
 Full Phase 2 record: [docs/phase2-note.md](docs/phase2-note.md). Data engineering:
 [docs/phase1-note.md](docs/phase1-note.md).
