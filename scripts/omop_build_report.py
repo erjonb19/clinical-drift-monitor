@@ -2,11 +2,13 @@
 
 After a pipeline update builds the omop_* tables, this reads them through the SQL warehouse
 and writes results/research/a_omop/build.json (committed): row counts, null counts per
-column, gate results, condition and site concept counts (concept IDs only, no SNOMED text),
-and the Unity Catalog lineage edges into the OMOP tables. Then it renders the dictionary.
+column, gate results, and condition and site concept counts (concept IDs only, no SNOMED
+text). Then it renders the dictionary. Lineage is recorded separately, because
+system.access.table_lineage lags the pipeline by hours.
 
     python scripts/omop_build_report.py --update-id <pipeline update ID>
     python scripts/omop_build_report.py --render-only   (dictionary from the committed build)
+    python scripts/omop_build_report.py --lineage       (results/research/a_omop/lineage.json)
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from cdm.omop import TABLES, data_dictionary, load_concept_map
 REPO = Path(__file__).resolve().parents[1]
 BUILD = REPO / "results" / "research" / "a_omop" / "build.json"
 DICTIONARY = REPO / "docs" / "data_dictionary.md"
+LINEAGE = REPO / "results" / "research" / "a_omop" / "lineage.json"
 SCHEMA = "workspace.cdm"
 
 
@@ -46,12 +49,6 @@ def collect(update_id: str) -> dict[str, Any]:
     sql = sql_client()
     counts = {t: int(sql(f"SELECT COUNT(*) AS n FROM {SCHEMA}.omop_{t}")["n"][0]) for t in TABLES}
     etl = sql(f"SELECT cdm_etl_reference FROM {SCHEMA}.omop_cdm_source")["cdm_etl_reference"][0]
-    lineage = sql(
-        "SELECT DISTINCT source_table_full_name AS source, target_table_full_name AS target "
-        "FROM system.access.table_lineage "
-        f"WHERE target_table_full_name LIKE '{SCHEMA}.omop_%' AND source_table_full_name IS "
-        "NOT NULL ORDER BY target, source"
-    )
     return {
         "built_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "update_id": update_id,
@@ -81,8 +78,19 @@ def collect(update_id: str) -> dict[str, Any]:
                 f"FROM {SCHEMA}.omop_image_occurrence GROUP BY 1 ORDER BY 1"
             )
         ),
-        "lineage": records(lineage),
     }
+
+
+def lineage() -> dict[str, Any]:
+    """Unity Catalog's lineage edges into the OMOP tables: proof they derive from silver."""
+    edges = sql_client()(
+        "SELECT source_table_full_name AS source, target_table_full_name AS target, "
+        "MAX(event_time) AS last_seen FROM system.access.table_lineage "
+        f"WHERE target_table_full_name LIKE '{SCHEMA}.omop_%' AND source_table_full_name IS "
+        "NOT NULL GROUP BY 1, 2 ORDER BY 2, 1"
+    )
+    return {"queried_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+            "table": "system.access.table_lineage", "edges": records(edges)}  # fmt: skip
 
 
 def main() -> None:
@@ -90,7 +98,12 @@ def main() -> None:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--update-id")
     group.add_argument("--render-only", action="store_true")
+    group.add_argument("--lineage", action="store_true")
     args = parser.parse_args()
+    if args.lineage:
+        LINEAGE.write_bytes((json.dumps(lineage(), indent=2) + "\n").encode())
+        print(f"wrote {LINEAGE}")
+        return
     if args.update_id:
         BUILD.parent.mkdir(parents=True, exist_ok=True)
         BUILD.write_bytes((json.dumps(collect(args.update_id), indent=2) + "\n").encode())
