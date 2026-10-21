@@ -103,3 +103,10 @@ the variation shown in caveat 3, not these exact numbers.
 
 The original Purdue ECE 570 notebook and slides are kept in [reference/](reference/) as
 read-only history.
+
+## License
+
+The code in this repository is released under the [MIT License](LICENSE). MIT covers the
+code only. ISIC images and metadata, and every other source dataset, keep their own
+licenses (CC-0, CC-BY or CC-BY-NC per ISIC image, and the terms listed per source in
+[docs/DATA_CARD.md](docs/DATA_CARD.md)). No data is committed here.
