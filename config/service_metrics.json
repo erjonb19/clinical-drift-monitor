@@ -1,0 +1,33 @@
+{
+  "note": "Model performance rows for docs/service_metrics.md. Each value is read from a committed results file at a JSON path; nothing is typed in. Test sets differ between rows, as the 'evaluated on' column says.",
+  "model_performance": [
+    {"model": "v1 ensemble (3 seeds)", "evaluated_on": "client test split, v1 data", "metric": "balanced accuracy",
+     "file": "results/phase2/overnight/final_test.json",
+     "value": "ensemble_3_seeds/scores/pooled/balanced_accuracy",
+     "low": "ensemble_3_seeds/bootstrap_95/balanced_accuracy/low", "high": "ensemble_3_seeds/bootstrap_95/balanced_accuracy/high"},
+    {"model": "v2 ensemble (3 seeds, shipped)", "evaluated_on": "client test split, v2 data", "metric": "balanced accuracy",
+     "file": "results/phase2/v2/test/final_test.json",
+     "value": "views/test_full_v2/ensemble_3_seeds/scores/pooled/balanced_accuracy",
+     "low": "views/test_full_v2/ensemble_3_seeds/bootstrap_95/balanced_accuracy/low", "high": "views/test_full_v2/ensemble_3_seeds/bootstrap_95/balanced_accuracy/high"},
+    {"model": "v2 ensemble (3 seeds, shipped)", "evaluated_on": "Buenos Aires (held-out site)", "metric": "balanced accuracy",
+     "file": "results/phase2/analysis_look/results.json",
+     "value": "external_seven_class/buenos_aires/v2-ensemble-final-seeds0-1-2/balanced_accuracy",
+     "low": "external_seven_class/buenos_aires/v2-ensemble-final-seeds0-1-2/bootstrap_95/balanced_accuracy/low", "high": "external_seven_class/buenos_aires/v2-ensemble-final-seeds0-1-2/bootstrap_95/balanced_accuracy/high"},
+    {"model": "v2 ensemble (3 seeds, shipped)", "evaluated_on": "PAD-UFES-20 (held-out site)", "metric": "balanced accuracy",
+     "file": "results/phase2/analysis_look/results.json",
+     "value": "external_seven_class/pad_ufes/v2-ensemble-final-seeds0-1-2/balanced_accuracy",
+     "low": "external_seven_class/pad_ufes/v2-ensemble-final-seeds0-1-2/bootstrap_95/balanced_accuracy/low", "high": "external_seven_class/pad_ufes/v2-ensemble-final-seeds0-1-2/bootstrap_95/balanced_accuracy/high"},
+    {"model": "v2 ensemble at the triage threshold", "evaluated_on": "client test split, pooled", "metric": "melanoma sensitivity",
+     "file": "results/phase2/triage/test.json",
+     "value": "models/v2-ensemble-final-seeds0-1-2/client_test_pooled/sensitivity",
+     "low": "models/v2-ensemble-final-seeds0-1-2/client_test_pooled/bootstrap_95/sensitivity/low", "high": "models/v2-ensemble-final-seeds0-1-2/client_test_pooled/bootstrap_95/sensitivity/high"},
+    {"model": "v2 ensemble at the triage threshold", "evaluated_on": "Buenos Aires (held-out site)", "metric": "melanoma sensitivity",
+     "file": "results/phase2/triage/test.json",
+     "value": "models/v2-ensemble-final-seeds0-1-2/external_buenos_aires/sensitivity",
+     "low": "models/v2-ensemble-final-seeds0-1-2/external_buenos_aires/bootstrap_95/sensitivity/low", "high": "models/v2-ensemble-final-seeds0-1-2/external_buenos_aires/bootstrap_95/sensitivity/high"},
+    {"model": "v2 ensemble at the triage threshold", "evaluated_on": "PAD-UFES-20 (held-out site)", "metric": "melanoma sensitivity",
+     "file": "results/phase2/triage/test.json",
+     "value": "models/v2-ensemble-final-seeds0-1-2/external_pad_ufes/sensitivity",
+     "low": "models/v2-ensemble-final-seeds0-1-2/external_pad_ufes/bootstrap_95/sensitivity/low", "high": "models/v2-ensemble-final-seeds0-1-2/external_pad_ufes/bootstrap_95/sensitivity/high"}
+  ]
+}
