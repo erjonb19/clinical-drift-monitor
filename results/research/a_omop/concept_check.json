@@ -1,34 +1,38 @@
 {
-  "checked_utc": "2026-10-20T23:55:43+00:00",
-  "code_version": "24a3f90",
+  "checked_utc": "2026-10-21T14:08:57+00:00",
+  "code_version": "4119d50",
   "vocabulary_release": {
     "None": "v5.0 29-AUG-26",
     "SNOMED": "2026-02-01 SNOMED CT International Edition; 2026-03-01 SNOMED CT US Edition; 2026-04-08 SNOMED CT UK Edition",
     "Type Concept": "Type Concept 20260202"
   },
   "citation": "https://athena.ohdsi.org/search-terms/terms/<concept_id>",
-  "map_rows": 93,
+  "map_rows": 107,
   "rows_by_match": {
-    "approximate": 9,
+    "approximate": 17,
     "broader": 7,
     "class_lca": 4,
-    "exact": 57,
-    "none": 12,
+    "exact": 58,
+    "none": 17,
     "source_specific": 1,
     "synonym": 3
   },
   "rows_by_field": {
     "anatom_site_1": 5,
     "anatom_site_2": 18,
+    "cdm_version": 1,
+    "condition_status": 8,
     "condition_type": 1,
     "diagnosis_3": 36,
     "diagnosis_confirm_type": 4,
     "ham_dx_type": 4,
     "ham_localization": 15,
     "image_type": 3,
-    "label": 7
+    "label": 7,
+    "modality": 3,
+    "sex": 2
   },
-  "distinct_concepts": 63,
+  "distinct_concepts": 65,
   "problems": [],
   "passed": true
 }
