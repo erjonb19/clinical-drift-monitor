@@ -79,3 +79,21 @@ def test_pipelines_do_not_retry_failed_updates() -> None:
     template = (REPO / "databricks" / "pipeline.json").read_text(encoding="utf-8")
     spec = deploy_module().render(template, VALUES)
     assert spec["configuration"]["pipelines.numUpdateRetryAttempts"] == "0"
+
+
+def test_deploy_refuses_missing_or_stale_resolved_concepts(tmp_path: Path) -> None:
+    check = deploy_module().check_resolved
+    cmap = tmp_path / "map.csv"
+    cmap.write_text(
+        "source_field,scope,source_value,concept_id,expected_domain,match,note\n"
+        "label,all,nv,4271013,Condition,exact,\nlabel,all,x,0,Condition,none,why\n",
+        encoding="utf-8",
+    )
+    resolved = tmp_path / "resolved.csv"
+    with pytest.raises(SystemExit, match="missing"):
+        check(cmap, resolved)
+    resolved.write_text("concept_id,concept_name\n4271013,n\n1,stale\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="stale"):
+        check(cmap, resolved)
+    resolved.write_text("concept_id,concept_name\n4271013,n\n", encoding="utf-8")
+    check(cmap, resolved)
