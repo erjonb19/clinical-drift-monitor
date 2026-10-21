@@ -15,9 +15,9 @@ No audit log committed yet (`results/research/g2_cohort/audit.jsonl`).
 
 ## Output quality
 
-OMOP build `cf10fee`: 7 of 7 gates passed.
+OMOP build `0239a19`: 7 of 7 gates passed.
 
-Concept map: 107 source values; approximate 17, broader 7, class_lca 4, exact 58, none 17, source_specific 1, synonym 3 (match types, `config/omop_concepts.csv`).
+Concept map: 107 source values; approximate 17, broader 7, class_lca 4, exact 60, none 15, source_specific 1, synonym 3 (match types, `config/omop_concepts.csv`).
 
 ## Model performance
 
