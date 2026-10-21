@@ -92,11 +92,11 @@ image_type,all,dermoscopic,37153789,Procedure,exact,digital dermatoscopy of skin
 image_type,all,clinical: close-up,4060639,Procedure,broader,medical photography
 image_type,all,clinical: overview,4060639,Procedure,broader,medical photography
 condition_type,all,isic_archive,32879,Type Concept,approximate,"registry: a curated research image archive, not an EHR"
-sex,all,male,0,Gender,none,"Gender vocabulary not in the Athena download yet; not entered from memory"
-sex,all,female,0,Gender,none,"Gender vocabulary not in the Athena download yet; not entered from memory"
-modality,all,dermoscopic,0,Modality,none,"DICOM vocabulary not in the Athena download yet; not entered from memory"
-modality,all,clinical: close-up,0,Modality,none,"DICOM vocabulary not in the Athena download yet; not entered from memory"
-modality,all,clinical: overview,0,Modality,none,"DICOM vocabulary not in the Athena download yet; not entered from memory"
+sex,all,male,8507,Gender,exact,
+sex,all,female,8532,Gender,exact,
+modality,all,dermoscopic,0,Modality,none,"no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory"
+modality,all,clinical: close-up,0,Modality,none,"no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory"
+modality,all,clinical: overview,0,Modality,none,"no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory"
 condition_status,ham10000,histo,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
 condition_status,ham10000,follow_up,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
 condition_status,ham10000,consensus,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
