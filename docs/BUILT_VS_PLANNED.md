@@ -97,14 +97,14 @@ Known limits:
 
 ### Research Phase A: OMOP tables (built 2026-10-21)
 
-- `config/omop_concepts.csv`: 107 source values mapped to 65 OMOP concepts, each checked
-  against an Athena download (`scripts/omop_concepts.py`). 17 values have no verified
-  concept (0, with reasons), including sex and modality until the Gender and DICOM
-  vocabularies are downloaded.
+- `config/omop_concepts.csv`: 107 source values mapped to 67 OMOP concepts, each checked
+  against two Athena downloads (`scripts/omop_concepts.py`). 15 values have no verified
+  concept (0, with reasons), including modality: no DICOM vocabulary was offered.
 - `cdm.omop`: person, observation_period, condition_occurrence, procedure_occurrence,
   image_occurrence, cdm_source and concept, plus seven gates. The pipeline publishes them as
   `workspace.cdm.omop_*`, with `omop_gate_results` (fails the update) and `omop_profile`.
-  The first build (update `61686b98`, code `cf10fee`) passed every gate.
+  The first build (update `61686b98`, code `cf10fee`) passed every gate. It was rebuilt
+  with Gender concepts (update `5992b755`, code `0239a19`), which also passed every gate.
 - `docs/data_dictionary.md` is generated from the column definitions and the build, and a
   test keeps it current.
 - Not done: the Unity Catalog lineage edges into the OMOP tables had not reached

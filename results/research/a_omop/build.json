@@ -1,8 +1,8 @@
 {
-  "built_utc": "2026-10-21T15:02:01+00:00",
-  "update_id": "61686b98-00d9-41fa-bbf0-8887be63c0a5",
-  "etl_reference": "cf10fee",
-  "report_code_version": "cf10fee",
+  "built_utc": "2026-10-21T16:48:45+00:00",
+  "update_id": "5992b755-b67a-4a97-8fb2-a37405c286c0",
+  "etl_reference": "0239a19",
+  "report_code_version": "0239a19",
   "row_counts": {
     "person": 15196,
     "observation_period": 15196,
@@ -10,7 +10,7 @@
     "procedure_occurrence": 37514,
     "image_occurrence": 27656,
     "cdm_source": 1,
-    "concept": 65
+    "concept": 67
   },
   "gates": [
     {
@@ -557,62 +557,62 @@
     {
       "table_name": "concept",
       "column_name": "concept_id",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "concept_name",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "domain_id",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "vocabulary_id",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "concept_class_id",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "standard_concept",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "concept_code",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "valid_start_date",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "valid_end_date",
-      "rows": "65",
+      "rows": "67",
       "nulls": "0"
     },
     {
       "table_name": "concept",
       "column_name": "invalid_reason",
-      "rows": "65",
-      "nulls": "65"
+      "rows": "67",
+      "nulls": "67"
     }
   ],
   "persons_by_rule": [

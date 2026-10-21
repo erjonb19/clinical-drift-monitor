@@ -896,8 +896,8 @@ def data_dictionary(cmap: pd.DataFrame, build: Mapping[str, Any] | None) -> str:
         "",
         "## Source values with no verified concept",
         "",
-        "These map to concept 0 on purpose. Each gives its reason. Values that need a "
-        "vocabulary not yet downloaded (Gender, DICOM) are among them.",
+        "These map to concept 0 on purpose. Each gives its reason. Modality is among them: "
+        "the Athena downloads offered no DICOM vocabulary.",
         "",
         "| Field | Scope | Source value | Reason |",
         "| --- | --- | --- | --- |",
