@@ -53,7 +53,9 @@ METADATA_COLUMNS = """
     image_type STRING, pixels_x INT, pixels_y INT, isic_lesion_id STRING, patient_id STRING,
     fitzpatrick_skin_type STRING, sex STRING, age_approx DOUBLE, anatom_site_1 STRING,
     diagnosis_1 STRING, diagnosis_2 STRING, diagnosis_3 STRING, isic_label STRING, url STRING,
-    lesion_id STRING, label STRING, run_id STRING, code_version STRING, ham_dataset STRING
+    lesion_id STRING, label STRING, run_id STRING, code_version STRING, ham_dataset STRING,
+    anatom_site_2 STRING, diagnosis_confirm_type STRING, ham_localization STRING,
+    ham_dx_type STRING
 """
 MANIFEST_COLUMNS = """
     isic_id STRING, source STRING, path STRING, bytes BIGINT, sha256 STRING,
