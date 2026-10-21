@@ -1,0 +1,87 @@
+name: Data or cohort request
+description: Ask for a cohort count, feasibility estimate, dataset or analysis from the OMOP tables.
+title: "[Request] "
+labels: ["data-request", "status: triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This service runs on **public research images** (HAM10000 and ISIC Archive), not patient records. It is a portfolio project.
+        Counts under 11 are suppressed in every output (docs/governance.md). Each request is checked against the data use checklist before work starts.
+  - type: input
+    id: requester
+    attributes:
+      label: Requester role and group
+      description: For example "dermatology fellow, melanoma outcomes group". Please don't give personal contact details.
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Research question
+      description: What do you want to know, and what decision will it inform?
+      placeholder: How many lesions confirmed by histopathology are melanoma, by body site, in patients aged 50 or over?
+    validations:
+      required: true
+  - type: textarea
+    id: cohort
+    attributes:
+      label: Cohort definition
+      description: Inclusion and exclusion criteria in plain words. These become a versioned phenotype file that must be approved before it runs.
+      placeholder: |
+        Include: lesions with a melanoma diagnosis (invasive or in situ), age at least 50.
+        Exclude: lesions diagnosed only by single-image consensus.
+    validations:
+      required: true
+  - type: checkboxes
+    id: data_needed
+    attributes:
+      label: Data needed
+      options:
+        - label: Counts or feasibility only (aggregates, small cells suppressed)
+        - label: Breakdown by age band, sex or body site
+        - label: Row-level data (workspace access only; needs a stated reason)
+        - label: Images
+        - label: Model predictions or drift scores
+  - type: dropdown
+    id: approval
+    attributes:
+      label: Approval status
+      options:
+        - Public data, no approval needed
+        - IRB exempt determination
+        - IRB approved (give the protocol number below)
+        - Data use agreement signed
+        - Not started
+    validations:
+      required: true
+  - type: input
+    id: approval_reference
+    attributes:
+      label: Approval reference
+      description: Protocol or agreement number, if any.
+  - type: input
+    id: needed_by
+    attributes:
+      label: Needed by
+      placeholder: 2026-11-15
+  - type: dropdown
+    id: output
+    attributes:
+      label: Output format
+      options:
+        - Table in this issue
+        - CSV of aggregates
+        - Notebook
+        - Cohort definition only
+    validations:
+      required: true
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I understand counts under 11 are suppressed, along with counts that would reveal them.
+          required: true
+        - label: I understand this is public research data with per-image licenses, some non-commercial.
+          required: true
