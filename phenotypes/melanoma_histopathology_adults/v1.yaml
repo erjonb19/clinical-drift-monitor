@@ -1,0 +1,11 @@
+name: melanoma_histopathology_adults
+version: 1
+title: Adults (18 or over at diagnosis) with melanoma and a histopathology procedure
+purpose: Trial feasibility, a biopsy-confirmed adult melanoma cohort
+author: Erjon Brucaj
+index:
+  condition_concept_ids: [4162276, 141232, 40391314]  # Melanoma NOS (mel), invasive, in situ
+  age_min: 18
+include:
+  - procedure_concept_ids: [43531286]  # histopathology
+breakdown: [age_band]
