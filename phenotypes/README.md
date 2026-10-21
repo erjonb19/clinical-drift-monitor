@@ -72,5 +72,5 @@ on one lesion and a procedure on another meets both.
   detected. A reviewer checks for it when approving similar definitions.
 - In this data, a person is a real patient only where ISIC records a patient ID. Elsewhere one
   person is one lesion (`docs/data_dictionary.md`).
-- Sex is concept 0 until the Gender vocabulary is downloaded, so a `gender_concept_id`
-  breakdown has one group for now.
+- People with no recorded sex have `gender_concept_id` 0, a group of their own in a
+  breakdown.
