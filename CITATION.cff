@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software or its OMOP build, please cite it as below, and cite the data sources (HAM10000 and the ISIC Archive collections) as listed in docs/DATA_CARD.md."
+title: "Clinical Drift Monitor: skin lesion classification with drift detection, and OMOP research tables from public dermoscopy archives"
+authors:
+  - family-names: Brucaj
+    given-names: Erjon
+repository-code: "https://github.com/erjonb19/clinical-drift-monitor"
+keywords:
+  - OMOP CDM
+  - dermoscopy
+  - out-of-distribution detection
+  - research data engineering
+  - Databricks
+references:
+  - type: dataset
+    title: "The HAM10000 dataset, a large collection of multi-source dermatoscopic images of common pigmented skin lesions"
+    authors:
+      - family-names: Tschandl
+        given-names: Philipp
+      - family-names: Rosendahl
+        given-names: Cliff
+      - family-names: Kittler
+        given-names: Harald
+    doi: "10.1038/sdata.2018.161"
+    year: 2018
+  - type: dataset
+    title: "ISIC Archive"
+    authors:
+      - name: "International Skin Imaging Collaboration"
+    url: "https://www.isic-archive.com"
