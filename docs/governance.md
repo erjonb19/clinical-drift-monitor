@@ -87,6 +87,7 @@ kept separate in the audit log so the workflow is visible.
 
 | Source | Terms | Constraint here |
 | --- | --- | --- |
+| Repository code | MIT (`LICENSE`) | Code only: not the data, and not the course material in `reference/` |
 | ISIC Archive images | CC-0, CC-BY or CC-BY-NC, per image | Attribution kept per image; NC images non-commercial |
 | HAM10000 | CC BY-NC 4.0 | Non-commercial; cited |
 | SNOMED CT (via Athena) | SNOMED International Affiliate License | Codes and names stay in tier 1; only OMOP concept IDs are public |
