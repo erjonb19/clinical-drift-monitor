@@ -233,3 +233,25 @@ the variation shown in caveat 3, not these exact numbers.
 
 The original Purdue ECE 570 notebook and slides are kept in [reference/](reference/) as
 read-only history.
+
+## License
+
+The code in this repository is released under the [MIT License](LICENSE). MIT covers the
+code only. ISIC images and metadata, and every other source dataset, keep their own
+licenses (CC-0, CC-BY or CC-BY-NC per ISIC image, and the terms listed per source in
+[docs/DATA_CARD.md](docs/DATA_CARD.md)). The course notebook and slides in
+[reference/](reference/) are not covered by the MIT License either; third-party figures and
+images in them keep their original terms.
+
+What the repository holds besides code, all derived from the sources and keeping their
+terms (non-commercial where a source is CC BY-NC):
+- `config/splits_v1.csv` and `config/patient_overlap_v1.csv`: ISIC lesion and patient IDs
+  with their split;
+- `config/omop_concepts.csv`: source values mapped to OMOP concept IDs (no SNOMED text);
+- `results/phase2/analysis_look/predictions.csv.gz`: one row per test image, with ISIC IDs,
+  labels and each model's class probabilities;
+- a few HAM10000 sample images in one cell output of the notebook in reference/ (CC BY-NC
+  4.0, Tschandl et al. 2018);
+- aggregate results (JSON).
+
+No image files, dataset downloads or model weights are committed.
