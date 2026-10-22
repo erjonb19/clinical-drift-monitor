@@ -193,3 +193,86 @@ def test_mimic_notes_need_the_tier_2_switch(
         list(MimicIVNotes(path).notes())
     monkeypatch.setenv("CDM_TIER2", "1")
     assert [n.note_id for n in MimicIVNotes(path).notes()] == ["n1"]
+
+
+def test_an_invalid_answer_is_never_correct() -> None:
+    assert error_kind("diagnosis", "not a label", "garbage", ALLOWED) == "invalid"
+
+
+def test_a_failed_call_is_logged_at_its_worst_case_and_raised(tmp_path: Path) -> None:
+    def broken(system: str, user: str) -> tuple[str, dict[str, int]]:
+        raise TimeoutError("no reply")
+
+    spend = SpendLog(tmp_path / "spend.jsonl")
+    with pytest.raises(TimeoutError):
+        llm_extract(BIOPSY, ALLOWED, broken, spend, tmp_path / "cache.jsonl")
+    assert spend.entries()[0]["failed"] is True and spend.total() > 0
+
+
+def test_mimic_notes_are_never_sent_to_an_outside_api(tmp_path: Path) -> None:
+    send, calls = recorded({"x": "{}"})
+    note = Note("n1", "mimic-iv-note", "", "", "x")
+    with pytest.raises(PermissionError):
+        llm_extract(note, ALLOWED, send, SpendLog(tmp_path / "s.jsonl"), tmp_path / "c.jsonl")
+    assert calls == []
+
+
+def test_an_existing_sheet_is_never_overwritten(tmp_path: Path) -> None:
+    write_sheet([BIOPSY], tmp_path, ALLOWED)
+    with pytest.raises(FileExistsError):
+        write_sheet([NO_DX], tmp_path, ALLOWED)
+
+
+def test_any_git_checkout_counts_as_the_repository(tmp_path: Path) -> None:
+    (tmp_path / "other" / ".git").mkdir(parents=True)
+    with pytest.raises(ValueError, match="inside the repository"):
+        outside_repo(tmp_path / "other" / "notes")
+
+
+def cli(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):  # type: ignore[no-untyped-def]
+    import importlib.util
+
+    monkeypatch.setenv("CDM_NOTES_DIR", str(tmp_path / "work"))
+    spec = importlib.util.spec_from_file_location("extraction", REPO / "scripts" / "extraction.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    setattr(module, "SPEND", tmp_path / "spend.jsonl")  # noqa: B010
+    setattr(module, "OUT", tmp_path / "score.json")  # noqa: B010
+    return module
+
+
+def test_a_score_from_too_few_notes_or_another_prompt_is_not_reportable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = cli(tmp_path, monkeypatch)
+    work = tmp_path / "work"
+    write_sheet([BIOPSY, NO_DX, PSORIASIS], work, ALLOWED, n=3)
+    sheet = pd.read_csv(work / "labelling_sheet.csv", dtype=str, keep_default_na=False)
+    sheet["label_diagnosis"], sheet["label_body_site"] = NOT_STATED, NOT_STATED
+    sheet["label_confirmation"] = NOT_STATED
+    sheet.to_csv(work / "labelling_sheet.csv", index=False)
+    scoring = sheet[sheet["split"] == "scoring"]
+    preds = scoring[["note_id"]].assign(diagnosis=NOT_STATED, body_site=NOT_STATED,
+                                        confirmation=NOT_STATED, prompt_sha="old")  # fmt: skip
+    preds.to_csv(work / "predictions_llm_scoring.csv", index=False)
+    (work / "scoring_prompt_sha.txt").write_text("new")
+    module.score_all()
+    result = json.loads((tmp_path / "score.json").read_text())
+    assert result["reportable"] is False
+    assert len(result["not_reportable_because"]) == 2  # too few notes, and the wrong prompt
+    assert result["methods"]["llm"]["diagnosis"]["accuracy"] == 1.0
+
+
+def test_labels_outside_the_choices_stop_scoring(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = cli(tmp_path, monkeypatch)
+    work = tmp_path / "work"
+    write_sheet([BIOPSY, NO_DX], work, ALLOWED, n=2)
+    sheet = pd.read_csv(work / "labelling_sheet.csv", dtype=str, keep_default_na=False)
+    sheet["label_diagnosis"], sheet["label_body_site"] = "melanomaa", NOT_STATED
+    sheet["label_confirmation"] = NOT_STATED
+    sheet.to_csv(work / "labelling_sheet.csv", index=False)
+    with pytest.raises(SystemExit, match="labels not in"):
+        module.score_all()

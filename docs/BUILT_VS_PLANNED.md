@@ -84,7 +84,10 @@ tagged so). Record: [phase2-note.md](phase2-note.md).
 - Triage operating point, committed before test (`results/phase2/triage/`).
 - Label provenance, the Buenos Aires local recalibration, and the analysis look (seven-class
   external accuracy, results by skin type, worst misses; `results/phase2/analysis_look/`).
-- Patient-level split check and gate (`results/phase2/patient_overlap/`, silent-failures #9).
+- Patient-level split check, run on silver (`results/phase2/patient_overlap/`, silent-failures #9).
+  The `patients_in_one_split` gate is part of `gate_results`, which fails a pipeline update on
+  any violation. It first ran in research Phase A's updates (`61686b98`, `5992b755`), and both
+  completed. Its row from those updates is not committed.
 
 Known limits:
 - Splits are by lesion. 47 MSK patients span splits, and HAM10000 and Barcelona cannot be
@@ -107,15 +110,11 @@ Known limits:
   with Gender concepts (update `5992b755`, code `0239a19`), which also passed every gate.
 - `docs/data_dictionary.md` is generated from the column definitions and the build, and a
   test keeps it current.
-- Not done: the Unity Catalog lineage edges into the OMOP tables had not reached
-  `system.access.table_lineage` when the build was recorded (the table lags).
-
-### Tooling
-
-- `scripts/log_evidence.py`: committed results file to MLflow run, refusing uncommitted files.
-  CI checks every indexed file still matches its logged hash.
-
-## Scaffolded
+- Unity Catalog lineage from bronze through silver into every OMOP table, read from
+  `system.access.table_lineage` the next day (the table lags):
+  `results/research/a_omop/lineage.json`. A test checks every OMOP table has a silver edge.
+- Not built: the `observation` table listed in PLAN.md. Every mapped field has a home in
+  another table, so it would be empty.
 
 ### Research Phase G: research informatics services (2026-10-21 and 22)
 
@@ -126,7 +125,24 @@ Known limits:
   the project owner's own decisions and is empty.
 - G3: dataset metadata, `CITATION.cff` and the quickstart notebook, run in CI offline. The
   Zenodo release is not made: it needs the owner to connect Zenodo.
-- G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests.
+- G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests; request numbers
+  come from a committed snapshot of the issue tracker.
+
+### Tooling
+
+- `scripts/log_evidence.py`: committed results file to MLflow run, refusing uncommitted files.
+  CI checks every indexed file still matches its logged hash.
+
+## Scaffolded
+
+### Research Phase G5: clinical text extraction
+
+- `cdm.extract` and `scripts/extraction.py`: note sources (MTSamples; MIMIC-IV-Note behind a
+  tier 2 switch, never sent to an outside API), label choices from the concept map, the Haiku
+  extractor with a spend log and budget cap, a keyword baseline, the labelling sheet, scoring
+  and error categories. Tested with made-up notes and a recorded transport. One live call on a
+  made-up note checked the connection. Not run on any real note: no MTSamples file and no
+  labels yet, so nothing is scored or logged to MLflow.
 
 ### Research Phase G6: public cohort demo
 

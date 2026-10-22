@@ -122,11 +122,12 @@ class MimicIVNotes:
 
 
 def outside_repo(path: Path) -> Path:
-    """Refuse a path inside the repository: note text, raw answers and error sheets live
-    elsewhere."""
+    """Refuse a path inside this repository or any other git checkout (a second worktree, a
+    clone): note text, raw answers and error sheets live elsewhere."""
     resolved = path.resolve()
-    if resolved == REPO or REPO in resolved.parents:
-        raise ValueError(f"{path} is inside the repository; note text must stay outside it")
+    for folder in (resolved, *resolved.parents):
+        if folder == REPO or (folder / ".git").exists():
+            raise ValueError(f"{path} is inside the repository; note text must stay outside it")
     return path
 
 
@@ -227,6 +228,18 @@ class SpendLog:
         if self.total() + worst > self.cap_usd:
             raise BudgetExceeded(f"spent ${self.total():.4f} of ${self.cap_usd:.2f}")
 
+    def record_failure(self, model: str, note: str, prompt_sha: str, prompt_chars: int) -> None:
+        """A call that failed after it may have been billed (a timeout, a dropped connection):
+        logged at its worst-case cost, so the cap stays conservative."""
+        price_in, price_out = PRICE_PER_MTOK[model]
+        worst = (prompt_chars / 3 * price_in + MAX_OUTPUT_TOKENS * price_out) / 1e6
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {"ts": datetime.now(UTC).isoformat(timespec="seconds"), "model": model,
+                 "note_id": note, "prompt_sha": prompt_sha, "failed": True,
+                 "cost_usd": worst}  # fmt: skip
+        with self.path.open("ab") as f:
+            f.write((json.dumps(entry) + "\n").encode())
+
     def record(self, model: str, note: str, prompt_sha: str, usage: dict[str, int]) -> float:
         price_in, price_out = PRICE_PER_MTOK[model]
         cost = (usage["input_tokens"] * price_in + usage["output_tokens"] * price_out) / 1e6
@@ -303,15 +316,25 @@ def llm_extract(
     """Haiku's answers for one note. A cached answer for the same note, model and prompt is
     reused, so a re-run costs nothing; the cache holds raw replies and stays outside the
     repository."""
+    if note.source == MimicIVNotes.name:
+        # PhysioNet's credentialed data use terms do not allow sending notes to an outside
+        # model API; MIMIC-IV-Note runs only with a model inside the approved environment.
+        raise PermissionError("MIMIC-IV-Note text is never sent to an outside LLM API")
     sha = prompt_hash(allowed)
     key = f"{model}:{sha}:{note.note_id}"
+    outside_repo(cache)
     cached = _read_cache(cache)
     if key not in cached:
         user = prompt(note, allowed)
-        spend.check(model, len(SYSTEM) + len(user))
-        text, usage = send(SYSTEM, user)
+        chars = len(SYSTEM) + len(user)
+        spend.check(model, chars)
+        try:
+            text, usage = send(SYSTEM, user)
+        except Exception:
+            spend.record_failure(model, note.note_id, sha, chars)
+            raise
         spend.record(model, note.note_id, sha, usage)
-        outside_repo(cache).parent.mkdir(parents=True, exist_ok=True)
+        cache.parent.mkdir(parents=True, exist_ok=True)
         with cache.open("ab") as f:
             f.write((json.dumps({"key": key, "reply": text}) + "\n").encode())
         cached[key] = text
@@ -393,9 +416,12 @@ def split_notes(
 
 def write_sheet(notes: Iterable[Note], folder: Path, allowed: Choices, n: int = 100) -> Path:
     """The labelling sheet (CSV, with the note text: outside the repository) and a second
-    file listing the labels allowed in each column."""
+    file listing the labels allowed in each column. An existing sheet is never overwritten:
+    it may hold your labels, and a new one could move notes between dev and scoring."""
     outside_repo(folder).mkdir(parents=True, exist_ok=True)
     sheet = folder / "labelling_sheet.csv"
+    if sheet.exists():
+        raise FileExistsError(f"{sheet} exists; move it away first if you mean to start over")
     with sheet.open("w", newline="", encoding="utf-8") as f:
         rows = csv.DictWriter(f, SHEET_COLUMNS)
         rows.writeheader()
@@ -430,10 +456,10 @@ def error_kind(field: str, label: str, predicted: str, allowed: Choices) -> str 
     """None if correct, else: missed, hallucinated, wrong granularity, wrong concept, or
     invalid. "Label error" is the labeller's call, made on the error sheet."""
     truth, guess = allowed.value(field, label), allowed.value(field, predicted)
+    if guess == INVALID:  # never correct, even against a label that is itself invalid
+        return "invalid"
     if truth == guess:
         return None
-    if guess == INVALID:
-        return "invalid"
     if guess == NOT_STATED:
         return "missed"
     if truth == NOT_STATED:

@@ -41,7 +41,9 @@ were looked at. Results live in `results/`, each logged in MLflow
   earlier lesion.
 - Splits are not by patient. The 47 MSK patients whose lesions sit in more than one split
   are documented (`config/patient_overlap_v1.csv`); any other such patient fails the
-  `patients_in_one_split` gate. Every test result also has a row without those patients.
+  `patients_in_one_split` gate. From the research extension on, every test result also has a
+  row without those patients; the first such rows are in
+  `results/phase2/patient_overlap/patient_overlap.json`.
 - **Held-out sites** (Buenos Aires, PAD-UFES-20) are never used for training, model
   selection, calibration or threshold choice.
 - **Validation** picks models, thresholds and PCA sizes. **Test** is scored once per model,
@@ -84,7 +86,9 @@ were looked at. Results live in `results/`, each logged in MLflow
   intervals overlap, the text says the difference is not resolved.
 - **Test-look discipline:** before any test or held-out site is scored, a `spec.json` with
   `"committed_before_running": true` is committed, naming the models, data, metrics,
-  thresholds and groups. Each model has a lock file. A second look at the same data needs
+  thresholds and groups. Each model's look writes a lock in the workspace volume
+  (`databricks/notebooks/analysis_look.py`, `drift_table.py`), and an existing lock refuses a
+  second run. A second look at the same data needs
   a recorded amendment and is reported as a second look.
 - **Too good or too bad:** an AUROC below 50%, a near-perfect score, or a large gap between
   seeds stops reporting until it is explained. Each explanation goes in the phase note, and
@@ -112,7 +116,8 @@ were looked at. Results live in `results/`, each logged in MLflow
 - **Reviewer instructions:** categorise each row as label doubt, image quality, artefact (ruler,
   ink, hair, vignette), rare presentation, or model error. The heatmap is shown after the
   first category is chosen, so it does not anchor the choice.
-- **Grad-CAM sanity:** a weight-randomization test runs in CI, and heatmaps that survive
+- **Grad-CAM sanity (Phase D, not built yet):** a weight-randomization test will run in CI,
+  and heatmaps that survive
   randomization are not interpreted.
 - **G5 errors:** every disagreement with the hand labels is categorised as missed, wrong
   concept, wrong granularity (for example melanoma vs melanoma in situ), hallucinated, or label
