@@ -6,10 +6,17 @@ Two steps, in order:
    probe's hyperparameters and the Mahalanobis PCA size, and writes
    ``results/research/b_vlm/spec.json``. Commit it before step 2.
 2. ``test``: refuses unless the spec is committed unchanged and no test look has happened.
-   Writes the look's lock first, then scores the clients' test split once (plus the
-   external sites and the drift sets) and writes ``results.json``. EfficientNet's numbers
-   come from the committed analysis-look predictions (no new look at any image), with
-   intervals over the same resampling units.
+   Scores the clients' test split once (plus the external sites and the drift sets), all in
+   memory, then writes ``results.json`` and only after it the lock ``test_look.json``. A
+   crash before the results are saved leaves nothing behind and the look unused; results
+   without a lock still count as a look. EfficientNet's numbers come from the committed
+   analysis-look predictions (no new look at any image), with intervals over the same
+   resampling units.
+
+``dry-run`` does step 2's whole computation on validation (and the drift selection draws)
+instead, scoring no test or external-site image, and reports its time and peak memory.
+The look itself runs as a Databricks serverless CPU job (``databricks/vlm_look_job.json``,
+notebook ``vlm_look``) with this file: run ``preflight --code-version <commit>`` here first.
 
 The embeddings stay outside git. Copy them once with
 ``databricks fs cp -r dbfs:/Volumes/workspace/cdm/raw/results/research/b_vlm/embeddings <dir>``
@@ -21,8 +28,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
+import time
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -53,6 +63,14 @@ from cdm.vlm import (
 REPO = Path(__file__).resolve().parents[1]
 OUT = REPO / "results" / "research" / "b_vlm"
 SPEC, LOCK, RESULTS = OUT / "spec.json", OUT / "test_look.json", OUT / "results.json"
+# What the look runs: a change to any of these after the job's commit is refused.
+LOOK_CODE = (
+    "src",
+    "scripts",
+    "config",
+    "databricks/notebooks/vlm_look.py",
+    "results/research/b_vlm/spec.json",
+)
 EFFNET = REPO / "results" / "phase2" / "analysis_look" / "predictions.csv.gz"
 OVERLAP = REPO / "config" / "patient_overlap_v1.csv"
 EFFNET_MODELS = (
@@ -203,59 +221,80 @@ def scored(logits: np.ndarray, labels: np.ndarray, units: list[str]) -> dict[str
     return {**point, "bootstrap_95": bootstrap_by_lesion(logits, labels, units, n=BOOTSTRAP)}
 
 
-def evaluation_rows(emb: Embeddings) -> dict[str, tuple[str, np.ndarray]]:
+@dataclass(frozen=True)
+class Plan:
+    """The embedding sets one run scores: the test look, or the dry run on validation."""
+
+    client: str
+    sites: tuple[str, ...]
+    shifts: tuple[str, ...]
+    # The committed EfficientNet predictions cover only the test look's images.
+    effnet: bool
+
+
+LOOK = Plan("test", ("buenos_aires", "pad_ufes"), SHIFTS, effnet=True)
+# Validation, and the PathMNIST and CIFAR-10 selection draws: no test or external-site image.
+DRY_RUN = Plan("val", (), ("pathmnist_select", "cifar10_select"), effnet=False)
+
+
+def evaluation_rows(emb: Embeddings, plan: Plan = LOOK) -> dict[str, tuple[str, np.ndarray]]:
     """Each reported row: the embedding set it comes from and the mask of its images."""
     overlap = set(pd.read_csv(OVERLAP, dtype=str)["patient_id"])
-    test_rows = emb.rows("test")
+    c = plan.client
+    client_rows = emb.rows(c)
     rows = {
-        "client_test": ("test", np.ones(len(test_rows), bool)),
-        "client_test_without_overlap_patients": (
-            "test",
-            ~test_rows["patient_id"].isin(overlap).to_numpy(),
+        f"client_{c}": (c, np.ones(len(client_rows), bool)),
+        f"client_{c}_without_overlap_patients": (
+            c,
+            ~client_rows["patient_id"].isin(overlap).to_numpy(),
         ),
-        "ham10000_test": ("test", (test_rows["source"] == "ham10000").to_numpy()),
+        f"ham10000_{c}": (c, (client_rows["source"] == "ham10000").to_numpy()),
     }
-    for site in ("buenos_aires", "pad_ufes"):
+    for site in plan.sites:
         rows[site] = (site, emb.rows(site)["label"].notna().to_numpy())
     return rows
 
 
-def preflight(emb: Embeddings) -> dict[str, Any]:
-    """Everything that can fail without looking at a test result, run before the lock is
-    written, so a broken input cannot use up the one look."""
-    if git("ls-files", "--", str(SPEC)) == "":
-        sys.exit(f"{SPEC} must be committed before the test look")
-    if git("status", "--porcelain", "--", "src", "scripts", "config", str(SPEC)):
-        sys.exit("uncommitted changes in src/, scripts/, config/ or the spec: commit first")
-    if LOCK.exists() or git("log", "--oneline", "--", str(LOCK)):
-        sys.exit(f"the test look already happened (see {LOCK} and its history)")
-    spec: dict[str, Any] = json.loads(SPEC.read_text(encoding="utf-8"))
+def check_inputs(emb: Embeddings, spec: dict[str, Any], plan: Plan) -> None:
+    """The checks that need no git, so the Databricks job runs them too."""
     for key in ("job_run_id", "sha256"):
         if spec["embeddings"][key] != emb.summary[key]:
             sys.exit(f"these embeddings are not the ones the spec was chosen on ({key})")
     pca = pca_size_for_variance(emb.feats["train"].astype(np.float64))
     if pca != spec["drift"]["pca_components_method_d"]:
         sys.exit("the PCA size recomputed on train differs from the spec's")
-    for name, (source, mask) in evaluation_rows(emb).items():
+    for name, (source, mask) in evaluation_rows(emb, plan).items():
         labels = emb.labels(source)[mask]
         if (labels < 0).any() or len(labels) == 0:
             sys.exit(f"{name}: unlabelled or empty")
-        effnet_logits(emb.rows(source)[mask])
+        if plan.effnet:
+            effnet_logits(emb.rows(source)[mask])
+
+
+def preflight(emb: Embeddings, code_version: str | None = None) -> dict[str, Any]:
+    """Everything that can fail without looking at a test result, run before any test image
+    is scored. With ``code_version`` (the commit the Databricks job runs), the code and the
+    spec must also be unchanged between that commit and HEAD."""
+    if git("ls-files", "--", str(SPEC)) == "":
+        sys.exit(f"{SPEC} must be committed before the test look")
+    if git("status", "--porcelain", "--", "src", "scripts", "config", str(SPEC)):
+        sys.exit("uncommitted changes in src/, scripts/, config/ or the spec: commit first")
+    if code_version and git("diff", "--name-only", code_version, "HEAD", "--", *LOOK_CODE):
+        sys.exit(f"src/, scripts/, config/ or the spec changed since {code_version}")
+    for path in (LOCK, RESULTS):
+        if path.exists() or git("log", "--oneline", "--", str(path)):
+            sys.exit(f"the test look already happened (see {path} and its history)")
+    spec: dict[str, Any] = json.loads(SPEC.read_text(encoding="utf-8"))
+    check_inputs(emb, spec, LOOK)
     return spec
 
 
-def test(emb: Embeddings) -> None:
-    spec = preflight(emb)
-    look = {
-        "status": "started",
-        "started_utc": datetime.now(UTC).isoformat(timespec="seconds"),
-        "spec_sha256": text_sha256(SPEC),
-        "code_version": git("rev-parse", "--short", "HEAD"),
-        "embeddings_job_run_id": emb.summary["job_run_id"],
-    }
-    LOCK.write_text(json.dumps(look, indent=2) + "\n", encoding="utf-8", newline="\n")
-
-    sets = ["train", "val", "test", *SHIFTS]
+def compute(emb: Embeddings, spec: dict[str, Any], plan: Plan) -> dict[str, Any]:
+    """Every metric of one run, in memory. It prints nothing and writes nothing, so a crash
+    here leaves no result anywhere and the look unused. The bootstrap streams its resamples
+    (one at a time, keeping only each resample's metric values), so memory does not grow
+    with the number of resamples."""
+    sets = [plan.client, *plan.sites, *plan.shifts]
     text = class_text(emb.text, template_choices(len(TEMPLATES))[spec["zero_shot"]["chosen"]])
     logits = {"zero_shot": {s: zero_shot_logits(emb.feats[s], text, emb.scale) for s in sets}}
     cfg = ProbeConfig(**spec["probe"]["chosen"])
@@ -265,13 +304,19 @@ def test(emb: Embeddings) -> None:
         probe = train_probe(emb.feats["train"], y_train, len(CLASSES), seed, cfg)
         logits[name] = {s: probe.logits(emb.feats[s]) for s in sets}
 
+    # The dry run has no EfficientNet predictions; the zero-shot logits stand in for them, so
+    # it does the same amount of work as the look.
+    reference = EFFNET_MODELS[0] if plan.effnet else f"stand_in_{EFFNET_MODELS[0]}"
     table: dict[str, dict[str, Any]] = {}
-    for row, (source, mask) in evaluation_rows(emb).items():
+    for row, (source, mask) in evaluation_rows(emb, plan).items():
         sub = emb.rows(source)[mask]
         units = clusters(list(sub["patient_id"]), list(sub["lesion_id"]), list(sub["isic_id"]))
         labels = emb.labels(source)[mask]
-        effnet = effnet_logits(sub)
-        models = {m: v[source][mask] for m, v in logits.items()} | effnet
+        models = {m: v[source][mask] for m, v in logits.items()}
+        if plan.effnet:
+            models |= effnet_logits(sub)
+        else:
+            models |= {f"stand_in_{m}": models["zero_shot"] for m in EFFNET_MODELS}
         entry: dict[str, Any] = {
             "images": int(mask.sum()),
             "units": len(set(units)),
@@ -282,17 +327,21 @@ def test(emb: Embeddings) -> None:
             for k in ("balanced_accuracy", "melanoma_sensitivity")
             if all(entry["models"][s][k] is not None for s in seeds)
         }
-        entry["paired_vs_" + EFFNET_MODELS[0]] = {
-            m: paired_bootstrap(models[m], effnet[EFFNET_MODELS[0]], labels, units, n=BOOTSTRAP)
+        entry["paired_vs_" + reference] = {
+            m: paired_bootstrap(models[m], models[reference], labels, units, n=BOOTSTRAP)
             for m in ("zero_shot", *seeds)
         }
         table[row] = entry
 
     x_train = emb.feats["train"].astype(np.float64)
-    feats = {s: emb.feats[s].astype(np.float64) for s in ["test", *SHIFTS]}
-    by_logits = {m: drift_metrics(x_train, y_train, feats, v, SHIFTS) for m, v in logits.items()}
+    feats = {s: emb.feats[s].astype(np.float64) for s in [plan.client, *plan.shifts]}
+    by_logits = {
+        m: drift_metrics(x_train, y_train, feats, v, plan.shifts, in_distribution=plan.client)
+        for m, v in logits.items()
+    }
     first = by_logits["zero_shot"]
     drift: dict[str, Any] = {
+        "in_distribution": plan.client,
         "pca_components_method_d": first["pca_components_method_d"],
         "mahalanobis": first["metrics"]["mahalanobis"],
         "zero_shot": {d: first["metrics"][d] for d in ("max_softmax", "energy")},
@@ -305,41 +354,127 @@ def test(emb: Embeddings) -> None:
                     k: summarize([by_logits[s]["metrics"][d][shift][k] for s in seeds])
                     for k in ("auroc", "fpr95")
                 }
-                for shift in SHIFTS
+                for shift in plan.shifts
             }
             for d in ("max_softmax", "energy")
         },
     }
+    return {"classification": table, "drift": drift}
 
+
+def write_json(path: Path, value: dict[str, Any]) -> None:
+    """Written in full to a temporary file, flushed to disk, then renamed into place, so the
+    file is either complete or absent."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    with tmp.open("w", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(value, indent=2) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+    json.loads(path.read_text(encoding="utf-8"))
+
+
+def record(body: dict[str, Any], look: dict[str, Any], out: Path) -> None:
+    """The results first, then the lock: the lock exists only once the results are saved."""
     results = {
         "spec": SPEC.relative_to(REPO).as_posix(),
         "spec_sha256": look["spec_sha256"],
         "code_version": look["code_version"],
-        "embeddings_job_run_id": emb.summary["job_run_id"],
-        "device": "cpu (probe and scoring); embeddings from the GPU job",
-        "classification": table,
-        "drift": drift,
+        "embeddings_job_run_id": look["embeddings_job_run_id"],
+        "ran_on": look["ran_on"],
+        **body,
         "caveat": CAVEAT,
         "note": "Research use only, per the BiomedCLIP model card; never served.",
     }
-    RESULTS.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8", newline="\n")
-    json.loads(RESULTS.read_text(encoding="utf-8"))
-    look.update(status="completed", completed_utc=datetime.now(UTC).isoformat(timespec="seconds"))
-    LOCK.write_text(json.dumps(look, indent=2) + "\n", encoding="utf-8", newline="\n")
-    head = table["client_test"]["models"]
-    for m in ("zero_shot", seeds[0], EFFNET_MODELS[0]):
-        print(
-            m, round(head[m]["balanced_accuracy"], 4), head[m]["bootstrap_95"]["balanced_accuracy"]
-        )
+    write_json(out / RESULTS.name, results)
+    write_json(
+        out / LOCK.name,
+        {
+            **look,
+            "results_sha256": sha256(out / RESULTS.name),
+            "completed_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+        },
+    )
+
+
+def new_look(emb: Embeddings, code_version: str, ran_on: str) -> dict[str, Any]:
+    return {
+        "started_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+        "spec_sha256": text_sha256(SPEC),
+        "code_version": code_version,
+        "embeddings_job_run_id": emb.summary["job_run_id"],
+        "ran_on": ran_on,
+    }
+
+
+def test(emb: Embeddings) -> None:
+    spec = preflight(emb)
+    look = new_look(emb, git("rev-parse", "--short", "HEAD"), "this computer (CPU)")
+    record(compute(emb, spec, LOOK), look, OUT)
+    print(f"wrote {RESULTS}, then {LOCK}")
+
+
+def peak_memory_mb() -> float:
+    """This process's peak resident memory so far."""
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        class Counters(ctypes.Structure):
+            _fields_ = [
+                ("cb", wintypes.DWORD),
+                ("page_faults", wintypes.DWORD),
+                ("peak_working_set", ctypes.c_size_t),
+                *[(f"other{i}", ctypes.c_size_t) for i in range(7)],
+            ]
+
+        c = Counters()
+        c.cb = ctypes.sizeof(c)
+        current = ctypes.windll.kernel32.GetCurrentProcess
+        current.restype = wintypes.HANDLE
+        info = ctypes.windll.psapi.GetProcessMemoryInfo
+        info.argtypes = [wintypes.HANDLE, ctypes.c_void_p, wintypes.DWORD]
+        if not info(current(), ctypes.byref(c), c.cb):
+            raise OSError("GetProcessMemoryInfo failed")
+        return float(c.peak_working_set) / 2**20
+    import resource
+
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # KiB on Linux
+
+
+def dry_run(emb: Embeddings, out: Path) -> dict[str, Any]:
+    """The look's whole computation on validation instead of test, to measure time and peak
+    memory. It scores no test or external-site image and writes no lock."""
+    if out.resolve().is_relative_to(OUT.resolve()):
+        sys.exit(f"the dry run writes outside {OUT}")
+    spec: dict[str, Any] = json.loads(SPEC.read_text(encoding="utf-8"))
+    check_inputs(emb, spec, DRY_RUN)
+    start = time.time()
+    body = compute(emb, spec, DRY_RUN)
+    usage = {"seconds": round(time.time() - start, 1), "peak_memory_mb": round(peak_memory_mb())}
+    write_json(out / "dry_run.json", {"dry_run": True, **usage, **body})
+    print(json.dumps(usage))
+    return usage
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("step", choices=["select", "test"])
+    parser.add_argument("step", choices=["select", "dry-run", "preflight", "test"])
     parser.add_argument("--emb", type=Path, default=data_root() / "b_vlm")
+    parser.add_argument("--out", type=Path, default=data_root() / "b_vlm_dry_run")
+    parser.add_argument("--code-version", help="preflight: the commit the Databricks job runs")
     args = parser.parse_args()
     emb = Embeddings(args.emb)
-    select(emb) if args.step == "select" else test(emb)
+    if args.step == "select":
+        select(emb)
+    elif args.step == "dry-run":
+        dry_run(emb, args.out)
+    elif args.step == "preflight":
+        preflight(emb, args.code_version)
+        print("preflight passed: no test image has been scored")
+    else:
+        test(emb)
     return 0
 
 

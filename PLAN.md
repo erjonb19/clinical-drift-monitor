@@ -149,9 +149,9 @@ The full first plan is in [docs/research_extension_plan.md](docs/research_extens
 - *Steps:*
   1. `src/cdm/vlm.py`: load BiomedCLIP at a pinned revision, embed, zero-shot with prompt templates.
   2. `src/cdm/probe.py`: a torch linear head on frozen embeddings, 3 seeds.
-  3. Embeddings written to `workspace.cdm.gold_vlm_embeddings` (model version `biomedclip-9f341de`); the analysis reads the job's files in the volume. *Proposed change, 2026-10-22, waiting for your approval:* this plan said append to `gold_embeddings`, but the Phase 1 gold task overwrites that table on every run, which would delete appended rows.
+  3. Embeddings written to `workspace.cdm.gold_vlm_embeddings` (model version `biomedclip-9f341de`); the analysis reads the job's files in the volume. *Changed 2026-10-22 (approved, see the decisions log):* this plan said append to `gold_embeddings`, but the Phase 1 gold task overwrites that table on every run, which would delete appended rows.
   4. Prompts and probe hyperparameters chosen on validation, then the spec.
-  5. One test look: balanced accuracy and melanoma sensitivity with intervals, next to the shipped v2 ensemble's committed numbers.
+  5. One test look: balanced accuracy and melanoma sensitivity with intervals, next to the shipped v2 ensemble's committed numbers. It runs as a Databricks serverless CPU job (`databricks/vlm_look_job.json`), after a dry run on validation that measures time and peak memory; the lock is written only after the results are saved, so a crash cannot use up the look.
   6. Drift: Mahalanobis (PCA by Phase 2's method D), max softmax and energy on BiomedCLIP features against Buenos Aires, PAD-UFES-20, PathMNIST and CIFAR-10. Gram is stated as not applicable to a ViT.
 - *Caveat in every table:* BiomedCLIP's pretraining (PMC-15M) may include figures of these images, so "zero-shot" cannot be shown to be unseen.
 - *Done when:* spec, results and MLflow run are committed; CI has a fake-model test that scores point the right way.
@@ -344,6 +344,9 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-22 (later)**
+  - **Phase B embeddings table:** approved: BiomedCLIP embeddings stay in their own table, `workspace.cdm.gold_vlm_embeddings`, not appended to `gold_embeddings` (which the Phase 1 gold task overwrites on every run).
+  - **Phase B test look:** not rerun on the laptop as it was (the first attempt was stopped for low system memory before any test image was scored). It was first made crash-safe (results saved before the lock is written) and checked by a dry run on validation, and it runs as a Databricks serverless CPU job. Nothing the committed spec chose changed.
 - **2026-10-22**
   - **Phase F:** approved. governed-clinical-agent reaches the OMOP tables only through the G2 cohort service (library phenotypes run autonomously; new definitions wait for a human approval by hash), replacing the first plan's fixed SQL templates. See [docs/cohort_contract.md](docs/cohort_contract.md).
   - **Haiku:** allowed for G5 and evals, capped at $5 in total across the project. No other paid keys. CLAUDE.md updated to match.

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import sys
 from pathlib import Path
 from types import ModuleType
 
@@ -24,6 +25,7 @@ def script() -> ModuleType:
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module  # dataclasses look their module up
     spec.loader.exec_module(module)
     return module
 
@@ -91,32 +93,105 @@ def test_effnet_refuses_a_label_mismatch_or_a_missing_image(
 
 
 @pytest.mark.parametrize(
-    ("outputs", "lock_exists", "message"),
+    ("outputs", "existing", "message"),
     [
-        ({"ls-files": ""}, False, "must be committed"),
-        ({"status": " M scripts/x.py"}, False, "uncommitted changes"),
-        ({}, True, "already happened"),
-        ({"log": "abc1234 an earlier look"}, False, "already happened"),
+        ({"ls-files": ""}, None, "must be committed"),
+        ({"status": " M scripts/x.py"}, None, "uncommitted changes"),
+        ({"diff": "src/cdm/vlm.py"}, None, "changed since"),
+        ({}, "test_look.json", "already happened"),
+        ({}, "results.json", "already happened"),
+        ({"log": "abc1234 an earlier look"}, None, "already happened"),
     ],
 )
-def test_preflight_refuses_before_any_lock_is_written(
+def test_preflight_refuses_before_any_test_image_is_scored(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     outputs: dict[str, str],
-    lock_exists: bool,
+    existing: str | None,
     message: str,
 ) -> None:
     module = script()
-    defaults = {"ls-files": "spec.json", "status": "", "log": ""}
+    defaults = {"ls-files": "spec.json", "status": "", "log": "", "diff": ""}
     monkeypatch.setattr(module, "git", lambda *a: {**defaults, **outputs}.get(a[0], ""))
     monkeypatch.setattr(module, "SPEC", tmp_path / "spec.json")
     monkeypatch.setattr(module, "LOCK", tmp_path / "test_look.json")
+    monkeypatch.setattr(module, "RESULTS", tmp_path / "results.json")
+    monkeypatch.setattr(module, "check_inputs", lambda *a: pytest.fail("inputs checked"))
     (tmp_path / "spec.json").write_text("{}")
-    if lock_exists:
-        (tmp_path / "test_look.json").write_text("{}")
+    if existing:
+        (tmp_path / existing).write_text("{}")
     with pytest.raises(SystemExit, match=message):
-        module.preflight(object())
-    assert lock_exists == (tmp_path / "test_look.json").exists()
+        module.preflight(object(), code_version="abc1234")
+    assert sorted(f.name for f in tmp_path.iterdir()) == sorted(
+        ["spec.json", *([existing] if existing else [])]
+    )
+
+
+def look_module(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+    module = script()
+    monkeypatch.setattr(module, "REPO", tmp_path)
+    monkeypatch.setattr(module, "SPEC", tmp_path / "spec.json")
+    monkeypatch.setattr(module, "OUT", tmp_path / "out")
+    monkeypatch.setattr(module, "LOCK", tmp_path / "out" / "test_look.json")
+    monkeypatch.setattr(module, "RESULTS", tmp_path / "out" / "results.json")
+    monkeypatch.setattr(module, "git", lambda *a: "abc1234")
+    monkeypatch.setattr(module, "preflight", lambda emb: {})
+    (tmp_path / "spec.json").write_text("{}")
+    return module
+
+
+class FakeEmb:
+    summary = {"job_run_id": "1"}
+
+
+def test_a_crash_while_scoring_leaves_no_lock_and_no_results(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = look_module(tmp_path, monkeypatch)
+
+    def crash(*a: object) -> None:
+        raise MemoryError
+
+    monkeypatch.setattr(module, "compute", crash)
+    with pytest.raises(MemoryError):
+        module.test(FakeEmb())
+    assert not (tmp_path / "out").exists()
+
+
+def test_the_lock_is_written_after_the_results_and_names_them(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = look_module(tmp_path, monkeypatch)
+    monkeypatch.setattr(module, "compute", lambda *a: {"classification": {}, "drift": {}})
+    order: list[str] = []
+    real = module.write_json
+
+    def logged(path: Path, value: dict[str, object]) -> None:
+        order.append(path.name)
+        real(path, value)
+
+    monkeypatch.setattr(module, "write_json", logged)
+    module.test(FakeEmb())
+    assert order == ["results.json", "test_look.json"]
+    lock = json.loads((tmp_path / "out" / "test_look.json").read_text())
+    results = (tmp_path / "out" / "results.json").read_bytes()
+    assert lock["results_sha256"] == hashlib.sha256(results).hexdigest()
+    assert sorted(f.name for f in (tmp_path / "out").iterdir()) == [
+        "results.json",
+        "test_look.json",
+    ]
+
+
+def test_the_dry_run_never_writes_into_the_results_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = look_module(tmp_path, monkeypatch)
+    with pytest.raises(SystemExit, match="writes outside"):
+        module.dry_run(FakeEmb(), tmp_path / "out" / "dry")
+
+
+def test_peak_memory_is_measured() -> None:
+    assert script().peak_memory_mb() > 1
 
 
 def test_paired_bootstrap_differences_have_the_right_sign() -> None:
