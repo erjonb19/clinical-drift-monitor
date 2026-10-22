@@ -1,0 +1,130 @@
+{
+  "@context": "https://schema.org/",
+  "@type": "Dataset",
+  "name": "Clinical Drift Monitor OMOP tables (public dermoscopy archives)",
+  "alternateName": "CDM-ISIC OMOP",
+  "description": "OMOP CDM v5.4-style tables (person, observation_period, condition_occurrence, procedure_occurrence, image_occurrence following the OHDSI medical imaging extension proposal, cdm_source, concept) built from the metadata of HAM10000 and five ISIC Archive collections by the project's Lakeflow pipeline. A portfolio project on public research images, not a clinical data source: there are no real dates (placeholders), and a person is one lesion where ISIC records no patient ID. The tables live in a Databricks workspace and are not distributed; the code rebuilds them from the public sources, and notebooks/quickstart.ipynb rebuilds one source locally.",
+  "url": "https://github.com/erjonb19/clinical-drift-monitor",
+  "creator": {
+    "@type": "Person",
+    "name": "Erjon Brucaj"
+  },
+  "keywords": [
+    "OMOP CDM",
+    "dermoscopy",
+    "skin lesion",
+    "medical imaging",
+    "research data",
+    "FAIR",
+    "ISIC Archive",
+    "HAM10000",
+    "cohort discovery"
+  ],
+  "license": "https://creativecommons.org/licenses/by-nc/4.0/",
+  "conditionsOfAccess": "Not distributed. Rebuild from the public sources with the repository's code; each image keeps its own ISIC license (CC-0, CC-BY or CC-BY-NC) and attribution in image_occurrence. HAM10000 and the CC-BY-NC collections make the combined tables non-commercial. SNOMED CT codes and names are not included outside the workspace (SNOMED International Affiliate License); OMOP concept IDs are. The code that builds them is MIT licensed (LICENSE); the MIT License does not cover the data.",
+  "isAccessibleForFree": true,
+  "measurementTechnique": [
+    "dermoscopy",
+    "clinical photography"
+  ],
+  "variableMeasured": [
+    {
+      "@type": "PropertyValue",
+      "name": "person",
+      "description": "One row per person (patient where recorded, else lesion)"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "observation_period",
+      "description": "One placeholder period per person"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "condition_occurrence",
+      "description": "One row per diagnosed lesion, with the confirmation method"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "procedure_occurrence",
+      "description": "Imaging per image; histopathology per lesion where recorded"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "image_occurrence",
+      "description": "One row per image: body site, modality, license, attribution"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "cdm_source",
+      "description": "Build metadata: code commit, vocabulary release"
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "concept",
+      "description": "The OMOP concepts the tables use"
+    }
+  ],
+  "isBasedOn": [
+    {
+      "@type": "Dataset",
+      "name": "HAM10000",
+      "identifier": "https://doi.org/10.7910/DVN/DBW86T",
+      "license": "https://creativecommons.org/licenses/by-nc/4.0/"
+    },
+    {
+      "@type": "Dataset",
+      "name": "ISIC Archive collection 212 (HAM10000 images)",
+      "url": "https://api.isic-archive.com/api/v2/collections/212/",
+      "license": "https://creativecommons.org/licenses/by-nc/4.0/",
+      "description": "restricted to the 10,015 HAM10000 image IDs"
+    },
+    {
+      "@type": "Dataset",
+      "name": "ISIC Archive collection 249 (BCN20000, Barcelona)",
+      "url": "https://api.isic-archive.com/api/v2/collections/249/",
+      "license": "https://creativecommons.org/licenses/by-nc/4.0/",
+      "description": "capped by whole lesions; 9,999 images selected for v2"
+    },
+    {
+      "@type": "Dataset",
+      "name": "ISIC Archive collection 251 (Hospital Italiano de Buenos Aires)",
+      "url": "https://api.isic-archive.com/api/v2/collections/251/",
+      "license": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "@type": "Dataset",
+      "name": "ISIC Archive collection 287 (MSK)",
+      "url": "https://api.isic-archive.com/api/v2/collections/287/",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "@type": "Dataset",
+      "name": "ISIC Archive collection 289 (MSK)",
+      "url": "https://api.isic-archive.com/api/v2/collections/289/",
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    {
+      "@type": "Dataset",
+      "name": "ISIC Archive collection 406 (PAD-UFES-20)",
+      "url": "https://api.isic-archive.com/api/v2/collections/406/",
+      "license": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "subjectOf": [
+    {
+      "@type": "CreativeWork",
+      "name": "Data dictionary",
+      "url": "https://github.com/erjonb19/clinical-drift-monitor/blob/main/docs/data_dictionary.md"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Data card",
+      "url": "https://github.com/erjonb19/clinical-drift-monitor/blob/main/docs/DATA_CARD.md"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Governance packet",
+      "url": "https://github.com/erjonb19/clinical-drift-monitor/blob/main/docs/governance.md"
+    }
+  ]
+}
