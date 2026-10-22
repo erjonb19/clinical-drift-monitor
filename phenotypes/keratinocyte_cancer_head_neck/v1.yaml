@@ -1,0 +1,11 @@
+name: keratinocyte_cancer_head_neck
+version: 1
+title: People with basal or squamous cell carcinoma and an image of the head or neck
+purpose: Feasibility count for a head and neck keratinocyte cancer image set
+author: Erjon Brucaj
+index:
+  condition_concept_ids: [4112752, 4300118, 4112745]  # BCC; SCC NOS (sites); SCC in situ, also used for HAM10000 SCC NOS
+include:
+  # Head and neck, head, face, scalp, neck, ear (HAM10000 and ISIC body sites)
+  - anatomic_site_concept_ids: [4237609, 4321847, 4250773, 4182240, 4182739, 4078238]
+breakdown: [gender_concept_id]

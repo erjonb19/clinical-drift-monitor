@@ -214,6 +214,10 @@ def make_broken(
     broken_config = json.loads(json.dumps(config))
     # The demo subset is not the v1 data, so it has no frozen lesions to keep.
     broken_config.pop("frozen_splits", None)
+    # Nor its documented cross-split patients (the demo uses HAM10000 lesions only).
+    broken_config.pop("patient_overlap", None)
+    # The OMOP tables are built for the real data only; their files sit next to the real config.
+    broken_config.pop("omop", None)
     broken_config["ham10000"]["split_fingerprint"] = split_fingerprint(clean, split)
     broken_config["ham10000"]["class_counts"] = clean["label"].value_counts().to_dict()
     broken_config["broken_demo"] = {"lesions_per_class": lesions_per_class,

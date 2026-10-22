@@ -53,6 +53,8 @@ def world(tmp_path: Path) -> tuple[Path, dict[str, Any], Any]:
             "lesion_id": f"HAM_{dx}{k}",
             "dx": dx,
             "dataset": "rosendahl" if k % 3 == 0 else "vidir_modern",
+            "localization": "back",
+            "dx_type": "histo",
         }  # fmt: skip
         for dx, n in {"nv": 30, "mel": 15, "bcc": 15}.items()
         for k in range(n)

@@ -63,7 +63,7 @@ CC-BY-NC require attribution, which is kept with every row.
 | Source | ISIC collections | License(s) | Attribution in ISIC | Used as |
 | --- | --- | --- | --- | --- |
 | HAM10000 | 212, restricted to the 10,015 HAM10000 image IDs | CC-BY-NC | "MILK study team" | Training, validation, test (Phase 0 split) |
-| Barcelona (BCN20000) | 249, capped at 5,000 images by whole lesions | CC-BY-NC | Hospital Clínic de Barcelona | New site |
+| Barcelona (BCN20000) | 249, capped by whole lesions: 5,000 images for v1, 10,000 (9,999 selected) for v2 | CC-BY-NC | Hospital Clínic de Barcelona | New site |
 | Buenos Aires (HIBA) | 251 | CC-BY | Hospital Italiano de Buenos Aires | New site |
 | MSK | 287, 289 | CC-0 | "Anonymous" (collections from Memorial Sloan Kettering) | New site |
 | PAD-UFES-20 | 406 | CC-BY | Federal University of Espírito Santo (UFES) | New site, smartphone photos |
@@ -71,6 +71,13 @@ CC-BY-NC require attribution, which is kept with every row.
 Sites and the Barcelona selection are defined in `config/sites.json`. The selection is
 reproducible from a seed and pinned by a fingerprint of the chosen image IDs; if ISIC's
 collection changes, ingestion stops rather than silently choosing different images.
+
+**Fields used by the OMOP tables (research Phase A, added 2026-10-21).** Ingest also keeps
+HAM10000's `localization` and `dx_type`, and ISIC's `anatom_site_2` and
+`diagnosis_confirm_type`. Before the metadata refresh, a read-only comparison against the live
+ISIC API was run to check that the image set and labels had not changed; its output was not
+committed, so it is a check, not evidence. The OMOP tables, their concepts and caveats are in
+[data_dictionary.md](data_dictionary.md).
 
 **HAM10000 differs from Phase 0's files.** ISIC serves HAM10000 re-encoded with stronger
 JPEG compression. In a seeded sample of 20 images, none was byte-identical, all had the

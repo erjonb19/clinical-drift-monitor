@@ -112,17 +112,110 @@ This is where the project becomes real ML work: proper federated training and OO
   - How it runs (decided 2026-10-02): aggregation uses Flower's own FedAvg and FedProx strategies (`flwr==1.39.0`), but the four clients train one after another in one process on one GPU, not through Flower's Ray simulation engine. Each round's model is scored on pooled validation and the best round is kept, the same rule as centralized training's best epoch; a real federated deployment could not see pooled validation data, so this selection is a simulation convenience, and it is stated wherever federated results appear.
 - [x] v2 data (decided 2026-10-04): Barcelona's cap rises from 5,000 to 10,000 images by the same seeded whole-lesion selection (fingerprint `4129a90a0e5f3aed`, 9,999 images), so v1's 5,000 are a subset. Every v1 lesion keeps its split (`config/splits_v1.csv`, gate `frozen_splits_kept`); only new lesions are assigned; HAM10000's fingerprint is unchanged. The pipeline update that lands the new images is also Phase 1's deferred check that Auto Loader picks up only new files.
 - [x] v2 models: 3 centralized and 6 federated runs (FedAvg and FedProx, 3 seeds each) with v1's configuration and FedAvg's standard image-count weighting; each client's share of training images and aggregation weight, and the bordered share, are reported. The keep rule is applied once, on the centralized models: v2 replaces v1 only if, on v1's exact validation images (mean of 3 seeds), pooled balanced accuracy rises by at least 1 point and no client's falls by more than 3 points, decided and committed before any v2 test look. Whichever data version wins is used by all three setups in the drift table, so the centralized vs federated comparison is not mixed with a data change; federated v1 vs v2 validation results are reported for information. Test: one look per v2 model, compared with v1 on v1's exact test images, with the full v2 test set as a second, separately labelled row. The drift table runs once, on the final models. (Done: `results/phase2/v2/decision.json` (v2 kept), `results/phase2/v2/test/final_test.json`; the drift table ran on the v2 models)
-- [x] OOD on held-out sites (real): Buenos Aires (new hospital) and PAD-UFES-20 (new hospital, smartphone photos); PathMNIST and CIFAR-10 as benchmark sets. Held-out accuracy is reported only on classes that map cleanly to HAM10000's (not "SCC, NOS"); PAD-UFES-20 has no df or vasc images. (Done for OOD: `results/phase2/drift/v2/table.json`. Not done: seven-class held-out accuracy, proposed below.)
+- [x] OOD on held-out sites (real): Buenos Aires (new hospital) and PAD-UFES-20 (new hospital, smartphone photos); PathMNIST and CIFAR-10 as benchmark sets. Held-out accuracy is reported only on classes that map cleanly to HAM10000's (not "SCC, NOS"); PAD-UFES-20 has no df or vasc images. (Done for OOD: `results/phase2/drift/v2/table.json`. Seven-class held-out accuracy: done in the analysis look, part B (job run 138750679720121, exported 2026-10-20): `results/phase2/analysis_look/results.json`.)
 - [x] One results table: 4 detectors (Mahalanobis, Gram, max softmax, energy) by shift by centralized vs federated, AUROC and FPR@95TPR, mean and range over 3 seeds, with the run-to-run spread. Mahalanobis's PCA size is chosen on validation data only. (Done: `results/phase2/drift/v2/table.md`; Mahalanobis shipped by the pre-set rule, a near tie with Gram)
-- [ ] Accuracy and drift reported per Fitzpatrick skin type where a site has at least 100 images of that type; smaller groups are listed with counts only. Skin type is recorded only at Buenos Aires and PAD-UFES-20, with 98 images of types IV to VI in total, too few to judge darker skin.
+- [x] Accuracy and drift reported per Fitzpatrick skin type where a site has at least 100 images of that type; smaller groups are listed with counts only. Skin type is recorded only at Buenos Aires and PAD-UFES-20, with 98 images of types IV to VI in total, too few to judge darker skin. (Done: drift by type in the analysis look part A, `results/phase2/analysis_look/skin_type_drift.json`; accuracy by type in part B, `results/phase2/analysis_look/results.json`; within each site only, types I to III.)
 - [ ] **Moved to Phase 3 (2026-10-05):** Label delay: the monitor watches drift without labels first, then checks accuracy once diagnoses for that batch are released. Reason: it describes how the monthly monitoring job sequences drift and accuracy checks, which is built in Phase 3.
-- [ ] Error analysis: confusion matrix, which classes, sites and skin types fail, and a look at the 20 worst misses.
+- [ ] Error analysis: confusion matrix, which classes, sites and skin types fail, and a look at the 20 worst misses. (Partly done: the 20 worst missed melanomas are in the analysis look part B. **Moved to research Phase D (2026-10-20):** the confusion matrices by site and skin type and the reviewed worst-miss list, built as the human-review worksheet.)
 - [ ] **Moved to Phase 3 (2026-10-05):** Risk-coverage and abstain workload: for the shipped model and detector, accuracy and balanced accuracy against coverage when the least confident or most out-of-distribution images are abstained on, per site, and the share of images sent to human review at the abstain threshold Phase 3 will use. Computed on validation to set the threshold, then reported once on test and the held-out sites. Reason: the abstain threshold is set for the Phase 3 API, and Phase 2 showed scores must be computed on the serving hardware to be comparable.
 - [x] Triage operating point (triage framing, not a clinical claim): for the shipped model, the melanoma-probability threshold set on validation for at least 95% melanoma sensitivity, committed before test; then, once on test (own lock per model), melanoma sensitivity, specificity and referral rate with bootstrap intervals by lesion, per client and on Buenos Aires and PAD-UFES-20. (Done: `results/phase2/triage/threshold.json` committed before `results/phase2/triage/test.json`; sensitivity held on the client test split and fell 14 to 17 points at the external sites)
-- [ ] Optional, CPU: simulated local recalibration at Buenos Aires (decided 2026-10-04), as evidence for the PCCP modification protocol, not a change to the shipped model. Its lesions are split 50/50 with a fixed seed; the 95%-sensitivity threshold is set on one half and sensitivity, specificity and referral rate are reported on the other with bootstrap intervals; repeated for 20 random splits, reporting mean and range. PAD-UFES-20 is excluded (52 melanomas). The spec is committed before it runs, after batch drift and label provenance.
+- [x] Optional, CPU: simulated local recalibration at Buenos Aires (decided 2026-10-04), as evidence for the PCCP modification protocol, not a change to the shipped model. Its lesions are split 50/50 with a fixed seed; the 95%-sensitivity threshold is set on one half and sensitivity, specificity and referral rate are reported on the other with bootstrap intervals; repeated for 20 random splits, reporting mean and range. PAD-UFES-20 is excluded (52 melanomas). The spec is committed before it runs, after batch drift and label provenance. (Done: job run 485412553188780, `results/phase2/ba_recalibration/results.json`. Its halves are split by lesion, and 199 of 623 Buenos Aires patients have more than one lesion, so the local threshold's result is, if anything, optimistic: `docs/silent-failures.md` #9.)
+- [x] Patient-level split check (added 2026-10-20): splits are by lesion, so a patient's lesions can sit in two splits. Only MSK collection 289 among the clients records patient IDs: 47 patients span splits, documented in `config/patient_overlap_v1.csv` and allowed by a new gate that fails on any other; HAM10000, Barcelona and MSK 287 cannot be checked. Not re-split (that would move frozen v1 lesions). Measured test effect is small: `results/phase2/patient_overlap/patient_overlap.json`, `docs/silent-failures.md` #9.
 - [x] Label provenance: from ISIC's diagnosis_confirm_type and HAM10000's dx_type, the share of diagnoses confirmed by histopathology vs other methods, per site and class. (Done: `results/phase2/label_provenance/label_provenance.json`)
 
 **Done when** the results table is fully logged and you can say which detector to ship and why. The rule, fixed before any Phase 2 result: ship the detector with the highest mean AUROC on the two real held-out sites, with FPR@95TPR breaking ties; the benchmark sets are secondary.
+
+## Research extension: Phases A to F (added 2026-10-20, approved)
+
+Aimed at research informatics work: research-ready OMOP data with a data dictionary and lineage, a vision-language baseline, subgroup evaluation, interpretability with human review, multimodal fusion, and a cohort contract. The full plan, with files, tables, risks and estimates, is [docs/research_extension_plan.md](docs/research_extension_plan.md). It runs after Phase 2 and before Phase 3; Phase 6 stays committed.
+
+Rules on top of CLAUDE.md: each phase is its own branch and PR with CI green; every reported number comes from a committed results file that is also logged in MLflow (`scripts/log_evidence.py`, index `results/mlflow_runs.json`); every new test look has a spec committed first and its own lock; intervals resample by patient where ISIC records one, by lesion elsewhere, and test results carry a row without the documented cross-split patients.
+
+- [x] **A: OMOP and SNOMED CT gold tables.** Every diagnosis, sex, body site, diagnosis-confirmation and modality value mapped to a cited OMOP concept (looked up in Athena, never from memory; unverified rows get concept 0 and are listed); OMOP-style person, condition_occurrence, procedure_occurrence, image_occurrence (OHDSI medical imaging extension proposal), observation_period, concept and cdm_source tables (the observation table first listed here was dropped: every mapped field has a home in another table, so it would be empty) built in the pipeline from silver, all labelled sources; `docs/data_dictionary.md`; quality checks as gates and tests; Unity Catalog lineage silver to OMOP. Person is one per lesion where no patient ID exists (an assumption), and dates are placeholders (documented). **Done when** one pipeline update builds every table with all OMOP gates passing, every value is mapped or listed as unverified, and the dictionary covers every column.
+- [ ] **B: BiomedCLIP baseline.** Zero-shot and a 3-seed linear probe on the same client test split as the shipped model; balanced accuracy and melanoma sensitivity with bootstrap intervals for both models; Mahalanobis, max softmax and energy on BiomedCLIP features against the same OOD sets (Gram does not apply to a ViT as built). Research use only, per its model card: never served. **Done when** the spec is committed before the test look and the comparison is logged and committed.
+- [ ] **C: Subgroups.** Performance and drift by age band, sex and body site for both models, with intervals; groups under 100 images get counts and a warning only. HAM10000 has no skin type; the existing within-site skin-type results are restated, and Fitzpatrick17k is a follow-up only. **Done when** the subgroup table is logged and committed.
+- [ ] **D: Grad-CAM and human review.** Grad-CAM for the shipped EfficientNet with a weight-randomization sanity test; a review worksheet of the worst misclassifications and most out-of-distribution images (image, heatmap, labels, scores, attribution, blank reviewer notes); confusion matrices by site and skin type (closes Phase 2's error analysis). Images stay in the volume and MLflow, not git. **Done when** the worksheet exists and the sanity test passes in CI.
+- [ ] **E: Multimodal fusion.** Image embeddings plus age, sex and body site, against image-only with the same head on the same embeddings and a metadata-only baseline, 3 seeds, same splits; reported as measured even if fusion does not help. **Done when** all three are logged with intervals and committed.
+- [ ] **F: Cohort contract (plan only).** `docs/cohort_contract.md`: how the OMOP tables would be exposed to governed-clinical-agent through fixed query templates, with the table contract, small-cell suppression, audit and groundedness. **Done when** you have reviewed it.
+
+## Research extension: Phase G, research informatics services (added 2026-10-21)
+
+Phase G turns the OMOP tables from Phase A into a small research data service. It covers the parts of research informatics that a model alone does not show: an evaluation protocol, governance evidence, tracked investigator requests, a governed cohort and feasibility service with a phenotype library, FAIR packaging, service metrics, clinical text extraction, and a public demo. It is a portfolio build on public data (ISIC, HAM10000, MTSamples) and synthetic requests. It is not a clinical service, and the docs say so.
+
+**Order:** A, then G1 to G6, then B to F as planned. G2 and G6 need Phase A's tables. G4 needs G1's issue form and G2's audit log. G5 needs Phase A's concept map. Everything else is independent.
+
+**Rules on top of the A to F rules:**
+- One PR per item. Never push to `main`. Merge only under the owner's merge rules (given 2026-10-21: stack order, merge commits, green CI, a diff check and a fresh review first). Ruff, mypy and pytest pass before every push.
+- CI makes no live LLM calls.
+- Stop and ask before:
+  - anything that costs money, including a Databricks re-ingest, a pipeline run or GPU time;
+  - any public deployment;
+  - installing system software;
+  - anything that needs your login.
+- No SNOMED codes or names, vocabulary files, caches, pickles or `.env` in git. OMOP concept IDs only.
+- **Exception to the zero-cost rule (your instruction, 2026-10-21):** G5 may call Claude Haiku through `ANTHROPIC_API_KEY` in `.env`, under $5 for the day. Spend is logged per call and reported at each checkpoint. Gemini's free tier is the zero-cost fallback if you would rather keep CLAUDE.md's rule unbroken.
+
+**Job description lines covered:**
+
+| Code | Line |
+| --- | --- |
+| DE-pipe | Research data pipelines with documented definitions, quality checks, metadata, lineage, FAIR reuse |
+| DE-gov | Governed access workflows |
+| DE-cohort | Cohort discovery, phenotyping, trial feasibility |
+| DE-req | Investigator needs turned into scoped, tracked requests |
+| DE-ehr | EHR integration, longitudinal tracking, research-ready datasets, real-world evidence, FHIR/OMOP |
+| AI-ie | AI methods: information extraction, LLM/VLM |
+| AI-eval | Evaluation plans: baselines, splits, human review, error analysis, subgroups, bias |
+| AI-svc | Maintainable services with tests, monitoring, docs |
+| AI-gov | Governance evidence and escalation |
+| SUP | Investigator support: demos, training, reusable examples |
+| MET | Service metrics: turnaround, output quality, reuse, model performance, feedback |
+
+| Item | Effort | Depends on | Covers |
+| --- | --- | --- | --- |
+| G1 Docs: eval protocol, governance packet, request form and board | 0.5 day | none | AI-eval, AI-gov, DE-gov, DE-req |
+| G2 Governed cohort and feasibility service, phenotype library | 1 to 1.5 days | A | DE-cohort, DE-gov, AI-svc, AI-gov, DE-ehr |
+| G3 FAIR packaging and quickstart notebook | 0.5 day | A, G2 | DE-pipe, SUP |
+| G4 Service metrics page | 0.5 day | G1, G2 | MET, AI-svc |
+| G5 Clinical text extraction to OMOP fields | 1 to 1.5 days, plus your labelling | A | AI-ie, AI-eval, DE-ehr |
+| G6 Public Streamlit cohort demo and walkthrough script | 0.5 day | G2, license check | SUP, DE-cohort |
+
+- [ ] **G1: Docs, quick wins.**
+  - `docs/EVAL_PLAN.md`, written as a study protocol: baselines, splits, human review, error analysis, reproducibility, subgroups and bias, failure criteria.
+  - `docs/governance/`: public and restricted access tiers, a data use checklist, risk tiering and the escalation path.
+  - `.github/ISSUE_TEMPLATE/data_request.yml`: question, cohort, data needed, approval status. Plus a GitHub project board; you create it, since it needs your login.
+  - **Done when** the docs are merged and a test request issue renders from the form.
+- [ ] **G2: Governed cohort and feasibility service** (`src/cdm/cohort.py`).
+  - Cohort definitions are versioned YAML files in `phenotypes/`, built only from allowlisted OMOP tables, columns and operators. No free SQL.
+  - A definition runs only once a recorded human has approved that exact version, by hash.
+  - Every request, approval, run and refusal goes to an append-only audit log.
+  - Counts under 11 are suppressed, including counts that could be recovered by subtracting one from another.
+  - It is written against generic OMOP CDM v5.4 column names, so it can later point at the intake platform's OMOP. It runs on DuckDB locally and in CI, and on Databricks SQL in the workspace.
+  - The pattern comes from `Security-Constrained-Agent-Runtime`, which is read only and not modified.
+  - **Done when** tests cover refusal of non-allowlisted fields, unapproved and changed definitions, suppression including the subtraction case, and the audit trail, and at least three phenotypes run on the Phase A tables.
+- [ ] **G3: FAIR packaging.**
+  - Dataset metadata: DCAT/schema.org JSON-LD, plus a `CITATION.cff`.
+  - `notebooks/quickstart.ipynb`, which runs on the public demo extract.
+  - A Zenodo-ready release: `.zenodo.json` and a release checklist. You connect Zenodo to GitHub; it needs your login.
+  - **Done when** the metadata validates in CI and the notebook runs in CI.
+- [ ] **G4: Service metrics page** (`scripts/service_metrics.py` to `docs/service_metrics.md`).
+  - Request turnaround from the issue tracker.
+  - Cohort output quality from the gates and audit log.
+  - Method reuse: phenotype runs per definition.
+  - Model performance where it holds and where it does not: rows read from committed results files (`config/service_metrics.json`), each with the date it was first committed. Not a trend line, because the rows are different test sets. (Changed 2026-10-22 from "over time, from `results/mlflow_runs.json`", which would have drawn different test sets as one line.)
+  - Every number comes from committed sources; request numbers from a committed snapshot of the issue tracker. Synthetic requests are labelled synthetic.
+  - **Done when** the page regenerates from one command and a test checks its numbers against fixtures.
+- [ ] **G5: Clinical text extraction.**
+  - Haiku extracts diagnosis, body site and confirmation method from MTSamples dermatology and pathology notes into OMOP fields, using Phase A's concept map.
+  - It is scored against a 50 to 100 note labelling sheet that you label, with per-field precision and recall and an error analysis.
+  - A loader interface lets MIMIC-IV-Note swap in later, with code and aggregates only in the repo.
+  - The MTSamples license is checked first. If it does not allow redistribution, the note text stays out of git.
+  - **Done when** the labelled set is scored, the results are logged in MLflow, and the spend is reported.
+- [ ] **G6: Public Streamlit demo** of the cohort service.
+  - It shows source labels and OMOP concept IDs only, never SNOMED names.
+  - The ISIC and HAM10000 metadata licenses are checked first; I stop and ask before deploying.
+  - `docs/demo_script.md`: a 3-minute walkthrough you can record.
+  - **Done when** you approve deployment and the app is live on Streamlit Community Cloud.
 
 ## Phase 3: Serving and MLOps (about 1 week)
 

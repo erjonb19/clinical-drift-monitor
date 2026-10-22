@@ -5,8 +5,10 @@ Run from the repository root on a clean commit, with the CLI installed and logge
 
 1. refuses to deploy uncommitted code, and pins everything to the commit hash;
 2. creates the schemas and the raw volume if missing;
-3. uploads the cdm wheel, config/sites.json, HAM10000_metadata.csv (MD5-checked) and the
-   ImageNet weights (hash-checked) into the volume, and the pipeline source into the workspace;
+3. uploads the cdm wheel, config/sites.json (with splits_v1.csv, patient_overlap_v1.csv,
+   omop_concepts.csv and the private resolved OMOP concepts beside it),
+   HAM10000_metadata.csv (MD5-checked) and the ImageNet weights (hash-checked) into the
+   volume, and the pipeline source into the workspace;
 4. creates or updates the pipelines ``cdm-phase1`` and ``cdm-phase1-broken`` and the jobs
    ``cdm-phase1`` and ``cdm-phase1-broken-demo`` from databricks/*.json.
 
@@ -24,12 +26,33 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 from cdm.data import data_root
 from cdm.gold import WEIGHTS_FILE
+from cdm.omop import load_concept_map, notes_quoting_concepts
 
 REPO = Path(__file__).resolve().parents[1]
 CODE = ["src", "pipelines", "config", "pyproject.toml"]
 WHEEL = "cdm-0.1.0-py3-none-any.whl"
+# Made by scripts/omop_concepts.py from a licensed Athena download; SNOMED content, never in git.
+RESOLVED_CONCEPTS = Path.home() / "athena_vocab" / "cdm_resolved_concepts.csv"
+
+
+def check_resolved(cmap_path: Path, resolved: Path) -> None:
+    """The resolved concepts must be exactly the map's non-zero concepts: a stale file (map
+    changed, scripts/omop_concepts.py not rerun) would fail the omop_concepts_resolve gate
+    only after a full pipeline run."""
+    if not resolved.exists():
+        sys.exit(f"{resolved} missing: run scripts/omop_concepts.py --vocab <Athena folder>")
+    wanted = {int(c) for c in load_concept_map(cmap_path)["concept_id"] if c != 0}
+    have = set(pd.read_csv(resolved, dtype=str)["concept_id"].astype(int))
+    if wanted != have:
+        sys.exit(f"{resolved} is stale ({len(have ^ wanted)} concepts differ): rerun omop_concepts")
+    quoting = notes_quoting_concepts(load_concept_map(cmap_path), pd.read_csv(resolved, dtype=str))
+    if quoting:
+        problems = "; ".join(quoting)
+        sys.exit(f"concept map notes quote SNOMED names, which must not be published: {problems}")
 
 
 def render(template: str, values: dict[str, str]) -> dict[str, Any]:
@@ -116,6 +139,7 @@ def main() -> int:
     ham_csv = data_root() / "ham10000" / config["ham10000"]["metadata_file"]
     if hashlib.md5(ham_csv.read_bytes()).hexdigest() != config["ham10000"]["metadata_md5"]:
         sys.exit(f"{ham_csv} does not match the MD5 in config/sites.json")
+    check_resolved(REPO / "config" / "omop_concepts.csv", RESOLVED_CONCEPTS)
     weights = Path.home() / ".cache" / "torch" / "hub" / "checkpoints" / WEIGHTS_FILE
     if not weights.exists():
         sys.exit(f"{weights} missing: run any Phase 0 command once to download it")
@@ -140,6 +164,9 @@ def main() -> int:
         REPO / "dist" / WHEEL: f"{deploy}/{WHEEL}",
         REPO / "config" / "sites.json": f"{deploy}/sites.json",
         REPO / "config" / "splits_v1.csv": f"{deploy}/splits_v1.csv",
+        REPO / "config" / "patient_overlap_v1.csv": f"{deploy}/patient_overlap_v1.csv",
+        REPO / "config" / "omop_concepts.csv": f"{deploy}/omop_concepts.csv",
+        RESOLVED_CONCEPTS: f"{deploy}/cdm_resolved_concepts.csv",
         ham_csv: f"{raw}/uploads/{ham_csv.name}",
         weights: f"{raw}/deploy/weights/{WEIGHTS_FILE}",
     }

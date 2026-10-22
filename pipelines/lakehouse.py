@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
@@ -28,7 +29,8 @@ from pyspark.sql import functions as F
 
 from cdm.gates import run_all, with_splits
 from cdm.images import DecodeError, decode_resize
-from cdm.splits import load_frozen
+from cdm.omop import TABLES, build_tables, check_tables, load_concept_map, profile, spark_schema
+from cdm.splits import load_frozen, load_patient_overlap
 
 _spark = SparkSession.getActiveSession()
 assert _spark is not None, "run inside a Databricks pipeline"
@@ -40,6 +42,20 @@ with open(spark.conf.get("cdm.config"), encoding="utf-8") as f:
 if "frozen_splits" in CONFIG:
     _frozen_file = Path(spark.conf.get("cdm.config")).parent / CONFIG["frozen_splits"]["file"]
     CONFIG["frozen_splits"]["lesions"] = load_frozen(_frozen_file)
+# Documented patients with lesions in two splits (lesion-level splits), also next to sites.json.
+if "patient_overlap" in CONFIG:
+    _overlap_file = Path(spark.conf.get("cdm.config")).parent / CONFIG["patient_overlap"]["file"]
+    CONFIG["patient_overlap"]["patients"] = load_patient_overlap(_overlap_file)
+# OMOP concept map and the resolved concepts (private: SNOMED content), next to sites.json.
+OMOP = CONFIG.get("omop")
+if OMOP:
+    _deploy = Path(spark.conf.get("cdm.config")).parent
+    OMOP_MAP = load_concept_map(_deploy / OMOP["concept_map"])
+    OMOP_CONCEPTS = pd.read_csv(
+        _deploy / OMOP["resolved_concepts"], dtype=str, keep_default_na=False
+    )
+    # The deploy folder is named after the commit (scripts/deploy_databricks.py).
+    OMOP_ETL_REFERENCE = _deploy.name
 IMAGES_GLOB = spark.conf.get("cdm.images_glob")
 METADATA_PATH = spark.conf.get("cdm.metadata_path")
 MANIFEST_PATH = spark.conf.get("cdm.manifest_path")
@@ -49,7 +65,9 @@ METADATA_COLUMNS = """
     image_type STRING, pixels_x INT, pixels_y INT, isic_lesion_id STRING, patient_id STRING,
     fitzpatrick_skin_type STRING, sex STRING, age_approx DOUBLE, anatom_site_1 STRING,
     diagnosis_1 STRING, diagnosis_2 STRING, diagnosis_3 STRING, isic_label STRING, url STRING,
-    lesion_id STRING, label STRING, run_id STRING, code_version STRING, ham_dataset STRING
+    lesion_id STRING, label STRING, run_id STRING, code_version STRING, ham_dataset STRING,
+    anatom_site_2 STRING, diagnosis_confirm_type STRING, ham_localization STRING,
+    ham_dx_type STRING
 """
 MANIFEST_COLUMNS = """
     isic_id STRING, source STRING, path STRING, bytes BIGINT, sha256 STRING,
@@ -185,3 +203,62 @@ def gate_results() -> DataFrame:
         lambda pdf: _gates(pdf.drop(columns="_group")),
         "name STRING, violations BIGINT, detail STRING",
     )
+
+
+# ---- OMOP (research Phase A) ----------------------------------------------------------------
+# OMOP CDM v5.4-style tables from silver, named omop_<table> in this pipeline's schema (one
+# pipeline cannot share tables with the broken demo's, so no second schema). Every view
+# rebuilds all tables from silver in one pandas step (cdm.omop); each keeps its own.
+
+
+def _omop_input() -> DataFrame:
+    decoded = spark.read.table("silver_decoded").filter("error IS NULL")
+    paths = decoded.select(*KEY, F.col("path").alias("local_path"))
+    return spark.read.table("silver_metadata").join(paths, KEY, "left")
+
+
+def _omop_build(pdf: pd.DataFrame) -> dict[str, pd.DataFrame]:
+    assert OMOP is not None
+    return build_tables(
+        pdf.drop(columns="_group"),
+        OMOP_MAP,
+        OMOP_CONCEPTS,
+        OMOP_ETL_REFERENCE,
+        OMOP["vocabulary_version"],
+        date.today(),
+    )
+
+
+def _omop_view(table: str) -> None:
+    @dp.materialized_view(
+        name=f"omop_{table}", comment=f"OMOP CDM v5.4 {table}; see docs/data_dictionary.md."
+    )
+    def view() -> DataFrame:
+        return _one_group(_omop_input()).applyInPandas(
+            lambda pdf: _omop_build(pdf)[table], spark_schema(table)
+        )
+
+
+def _omop_gates(pdf: pd.DataFrame) -> pd.DataFrame:
+    silver = pdf.drop(columns="_group")
+    gates = check_tables(silver, _omop_build(pdf), OMOP_MAP)
+    return pd.DataFrame([asdict(g) for g in gates])
+
+
+if OMOP:
+    for _table in TABLES:
+        _omop_view(_table)
+
+    @dp.materialized_view(comment="Rows and nulls per OMOP column (the data dictionary's rates).")
+    def omop_profile() -> DataFrame:
+        return _one_group(_omop_input()).applyInPandas(
+            lambda pdf: profile(_omop_build(pdf)),
+            "table_name STRING, column_name STRING, rows BIGINT, nulls BIGINT",
+        )
+
+    @dp.materialized_view(comment="One row per OMOP gate; any violation fails the update.")
+    @dp.expect_all_or_fail({"gate_passes": "violations = 0"})
+    def omop_gate_results() -> DataFrame:
+        return _one_group(_omop_input()).applyInPandas(
+            _omop_gates, "name STRING, violations BIGINT, detail STRING"
+        )
