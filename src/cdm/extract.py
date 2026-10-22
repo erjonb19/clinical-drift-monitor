@@ -77,13 +77,26 @@ SKIN = re.compile(
     r"lentigo|epiderm\w*|mole)\b",
     re.I,
 )
+# A specific skin-lesion diagnosis, a skin biopsy, or a skin lesion named as such. Unlike SKIN,
+# it does not match incidental words ("the skin was closed"). Owner's decision, 2026-10-22,
+# before any labelling: see results/research/g5_extraction/selection_spec.json.
+LESION = re.compile(
+    r"\b(melanoma|basal cell (carcinoma|cancer)|bcca|squamous cell (carcinoma|cancer) of the skin|"
+    r"cutaneous squamous cell|keratoacanthoma|nev(us|i)|seborrheic keratos[ie]s|"
+    r"actinic keratos[ie]s|dermatofibroma|cherry angioma|pyogenic granuloma|lentigo|"
+    r"skin cancer|skin lesions?|cutaneous lesions?|pigmented lesions?|skin biops(y|ies))\b",
+    re.I,
+)
+DEV_SHARE = 0.1
 
 
 @dataclass
 class MTSamples:
     """MTSamples transcriptions (mtsamples.com; the common CSV has ``medical_specialty``,
-    ``sample_name`` and ``transcription``). Dermatology notes, plus pathology notes that
-    are about skin. The site allows sharing for education with credit, not redistribution
+    ``sample_name`` and ``transcription``). Dermatology notes, pathology notes that are
+    about skin, and notes from any other specialty that name a skin-lesion diagnosis, a skin
+    biopsy or a skin lesion (``LESION``); notes that say only "no skin lesions" come in as
+    negative controls. The site allows sharing for education with credit, not redistribution
     under an open license, so the text stays outside the repository."""
 
     path: Path
@@ -97,7 +110,7 @@ class MTSamples:
                 continue
             derm = specialty == "Dermatology"
             skin_pathology = "pathology" in specialty.lower() and SKIN.search(text)
-            if derm or skin_pathology:
+            if derm or skin_pathology or LESION.search(text):
                 yield Note(note_id(text), self.name, specialty, row["sample_name"].strip(), text)
 
 
@@ -404,7 +417,7 @@ SHEET_COLUMNS = ["note_id", "split", "source", "specialty", "title", "text",
 
 
 def split_notes(
-    notes: Iterable[Note], n: int = 100, dev_share: float = 0.2
+    notes: Iterable[Note], n: int = 100, dev_share: float = DEV_SHARE
 ) -> list[tuple[Note, str]]:
     """Up to ``n`` notes in a fixed order (by note ID), the first ``dev_share`` of them for
     prompt design and the rest for scoring. Decided before any prompt runs, as the protocol

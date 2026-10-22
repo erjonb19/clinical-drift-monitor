@@ -156,7 +156,7 @@ def test_note_text_never_lands_in_the_repository(tmp_path: Path) -> None:
     assert outside_repo(tmp_path) == tmp_path
     sheet = write_sheet([BIOPSY, NO_DX, PSORIASIS], tmp_path, ALLOWED, n=3)
     rows = pd.read_csv(sheet, dtype=str, keep_default_na=False)
-    assert list(rows["split"]).count("dev") == 1 and len(rows) == 3
+    assert list(rows["split"]).count("dev") == 0 and len(rows) == 3  # 10% of 3 rounds to 0
     assert set(rows["label_diagnosis"]) == {""}
     legend = pd.read_csv(tmp_path / "labelling_choices.csv", dtype=str, keep_default_na=False)
     assert {"label_diagnosis", "label_body_site", "label_confirmation"} == set(legend["column"])
@@ -166,7 +166,7 @@ def test_splits_are_fixed_by_note_id_before_any_prompt_runs() -> None:
     notes = [note(f"Note number {i} about a nevus on the arm.") for i in range(10)]
     first = split_notes(notes, n=10)
     assert first == split_notes(list(reversed(notes)), n=10)
-    assert [s for _, s in first].count("dev") == 2
+    assert [s for _, s in first].count("dev") == 1  # DEV_SHARE 0.1 of 10 notes
 
 
 def test_mtsamples_keeps_dermatology_and_skin_pathology(tmp_path: Path) -> None:
@@ -276,3 +276,13 @@ def test_labels_outside_the_choices_stop_scoring(
     sheet.to_csv(work / "labelling_sheet.csv", index=False)
     with pytest.raises(SystemExit, match="labels not in"):
         module.score_all()
+
+
+def test_lesion_rule_takes_lesion_notes_and_leaves_incidental_skin() -> None:
+    from cdm.extract import LESION
+
+    assert LESION.search("Shave biopsy of a pigmented lesion on the back.")
+    assert LESION.search("History of basal cell carcinoma of the nose.")
+    assert LESION.search("SKIN: No skin lesions.")  # a negative control, on purpose
+    assert not LESION.search("The skin was closed with 4-0 nylon.")
+    assert not LESION.search("Squamous cell carcinoma of the larynx.")

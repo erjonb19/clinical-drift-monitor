@@ -1,0 +1,31 @@
+{
+  "decided": "2026-10-22",
+  "decided_by": "the owner (selection widened before any labelling); rules written by Claude Code",
+  "source": "MTSamples CSV (4,999 rows) at the owner's local path, outside the repository; note text never enters git",
+  "inclusion": {
+    "dermatology": "medical_specialty is Dermatology",
+    "skin_pathology": "a pathology specialty and the text matches cdm.extract.SKIN",
+    "lesion_mention_other_specialty": "any other specialty and the text matches cdm.extract.LESION: a specific skin-lesion diagnosis (melanoma, basal cell carcinoma, cutaneous squamous cell carcinoma, keratoacanthoma, nevus, seborrheic or actinic keratosis, dermatofibroma, cherry angioma, pyogenic granuloma, lentigo, skin cancer), a skin biopsy, or a skin, cutaneous or pigmented lesion named as such",
+    "negative_controls": "notes whose only match is a phrase like 'no skin lesions' (review-of-systems templates) are kept on purpose: the expected labels are empty, which tests false positives",
+    "excluded": "incidental skin words (for example 'the skin was closed'), which the earlier SKIN pattern matched, and empty transcriptions; duplicate texts count once (note ID is a hash of the text)"
+  },
+  "split": {
+    "rule": "notes ordered by note ID; the first 10% are development (prompt design), the rest scoring; fixed before any prompt runs",
+    "dev_share": 0.1
+  },
+  "counts": {
+    "notes": 73,
+    "by_split": {
+      "dev": 7,
+      "scoring": 66
+    },
+    "by_inclusion_rule": {
+      "lesion_mention_other_specialty": 45,
+      "dermatology": 28
+    },
+    "negative_controls": 19
+  },
+  "minimum_scoring_notes": 50,
+  "superseded": "a first sheet of 30 notes (Dermatology plus skin pathology only, 20% development), never labelled, kept outside the repository",
+  "note_ids_sha256": "de4b5cb26902e66b115e69ccdfb464aff22d84d450345207bef1700819848390"
+}

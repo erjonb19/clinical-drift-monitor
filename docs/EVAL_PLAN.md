@@ -159,4 +159,5 @@ as a finding, with the same prominence as a success.
 | Date | Change | Why | Looks affected |
 | --- | --- | --- | --- |
 | 2026-10-21 | Protocol written down from the rules Phases 0 to 2 already followed, plus Phases B to G5 | Phase G1 | None: Phases 0 to 2 were run under the same rules, recorded in their specs |
+| 2026-10-22 | G5: notes from any specialty that name a skin-lesion diagnosis, a skin biopsy or a skin lesion are included (`cdm.extract.LESION`), and the development share is 10% instead of 20% | Owner's decision: MTSamples has 21 unique dermatology notes, too few for the 50-note scoring minimum; rules in `results/research/g5_extraction/selection_spec.json` | None: no note had been labelled and no prompt had run on a scoring note |
 | 2026-10-22 | G5: no temperature 0; answers are cached and replayed | The API refuses a temperature setting for Claude Haiku 5.5 ("deprecated for this model"), found on the first connection test | None: no G5 note had been run |
