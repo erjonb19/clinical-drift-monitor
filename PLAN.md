@@ -202,8 +202,8 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - Request turnaround from the issue tracker.
   - Cohort output quality from the gates and audit log.
   - Method reuse: phenotype runs per definition.
-  - Model performance over time, from `results/mlflow_runs.json`.
-  - Every number comes from committed or queried sources. Synthetic requests are labelled synthetic.
+  - Model performance where it holds and where it does not: rows read from committed results files (`config/service_metrics.json`), each with the date it was first committed. Not a trend line, because the rows are different test sets. (Changed 2026-10-22 from "over time, from `results/mlflow_runs.json`", which would have drawn different test sets as one line.)
+  - Every number comes from committed sources; request numbers from a committed snapshot of the issue tracker. Synthetic requests are labelled synthetic.
   - **Done when** the page regenerates from one command and a test checks its numbers against fixtures.
 - [ ] **G5: Clinical text extraction.**
   - Haiku extracts diagnosis, body site and confirmation method from MTSamples dermatology and pathology notes into OMOP fields, using Phase A's concept map.
