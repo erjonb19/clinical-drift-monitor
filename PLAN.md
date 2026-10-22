@@ -271,7 +271,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 
 The model becomes a service with a threshold, a schedule and a CI gate, which is what production ML and forward deployed roles look for.
 
-- [ ] Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
+- [ ] (Tried 2026-10-22: exported, but parity failed under the amended rule; see the decisions log and `results/phase3/onnx/`.) Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
 - [ ] FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
 - [ ] Docker image, deployed free on Render.
 - [ ] Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
@@ -354,6 +354,12 @@ Owner decisions that change scope, cost or process, newest first.
     same 512 validation images first, commit an amended spec quoting it (`spec_v2.json`): an
     ONNX gap of at most 2x that noise, and a top-class disagreement only where PyTorch also
     disagrees with itself or the top two classes are within 0.01; then run the parity check once.
+  - **That parity run failed (job run 885785618939922, `results/phase3/onnx/results.json`).**
+    ONNX Runtime's gaps were about 3 to 7 times PyTorch's own noise (largest logit gap 0.18 to
+    0.26 against 2x noise of 0.12 to 0.14), and the top class moved on 1 to 4 images per
+    seed, and 3 for the ensemble, where PyTorch is stable. ONNX Runtime was faster (median 43
+    to 57 ms per seed against 92 to 93 ms, one image, 4 CPUs). Not rerun. The ONNX item stays
+    open; how to serve is the owner's call.
 - **2026-10-22 (evening)**
   - **Phase E feature set:** PLAN said the EfficientNet penultimate embeddings were "already in
     `gold_embeddings`"; that table holds ImageNet-pretrained B0 features, not the shipped
