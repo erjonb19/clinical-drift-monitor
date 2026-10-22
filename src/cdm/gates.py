@@ -137,6 +137,44 @@ def lesions_in_one_split(frame: pd.DataFrame) -> Gate:
     return Gate("no_lesion_in_two_splits", len(leaked), _examples(leaked))
 
 
+def patient_overlap(config: Mapping[str, Any]) -> dict[str, set[str]]:
+    """Documented cross-split patients (source -> patient IDs) that the caller loaded into
+    ``config["patient_overlap"]["patients"]`` from the file the config names; empty if none."""
+    return dict(config.get("patient_overlap", {}).get("patients", {}))
+
+
+def patients_across_splits(frame: pd.DataFrame) -> dict[tuple[str, str], list[str]]:
+    """(source, patient ID) -> its sorted splits, for patients with lesions in more than one of
+    train, val and test. Only sources that record ``patient_id`` can be checked."""
+    if "patient_id" not in frame:
+        return {}
+    rows = frame[frame["split"].isin(SPLITS) & frame["patient_id"].notna()]
+    out: dict[tuple[str, str], list[str]] = {}
+    for (source, patient), g in rows.groupby(["source", "patient_id"]):
+        splits = sorted(set(map(str, g["split"])))
+        if len(splits) > 1:
+            out[(str(source), str(patient))] = splits
+    return out
+
+
+def patients_in_one_split(frame: pd.DataFrame, documented: Mapping[str, Iterable[str]]) -> Gate:
+    """No patient may have lesions in two splits, except the documented ones.
+
+    Splits are by lesion (Phase 0's rule, frozen since v1), so a patient with several lesions
+    can land in train and test. MSK collection 289 has such patients; they are listed in
+    config/patient_overlap_v1.csv and docs/silent-failures.md #9 rather than re-split, which
+    would change the frozen MSK split. Any patient not on the list fails the gate.
+    """
+    crossing = patients_across_splits(frame)
+    known = {(s, str(p)) for s, ps in documented.items() for p in ps}
+    new = sorted(f"{s}/{p}" for s, p in crossing if (s, p) not in known)
+    return Gate(
+        "patients_in_one_split",
+        len(new),
+        _examples(new) or f"{len(crossing)} patients in more than one split, all documented",
+    )
+
+
 def split_matches_phase0(ham: pd.DataFrame, expected: str) -> Gate:
     """HAM10000's lesion-to-split assignment must be exactly Phase 0's."""
     got = split_fingerprint(ham.rename(columns={"label": "dx"}), ham["split"])
@@ -255,4 +293,5 @@ def run_all(frame: pd.DataFrame, config: Mapping[str, Any]) -> list[Gate]:
         site_label_rule_applied(frame, label_rule(config)),
         every_client_image_has_a_client(frame),
         frozen_splits_kept(frame, frozen_splits(config)),
+        patients_in_one_split(frame, patient_overlap(config)),
     ]

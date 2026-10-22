@@ -1,0 +1,945 @@
+{
+  "spec": "results/phase2/analysis_look/spec.json, part B",
+  "code_version": "f2bbf42",
+  "device": "cpu",
+  "scored_images": 7176,
+  "reproducibility_check_client_test": {
+    "v2-ensemble-final-seeds0-1-2": {
+      "balanced_accuracy": {
+        "cpu": 0.6646288355327806,
+        "reported": 0.6646288355327806,
+        "difference_points": 0.0
+      },
+      "melanoma_sensitivity": {
+        "cpu": 0.7161936560934892,
+        "reported": 0.7161936560934892,
+        "difference_points": 0.0
+      }
+    },
+    "v2-final-seed0": {
+      "balanced_accuracy": {
+        "cpu": 0.6220509467561675,
+        "reported": 0.6220509467561675,
+        "difference_points": 0.0
+      },
+      "melanoma_sensitivity": {
+        "cpu": 0.664440734557596,
+        "reported": 0.664440734557596,
+        "difference_points": 0.0
+      }
+    },
+    "v2-final-seed1": {
+      "balanced_accuracy": {
+        "cpu": 0.6247790220564775,
+        "reported": 0.6247790220564775,
+        "difference_points": 0.0
+      },
+      "melanoma_sensitivity": {
+        "cpu": 0.7011686143572621,
+        "reported": 0.7011686143572621,
+        "difference_points": 0.0
+      }
+    },
+    "v2-final-seed2": {
+      "balanced_accuracy": {
+        "cpu": 0.6427729825239854,
+        "reported": 0.6427729825239854,
+        "difference_points": 0.0
+      },
+      "melanoma_sensitivity": {
+        "cpu": 0.6894824707846411,
+        "reported": 0.6894824707846411,
+        "difference_points": 0.0
+      }
+    }
+  },
+  "external_seven_class": {
+    "buenos_aires": {
+      "v2-ensemble-final-seeds0-1-2": {
+        "images": 1458,
+        "melanoma_images": 253,
+        "classes_present": [
+          "akiec",
+          "bcc",
+          "bkl",
+          "df",
+          "mel",
+          "nv",
+          "vasc"
+        ],
+        "balanced_accuracy": 0.5591352317248353,
+        "macro_auroc": 0.8754344089283368,
+        "melanoma_sensitivity": 0.466403162055336,
+        "accuracy": 0.6337448559670782,
+        "recall": {
+          "akiec": 0.3968253968253968,
+          "bcc": 0.5264705882352941,
+          "bkl": 0.5340909090909091,
+          "df": 0.4098360655737705,
+          "mel": 0.466403162055336,
+          "nv": 0.8156146179401993,
+          "vasc": 0.7647058823529411
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.5227000391016413,
+            "high": 0.5956980398060994
+          },
+          "macro_auroc": {
+            "low": 0.8599359015679503,
+            "high": 0.889854185061516
+          },
+          "melanoma_sensitivity": {
+            "low": 0.39285352805089646,
+            "high": 0.5366939208115679
+          }
+        }
+      },
+      "v2-final-seed0": {
+        "images": 1458,
+        "melanoma_images": 253,
+        "classes_present": [
+          "akiec",
+          "bcc",
+          "bkl",
+          "df",
+          "mel",
+          "nv",
+          "vasc"
+        ],
+        "balanced_accuracy": 0.5049879151140881,
+        "macro_auroc": 0.852189102511624,
+        "melanoma_sensitivity": 0.39920948616600793,
+        "accuracy": 0.5816186556927297,
+        "recall": {
+          "akiec": 0.38095238095238093,
+          "bcc": 0.49117647058823527,
+          "bkl": 0.48863636363636365,
+          "df": 0.32786885245901637,
+          "mel": 0.39920948616600793,
+          "nv": 0.760797342192691,
+          "vasc": 0.6862745098039216
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.46659443142393375,
+            "high": 0.5410699162607673
+          },
+          "macro_auroc": {
+            "low": 0.8350198015823764,
+            "high": 0.8673355310703793
+          },
+          "melanoma_sensitivity": {
+            "low": 0.32798014705882356,
+            "high": 0.4677505147563486
+          }
+        }
+      },
+      "v2-final-seed1": {
+        "images": 1458,
+        "melanoma_images": 253,
+        "classes_present": [
+          "akiec",
+          "bcc",
+          "bkl",
+          "df",
+          "mel",
+          "nv",
+          "vasc"
+        ],
+        "balanced_accuracy": 0.5218915152924516,
+        "macro_auroc": 0.8690090363995869,
+        "melanoma_sensitivity": 0.5059288537549407,
+        "accuracy": 0.6152263374485597,
+        "recall": {
+          "akiec": 0.4444444444444444,
+          "bcc": 0.4970588235294118,
+          "bkl": 0.4431818181818182,
+          "df": 0.3770491803278688,
+          "mel": 0.5059288537549407,
+          "nv": 0.7973421926910299,
+          "vasc": 0.5882352941176471
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.4821910394631709,
+            "high": 0.5600568341143034
+          },
+          "macro_auroc": {
+            "low": 0.8543413959091615,
+            "high": 0.8830865482727923
+          },
+          "melanoma_sensitivity": {
+            "low": 0.43567800227660786,
+            "high": 0.5745623491552695
+          }
+        }
+      },
+      "v2-final-seed2": {
+        "images": 1458,
+        "melanoma_images": 253,
+        "classes_present": [
+          "akiec",
+          "bcc",
+          "bkl",
+          "df",
+          "mel",
+          "nv",
+          "vasc"
+        ],
+        "balanced_accuracy": 0.5339348171552808,
+        "macro_auroc": 0.8554427296656647,
+        "melanoma_sensitivity": 0.48221343873517786,
+        "accuracy": 0.6296296296296297,
+        "recall": {
+          "akiec": 0.23809523809523808,
+          "bcc": 0.5205882352941177,
+          "bkl": 0.5113636363636364,
+          "df": 0.3770491803278688,
+          "mel": 0.48221343873517786,
+          "nv": 0.8239202657807309,
+          "vasc": 0.7843137254901961
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.4987032453486278,
+            "high": 0.5694583264513583
+          },
+          "macro_auroc": {
+            "low": 0.8366788209478137,
+            "high": 0.8722790771407133
+          },
+          "melanoma_sensitivity": {
+            "low": 0.40405563746411116,
+            "high": 0.5517273307790549
+          }
+        }
+      }
+    },
+    "pad_ufes": {
+      "v2-ensemble-final-seeds0-1-2": {
+        "images": 2106,
+        "melanoma_images": 52,
+        "classes_present": [
+          "akiec",
+          "bcc",
+          "bkl",
+          "mel",
+          "nv"
+        ],
+        "balanced_accuracy": 0.3939577891307816,
+        "macro_auroc": 0.774842223229933,
+        "melanoma_sensitivity": 0.25,
+        "accuracy": 0.38841405508072174,
+        "recall": {
+          "akiec": 0.29315068493150687,
+          "bcc": 0.41301775147928993,
+          "bkl": 0.5914893617021276,
+          "df": 0.0,
+          "mel": 0.25,
+          "nv": 0.42213114754098363,
+          "vasc": 0.0
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.36347946501768696,
+            "high": 0.4228119478892214
+          },
+          "macro_auroc": {
+            "low": 0.7575215351374818,
+            "high": 0.7913324212530091
+          },
+          "melanoma_sensitivity": {
+            "low": 0.14704088952654232,
+            "high": 0.3611258865248227
+          }
+        }
+      },
+      "v2-final-seed0": {
+        "images": 2106,
+        "melanoma_images": 52,
+        "classes_present": [
+          "akiec",
+          "bcc",
+          "bkl",
+          "mel",
+          "nv"
+        ],
+        "balanced_accuracy": 0.3200093451605094,
+        "macro_auroc": 0.755891081822781,
+        "melanoma_sensitivity": 0.1346153846153846,
+        "accuracy": 0.30151946818613484,
+        "recall": {
+          "akiec": 0.19726027397260273,
+          "bcc": 0.3005917159763314,
+          "bkl": 0.676595744680851,
+          "df": 0.0,
+          "mel": 0.1346153846153846,
+          "nv": 0.29098360655737704,
+          "vasc": 0.0
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.2925877629743685,
+            "high": 0.3480404261233873
+          },
+          "macro_auroc": {
+            "low": 0.7394411056578041,
+            "high": 0.77084376804114
+          },
+          "melanoma_sensitivity": {
+            "low": 0.04345513413506013,
+            "high": 0.2258216676810712
+          }
+        }
+      },
+      "v2-final-seed1": {
+        "images": 2106,
+        "melanoma_images": 52,
+        "classes_present": [
+          "akiec",
+          "bcc",
+          "bkl",
+          "mel",
+          "nv"
+        ],
+        "balanced_accuracy": 0.4091760850291427,
+        "macro_auroc": 0.7748512474311571,
+        "melanoma_sensitivity": 0.2692307692307692,
+        "accuracy": 0.4264007597340931,
+        "recall": {
+          "akiec": 0.4123287671232877,
+          "bcc": 0.4236686390532544,
+          "bkl": 0.502127659574468,
+          "df": 0.0,
+          "mel": 0.2692307692307692,
+          "nv": 0.4385245901639344,
+          "vasc": 0.0
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.37747189920884894,
+            "high": 0.4418307310801543
+          },
+          "macro_auroc": {
+            "low": 0.7580939452473098,
+            "high": 0.7916599054566847
+          },
+          "melanoma_sensitivity": {
+            "low": 0.14997340425531913,
+            "high": 0.38894927536231877
+          }
+        }
+      },
+      "v2-final-seed2": {
+        "images": 2106,
+        "melanoma_images": 52,
+        "classes_present": [
+          "akiec",
+          "bcc",
+          "bkl",
+          "mel",
+          "nv"
+        ],
+        "balanced_accuracy": 0.36162169634482205,
+        "macro_auroc": 0.7328511493725581,
+        "melanoma_sensitivity": 0.17307692307692307,
+        "accuracy": 0.36752136752136755,
+        "recall": {
+          "akiec": 0.2589041095890411,
+          "bcc": 0.40710059171597635,
+          "bkl": 0.49361702127659574,
+          "df": 0.0,
+          "mel": 0.17307692307692307,
+          "nv": 0.47540983606557374,
+          "vasc": 0.0
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.3298446281269596,
+            "high": 0.39032473632006437
+          },
+          "macro_auroc": {
+            "low": 0.7132008452561129,
+            "high": 0.75090208613612
+          },
+          "melanoma_sensitivity": {
+            "low": 0.08195884911341585,
+            "high": 0.275092213114754
+          }
+        }
+      }
+    }
+  },
+  "skin_type_within_site": {
+    "buenos_aires": {
+      "labelled_images_by_type": {
+        "II": 945,
+        "III": 269,
+        "not recorded": 113,
+        "I": 106,
+        "IV": 25
+      },
+      "counts_only_gap": {
+        "IV": 25,
+        "V": 0,
+        "VI": 0
+      },
+      "ensemble": {
+        "I": {
+          "images": 106,
+          "melanoma_images": 32,
+          "classes_present": [
+            "akiec",
+            "bcc",
+            "bkl",
+            "df",
+            "mel",
+            "nv",
+            "vasc"
+          ],
+          "balanced_accuracy": 0.567141032658274,
+          "macro_auroc": 0.8695322651507728,
+          "melanoma_sensitivity": 0.375,
+          "accuracy": 0.5943396226415094,
+          "recall": {
+            "akiec": 0.75,
+            "bcc": 0.6551724137931034,
+            "bkl": 0.625,
+            "df": 0.25,
+            "mel": 0.375,
+            "nv": 0.8148148148148148,
+            "vasc": 0.5
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.4233302975759872,
+              "high": 0.7257928160689485
+            },
+            "macro_auroc": {
+              "low": 0.8121668385962161,
+              "high": 0.9215988967834632
+            },
+            "melanoma_sensitivity": {
+              "low": 0.2161679536679537,
+              "high": 0.5789898132427843
+            }
+          },
+          "too_small_to_interpret": false
+        },
+        "II": {
+          "images": 945,
+          "melanoma_images": 192,
+          "classes_present": [
+            "akiec",
+            "bcc",
+            "bkl",
+            "df",
+            "mel",
+            "nv",
+            "vasc"
+          ],
+          "balanced_accuracy": 0.5284838164100875,
+          "macro_auroc": 0.85447853140782,
+          "melanoma_sensitivity": 0.4635416666666667,
+          "accuracy": 0.5693121693121693,
+          "recall": {
+            "akiec": 0.3191489361702128,
+            "bcc": 0.5198412698412699,
+            "bkl": 0.5384615384615384,
+            "df": 0.35714285714285715,
+            "mel": 0.4635416666666667,
+            "nv": 0.7234726688102894,
+            "vasc": 0.7777777777777778
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.48654144548524647,
+              "high": 0.5706827338132017
+            },
+            "macro_auroc": {
+              "low": 0.8334837864358431,
+              "high": 0.8745404585188948
+            },
+            "melanoma_sensitivity": {
+              "low": 0.37627538269290844,
+              "high": 0.5446222791293214
+            }
+          },
+          "too_small_to_interpret": false
+        },
+        "III": {
+          "images": 269,
+          "melanoma_images": 19,
+          "classes_present": [
+            "akiec",
+            "bcc",
+            "bkl",
+            "df",
+            "mel",
+            "nv",
+            "vasc"
+          ],
+          "balanced_accuracy": 0.6131122037743431,
+          "macro_auroc": 0.9404181320411721,
+          "melanoma_sensitivity": 0.5789473684210527,
+          "accuracy": 0.7955390334572491,
+          "recall": {
+            "akiec": 0.5,
+            "bcc": 0.3870967741935484,
+            "bkl": 0.5555555555555556,
+            "df": 0.5454545454545454,
+            "mel": 0.5789473684210527,
+            "nv": 0.9247311827956989,
+            "vasc": 0.8
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5070999472880715,
+              "high": 0.7103402470256245
+            },
+            "macro_auroc": {
+              "low": 0.9184550226602833,
+              "high": 0.9609571582379272
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3333333333333333,
+              "high": 0.8
+            }
+          },
+          "too_small_to_interpret": true
+        }
+      }
+    },
+    "pad_ufes": {
+      "labelled_images_by_type": {
+        "not recorded": 804,
+        "II": 750,
+        "III": 347,
+        "I": 137,
+        "IV": 59,
+        "V": 8,
+        "VI": 1
+      },
+      "counts_only_gap": {
+        "IV": 59,
+        "V": 8,
+        "VI": 1
+      },
+      "ensemble": {
+        "I": {
+          "images": 137,
+          "melanoma_images": 3,
+          "classes_present": [
+            "akiec",
+            "bcc",
+            "bkl",
+            "mel",
+            "nv"
+          ],
+          "balanced_accuracy": 0.3937161716171617,
+          "macro_auroc": 0.7438376252561851,
+          "melanoma_sensitivity": 0.3333333333333333,
+          "accuracy": 0.41605839416058393,
+          "recall": {
+            "akiec": 0.16,
+            "bcc": 0.4752475247524752,
+            "bkl": 0.25,
+            "df": 0.0,
+            "mel": 0.3333333333333333,
+            "nv": 0.75,
+            "vasc": 0.0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.17864878993931418,
+              "high": 0.5416115440251537
+            },
+            "macro_auroc": {
+              "low": 0.6208953708140422,
+              "high": 0.8333361993623856
+            },
+            "melanoma_sensitivity": {
+              "low": 0.0,
+              "high": 0.5
+            }
+          },
+          "too_small_to_interpret": true
+        },
+        "II": {
+          "images": 750,
+          "melanoma_images": 35,
+          "classes_present": [
+            "akiec",
+            "bcc",
+            "bkl",
+            "mel",
+            "nv"
+          ],
+          "balanced_accuracy": 0.4367389861779566,
+          "macro_auroc": 0.7789434314418184,
+          "melanoma_sensitivity": 0.22857142857142856,
+          "accuracy": 0.3973333333333333,
+          "recall": {
+            "akiec": 0.33974358974358976,
+            "bcc": 0.4043824701195219,
+            "bkl": 0.6521739130434783,
+            "df": 0.0,
+            "mel": 0.22857142857142856,
+            "nv": 0.5588235294117647,
+            "vasc": 0.0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.3751151037616545,
+              "high": 0.49735016872798904
+            },
+            "macro_auroc": {
+              "low": 0.7467694981145659,
+              "high": 0.8106496013156926
+            },
+            "melanoma_sensitivity": {
+              "low": 0.11426948051948052,
+              "high": 0.36671052631578943
+            }
+          },
+          "too_small_to_interpret": false
+        },
+        "III": {
+          "images": 347,
+          "melanoma_images": 10,
+          "classes_present": [
+            "akiec",
+            "bcc",
+            "bkl",
+            "mel",
+            "nv"
+          ],
+          "balanced_accuracy": 0.43909836207045344,
+          "macro_auroc": 0.7529684655024831,
+          "melanoma_sensitivity": 0.4,
+          "accuracy": 0.40057636887608067,
+          "recall": {
+            "akiec": 0.2808988764044944,
+            "bcc": 0.41935483870967744,
+            "bkl": 0.42857142857142855,
+            "df": 0.0,
+            "mel": 0.4,
+            "nv": 0.6666666666666666,
+            "vasc": 0.0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.32770455117337416,
+              "high": 0.5852830087956614
+            },
+            "macro_auroc": {
+              "low": 0.6965439294549308,
+              "high": 0.8332228386256484
+            },
+            "melanoma_sensitivity": {
+              "low": 0.1104166666666667,
+              "high": 0.6666666666666666
+            }
+          },
+          "too_small_to_interpret": true
+        }
+      }
+    }
+  },
+  "worst_missed_melanomas": {
+    "definition": "client-test melanomas the ensemble misses (predicted class not mel), lowest melanoma probability first",
+    "missed_total": 170,
+    "top20": [
+      {
+        "isic_id": "ISIC_0063394",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Trunk",
+        "age_approx": 30.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "akiec",
+        "melanoma_probability": 0.0038398471
+      },
+      {
+        "isic_id": "ISIC_0065278",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Head and neck",
+        "age_approx": 75.0,
+        "sex": "male",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": true,
+        "predicted": "akiec",
+        "melanoma_probability": 0.0138301482
+      },
+      {
+        "isic_id": "ISIC_0064328",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Trunk",
+        "age_approx": 30.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "akiec",
+        "melanoma_probability": 0.0157212839
+      },
+      {
+        "isic_id": "ISIC_0055287",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Head and neck",
+        "age_approx": 85.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": true,
+        "predicted": "nv",
+        "melanoma_probability": 0.0159205469
+      },
+      {
+        "isic_id": "ISIC_0056710",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Trunk",
+        "age_approx": 30.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "akiec",
+        "melanoma_probability": 0.0174333811
+      },
+      {
+        "isic_id": "ISIC_0060393",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Trunk",
+        "age_approx": 75.0,
+        "sex": "male",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "bcc",
+        "melanoma_probability": 0.0182685757
+      },
+      {
+        "isic_id": "ISIC_0033967",
+        "client": "ham_vienna",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Lower extremity",
+        "age_approx": 25.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": true,
+        "predicted": "vasc",
+        "melanoma_probability": 0.0223434125
+      },
+      {
+        "isic_id": "ISIC_0062864",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Head and neck",
+        "age_approx": 85.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": true,
+        "predicted": "nv",
+        "melanoma_probability": 0.02348647
+      },
+      {
+        "isic_id": "ISIC_0059482",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Head and neck",
+        "age_approx": 55.0,
+        "sex": "male",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "bcc",
+        "melanoma_probability": 0.0236421689
+      },
+      {
+        "isic_id": "ISIC_0029562",
+        "client": "ham_vienna",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Upper extremity",
+        "age_approx": 40.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "vasc",
+        "melanoma_probability": 0.023805104
+      },
+      {
+        "isic_id": "ISIC_0058791",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Trunk",
+        "age_approx": 75.0,
+        "sex": "male",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "bkl",
+        "melanoma_probability": 0.0242561266
+      },
+      {
+        "isic_id": "ISIC_0060749",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Head and neck",
+        "age_approx": 85.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": true,
+        "predicted": "nv",
+        "melanoma_probability": 0.0270562499
+      },
+      {
+        "isic_id": "ISIC_0059523",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Head and neck",
+        "age_approx": 70.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": true,
+        "predicted": "bcc",
+        "melanoma_probability": 0.0304124066
+      },
+      {
+        "isic_id": "ISIC_0033051",
+        "client": "ham_vienna",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Lower extremity",
+        "age_approx": 25.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "vasc",
+        "melanoma_probability": 0.0338350768
+      },
+      {
+        "isic_id": "ISIC_0033431",
+        "client": "ham_vienna",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Upper extremity",
+        "age_approx": 65.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "vasc",
+        "melanoma_probability": 0.0368441987
+      },
+      {
+        "isic_id": "ISIC_0062524",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Trunk",
+        "age_approx": 50.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "nv",
+        "melanoma_probability": 0.0438164539
+      },
+      {
+        "isic_id": "ISIC_0028567",
+        "client": "ham_queensland",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Lower extremity",
+        "age_approx": 65.0,
+        "sex": "female",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "nv",
+        "melanoma_probability": 0.0454204992
+      },
+      {
+        "isic_id": "ISIC_0066359",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Head and neck",
+        "age_approx": 75.0,
+        "sex": "male",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "bcc",
+        "melanoma_probability": 0.0482991068
+      },
+      {
+        "isic_id": "ISIC_0057870",
+        "client": "barcelona",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Head and neck",
+        "age_approx": 75.0,
+        "sex": "male",
+        "diagnosis_3": "Melanoma, NOS",
+        "bordered": false,
+        "predicted": "akiec",
+        "melanoma_probability": 0.0532461864
+      },
+      {
+        "isic_id": "ISIC_0014255",
+        "client": "msk",
+        "skin_type": "not recorded",
+        "image_type": "dermoscopic",
+        "anatom_site_1": "Trunk",
+        "age_approx": 65.0,
+        "sex": "male",
+        "diagnosis_3": "Melanoma Invasive",
+        "bordered": false,
+        "predicted": "df",
+        "melanoma_probability": 0.0546723136
+      }
+    ]
+  },
+  "note": "descriptive only; no model or threshold change; skin type is mixed up with site and imaging type"
+}

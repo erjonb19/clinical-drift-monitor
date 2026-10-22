@@ -155,6 +155,24 @@ hypothesis (TF32 convolution arithmetic on the A10 GPU against CPU float32). Eve
 detection metric compares scores from one GPU run, so none is affected. Evidence:
 `results/phase2/batch_drift/reference-186825054715071/v2-final-seed0_check.json`.
 
+## Limitation: splits are by lesion, not by patient
+
+Splits keep every lesion in one split, but a patient's different lesions can land in train and
+test. Patient IDs exist at only some sources:
+- MSK collection 289 is the only training-client collection that records them. There, 47
+  patients span splits, and 30 of the 130 MSK test lesions with a patient ID share a patient
+  with train.
+- HAM10000, Barcelona and MSK collection 287 cannot be checked.
+
+The effect on the reported test numbers is small. Dropping the 55 affected images moves the
+ensemble's pooled balanced accuracy from 66.46% to 66.09%, from saved predictions with no new
+look.
+
+The Buenos Aires recalibration is affected the same way: it split lesions 50/50, and 199 of the
+623 Buenos Aires patients have more than one lesion. Its local-threshold sensitivity on the
+held-out half is therefore, if anything, optimistic. Details: `docs/silent-failures.md` #9.
+Evidence: `results/phase2/patient_overlap/patient_overlap.json`.
+
 ## Simulated local recalibration at Buenos Aires (evidence for the change-control plan)
 
 Spec committed before running (`results/phase2/ba_recalibration/spec.json`); not a change to the
@@ -174,3 +192,72 @@ Buenos Aires melanomas poorly, so recovering them by threshold alone means refer
 in five images. For the change-control plan, site-level recalibration is therefore not enough on
 its own at a site like this; retraining with the site's data is the modification that could
 address it. Evidence: `results/phase2/ba_recalibration/results.json`.
+
+## Analysis look: seven-class accuracy at the new sites, and results by skin type
+
+Spec committed before running (`results/phase2/analysis_look/spec.json`). The look:
+- part A used the drift run's saved GPU scores;
+- part B re-scored on CPU (job run 138750679720121, code `f2bbf42`) the shipped ensemble and the
+  three v2 centralized models, one look each. The CPU re-scoring reproduced the reported client
+  test numbers exactly (0.0 points for all four models);
+- it is descriptive only: no model or threshold changes.
+
+Evidence: `results/phase2/analysis_look/results.json` (part B) and `skin_type_drift.json`
+(part A). Per-image probabilities are in `predictions.csv.gz`: ISIC image and lesion IDs,
+source, client, split, label, skin type, image type, a bordered flag, and each model's class
+probabilities. It
+holds no patient IDs and no images; the IDs and labels are public ISIC metadata, and each
+image's license and attribution are kept in silver.
+
+**Seven-class accuracy at the held-out sites** (ensemble; 95% bootstrap intervals by lesion).
+This counts only classes that map cleanly to HAM10000's, so "SCC, NOS" is excluded:
+
+| Site | Images | Melanomas | Balanced accuracy | Melanoma sensitivity (top class) | Macro AUROC |
+| --- | ---: | ---: | --- | --- | ---: |
+| Client test, pooled (reference) | 3,262 | 599 | 66.46% | 71.62% | 90.90% |
+| Buenos Aires | 1,458 | 253 | 55.91% [52.3, 59.6] | 46.64% [39.3, 53.7] | 87.54% |
+| PAD-UFES-20 (no df or vasc) | 2,106 | 52 | 39.40% [36.3, 42.3] | 25.00% [14.7, 36.1] | 77.48% |
+
+A result this low was checked before being reported (CLAUDE.md: investigate a result that looks too bad):
+- The same run reproduced the client test exactly, so the scoring path is right.
+- Ranking still carries: macro AUROC is 87.5% and 77.5%.
+- Top-class melanoma sensitivity (46.6% at Buenos Aires) is not the triage number. The triage
+  operating point refers far more images (threshold 0.0638) and reached 81.8% there.
+- PAD-UFES-20 is all smartphone photographs, an imaging type absent from training.
+
+**Accuracy by skin type, within each site** (ensemble; types with at least 100 labelled images):
+
+| Site | Type | Images | Melanomas | Balanced accuracy | Melanoma sensitivity |
+| --- | --- | ---: | ---: | --- | --- |
+| Buenos Aires | I | 106 | 32 | 56.7% [42.3, 72.6] | 37.5% [21.6, 57.9] |
+| Buenos Aires | II | 945 | 192 | 52.8% [48.7, 57.1] | 46.4% [37.6, 54.5] |
+| Buenos Aires | III | 269 | 19 | 61.3% [50.7, 71.0] | 57.9% [33.3, 80.0] |
+| PAD-UFES-20 | I | 137 | 3 | 39.4% [17.9, 54.2] | 33.3% [0.0, 50.0] |
+| PAD-UFES-20 | II | 750 | 35 | 43.7% [37.5, 49.7] | 22.9% [11.4, 36.7] |
+| PAD-UFES-20 | III | 347 | 10 | 43.9% [32.8, 58.5] | 40.0% [11.0, 66.7] |
+
+**Drift by skin type** (Mahalanobis, the shipped detector; AUROC of the clients' test split
+against the type's images, mean and range over the three centralized models):
+
+| Site | Type I | Type II | Type III |
+| --- | --- | --- | --- |
+| Buenos Aires | 68.7% (67.5–70.0) | 73.6% (72.5–74.5) | 51.0% (48.3–56.3) |
+| PAD-UFES-20 | 81.4% (79.1–84.0) | 81.5% (78.5–83.8) | 81.1% (76.7–83.8) |
+
+**Types IV to VI are a gap, not a result.** Labelled counts:
+- Buenos Aires: IV 25;
+- PAD-UFES-20: IV 59, V 8, VI 1.
+
+Melanoma counts within a type are often tiny (3 at PAD-UFES-20 type I), so those intervals are
+very wide. Skin type is mixed up with site and imaging type, so **no skin-type effect is
+claimed**. Buenos Aires type III has an AUROC near 50%, meaning the detector does not separate
+those images from in-distribution test images at all. Why is not established here.
+
+**Worst misses.** The ensemble misses 170 client-test melanomas (top class not melanoma). Of the
+20 with the lowest melanoma probability:
+- by site: 14 are from Barcelona, 4 from HAM Vienna, 1 from HAM Queensland, 1 from MSK;
+- 6 are bordered images;
+- predicted classes: akiec 5, nv 5, bcc 4, vasc 4, bkl 1, df 1.
+
+The list with metadata is in `results.json`. Confusion matrices by site and skin type and the
+review of these cases are research Phase D.
