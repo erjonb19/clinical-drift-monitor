@@ -141,4 +141,17 @@ class DemoSession:
 
 
 def library() -> list[Path]:
-    return sorted((REPO / "phenotypes").glob("*/v*.yaml"))
+    """Every library phenotype file, latest version last within each name."""
+    paths = (REPO / "phenotypes").glob("*/v*.yaml")
+    return sorted(paths, key=lambda p: (p.parent.name, int(p.stem[1:])))
+
+
+def concepts_in(definition: dict[str, Any]) -> pd.DataFrame:
+    """The concept IDs a definition uses, with Athena links for their names (no SNOMED text
+    is shown or stored here)."""
+    ids = list(definition["index"]["condition_concept_ids"])
+    for criterion in definition.get("include", []) + definition.get("exclude", []):
+        ids += next(iter(criterion.values()))
+    unique = sorted(set(ids))
+    links = [f"https://athena.ohdsi.org/search-terms/terms/{c}" for c in unique]
+    return pd.DataFrame({"concept_id": unique, "name (Athena)": links})

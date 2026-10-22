@@ -44,6 +44,34 @@ def test_a_library_phenotype_needs_the_visitors_approval(session: DemoSession) -
     assert (session.folder / "approvals.jsonl").exists()
 
 
+def test_the_library_approvals_file_is_never_touched(session: DemoSession) -> None:
+    from cdm.demo import REPO
+
+    library_file = REPO / "phenotypes" / "approvals.jsonl"
+    before = library_file.read_bytes() if library_file.exists() else None
+    for path in library():
+        session.approve(path)
+        session.run(path)
+    assert (library_file.read_bytes() if library_file.exists() else None) == before
+
+
+def test_small_counts_come_out_suppressed(tmp_path: Path) -> None:
+    session = DemoSession(fetch_tables(lambda collection: records(24)), folder=tmp_path)
+    path = next(p for p in library() if p.parent.name == "melanoma_any")
+    session.approve(path)
+    result = session.run(path)
+    assert result.attrition[0]["persons"] == "suppressed"  # 6 people with melanoma
+    assert all(r["persons"] in ("suppressed", "0") for r in result.breakdown)
+
+
+def test_concepts_are_ids_with_athena_links() -> None:
+    from cdm.demo import concepts_in
+
+    table = concepts_in(custom_definition(["Melanoma, NOS"], None, None, True, []))
+    assert table["concept_id"].tolist() == [4162276, 43531286]
+    assert table["name (Athena)"].str.startswith("https://athena.ohdsi.org/").all()
+
+
 def test_a_changed_custom_definition_is_a_new_version(session: DemoSession) -> None:
     options = diagnosis_options()
     assert options["Melanoma, NOS"] == 4162276
