@@ -1,0 +1,1020 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "selection_code_version": "6c46ccd",
+  "selection_job_run": "230673257459446",
+  "wheel_sha256": "70caed4757f28f176ba83212085ce7b3810de7f40803c9c2ca527d7e8d35dea8",
+  "train_val_inputs_sha256": "5210ed78cb1b46bc02098aabee2e15dc1763a5a2171bf020cb840ee1c2b6b8ee",
+  "variants": [
+    "metadata_only",
+    "image_only__biomedclip",
+    "image_only__imagenet_effb0",
+    "fusion__biomedclip",
+    "fusion__imagenet_effb0"
+  ],
+  "feature_sets": {
+    "biomedclip": "Phase B embeddings (job run 1040483728228282)",
+    "imagenet_effb0": "workspace.cdm.gold_embeddings, model_version imagenet-effb0 (ImageNet weights, not the shipped model)"
+  },
+  "metadata": {
+    "columns": [
+      "age",
+      "age_missing",
+      "sex:8507",
+      "sex:8532",
+      "sex:unknown",
+      "site:4055938",
+      "site:4078238",
+      "site:4092246",
+      "site:4144227",
+      "site:4145302",
+      "site:4159862",
+      "site:4159864",
+      "site:4160209",
+      "site:4160210",
+      "site:4182240",
+      "site:4182739",
+      "site:4237609",
+      "site:4238998",
+      "site:4246735",
+      "site:4250773",
+      "site:4252576",
+      "site:4254263",
+      "site:4263673",
+      "site:4272029",
+      "site:4280364",
+      "site:4282616",
+      "site:4297782",
+      "site:4313445",
+      "site:4318817",
+      "site:4321847",
+      "site:4327352",
+      "site:4327489",
+      "site:unknown"
+    ],
+    "age_mean": 54.64492319968083,
+    "age_std": 17.707672508313998,
+    "rule": "fit on train; unseen categories are unknown; the image's source is never an input"
+  },
+  "chosen": {
+    "metadata_only": {
+      "lr": 0.001,
+      "weight_decay": 0.0,
+      "epochs": 30,
+      "batch_size": 256
+    },
+    "image_only__biomedclip": {
+      "lr": 0.001,
+      "weight_decay": 0.01,
+      "epochs": 30,
+      "batch_size": 256
+    },
+    "image_only__imagenet_effb0": {
+      "lr": 0.0001,
+      "weight_decay": 0.0,
+      "epochs": 30,
+      "batch_size": 256
+    },
+    "fusion__biomedclip": {
+      "lr": 0.001,
+      "weight_decay": 0.0,
+      "epochs": 30,
+      "batch_size": 256
+    },
+    "fusion__imagenet_effb0": {
+      "lr": 0.0001,
+      "weight_decay": 0.01,
+      "epochs": 30,
+      "batch_size": 256
+    }
+  },
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "validation_grid": {
+    "metadata_only": [
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.29907353599758574,
+          0.3071679044484932,
+          0.3140549191350907
+        ],
+        "mean": 0.3067654531937232
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.29907353599758574,
+          0.3071679044484932,
+          0.3140549191350907
+        ],
+        "mean": 0.3067654531937232
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.29907353599758574,
+          0.3071679044484932,
+          0.3140549191350907
+        ],
+        "mean": 0.3067654531937232
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3155227618749826,
+          0.31929066631259717,
+          0.31260477229488853
+        ],
+        "mean": 0.3158060668274894
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3155227618749826,
+          0.31929066631259717,
+          0.31260477229488853
+        ],
+        "mean": 0.3158060668274894
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3155227618749826,
+          0.31929066631259717,
+          0.31260477229488853
+        ],
+        "mean": 0.3158060668274894
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3336296157382161,
+          0.3398361926788292,
+          0.33713765447620764
+        ],
+        "mean": 0.33686782096441764
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3336296157382161,
+          0.3398361926788292,
+          0.33713765447620764
+        ],
+        "mean": 0.33686782096441764
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3336296157382161,
+          0.3389377200822434,
+          0.33713765447620764
+        ],
+        "mean": 0.33656833009888903
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3340951264945699,
+          0.34163062026616725,
+          0.333596247307851
+        ],
+        "mean": 0.33644066468952943
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3340951264945699,
+          0.34163062026616725,
+          0.333596247307851
+        ],
+        "mean": 0.33644066468952943
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.3345215657269792,
+          0.34137306532111233,
+          0.333596247307851
+        ],
+        "mean": 0.3364969594519809
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.33373333179743175,
+          0.32889371097371095,
+          0.3271146405266373
+        ],
+        "mean": 0.32991389443259334
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.33373333179743175,
+          0.32889371097371095,
+          0.3271146405266373
+        ],
+        "mean": 0.32991389443259334
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.33373333179743175,
+          0.3288078593253593,
+          0.3271146405266373
+        ],
+        "mean": 0.3298852772164761
+      }
+    ],
+    "image_only__biomedclip": [
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5346186978703497,
+          0.5339299806492742,
+          0.5260323398123757
+        ],
+        "mean": 0.5315270061106666
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5346186978703497,
+          0.5339299806492742,
+          0.5260323398123757
+        ],
+        "mean": 0.5315270061106666
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5346186978703497,
+          0.5339299806492742,
+          0.5260323398123757
+        ],
+        "mean": 0.5315270061106666
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.531666463589372,
+          0.5349209555828939,
+          0.5325412772341853
+        ],
+        "mean": 0.5330428988021504
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.531666463589372,
+          0.5349209555828939,
+          0.5325412772341853
+        ],
+        "mean": 0.5330428988021504
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.531666463589372,
+          0.5349209555828939,
+          0.532627128882537
+        ],
+        "mean": 0.5330715160182676
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5352518217863789,
+          0.5335970377335243,
+          0.540327498825763
+        ],
+        "mean": 0.5363921194485554
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5352518217863789,
+          0.5335970377335243,
+          0.540327498825763
+        ],
+        "mean": 0.5363921194485554
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5353376734347306,
+          0.5335999124765447,
+          0.5403242638318192
+        ],
+        "mean": 0.5364206165810316
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5134584963781269,
+          0.5147118562954525,
+          0.5386732742988507
+        ],
+        "mean": 0.5222812089908101
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5134584963781269,
+          0.5147118562954525,
+          0.5386732742988507
+        ],
+        "mean": 0.5222812089908101
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5171320432260158,
+          0.5140652448915523,
+          0.5353414515214616
+        ],
+        "mean": 0.5221795798796766
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.49337902258080973,
+          0.49301789850264915,
+          0.5190953947591372
+        ],
+        "mean": 0.501830771947532
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.49337902258080973,
+          0.49310375015100083,
+          0.5190095431107855
+        ],
+        "mean": 0.501830771947532
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.4920613012415494,
+          0.49296607901594375,
+          0.5220857502675137
+        ],
+        "mean": 0.5023710435083356
+      }
+    ],
+    "image_only__imagenet_effb0": [
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5517711029690268,
+          0.5569174884875945,
+          0.5528617784386837
+        ],
+        "mean": 0.5538501232984351
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5517711029690268,
+          0.5569174884875945,
+          0.5528617784386837
+        ],
+        "mean": 0.5538501232984351
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5517711029690268,
+          0.5569174884875945,
+          0.5528617784386837
+        ],
+        "mean": 0.5538501232984351
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.540010165003974,
+          0.5261918282609938,
+          0.5442235748944221
+        ],
+        "mean": 0.5368085227197966
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.540010165003974,
+          0.5261918282609938,
+          0.5442235748944221
+        ],
+        "mean": 0.5368085227197966
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5397518338234005,
+          0.5261918282609938,
+          0.5442235748944221
+        ],
+        "mean": 0.536722412326272
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5049331343712894,
+          0.4965229365402465,
+          0.5084753457837716
+        ],
+        "mean": 0.5033104722317692
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5049331343712894,
+          0.4965229365402465,
+          0.5084753457837716
+        ],
+        "mean": 0.5033104722317692
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5048472827229378,
+          0.496264605359673,
+          0.5080489065513623
+        ],
+        "mean": 0.5030535982113243
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.48909546671675136,
+          0.4789136167697899,
+          0.47920918802224394
+        ],
+        "mean": 0.4824060905029284
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.48909546671675136,
+          0.4789136167697899,
+          0.47920918802224394
+        ],
+        "mean": 0.4824060905029284
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.48918209460062156,
+          0.4826665452781427,
+          0.47877801705852496
+        ],
+        "mean": 0.4835422189790964
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.4500385049442847,
+          0.4576741723816467,
+          0.46550106876927083
+        ],
+        "mean": 0.4577379153650674
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.44397353578654597,
+          0.4432176764896232,
+          0.4731239685391784
+        ],
+        "mean": 0.45343839360511584
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.4516789678009678,
+          0.4729795673199581,
+          0.47078123284028434
+        ],
+        "mean": 0.4651465893204034
+      }
+    ],
+    "fusion__biomedclip": [
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5628262076647726,
+          0.5490794393148862,
+          0.5635301189865342
+        ],
+        "mean": 0.5584785886553977
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5628262076647726,
+          0.5490794393148862,
+          0.5635301189865342
+        ],
+        "mean": 0.5584785886553977
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5628262076647726,
+          0.5490794393148862,
+          0.5635301189865342
+        ],
+        "mean": 0.5584785886553977
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5684246396133734,
+          0.5644069737729972,
+          0.5704937787207139
+        ],
+        "mean": 0.5677751307023615
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5684246396133734,
+          0.5644069737729972,
+          0.5704937787207139
+        ],
+        "mean": 0.5677751307023615
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5685104912617251,
+          0.5641518775863676,
+          0.5704937787207139
+        ],
+        "mean": 0.567718715856269
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5842030933393155,
+          0.5724406364269942,
+          0.5724198482661069
+        ],
+        "mean": 0.5763545260108055
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5842030933393155,
+          0.5724406364269942,
+          0.5724198482661069
+        ],
+        "mean": 0.5763545260108055
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.583435706271925,
+          0.5727815842619755,
+          0.5725024649205146
+        ],
+        "mean": 0.5762399184848049
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5687162780451427,
+          0.5742660280823496,
+          0.5790326616170253
+        ],
+        "mean": 0.5740049892481726
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5687162780451427,
+          0.5742660280823496,
+          0.5790326616170253
+        ],
+        "mean": 0.5740049892481726
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5692738028067473,
+          0.5744797302659526,
+          0.5786888390390238
+        ],
+        "mean": 0.5741474573705746
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5485783190825219,
+          0.5547709743408765,
+          0.5649210250583858
+        ],
+        "mean": 0.5560901061605947
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5485783190825219,
+          0.5547709743408765,
+          0.5649210250583858
+        ],
+        "mean": 0.5560901061605947
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5461868823387764,
+          0.5488782909119115,
+          0.5640227413610779
+        ],
+        "mean": 0.5530293048705887
+      }
+    ],
+    "fusion__imagenet_effb0": [
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5654471203244721,
+          0.5503078693424838,
+          0.5632185946053271
+        ],
+        "mean": 0.5596578614240943
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5654471203244721,
+          0.5503078693424838,
+          0.5632185946053271
+        ],
+        "mean": 0.5596578614240943
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5654471203244721,
+          0.5503937209908354,
+          0.5632185946053271
+        ],
+        "mean": 0.5596864786402116
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.560759673754699,
+          0.5541168275103706,
+          0.5523607230932603
+        ],
+        "mean": 0.5557457414527767
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.560759673754699,
+          0.5541168275103706,
+          0.5523607230932603
+        ],
+        "mean": 0.5557457414527767
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.560759673754699,
+          0.5541168275103706,
+          0.5523607230932603
+        ],
+        "mean": 0.5557457414527767
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5342535196866317,
+          0.5286520627443524,
+          0.5244780827944041
+        ],
+        "mean": 0.5291278884084627
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5342535196866317,
+          0.5286520627443524,
+          0.5244780827944041
+        ],
+        "mean": 0.5291278884084627
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5375682523469791,
+          0.5294646836925866,
+          0.5252907037426383
+        ],
+        "mean": 0.530774546594068
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5140138746696138,
+          0.5083793321049656,
+          0.5093933345494819
+        ],
+        "mean": 0.510595513774687
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5140138746696138,
+          0.5083793321049656,
+          0.5093933345494819
+        ],
+        "mean": 0.510595513774687
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5134145956540591,
+          0.5122115033619786,
+          0.5162515493969911
+        ],
+        "mean": 0.5139592161376764
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.48510897191940944,
+          0.4831818969115745,
+          0.488514013261992
+        ],
+        "mean": 0.48560162736432533
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.4940737471913876,
+          0.5016977951844083,
+          0.4895364965160122
+        ],
+        "mean": 0.49510267963060267
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.4790930418151314,
+          0.4889443369654303,
+          0.4974384115820199
+        ],
+        "mean": 0.48849193012086056
+      }
+    ]
+  },
+  "rule": "per variant, the highest mean validation balanced accuracy over the 3 seeds (cdm.probe.select_config)",
+  "test_look": {
+    "rows": "client_test, client_test_without_overlap_patients, ham10000_test, buenos_aires, pad_ufes (as in Phase B)",
+    "bootstrap": "1000 resamples, seed 0, by patient, else lesion, else image",
+    "paired": "fusion minus image only, same feature set and seed, on the same resamples",
+    "source_held_out": "per client source, train without it (encoder refit) and score its test images, image only and fusion, 3 seeds, point estimates",
+    "reference": "the shipped EfficientNet v2 ensemble from the committed analysis-look predictions"
+  },
+  "risks": "metadata can encode the source and so label prevalence; small gains sit inside the intervals",
+  "known_limits": [
+    "the ImageNet-feature variants (image_only__imagenet_effb0 and fusion__imagenet_effb0) chose lr 1e-4, the grid's lowest; the grid was not widened (Phase B widened its grid in the same case), so their configurations may not be the best available"
+  ]
+}
