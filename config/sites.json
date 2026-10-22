@@ -80,5 +80,11 @@
   "patient_overlap": {
     "file": "patient_overlap_v1.csv",
     "note": "patients whose lesions sit in more than one split (splits are by lesion); documented, not re-split (2026-10-20, docs/silent-failures.md #9); any other patient fails the patients_in_one_split gate"
+  },
+  "omop": {
+    "concept_map": "omop_concepts.csv",
+    "resolved_concepts": "cdm_resolved_concepts.csv",
+    "vocabulary_version": "v5.0 29-AUG-26",
+    "note": "OMOP tables (research Phase A). The concept map is committed; the resolved concepts (names and codes, SNOMED content) are made by scripts/omop_concepts.py from a licensed Athena download and uploaded by the deploy script, never committed"
   }
 }

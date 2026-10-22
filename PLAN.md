@@ -131,12 +131,91 @@ Aimed at research informatics work: research-ready OMOP data with a data diction
 
 Rules on top of CLAUDE.md: each phase is its own branch and PR with CI green; every reported number comes from a committed results file that is also logged in MLflow (`scripts/log_evidence.py`, index `results/mlflow_runs.json`); every new test look has a spec committed first and its own lock; intervals resample by patient where ISIC records one, by lesion elsewhere, and test results carry a row without the documented cross-split patients.
 
-- [ ] **A: OMOP and SNOMED CT gold tables.** Every diagnosis, sex, body site, diagnosis-confirmation and modality value mapped to a cited OMOP concept (looked up in Athena, never from memory; unverified rows get concept 0 and are listed); OMOP-style person, condition_occurrence, procedure_occurrence, image_occurrence (OHDSI medical imaging extension proposal), observation, concept and cdm_source tables built in the pipeline from silver, all labelled sources; `docs/data_dictionary.md`; quality checks as gates and tests; Unity Catalog lineage silver to OMOP. Person is one per lesion where no patient ID exists (an assumption), and dates are placeholders (documented). **Done when** one pipeline update builds every table with all OMOP gates passing, every value is mapped or listed as unverified, and the dictionary covers every column.
+- [x] **A: OMOP and SNOMED CT gold tables.** Every diagnosis, sex, body site, diagnosis-confirmation and modality value mapped to a cited OMOP concept (looked up in Athena, never from memory; unverified rows get concept 0 and are listed); OMOP-style person, condition_occurrence, procedure_occurrence, image_occurrence (OHDSI medical imaging extension proposal), observation_period, concept and cdm_source tables (the observation table first listed here was dropped: every mapped field has a home in another table, so it would be empty) built in the pipeline from silver, all labelled sources; `docs/data_dictionary.md`; quality checks as gates and tests; Unity Catalog lineage silver to OMOP. Person is one per lesion where no patient ID exists (an assumption), and dates are placeholders (documented). **Done when** one pipeline update builds every table with all OMOP gates passing, every value is mapped or listed as unverified, and the dictionary covers every column.
 - [ ] **B: BiomedCLIP baseline.** Zero-shot and a 3-seed linear probe on the same client test split as the shipped model; balanced accuracy and melanoma sensitivity with bootstrap intervals for both models; Mahalanobis, max softmax and energy on BiomedCLIP features against the same OOD sets (Gram does not apply to a ViT as built). Research use only, per its model card: never served. **Done when** the spec is committed before the test look and the comparison is logged and committed.
 - [ ] **C: Subgroups.** Performance and drift by age band, sex and body site for both models, with intervals; groups under 100 images get counts and a warning only. HAM10000 has no skin type; the existing within-site skin-type results are restated, and Fitzpatrick17k is a follow-up only. **Done when** the subgroup table is logged and committed.
 - [ ] **D: Grad-CAM and human review.** Grad-CAM for the shipped EfficientNet with a weight-randomization sanity test; a review worksheet of the worst misclassifications and most out-of-distribution images (image, heatmap, labels, scores, attribution, blank reviewer notes); confusion matrices by site and skin type (closes Phase 2's error analysis). Images stay in the volume and MLflow, not git. **Done when** the worksheet exists and the sanity test passes in CI.
 - [ ] **E: Multimodal fusion.** Image embeddings plus age, sex and body site, against image-only with the same head on the same embeddings and a metadata-only baseline, 3 seeds, same splits; reported as measured even if fusion does not help. **Done when** all three are logged with intervals and committed.
 - [ ] **F: Cohort contract (plan only).** `docs/cohort_contract.md`: how the OMOP tables would be exposed to governed-clinical-agent through fixed query templates, with the table contract, small-cell suppression, audit and groundedness. **Done when** you have reviewed it.
+
+## Research extension: Phase G, research informatics services (added 2026-10-21)
+
+Phase G turns the OMOP tables from Phase A into a small research data service. It covers the parts of research informatics that a model alone does not show: an evaluation protocol, governance evidence, tracked investigator requests, a governed cohort and feasibility service with a phenotype library, FAIR packaging, service metrics, clinical text extraction, and a public demo. It is a portfolio build on public data (ISIC, HAM10000, MTSamples) and synthetic requests. It is not a clinical service, and the docs say so.
+
+**Order:** A, then G1 to G6, then B to F as planned. G2 and G6 need Phase A's tables. G4 needs G1's issue form and G2's audit log. G5 needs Phase A's concept map. Everything else is independent.
+
+**Rules on top of the A to F rules:**
+- One PR per item. Never push to `main`. Merge only under the owner's merge rules (given 2026-10-21: stack order, merge commits, green CI, a diff check and a fresh review first). Ruff, mypy and pytest pass before every push.
+- CI makes no live LLM calls.
+- Stop and ask before:
+  - anything that costs money, including a Databricks re-ingest, a pipeline run or GPU time;
+  - any public deployment;
+  - installing system software;
+  - anything that needs your login.
+- No SNOMED codes or names, vocabulary files, caches, pickles or `.env` in git. OMOP concept IDs only.
+- **Exception to the zero-cost rule (your instruction, 2026-10-21):** G5 may call Claude Haiku through `ANTHROPIC_API_KEY` in `.env`, under $5 for the day. Spend is logged per call and reported at each checkpoint. Gemini's free tier is the zero-cost fallback if you would rather keep CLAUDE.md's rule unbroken.
+
+**Job description lines covered:**
+
+| Code | Line |
+| --- | --- |
+| DE-pipe | Research data pipelines with documented definitions, quality checks, metadata, lineage, FAIR reuse |
+| DE-gov | Governed access workflows |
+| DE-cohort | Cohort discovery, phenotyping, trial feasibility |
+| DE-req | Investigator needs turned into scoped, tracked requests |
+| DE-ehr | EHR integration, longitudinal tracking, research-ready datasets, real-world evidence, FHIR/OMOP |
+| AI-ie | AI methods: information extraction, LLM/VLM |
+| AI-eval | Evaluation plans: baselines, splits, human review, error analysis, subgroups, bias |
+| AI-svc | Maintainable services with tests, monitoring, docs |
+| AI-gov | Governance evidence and escalation |
+| SUP | Investigator support: demos, training, reusable examples |
+| MET | Service metrics: turnaround, output quality, reuse, model performance, feedback |
+
+| Item | Effort | Depends on | Covers |
+| --- | --- | --- | --- |
+| G1 Docs: eval protocol, governance packet, request form and board | 0.5 day | none | AI-eval, AI-gov, DE-gov, DE-req |
+| G2 Governed cohort and feasibility service, phenotype library | 1 to 1.5 days | A | DE-cohort, DE-gov, AI-svc, AI-gov, DE-ehr |
+| G3 FAIR packaging and quickstart notebook | 0.5 day | A, G2 | DE-pipe, SUP |
+| G4 Service metrics page | 0.5 day | G1, G2 | MET, AI-svc |
+| G5 Clinical text extraction to OMOP fields | 1 to 1.5 days, plus your labelling | A | AI-ie, AI-eval, DE-ehr |
+| G6 Public Streamlit cohort demo and walkthrough script | 0.5 day | G2, license check | SUP, DE-cohort |
+
+- [ ] **G1: Docs, quick wins.**
+  - `docs/EVAL_PLAN.md`, written as a study protocol: baselines, splits, human review, error analysis, reproducibility, subgroups and bias, failure criteria.
+  - `docs/governance/`: public and restricted access tiers, a data use checklist, risk tiering and the escalation path.
+  - `.github/ISSUE_TEMPLATE/data_request.yml`: question, cohort, data needed, approval status. Plus a GitHub project board; you create it, since it needs your login.
+  - **Done when** the docs are merged and a test request issue renders from the form.
+- [ ] **G2: Governed cohort and feasibility service** (`src/cdm/cohort.py`).
+  - Cohort definitions are versioned YAML files in `phenotypes/`, built only from allowlisted OMOP tables, columns and operators. No free SQL.
+  - A definition runs only once a recorded human has approved that exact version, by hash.
+  - Every request, approval, run and refusal goes to an append-only audit log.
+  - Counts under 11 are suppressed, including counts that could be recovered by subtracting one from another.
+  - It is written against generic OMOP CDM v5.4 column names, so it can later point at the intake platform's OMOP. It runs on DuckDB locally and in CI, and on Databricks SQL in the workspace.
+  - The pattern comes from `Security-Constrained-Agent-Runtime`, which is read only and not modified.
+  - **Done when** tests cover refusal of non-allowlisted fields, unapproved and changed definitions, suppression including the subtraction case, and the audit trail, and at least three phenotypes run on the Phase A tables.
+- [ ] **G3: FAIR packaging.**
+  - Dataset metadata: DCAT/schema.org JSON-LD, plus a `CITATION.cff`.
+  - `notebooks/quickstart.ipynb`, which runs on the public demo extract.
+  - A Zenodo-ready release: `.zenodo.json` and a release checklist. You connect Zenodo to GitHub; it needs your login.
+  - **Done when** the metadata validates in CI and the notebook runs in CI.
+- [ ] **G4: Service metrics page** (`scripts/service_metrics.py` to `docs/service_metrics.md`).
+  - Request turnaround from the issue tracker.
+  - Cohort output quality from the gates and audit log.
+  - Method reuse: phenotype runs per definition.
+  - Model performance over time, from `results/mlflow_runs.json`.
+  - Every number comes from committed or queried sources. Synthetic requests are labelled synthetic.
+  - **Done when** the page regenerates from one command and a test checks its numbers against fixtures.
+- [ ] **G5: Clinical text extraction.**
+  - Haiku extracts diagnosis, body site and confirmation method from MTSamples dermatology and pathology notes into OMOP fields, using Phase A's concept map.
+  - It is scored against a 50 to 100 note labelling sheet that you label, with per-field precision and recall and an error analysis.
+  - A loader interface lets MIMIC-IV-Note swap in later, with code and aggregates only in the repo.
+  - The MTSamples license is checked first. If it does not allow redistribution, the note text stays out of git.
+  - **Done when** the labelled set is scored, the results are logged in MLflow, and the spend is reported.
+- [ ] **G6: Public Streamlit demo** of the cohort service.
+  - It shows source labels and OMOP concept IDs only, never SNOMED names.
+  - The ISIC and HAM10000 metadata licenses are checked first; I stop and ask before deploying.
+  - `docs/demo_script.md`: a 3-minute walkthrough you can record.
+  - **Done when** you approve deployment and the app is live on Streamlit Community Cloud.
 
 ## Phase 3: Serving and MLOps (about 1 week)
 
