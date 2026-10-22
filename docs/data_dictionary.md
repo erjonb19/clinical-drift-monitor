@@ -65,7 +65,7 @@ Each gate is a row in `omop_gate_results`. Any violation fails the pipeline upda
 
 | Column | Type | Required | From | Note | Null |
 | --- | --- | --- | --- | --- | --- |
-| `observation_period_id` | BIGINT | yes | hash of person_source_value |  | 0.0% |
+| `observation_period_id` | BIGINT | yes | hash of "op" + person_source_value |  | 0.0% |
 | `person_id` | BIGINT | yes | the person's person_id |  | 0.0% |
 | `observation_period_start_date` | DATE | yes | constant | placeholder date 2000-01-01; not a real date | 0.0% |
 | `observation_period_end_date` | DATE | yes | constant | placeholder date 2000-01-01; not a real date | 0.0% |
