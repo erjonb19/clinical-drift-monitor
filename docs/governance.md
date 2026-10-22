@@ -99,5 +99,5 @@ kept separate in the audit log so the workflow is visible.
 | Bugs that reported success | `docs/silent-failures.md` |
 | Test looks decided in advance | `spec.json` files with `committed_before_running`; locks |
 | Concept mapping verified, not guessed | `results/research/a_omop/concept_check.json` |
-| Requests scoped and tracked | GitHub issues from the request form; project board |
+| Requests scoped and tracked | GitHub issues from the request form, which adds each one to the [project board](https://github.com/users/erjonb19/projects/2) |
 | Cohort access governed | Phase G2: allowlist, approval by hash, audit log, suppression tests |

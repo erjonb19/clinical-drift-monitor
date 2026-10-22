@@ -2,6 +2,7 @@ name: Data or cohort request
 description: Ask for a cohort count, feasibility estimate, dataset or analysis from the OMOP tables.
 title: "[Request] "
 labels: ["data-request", "status: triage"]
+projects: ["erjonb19/2"]
 body:
   - type: markdown
     attributes:
