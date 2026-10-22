@@ -23,6 +23,7 @@ from cdm.cohort import (
     parse,
     suppress,
     suppress_attrition,
+    suppress_breakdown,
     verify_chain,
 )
 from cdm.omop import build_tables, load_concept_map
@@ -92,12 +93,78 @@ def test_committed_phenotypes_are_valid_and_use_mapped_concepts() -> None:
 
 
 def test_small_cells_and_the_cell_that_would_reveal_one_are_hidden() -> None:
-    assert suppress(pd.Series([5, 50, 30]), total=85) == [SUPPRESSED, "50", COMPLEMENT]
-    assert suppress(pd.Series([5, 7, 30]), total=42) == [SUPPRESSED, SUPPRESSED, "30"]
+    assert suppress(pd.Series([5, 50, 30]), total=85) == [SUPPRESSED] * 3
+    assert suppress(pd.Series([5, 7, 30]), total=42) == [SUPPRESSED] * 3
     assert suppress(pd.Series([0, 50, 12]), total=62) == ["0", "50", "12"]
     assert suppress(pd.Series([5, 50])) == [SUPPRESSED, "50"]  # no total published
     # 100 -> 95 drops 5 people: 95 is hidden too; 95 -> 40 drops 55, so 40 is shown.
     assert suppress_attrition(pd.Series([100, 95, 40, 3])) == ["100", COMPLEMENT, "40", SUPPRESSED]
+    # Eleven people in eleven cells of one: hiding the cells is not enough, the total goes too.
+    cells, total = suppress_breakdown(pd.Series([1] * 11 + [0]), 11, "11")
+    assert cells == [SUPPRESSED] * 11 + ["0"] and total == SUPPRESSED
+    # A step after a hidden one: its drop counts from the last shown step (100 -> 95 is 5).
+    assert suppress_attrition(pd.Series([100, 95, 95, 40])) == ["100", COMPLEMENT, COMPLEMENT,
+                                                                "40"]  # fmt: skip
+
+
+def _pinned(outputs: dict[tuple[str, ...], list[tuple[int, ...]]]) -> list[object]:
+    """Outputs from which some count from 1 to 10 is the same in every true vector that
+    could have produced them, so a reader would know it."""
+    leaks: list[object] = []
+    for shown, vectors in outputs.items():
+        for i in range(len(vectors[0])):
+            values = {v[i] for v in vectors}
+            if len(values) == 1 and 0 < next(iter(values)) < 11:
+                leaks.append((shown, i, values))
+    return leaks
+
+
+def test_no_small_count_can_be_worked_out_from_any_output() -> None:
+    """Brute force: every breakdown of three cells (0 to 24 each) under its published total,
+    and every three-step attrition (with its drops), grouped by what is shown."""
+    from itertools import product
+
+    cells: dict[tuple[str, ...], list[tuple[int, ...]]] = {}
+    for v in product(range(25), repeat=3):
+        cells_shown, total = suppress_breakdown(
+            pd.Series(v), sum(v), suppress_attrition(pd.Series([sum(v)]))[0]
+        )
+        shown = (*cells_shown, total)
+        cells.setdefault(shown, []).append(v)
+    assert _pinned(cells) == []
+    steps: dict[tuple[str, ...], list[tuple[int, ...]]] = {}
+    for a, b, c in product(range(40), repeat=3):
+        if a >= b >= c:
+            shown = tuple(suppress_attrition(pd.Series([a, b, c])))
+            steps.setdefault(shown, []).append((a, b, c, a - b, b - c, a - c))
+    assert _pinned(steps) == []
+
+
+def test_a_hidden_final_count_hides_the_breakdown(tmp_path: Path) -> None:
+    frame = silver(40)
+    nevi = frame.index[frame["label"] == "nv"]  # 30 people
+    frame.loc[nevi, "ham_dx_type"] = "follow_up"
+    frame.loc[nevi[:5], "ham_dx_type"] = "histo"
+    engine, tables = duckdb_engine(omop(frame))
+    svc = CohortService(engine, tables, Approvals(tmp_path / "approvals.jsonl"),
+                        AuditLog(tmp_path / "audit.jsonl"))  # fmt: skip
+    definition = {"name": "nv", "version": 1, "title": "t",
+                  "index": {"condition_concept_ids": [NEVUS]},
+                  "exclude": [{"procedure_concept_ids": [HISTO]}],
+                  "breakdown": ["gender_concept_id"]}  # fmt: skip
+    path = write(tmp_path, definition)
+    svc.decide(path, "approve", "PI", "ok")
+    result = svc.run(path, "fellow")
+    # 30 -> 25 drops 5 people, so 25 is hidden, and so is the one cell that would equal it.
+    assert [r["persons"] for r in result.attrition] == ["30", COMPLEMENT]
+    assert [r["persons"] for r in result.breakdown] == [COMPLEMENT]
+
+
+def test_bad_versions_and_age_ranges_are_refused() -> None:
+    with pytest.raises(PhenotypeError, match="positive integer"):
+        parse(BASE | {"version": True})
+    with pytest.raises(PhenotypeError, match="age_min is above age_max"):
+        parse(BASE | {"index": {"condition_concept_ids": [MEL], "age_min": 50, "age_max": 20}})
 
 
 # ---- approval, audit and counts on real OMOP tables (built from synthetic silver) ----------

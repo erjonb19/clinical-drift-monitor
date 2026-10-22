@@ -92,8 +92,12 @@ def test_deploy_refuses_missing_or_stale_resolved_concepts(tmp_path: Path) -> No
     resolved = tmp_path / "resolved.csv"
     with pytest.raises(SystemExit, match="missing"):
         check(cmap, resolved)
-    resolved.write_text("concept_id,concept_name\n4271013,n\n1,stale\n", encoding="utf-8")
+    head = "concept_id,concept_name,vocabulary_id\n"
+    resolved.write_text(head + "4271013,n,SNOMED\n1,stale,SNOMED\n", encoding="utf-8")
     with pytest.raises(SystemExit, match="stale"):
         check(cmap, resolved)
-    resolved.write_text("concept_id,concept_name\n4271013,n\n", encoding="utf-8")
+    resolved.write_text(head + "4271013,melanocytic naevus,SNOMED\n", encoding="utf-8")
     check(cmap, resolved)
+    cmap.write_text(cmap.read_text("utf-8").replace(",why", ",a melanocytic naevus"), "utf-8")
+    with pytest.raises(SystemExit, match="quote SNOMED names"):
+        check(cmap, resolved)
