@@ -1,0 +1,10 @@
+name: melanoma_under_18
+version: 1
+title: People under 18 at diagnosis with any melanoma
+purpose: Feasibility for a pediatric melanoma imaging review; expected to be small, so most cells are suppressed
+author: Erjon Brucaj
+index:
+  condition_concept_ids: [4162276, 141232, 40391314]  # Melanoma NOS (mel), invasive, in situ
+  age_max: 17
+breakdown: [gender_concept_id]
+# Concept IDs come from config/omop_concepts.csv; their names are in the workspace concept table.

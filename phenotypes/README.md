@@ -16,6 +16,8 @@ the workspace's concept table, because SNOMED text is not published here.
 | `melanoma_histopathology_adults` | Trial feasibility: adults with melanoma and a histopathology procedure |
 | `keratinocyte_cancer_head_neck` | Basal or squamous cell carcinoma with an image of the head or neck |
 | `nevus_without_histopathology` | Nevi with no biopsy: the cohort whose labels are weaker |
+| `melanoma_under_18` | Pediatric melanoma feasibility. Small by design: it shows suppression |
+| `melanoma_dermoscopy` | Proposed for a commercial image export; the decision is in `approvals.jsonl` |
 
 ## The language
 
