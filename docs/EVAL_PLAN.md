@@ -133,7 +133,9 @@ were looked at. Results live in `results/`, each logged in MLflow
   selection, and the per-file SHA-256 manifest.
 - CPU/GPU reproducibility tolerances are set before running. A failed tolerance is
   reported, never loosened.
-- LLM runs (G5) record the model ID, prompt hash, temperature 0, and token cost per call.
+- LLM runs (G5) record the model ID, prompt hash, and token cost per call. The model takes no
+  temperature setting, so each answer is cached and a re-run replays it instead of sampling
+  again.
   CI never calls an LLM; it replays recorded outputs.
 
 ## 10. Failure criteria (decided before the look)
@@ -157,3 +159,4 @@ as a finding, with the same prominence as a success.
 | Date | Change | Why | Looks affected |
 | --- | --- | --- | --- |
 | 2026-10-21 | Protocol written down from the rules Phases 0 to 2 already followed, plus Phases B to G5 | Phase G1 | None: Phases 0 to 2 were run under the same rules, recorded in their specs |
+| 2026-10-22 | G5: no temperature 0; answers are cached and replayed | The API refuses a temperature setting for Claude Haiku 5.5 ("deprecated for this model"), found on the first connection test | None: no G5 note had been run |
