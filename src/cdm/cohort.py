@@ -11,8 +11,9 @@ images and sex, and an optional breakdown. The service:
 3. **compiles** it to SQL against generic OMOP CDM v5.4 table and column names, so it runs on
    DuckDB (tests, local), on Databricks SQL (``workspace.cdm.omop_*``), or on any other OMOP
    that supplies a table map;
-4. **suppresses small cells**: a count from 1 to 10 is shown as "<11", and a second cell is
-   suppressed where the suppressed one could otherwise be recovered by subtraction;
+4. **suppresses small cells**: a count from 1 to 10 is hidden, and so are other cells where
+   subtraction would recover it. Every hidden cell carries the same label, with no stated
+   range, because a range ("under 11", "11 or more") is itself enough to pin a count;
 5. writes every request, refusal, approval and run to a **hash-chained audit log** that
    :func:`verify_chain` checks.
 
@@ -38,9 +39,10 @@ import pandas as pd
 import yaml
 
 MIN_CELL = 11
-SUPPRESSED = "<11"
-# A cell of 11 or more hidden only so a "<11" cell next to it cannot be recovered.
-COMPLEMENT = "suppressed"
+SUPPRESSED = "suppressed"
+# A cell hidden only so a small one cannot be recovered. Same label on purpose: two labels
+# would tell a reader which hidden cells are under 11.
+COMPLEMENT = SUPPRESSED
 OMOP_TABLES = (
     "person",
     "condition_occurrence",
@@ -232,26 +234,34 @@ def compile_sql(pheno: Phenotype, tables: Mapping[str, str]) -> dict[str, str]:
 
 
 def suppress(counts: pd.Series, total: int | None = None) -> list[str]:
-    """Counts as strings with cells from 1 to 10 shown as "<11". If the total is published,
-    the hidden cells add up to the total minus the shown ones, so the smallest shown cells are
-    hidden too ("suppressed") until the hidden cells hold at least 11 people together: then
-    no hidden cell can be worked out. Zero is shown: it reveals no person."""
+    """Counts as strings with cells from 1 to 10 hidden. If the total is published and any
+    cell is small, every non-zero cell is hidden: partial hiding (the smallest other cells)
+    was tried first, and a brute-force test showed that a reader who knows the rule can undo
+    it. Zero is shown: it reveals no person. Ask for a coarser breakdown to see more."""
     values = [int(v) for v in counts]
-    small = {i for i, v in enumerate(values) if 0 < v < MIN_CELL}
-    extra: set[int] = set()
-    if total is not None and small:
-        rest = sorted((i for i, v in enumerate(values) if i not in small and v > 0),
-                      key=lambda i: values[i])  # fmt: skip
-        while rest and sum(values[i] for i in small | extra) < MIN_CELL:
-            extra.add(rest.pop(0))
-    return [
-        SUPPRESSED if i in small else COMPLEMENT if i in extra else str(v)
-        for i, v in enumerate(values)
-    ]
+    small = any(0 < v < MIN_CELL for v in values)
+    hide_all = total is not None and small
+    return [SUPPRESSED if (0 < v < MIN_CELL) or (hide_all and v > 0) else str(v) for v in values]
+
+
+def suppress_breakdown(counts: pd.Series, final: int, final_shown: str) -> tuple[list[str], str]:
+    """A breakdown of the final cohort, and how the final count may be shown with it. The
+    cells add up to the final count, so when it is hidden every non-zero cell is hidden too.
+    When the cells are hidden and the count is shown, ``k`` hidden cells adding up to it
+    could each still be 11 or more only if it is at least ``k + 10``; below that the final
+    count is hidden as well."""
+    values = [int(v) for v in counts]
+    if not final_shown.isdigit():
+        return [str(v) if v == 0 else SUPPRESSED for v in values], final_shown
+    cells = suppress(counts, total=final)
+    hidden = sum(1 for c in cells if c == SUPPRESSED)
+    if hidden and final < hidden + MIN_CELL - 1:
+        return [str(v) if v == 0 else SUPPRESSED for v in values], SUPPRESSED
+    return cells, final_shown
 
 
 def suppress_attrition(persons: pd.Series) -> list[str]:
-    """Attrition counts: a step from 1 to 10 shows "<11". The drop between two shown steps is
+    """Attrition counts: a step from 1 to 10 is hidden. The drop between two shown steps is
     also a count of people, so a step is hidden too ("suppressed") while its drop from the last
     *shown* step is from 1 to 10; hiding one step does not make the next one safe."""
     values = [int(v) for v in persons]
@@ -369,8 +379,8 @@ class CohortResult:
     attrition: list[dict[str, Any]]
     breakdown: list[dict[str, Any]]
     note: str = (
-        "Counts from 1 to 10 show as <11; a cell marked suppressed is 11 or more, hidden so "
-        "that a <11 cell cannot be worked out by subtraction."
+        "Counts from 1 to 10 are suppressed, and so are other cells where subtraction would "
+        "reveal one. A suppressed cell can be any size: the label says nothing about it."
     )
 
 
@@ -410,10 +420,7 @@ class CohortService:
         if "breakdown" in sql:
             frame = self.engine(sql["breakdown"])
             final = int(attrition["persons"].iloc[-1])
-            cells = suppress(frame["persons"], total=final)
-            if not shown[-1].isdigit():
-                # The cells would add up to the hidden total, so none of them is shown.
-                cells = [c if c == SUPPRESSED or c == "0" else COMPLEMENT for c in cells]
+            cells, rows[-1]["persons"] = suppress_breakdown(frame["persons"], final, shown[-1])
             keys = [c for c in frame.columns if c != "persons"]
             breakdown = [
                 {**{k: (None if pd.isna(r[k]) else int(r[k])) for k in keys}, "persons": cell}
