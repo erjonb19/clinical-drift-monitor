@@ -243,6 +243,15 @@ licenses (CC-0, CC-BY or CC-BY-NC per ISIC image, and the terms listed per sourc
 [reference/](reference/) are not covered by the MIT License either; third-party figures and
 images in them keep their original terms.
 
-No dataset files or model weights are committed. `config/splits_v1.csv` lists source and
-lesion IDs only, and the notebook in reference/ shows a few HAM10000 sample images (CC BY-NC
-4.0, Tschandl et al. 2018).
+What the repository holds besides code, all derived from the sources and keeping their
+terms (non-commercial where a source is CC BY-NC):
+- `config/splits_v1.csv` and `config/patient_overlap_v1.csv`: ISIC lesion and patient IDs
+  with their split;
+- `config/omop_concepts.csv`: source values mapped to OMOP concept IDs (no SNOMED text);
+- `results/phase2/analysis_look/predictions.csv.gz`: one row per test image, with ISIC IDs,
+  labels and each model's class probabilities;
+- a few HAM10000 sample images in one cell output of the notebook in reference/ (CC BY-NC
+  4.0, Tschandl et al. 2018);
+- aggregate results (JSON).
+
+No image files, dataset downloads or model weights are committed.
