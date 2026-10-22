@@ -15,7 +15,7 @@
       "spec": {
         "environment_version": "4",
         "dependencies": [
-          "/Volumes/workspace/cdm/raw/deploy/07e8843/cdm-0.1.0-py3-none-any.whl",
+          "/Volumes/workspace/cdm/raw/deploy/51403e3/cdm-0.1.0-py3-none-any.whl",
           "torch==2.14.0",
           "torchvision==0.29.0",
           "onnx==1.23.2",
@@ -35,12 +35,13 @@
       "notebook_task": {
         "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/onnx_export",
         "base_parameters": {
-          "code_version": "07e8843",
-          "wheel": "/Volumes/workspace/cdm/raw/deploy/07e8843/cdm-0.1.0-py3-none-any.whl",
-          "wheel_sha256": "9af05c7dbcaea12dab18cb2b95f1f49ae76a3cd616751a46adbcd927e7e3067f",
-          "repo": "/Volumes/workspace/cdm/raw/deploy/07e8843/repo",
-          "files_sha256": "{\"results/phase3/onnx/spec.json\": \"4386404c3143ae0b5b2a89e3275309177cbfc709e95c9ebd8712f867c4210eca\", \"databricks/notebooks/onnx_export.py\": \"7d2b31d68438ad6185fe2a7b891999cdaaced270eeff4e35c013f34e87804844\"}",
+          "code_version": "51403e3",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/51403e3/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "55d1196dcc439f13334595740337c6e2ca91b3ed78eccc7131805b4e36acba88",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/51403e3/repo",
+          "files_sha256": "{\"results/phase3/onnx/spec.json\": \"4386404c3143ae0b5b2a89e3275309177cbfc709e95c9ebd8712f867c4210eca\", \"databricks/notebooks/onnx_export.py\": \"36bc80d837ca202ea908553e6d3bb07e2f79af143b218e79a16f825e6209e1a9\"}",
           "out": "/Volumes/workspace/cdm/raw/results/phase3/onnx",
+          "mode": "noise",
           "job_run_id": "{{job.run_id}}"
         }
       }
