@@ -869,6 +869,33 @@
       "494f15aa457b46a48271ccfb5a80ecbe"
     ]
   },
+  "results/research/b_vlm/dry_run/databricks_run_138325650497812.json": {
+    "databricks_job_run": "138325650497812",
+    "experiment_id": "3252981153928765",
+    "file_commit": "d09981b",
+    "file_sha256": "3c3453b09de25a371a93b1556588150c98de47fe8df4443c094a778aaa24fea6",
+    "logged_after_the_fact": false,
+    "metrics": 783,
+    "run_id": "5d43bb9dc77344b59710c69d46dbc6f3"
+  },
+  "results/research/b_vlm/dry_run/laptop.json": {
+    "databricks_job_run": null,
+    "experiment_id": "3252981153928765",
+    "file_commit": "d09981b",
+    "file_sha256": "64a20b418c816f5b1f7dda60e223bc0025ab6ca35bb0b44af4a7134771f2587a",
+    "logged_after_the_fact": false,
+    "metrics": 783,
+    "run_id": "e0d273cc631f482c9ee3189fbe372775"
+  },
+  "results/research/b_vlm/embeddings_summary.json": {
+    "databricks_job_run": "1040483728228282",
+    "experiment_id": "3252981153928765",
+    "file_commit": "d09981b",
+    "file_sha256": "4d6fccb6b74beb9dc0cf33e136051b7ca4cad77f40abb77feaf8c7696c02f461",
+    "logged_after_the_fact": false,
+    "metrics": 24,
+    "run_id": "95c3c0ddfdb14dcbabbbaa779a0632eb"
+  },
   "results/research/b_vlm/results.json": {
     "databricks_job_run": "930314930675108",
     "experiment_id": "3252981153928765",
