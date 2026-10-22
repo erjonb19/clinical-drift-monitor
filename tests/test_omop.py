@@ -258,3 +258,11 @@ def test_committed_data_dictionary_is_current() -> None:
     for table, cols in TABLES.items():
         assert f"## omop_{table}" in committed
         assert all(f"| `{c.name}` |" in committed for c in cols)
+
+
+def test_committed_lineage_reaches_every_omop_table_from_bronze() -> None:
+    path = Path(__file__).resolve().parents[1] / "results/research/a_omop/lineage.json"
+    edges = {(e["source"], e["target"]) for e in json.loads(path.read_text("utf-8"))["edges"]}
+    for table in TABLES:
+        assert ("workspace.cdm.silver_metadata", f"workspace.cdm.omop_{table}") in edges
+    assert ("workspace.cdm.bronze_metadata", "workspace.cdm.silver_metadata") in edges
