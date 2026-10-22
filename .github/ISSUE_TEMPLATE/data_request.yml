@@ -47,7 +47,8 @@ body:
   - type: dropdown
     id: approval
     attributes:
-      label: Approval status
+      label: Ethics or data use approval status
+      description: Separate from the review of your cohort definition, which every request gets.
       options:
         - Public data, no approval needed
         - IRB exempt determination
