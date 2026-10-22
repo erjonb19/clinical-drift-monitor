@@ -1,0 +1,84 @@
+{
+  "code_version": "4f5f829",
+  "wheel_sha256": "6b1a52e1dabcf89fd79f259be6e296c2fd80275bfcd80343624461ba96968fc7",
+  "job_run_id": "498023462798649",
+  "finished_utc": "2026-10-22T22:31:22+00:00",
+  "device": "NVIDIA A10G",
+  "models": {
+    "seed0": "538b9a8188528706",
+    "seed1": "b8092ff952d4db13",
+    "seed2": "5e1b02ef8638c5e9"
+  },
+  "shape": {
+    "seed0__train": [
+      15277,
+      1280
+    ],
+    "seed0__val": [
+      3210,
+      1280
+    ],
+    "seed0__test": [
+      3262,
+      1280
+    ],
+    "seed0__buenos_aires": [
+      1616,
+      1280
+    ],
+    "seed0__pad_ufes": [
+      2298,
+      1280
+    ],
+    "seed1__train": [
+      15277,
+      1280
+    ],
+    "seed1__val": [
+      3210,
+      1280
+    ],
+    "seed1__test": [
+      3262,
+      1280
+    ],
+    "seed1__buenos_aires": [
+      1616,
+      1280
+    ],
+    "seed1__pad_ufes": [
+      2298,
+      1280
+    ],
+    "seed2__train": [
+      15277,
+      1280
+    ],
+    "seed2__val": [
+      3210,
+      1280
+    ],
+    "seed2__test": [
+      3262,
+      1280
+    ],
+    "seed2__buenos_aires": [
+      1616,
+      1280
+    ],
+    "seed2__pad_ufes": [
+      2298,
+      1280
+    ]
+  },
+  "row_order": "the Phase B embeddings' meta.csv, set by set",
+  "test_top_probability_gap": {
+    "seed0": 0.00579520521344172,
+    "seed1": 0.0064587766185158135,
+    "seed2": 0.006180754798374899
+  },
+  "seconds_total": 154,
+  "sha256": {
+    "features.npz": "afb0643af1abd8c90f7245e5b26b4df2c8adc9b6b0769fda9faa1688e3d5a8b6"
+  }
+}

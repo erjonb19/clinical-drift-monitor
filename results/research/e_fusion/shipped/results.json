@@ -1,0 +1,1865 @@
+{
+  "spec": "results/research/e_fusion/spec_shipped.json",
+  "spec_sha256": "3a517b716ccabf4e41d5377270b7e778caa5eb65d74e1df4f08978de83bc707f",
+  "code_version": "ce9dfed",
+  "wheel_sha256": "800e7481d41e7f26dbafc9558947b6f5d661c643947e11d5e2d0c77173e2087f",
+  "ran_on": "Databricks serverless CPU, job run 124072636853443",
+  "classification": {
+    "client_test": {
+      "images": 3262,
+      "units": 1851,
+      "models": {
+        "image_only__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.6201723213916086,
+          "macro_auroc": 0.8698950438373751,
+          "melanoma_sensitivity": 0.6260434056761269,
+          "accuracy": 0.7041692213366033,
+          "recall": {
+            "akiec": 0.4909090909090909,
+            "bcc": 0.7758620689655172,
+            "bkl": 0.5726027397260274,
+            "df": 0.4883720930232558,
+            "mel": 0.6260434056761269,
+            "nv": 0.7737804878048781,
+            "vasc": 0.6136363636363636
+          },
+          "support": {
+            "akiec": 165,
+            "bcc": 406,
+            "bkl": 365,
+            "df": 43,
+            "mel": 599,
+            "nv": 1640,
+            "vasc": 44
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5653231518795955,
+              "high": 0.6834410066372486,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8212884242627663,
+              "high": 0.9250032277630246,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5470171074385244,
+              "high": 0.7046980497262774,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.631026353854021,
+          "macro_auroc": 0.8754974760850374,
+          "melanoma_sensitivity": 0.6410684474123539,
+          "accuracy": 0.7090741876149601,
+          "recall": {
+            "akiec": 0.5393939393939394,
+            "bcc": 0.770935960591133,
+            "bkl": 0.5643835616438356,
+            "df": 0.5348837209302325,
+            "mel": 0.6410684474123539,
+            "nv": 0.775609756097561,
+            "vasc": 0.5909090909090909
+          },
+          "support": {
+            "akiec": 165,
+            "bcc": 406,
+            "bkl": 365,
+            "df": 43,
+            "mel": 599,
+            "nv": 1640,
+            "vasc": 44
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5767701985570162,
+              "high": 0.694235564791296,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8243023815345789,
+              "high": 0.9324749108985025,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5675648863148863,
+              "high": 0.7155909142554158,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.6239118019113581,
+          "macro_auroc": 0.8731055783667597,
+          "melanoma_sensitivity": 0.6494156928213689,
+          "accuracy": 0.7207234825260577,
+          "recall": {
+            "akiec": 0.4727272727272727,
+            "bcc": 0.7561576354679803,
+            "bkl": 0.5863013698630137,
+            "df": 0.4418604651162791,
+            "mel": 0.6494156928213689,
+            "nv": 0.801829268292683,
+            "vasc": 0.6590909090909091
+          },
+          "support": {
+            "akiec": 165,
+            "bcc": 406,
+            "bkl": 365,
+            "df": 43,
+            "mel": 599,
+            "nv": 1640,
+            "vasc": 44
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5690275862093799,
+              "high": 0.6867645820989966,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8242506199827742,
+              "high": 0.9262403275884643,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5756632499246307,
+              "high": 0.7217492972908319,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.6282457308756773,
+          "macro_auroc": 0.8721439646439901,
+          "melanoma_sensitivity": 0.6444073455759599,
+          "accuracy": 0.710913549969344,
+          "recall": {
+            "akiec": 0.4909090909090909,
+            "bcc": 0.7733990147783252,
+            "bkl": 0.5863013698630137,
+            "df": 0.5116279069767442,
+            "mel": 0.6444073455759599,
+            "nv": 0.7774390243902439,
+            "vasc": 0.6136363636363636
+          },
+          "support": {
+            "akiec": 165,
+            "bcc": 406,
+            "bkl": 365,
+            "df": 43,
+            "mel": 599,
+            "nv": 1640,
+            "vasc": 44
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5720028011469706,
+              "high": 0.6890965740156767,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8242373070832909,
+              "high": 0.9258256850190306,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5685341370889988,
+              "high": 0.718277717016572,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.6354070225217034,
+          "macro_auroc": 0.8797491192941311,
+          "melanoma_sensitivity": 0.654424040066778,
+          "accuracy": 0.7167381974248928,
+          "recall": {
+            "akiec": 0.5515151515151515,
+            "bcc": 0.7635467980295566,
+            "bkl": 0.5671232876712329,
+            "df": 0.5116279069767442,
+            "mel": 0.654424040066778,
+            "nv": 0.7859756097560976,
+            "vasc": 0.6136363636363636
+          },
+          "support": {
+            "akiec": 165,
+            "bcc": 406,
+            "bkl": 365,
+            "df": 43,
+            "mel": 599,
+            "nv": 1640,
+            "vasc": 44
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5805902324070245,
+              "high": 0.6974315935228041,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8281671831713803,
+              "high": 0.9361735007748552,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5750199958893899,
+              "high": 0.7297758464771125,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.6260196311195908,
+          "macro_auroc": 0.8751993094495776,
+          "melanoma_sensitivity": 0.6494156928213689,
+          "accuracy": 0.7207234825260577,
+          "recall": {
+            "akiec": 0.44242424242424244,
+            "bcc": 0.7733990147783252,
+            "bkl": 0.5945205479452055,
+            "df": 0.46511627906976744,
+            "mel": 0.6494156928213689,
+            "nv": 0.7981707317073171,
+            "vasc": 0.6590909090909091
+          },
+          "support": {
+            "akiec": 165,
+            "bcc": 406,
+            "bkl": 365,
+            "df": 43,
+            "mel": 599,
+            "nv": 1640,
+            "vasc": 44
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5707429060096304,
+              "high": 0.6871427088989676,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.827119210114822,
+              "high": 0.9288380423848067,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.574051074848169,
+              "high": 0.7225559771714678,
+              "draws": 1000
+            }
+          }
+        }
+      },
+      "reference_v2-ensemble-final-seeds0-1-2": {
+        "balanced_accuracy": 0.6646288355327806,
+        "macro_auroc": 0.9090028131675861,
+        "melanoma_sensitivity": 0.7161936560934892,
+        "accuracy": 0.7339055793991416,
+        "recall": {
+          "akiec": 0.5636363636363636,
+          "bcc": 0.7980295566502463,
+          "bkl": 0.5150684931506849,
+          "df": 0.6046511627906976,
+          "mel": 0.7161936560934892,
+          "nv": 0.7957317073170732,
+          "vasc": 0.6590909090909091
+        },
+        "support": {
+          "akiec": 165,
+          "bcc": 406,
+          "bkl": 365,
+          "df": 43,
+          "mel": 599,
+          "nv": 1640,
+          "vasc": 44
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.6079887360800342,
+            "high": 0.7278728382810711,
+            "draws": 1000
+          },
+          "macro_auroc": {
+            "low": 0.8735951285276882,
+            "high": 0.9473437946521234,
+            "draws": 1000
+          },
+          "melanoma_sensitivity": {
+            "low": 0.6351539656743413,
+            "high": 0.7901189433571757,
+            "draws": 1000
+          }
+        }
+      },
+      "over_seeds": {
+        "image_only__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.6250368257189959,
+            "min": 0.6201723213916086,
+            "max": 0.631026353854021
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.6388425153032832,
+            "min": 0.6260434056761269,
+            "max": 0.6494156928213689
+          }
+        },
+        "fusion__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.6298907948389906,
+            "min": 0.6260196311195908,
+            "max": 0.6354070225217034
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.649415692821369,
+            "min": 0.6444073455759599,
+            "max": 0.654424040066778
+          }
+        }
+      },
+      "paired_fusion_minus_image_only": {
+        "seed0": {
+          "balanced_accuracy": {
+            "difference": 0.00807340948406865,
+            "low": -0.0010496199970351059,
+            "high": 0.01893942616264104
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.01836393989983298,
+            "low": -0.003593319107842685,
+            "high": 0.041397626931567254
+          }
+        },
+        "seed1": {
+          "balanced_accuracy": {
+            "difference": 0.004380668667682497,
+            "low": -0.007458349321737076,
+            "high": 0.016297387178139836
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.013355592654424098,
+            "low": -0.005961549311667774,
+            "high": 0.03220351980867208
+          }
+        },
+        "seed2": {
+          "balanced_accuracy": {
+            "difference": 0.0021078292082327144,
+            "low": -0.0051639156290482465,
+            "high": 0.011246974045934029
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.0,
+            "low": -0.014852637498386723,
+            "high": 0.015224059807710843
+          }
+        }
+      }
+    },
+    "client_test_without_overlap_patients": {
+      "images": 3198,
+      "units": 1820,
+      "models": {
+        "image_only__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.6219532014714569,
+          "macro_auroc": 0.8680424363832504,
+          "melanoma_sensitivity": 0.6221837088388215,
+          "accuracy": 0.7054409005628518,
+          "recall": {
+            "akiec": 0.49693251533742333,
+            "bcc": 0.7753086419753087,
+            "bkl": 0.5761772853185596,
+            "df": 0.5121951219512195,
+            "mel": 0.6221837088388215,
+            "nv": 0.7756370416407706,
+            "vasc": 0.5952380952380952
+          },
+          "support": {
+            "akiec": 163,
+            "bcc": 405,
+            "bkl": 361,
+            "df": 41,
+            "mel": 577,
+            "nv": 1609,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5667724755255901,
+              "high": 0.6822216941987208,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8155248719209793,
+              "high": 0.9244992179488998,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5408880860494933,
+              "high": 0.6971441922563418,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.62519189810124,
+          "macro_auroc": 0.8725083544273767,
+          "melanoma_sensitivity": 0.6429809358752167,
+          "accuracy": 0.7085678549093183,
+          "recall": {
+            "akiec": 0.5398773006134969,
+            "bcc": 0.7703703703703704,
+            "bkl": 0.5650969529085873,
+            "df": 0.5121951219512195,
+            "mel": 0.6429809358752167,
+            "nv": 0.7743940335612182,
+            "vasc": 0.5714285714285714
+          },
+          "support": {
+            "akiec": 163,
+            "bcc": 405,
+            "bkl": 361,
+            "df": 41,
+            "mel": 577,
+            "nv": 1609,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5703194521397262,
+              "high": 0.6919690638966932,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8186047863792725,
+              "high": 0.928833989859997,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5627545870330337,
+              "high": 0.7117032254883314,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.6188247371291197,
+          "macro_auroc": 0.8704171312740064,
+          "melanoma_sensitivity": 0.658578856152513,
+          "accuracy": 0.7213883677298312,
+          "recall": {
+            "akiec": 0.4723926380368098,
+            "bcc": 0.7555555555555555,
+            "bkl": 0.5872576177285319,
+            "df": 0.4146341463414634,
+            "mel": 0.658578856152513,
+            "nv": 0.800497203231821,
+            "vasc": 0.6428571428571429
+          },
+          "support": {
+            "akiec": 163,
+            "bcc": 405,
+            "bkl": 361,
+            "df": 41,
+            "mel": 577,
+            "nv": 1609,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5646490555654484,
+              "high": 0.6818898710017023,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.820223740517494,
+              "high": 0.9253026497880158,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5819423220093256,
+              "high": 0.7287469392429501,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.6268352627188877,
+          "macro_auroc": 0.8702184339848137,
+          "melanoma_sensitivity": 0.6412478336221837,
+          "accuracy": 0.7120075046904315,
+          "recall": {
+            "akiec": 0.49693251533742333,
+            "bcc": 0.7728395061728395,
+            "bkl": 0.590027700831025,
+            "df": 0.5121951219512195,
+            "mel": 0.6412478336221837,
+            "nv": 0.7793660658794282,
+            "vasc": 0.5952380952380952
+          },
+          "support": {
+            "akiec": 163,
+            "bcc": 405,
+            "bkl": 361,
+            "df": 41,
+            "mel": 577,
+            "nv": 1609,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5732762631199532,
+              "high": 0.6867661949459855,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8185984560571333,
+              "high": 0.9250969350805696,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5617021963824289,
+              "high": 0.7140581666526599,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.6293529944812583,
+          "macro_auroc": 0.8768182695435301,
+          "melanoma_sensitivity": 0.6551126516464472,
+          "accuracy": 0.7157598499061913,
+          "recall": {
+            "akiec": 0.5521472392638037,
+            "bcc": 0.762962962962963,
+            "bkl": 0.5678670360110804,
+            "df": 0.4878048780487805,
+            "mel": 0.6551126516464472,
+            "nv": 0.7843380981976383,
+            "vasc": 0.5952380952380952
+          },
+          "support": {
+            "akiec": 163,
+            "bcc": 405,
+            "bkl": 361,
+            "df": 41,
+            "mel": 577,
+            "nv": 1609,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5744615711225336,
+              "high": 0.6954459079843258,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8236657721685144,
+              "high": 0.9338148619822281,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5716343110360835,
+              "high": 0.7244310807302934,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.6198526951707628,
+          "macro_auroc": 0.872597506502742,
+          "melanoma_sensitivity": 0.6551126516464472,
+          "accuracy": 0.7204502814258912,
+          "recall": {
+            "akiec": 0.44171779141104295,
+            "bcc": 0.7728395061728395,
+            "bkl": 0.590027700831025,
+            "df": 0.43902439024390244,
+            "mel": 0.6551126516464472,
+            "nv": 0.7973896830329397,
+            "vasc": 0.6428571428571429
+          },
+          "support": {
+            "akiec": 163,
+            "bcc": 405,
+            "bkl": 361,
+            "df": 41,
+            "mel": 577,
+            "nv": 1609,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5659089947513053,
+              "high": 0.6834964495421277,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8226698503432341,
+              "high": 0.9270149017991044,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.577197073449633,
+              "high": 0.7272808732486152,
+              "draws": 1000
+            }
+          }
+        }
+      },
+      "reference_v2-ensemble-final-seeds0-1-2": {
+        "balanced_accuracy": 0.6607123493564447,
+        "macro_auroc": 0.9076265044564369,
+        "melanoma_sensitivity": 0.7157712305025996,
+        "accuracy": 0.7335834896810507,
+        "recall": {
+          "akiec": 0.5705521472392638,
+          "bcc": 0.7975308641975308,
+          "bkl": 0.518005540166205,
+          "df": 0.5853658536585366,
+          "mel": 0.7157712305025996,
+          "nv": 0.7949036668738346,
+          "vasc": 0.6428571428571429
+        },
+        "support": {
+          "akiec": 163,
+          "bcc": 405,
+          "bkl": 361,
+          "df": 41,
+          "mel": 577,
+          "nv": 1609,
+          "vasc": 42
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.6051602902307464,
+            "high": 0.7299204696773232,
+            "draws": 1000
+          },
+          "macro_auroc": {
+            "low": 0.8718199250628148,
+            "high": 0.9465470581134603,
+            "draws": 1000
+          },
+          "melanoma_sensitivity": {
+            "low": 0.63004463772401,
+            "high": 0.7816005818048004,
+            "draws": 1000
+          }
+        }
+      },
+      "over_seeds": {
+        "image_only__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.6219899455672722,
+            "min": 0.6188247371291197,
+            "max": 0.62519189810124
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.6412478336221837,
+            "min": 0.6221837088388215,
+            "max": 0.658578856152513
+          }
+        },
+        "fusion__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.6253469841236362,
+            "min": 0.6198526951707628,
+            "max": 0.6293529944812583
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.6504910456383594,
+            "min": 0.6412478336221837,
+            "max": 0.6551126516464472
+          }
+        }
+      },
+      "paired_fusion_minus_image_only": {
+        "seed0": {
+          "balanced_accuracy": {
+            "difference": 0.004882061247430736,
+            "low": -0.002162894949899746,
+            "high": 0.011513703298487478
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.01906412478336228,
+            "low": -0.0035540038350480086,
+            "high": 0.04410147622196992
+          }
+        },
+        "seed1": {
+          "balanced_accuracy": {
+            "difference": 0.00416109638001827,
+            "low": -0.007871405713340482,
+            "high": 0.01695530037645615
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.012131715771230511,
+            "low": -0.008759444231015528,
+            "high": 0.032262423714036585
+          }
+        },
+        "seed2": {
+          "balanced_accuracy": {
+            "difference": 0.0010279580416431289,
+            "low": -0.007023130056167709,
+            "high": 0.010636303096766117
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.0034662045060658286,
+            "low": -0.019540256272603976,
+            "high": 0.011398467432950225
+          }
+        }
+      }
+    },
+    "ham10000_test": {
+      "images": 1528,
+      "units": 1121,
+      "models": {
+        "image_only__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.7329724836993595,
+          "macro_auroc": 0.9512361233940642,
+          "melanoma_sensitivity": 0.6296296296296297,
+          "accuracy": 0.800392670157068,
+          "recall": {
+            "akiec": 0.5471698113207547,
+            "bcc": 0.7386363636363636,
+            "bkl": 0.7134146341463414,
+            "df": 0.8095238095238095,
+            "mel": 0.6296296296296297,
+            "nv": 0.8590998043052838,
+            "vasc": 0.8333333333333334
+          },
+          "support": {
+            "akiec": 53,
+            "bcc": 88,
+            "bkl": 164,
+            "df": 21,
+            "mel": 162,
+            "nv": 1022,
+            "vasc": 18
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.6811793407103313,
+              "high": 0.7810577405862815,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.9366894072884531,
+              "high": 0.9638675300677133,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5367156807722528,
+              "high": 0.7229755717255718,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.7409507126510773,
+          "macro_auroc": 0.9488708001130453,
+          "melanoma_sensitivity": 0.6481481481481481,
+          "accuracy": 0.8043193717277487,
+          "recall": {
+            "akiec": 0.6792452830188679,
+            "bcc": 0.75,
+            "bkl": 0.7134146341463414,
+            "df": 0.7619047619047619,
+            "mel": 0.6481481481481481,
+            "nv": 0.8561643835616438,
+            "vasc": 0.7777777777777778
+          },
+          "support": {
+            "akiec": 53,
+            "bcc": 88,
+            "bkl": 164,
+            "df": 21,
+            "mel": 162,
+            "nv": 1022,
+            "vasc": 18
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.6785813783915409,
+              "high": 0.7979292465385976,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.930238675384875,
+              "high": 0.9644751647429846,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5597253052164262,
+              "high": 0.7347000245881485,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.7591217560981917,
+          "macro_auroc": 0.9378100940357791,
+          "melanoma_sensitivity": 0.6296296296296297,
+          "accuracy": 0.8154450261780105,
+          "recall": {
+            "akiec": 0.6037735849056604,
+            "bcc": 0.7840909090909091,
+            "bkl": 0.7073170731707317,
+            "df": 0.7142857142857143,
+            "mel": 0.6296296296296297,
+            "nv": 0.8747553816046967,
+            "vasc": 1.0
+          },
+          "support": {
+            "akiec": 53,
+            "bcc": 88,
+            "bkl": 164,
+            "df": 21,
+            "mel": 162,
+            "nv": 1022,
+            "vasc": 18
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.7106165814368307,
+              "high": 0.8075679178610284,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.9118435715273808,
+              "high": 0.9586001492806517,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.530755033557047,
+              "high": 0.7253555647611157,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.7307179198817115,
+          "macro_auroc": 0.9469201024336186,
+          "melanoma_sensitivity": 0.6419753086419753,
+          "accuracy": 0.8017015706806283,
+          "recall": {
+            "akiec": 0.5283018867924528,
+            "bcc": 0.7386363636363636,
+            "bkl": 0.7012195121951219,
+            "df": 0.8095238095238095,
+            "mel": 0.6419753086419753,
+            "nv": 0.8620352250489237,
+            "vasc": 0.8333333333333334
+          },
+          "support": {
+            "akiec": 53,
+            "bcc": 88,
+            "bkl": 164,
+            "df": 21,
+            "mel": 162,
+            "nv": 1022,
+            "vasc": 18
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.6776428239573171,
+              "high": 0.7782888942520427,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.9255443399159126,
+              "high": 0.9641260610607814,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5474257907542579,
+              "high": 0.7348413720638579,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.7468115997785706,
+          "macro_auroc": 0.9516233121397268,
+          "melanoma_sensitivity": 0.6358024691358025,
+          "accuracy": 0.805628272251309,
+          "recall": {
+            "akiec": 0.6792452830188679,
+            "bcc": 0.75,
+            "bkl": 0.7073170731707317,
+            "df": 0.7619047619047619,
+            "mel": 0.6358024691358025,
+            "nv": 0.860078277886497,
+            "vasc": 0.8333333333333334
+          },
+          "support": {
+            "akiec": 53,
+            "bcc": 88,
+            "bkl": 164,
+            "df": 21,
+            "mel": 162,
+            "nv": 1022,
+            "vasc": 18
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.6901683119766352,
+              "high": 0.8016863422331424,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.9343078067302288,
+              "high": 0.9660314168172554,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.536218944099379,
+              "high": 0.7232426404995539,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.7690309386264218,
+          "macro_auroc": 0.9417399138396315,
+          "melanoma_sensitivity": 0.6172839506172839,
+          "accuracy": 0.8167539267015707,
+          "recall": {
+            "akiec": 0.6037735849056604,
+            "bcc": 0.8181818181818182,
+            "bkl": 0.7073170731707317,
+            "df": 0.7619047619047619,
+            "mel": 0.6172839506172839,
+            "nv": 0.8747553816046967,
+            "vasc": 1.0
+          },
+          "support": {
+            "akiec": 53,
+            "bcc": 88,
+            "bkl": 164,
+            "df": 21,
+            "mel": 162,
+            "nv": 1022,
+            "vasc": 18
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.7182205791694796,
+              "high": 0.8163537918297372,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.9173734091365922,
+              "high": 0.9607878231253801,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.5197666740039621,
+              "high": 0.7123287671232876,
+              "draws": 1000
+            }
+          }
+        }
+      },
+      "reference_v2-ensemble-final-seeds0-1-2": {
+        "balanced_accuracy": 0.7632621105288988,
+        "macro_auroc": 0.9676453326863875,
+        "melanoma_sensitivity": 0.7283950617283951,
+        "accuracy": 0.8154450261780105,
+        "recall": {
+          "akiec": 0.6226415094339622,
+          "bcc": 0.8409090909090909,
+          "bkl": 0.6341463414634146,
+          "df": 0.7619047619047619,
+          "mel": 0.7283950617283951,
+          "nv": 0.8659491193737769,
+          "vasc": 0.8888888888888888
+        },
+        "support": {
+          "akiec": 53,
+          "bcc": 88,
+          "bkl": 164,
+          "df": 21,
+          "mel": 162,
+          "nv": 1022,
+          "vasc": 18
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.7079560443498115,
+            "high": 0.8165718676491343,
+            "draws": 1000
+          },
+          "macro_auroc": {
+            "low": 0.959753201834655,
+            "high": 0.9747009392324135,
+            "draws": 1000
+          },
+          "melanoma_sensitivity": {
+            "low": 0.631578947368421,
+            "high": 0.820771563342318,
+            "draws": 1000
+          }
+        }
+      },
+      "over_seeds": {
+        "image_only__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.7443483174828761,
+            "min": 0.7329724836993595,
+            "max": 0.7591217560981917
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.6358024691358025,
+            "min": 0.6296296296296297,
+            "max": 0.6481481481481481
+          }
+        },
+        "fusion__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.7488534860955679,
+            "min": 0.7307179198817115,
+            "max": 0.7690309386264218
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.6316872427983539,
+            "min": 0.6172839506172839,
+            "max": 0.6419753086419753
+          }
+        }
+      },
+      "paired_fusion_minus_image_only": {
+        "seed0": {
+          "balanced_accuracy": {
+            "difference": -0.002254563817647992,
+            "low": -0.014315980088120303,
+            "high": 0.009217007720277198
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.012345679012345623,
+            "low": -0.030494840525328356,
+            "high": 0.055918199929684734
+          }
+        },
+        "seed1": {
+          "balanced_accuracy": {
+            "difference": 0.0058608871274933305,
+            "low": -0.009412045745390184,
+            "high": 0.0288136351614237
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.012345679012345623,
+            "low": -0.05465905662274973,
+            "high": 0.025490114980560825
+          }
+        },
+        "seed2": {
+          "balanced_accuracy": {
+            "difference": 0.009909182528230143,
+            "low": -0.004470558622158139,
+            "high": 0.027435026742498807
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.012345679012345734,
+            "low": -0.035517446471054676,
+            "high": 0.007253187316116402
+          }
+        }
+      }
+    },
+    "buenos_aires": {
+      "images": 1458,
+      "units": 566,
+      "models": {
+        "image_only__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.48141716586567174,
+          "macro_auroc": 0.8228868677091786,
+          "melanoma_sensitivity": 0.39920948616600793,
+          "accuracy": 0.5843621399176955,
+          "recall": {
+            "akiec": 0.31746031746031744,
+            "bcc": 0.5029411764705882,
+            "bkl": 0.5568181818181818,
+            "df": 0.22950819672131148,
+            "mel": 0.39920948616600793,
+            "nv": 0.7757475083056479,
+            "vasc": 0.5882352941176471
+          },
+          "support": {
+            "akiec": 63,
+            "bcc": 340,
+            "bkl": 88,
+            "df": 61,
+            "mel": 253,
+            "nv": 602,
+            "vasc": 51
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.43793905329913135,
+              "high": 0.5217188052243441,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7986311848472957,
+              "high": 0.8444158163498208,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.33186909990822083,
+              "high": 0.46461034189987915,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.5119435403358217,
+          "macro_auroc": 0.8383112273079982,
+          "melanoma_sensitivity": 0.43478260869565216,
+          "accuracy": 0.6035665294924554,
+          "recall": {
+            "akiec": 0.38095238095238093,
+            "bcc": 0.49117647058823527,
+            "bkl": 0.5568181818181818,
+            "df": 0.29508196721311475,
+            "mel": 0.43478260869565216,
+            "nv": 0.7973421926910299,
+            "vasc": 0.6274509803921569
+          },
+          "support": {
+            "akiec": 63,
+            "bcc": 340,
+            "bkl": 88,
+            "df": 61,
+            "mel": 253,
+            "nv": 602,
+            "vasc": 51
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.4705265485139998,
+              "high": 0.5493735052012052,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8176179748358016,
+              "high": 0.8574113318031193,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.36144047555862213,
+              "high": 0.5019636319257994,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.49641496931553936,
+          "macro_auroc": 0.8233880005436159,
+          "melanoma_sensitivity": 0.43873517786561267,
+          "accuracy": 0.6172839506172839,
+          "recall": {
+            "akiec": 0.23809523809523808,
+            "bcc": 0.5205882352941177,
+            "bkl": 0.5227272727272727,
+            "df": 0.29508196721311475,
+            "mel": 0.43873517786561267,
+            "nv": 0.8322259136212624,
+            "vasc": 0.6274509803921569
+          },
+          "support": {
+            "akiec": 63,
+            "bcc": 340,
+            "bkl": 88,
+            "df": 61,
+            "mel": 253,
+            "nv": 602,
+            "vasc": 51
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.45667342783294756,
+              "high": 0.5325347883016087,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7998156328448391,
+              "high": 0.8450929991157383,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.36363636363636365,
+              "high": 0.5084145162489774,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.48538347929508524,
+          "macro_auroc": 0.8225910955007357,
+          "melanoma_sensitivity": 0.4031620553359684,
+          "accuracy": 0.5864197530864198,
+          "recall": {
+            "akiec": 0.30158730158730157,
+            "bcc": 0.4852941176470588,
+            "bkl": 0.5681818181818182,
+            "df": 0.2459016393442623,
+            "mel": 0.4031620553359684,
+            "nv": 0.7857142857142857,
+            "vasc": 0.6078431372549019
+          },
+          "support": {
+            "akiec": 63,
+            "bcc": 340,
+            "bkl": 88,
+            "df": 61,
+            "mel": 253,
+            "nv": 602,
+            "vasc": 51
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.4399736845844422,
+              "high": 0.5230969227312511,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7971429135139758,
+              "high": 0.8439736370575985,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.33461501901140683,
+              "high": 0.4732560362722605,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.5223471745944529,
+          "macro_auroc": 0.8444536976093133,
+          "melanoma_sensitivity": 0.45849802371541504,
+          "accuracy": 0.6165980795610425,
+          "recall": {
+            "akiec": 0.36507936507936506,
+            "bcc": 0.4970588235294118,
+            "bkl": 0.5681818181818182,
+            "df": 0.32786885245901637,
+            "mel": 0.45849802371541504,
+            "nv": 0.8122923588039868,
+            "vasc": 0.6274509803921569
+          },
+          "support": {
+            "akiec": 63,
+            "bcc": 340,
+            "bkl": 88,
+            "df": 61,
+            "mel": 253,
+            "nv": 602,
+            "vasc": 51
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.4813837676384778,
+              "high": 0.5609425191289391,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8246565936613078,
+              "high": 0.8629520889233975,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3842527777777778,
+              "high": 0.5269966804979253,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.5127545551831132,
+          "macro_auroc": 0.8337206883457332,
+          "melanoma_sensitivity": 0.4308300395256917,
+          "accuracy": 0.6248285322359396,
+          "recall": {
+            "akiec": 0.23809523809523808,
+            "bcc": 0.538235294117647,
+            "bkl": 0.5340909090909091,
+            "df": 0.32786885245901637,
+            "mel": 0.4308300395256917,
+            "nv": 0.8338870431893688,
+            "vasc": 0.6862745098039216
+          },
+          "support": {
+            "akiec": 63,
+            "bcc": 340,
+            "bkl": 88,
+            "df": 61,
+            "mel": 253,
+            "nv": 602,
+            "vasc": 51
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.4724972253901449,
+              "high": 0.5509280263707783,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.8104275873612302,
+              "high": 0.8546874886508808,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.356,
+              "high": 0.5,
+              "draws": 1000
+            }
+          }
+        }
+      },
+      "reference_v2-ensemble-final-seeds0-1-2": {
+        "balanced_accuracy": 0.5591352317248353,
+        "macro_auroc": 0.8754344089283368,
+        "melanoma_sensitivity": 0.466403162055336,
+        "accuracy": 0.6337448559670782,
+        "recall": {
+          "akiec": 0.3968253968253968,
+          "bcc": 0.5264705882352941,
+          "bkl": 0.5340909090909091,
+          "df": 0.4098360655737705,
+          "mel": 0.466403162055336,
+          "nv": 0.8156146179401993,
+          "vasc": 0.7647058823529411
+        },
+        "support": {
+          "akiec": 63,
+          "bcc": 340,
+          "bkl": 88,
+          "df": 61,
+          "mel": 253,
+          "nv": 602,
+          "vasc": 51
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.520246396200238,
+            "high": 0.5937615324056388,
+            "draws": 1000
+          },
+          "macro_auroc": {
+            "low": 0.8566173077477792,
+            "high": 0.892202641962302,
+            "draws": 1000
+          },
+          "melanoma_sensitivity": {
+            "low": 0.39895367610531546,
+            "high": 0.5348933706455659,
+            "draws": 1000
+          }
+        }
+      },
+      "over_seeds": {
+        "image_only__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.4965918918390109,
+            "min": 0.48141716586567174,
+            "max": 0.5119435403358217
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.4242424242424243,
+            "min": 0.39920948616600793,
+            "max": 0.43873517786561267
+          }
+        },
+        "fusion__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.5068284030242171,
+            "min": 0.48538347929508524,
+            "max": 0.5223471745944529
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.4308300395256917,
+            "min": 0.4031620553359684,
+            "max": 0.45849802371541504
+          }
+        }
+      },
+      "paired_fusion_minus_image_only": {
+        "seed0": {
+          "balanced_accuracy": {
+            "difference": 0.003966313429413504,
+            "low": -0.006526667948249386,
+            "high": 0.014544689419575872
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.0039525691699604515,
+            "low": -0.01901689090377303,
+            "high": 0.02692829457364342
+          }
+        },
+        "seed1": {
+          "balanced_accuracy": {
+            "difference": 0.010403634258631222,
+            "low": -0.0038384337825140237,
+            "high": 0.023815303712916243
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.023715415019762875,
+            "low": -0.008585548928896576,
+            "high": 0.05167751706439775
+          }
+        },
+        "seed2": {
+          "balanced_accuracy": {
+            "difference": 0.016339585867573836,
+            "low": 0.0020956268955525563,
+            "high": 0.032495954442702715
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.007905138339920958,
+            "low": -0.03249391775231519,
+            "high": 0.017858742959549458
+          }
+        }
+      }
+    },
+    "pad_ufes": {
+      "images": 2106,
+      "units": 1297,
+      "models": {
+        "image_only__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.3545891206827084,
+          "macro_auroc": 0.7274927333055804,
+          "melanoma_sensitivity": 0.21153846153846154,
+          "accuracy": 0.31054131054131057,
+          "recall": {
+            "akiec": 0.12602739726027398,
+            "bcc": 0.34437869822485206,
+            "bkl": 0.6893617021276596,
+            "df": 0.0,
+            "mel": 0.21153846153846154,
+            "nv": 0.4016393442622951,
+            "vasc": 0.0
+          },
+          "support": {
+            "akiec": 730,
+            "bcc": 845,
+            "bkl": 235,
+            "df": 0,
+            "mel": 52,
+            "nv": 244,
+            "vasc": 0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.3243372581894193,
+              "high": 0.38614805642463806,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7082975921822727,
+              "high": 0.745462669198739,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.10198979591836735,
+              "high": 0.3260980479148181,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.38056744044184787,
+          "macro_auroc": 0.7441493245102114,
+          "melanoma_sensitivity": 0.21153846153846154,
+          "accuracy": 0.39078822412155745,
+          "recall": {
+            "akiec": 0.29726027397260274,
+            "bcc": 0.4319526627218935,
+            "bkl": 0.5276595744680851,
+            "df": 0.0,
+            "mel": 0.21153846153846154,
+            "nv": 0.4344262295081967,
+            "vasc": 0.0
+          },
+          "support": {
+            "akiec": 730,
+            "bcc": 845,
+            "bkl": 235,
+            "df": 0,
+            "mel": 52,
+            "nv": 244,
+            "vasc": 0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.34939848048093913,
+              "high": 0.41205243738537883,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7232872087933357,
+              "high": 0.7639552955000134,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.10340444184687317,
+              "high": 0.32655700211118927,
+              "draws": 1000
+            }
+          }
+        },
+        "image_only__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.39254583727156145,
+          "macro_auroc": 0.727583664649015,
+          "melanoma_sensitivity": 0.21153846153846154,
+          "accuracy": 0.38603988603988604,
+          "recall": {
+            "akiec": 0.2356164383561644,
+            "bcc": 0.4414201183431953,
+            "bkl": 0.5659574468085107,
+            "df": 0.0,
+            "mel": 0.21153846153846154,
+            "nv": 0.5081967213114754,
+            "vasc": 0.0
+          },
+          "support": {
+            "akiec": 730,
+            "bcc": 845,
+            "bkl": 235,
+            "df": 0,
+            "mel": 52,
+            "nv": 244,
+            "vasc": 0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.363957625418892,
+              "high": 0.4242225503820108,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7077862550687701,
+              "high": 0.7464067492812742,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.11361235595390524,
+              "high": 0.320800365185636,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed0": {
+          "balanced_accuracy": 0.3755812977367177,
+          "macro_auroc": 0.7295547150312249,
+          "melanoma_sensitivity": 0.25,
+          "accuracy": 0.3333333333333333,
+          "recall": {
+            "akiec": 0.15616438356164383,
+            "bcc": 0.36923076923076925,
+            "bkl": 0.6680851063829787,
+            "df": 0.0,
+            "mel": 0.25,
+            "nv": 0.4344262295081967,
+            "vasc": 0.0
+          },
+          "support": {
+            "akiec": 730,
+            "bcc": 845,
+            "bkl": 235,
+            "df": 0,
+            "mel": 52,
+            "nv": 244,
+            "vasc": 0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.34323801151623784,
+              "high": 0.4085996239949645,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7112698471816581,
+              "high": 0.7468551920589303,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.13725490196078433,
+              "high": 0.375,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed1": {
+          "balanced_accuracy": 0.3817233316800574,
+          "macro_auroc": 0.7516564899892652,
+          "melanoma_sensitivity": 0.19230769230769232,
+          "accuracy": 0.3888888888888889,
+          "recall": {
+            "akiec": 0.29178082191780824,
+            "bcc": 0.421301775147929,
+            "bkl": 0.5319148936170213,
+            "df": 0.0,
+            "mel": 0.19230769230769232,
+            "nv": 0.4713114754098361,
+            "vasc": 0.0
+          },
+          "support": {
+            "akiec": 730,
+            "bcc": 845,
+            "bkl": 235,
+            "df": 0,
+            "mel": 52,
+            "nv": 244,
+            "vasc": 0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.3505568368525796,
+              "high": 0.41231145585067663,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7321907319560483,
+              "high": 0.7713188620974103,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.08924655388471178,
+              "high": 0.2884868421052631,
+              "draws": 1000
+            }
+          }
+        },
+        "fusion__shipped_effb0__seed2": {
+          "balanced_accuracy": 0.3893235880994552,
+          "macro_auroc": 0.7316327240195001,
+          "melanoma_sensitivity": 0.19230769230769232,
+          "accuracy": 0.3936372269705603,
+          "recall": {
+            "akiec": 0.24383561643835616,
+            "bcc": 0.46153846153846156,
+            "bkl": 0.548936170212766,
+            "df": 0.0,
+            "mel": 0.19230769230769232,
+            "nv": 0.5,
+            "vasc": 0.0
+          },
+          "support": {
+            "akiec": 730,
+            "bcc": 845,
+            "bkl": 235,
+            "df": 0,
+            "mel": 52,
+            "nv": 244,
+            "vasc": 0
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.3577960355307603,
+              "high": 0.42182697588180845,
+              "draws": 1000
+            },
+            "macro_auroc": {
+              "low": 0.7095881895307596,
+              "high": 0.7506377956733472,
+              "draws": 1000
+            },
+            "melanoma_sensitivity": {
+              "low": 0.09090909090909091,
+              "high": 0.3055697278911565,
+              "draws": 1000
+            }
+          }
+        }
+      },
+      "reference_v2-ensemble-final-seeds0-1-2": {
+        "balanced_accuracy": 0.3939577891307816,
+        "macro_auroc": 0.774842223229933,
+        "melanoma_sensitivity": 0.25,
+        "accuracy": 0.38841405508072174,
+        "recall": {
+          "akiec": 0.29315068493150687,
+          "bcc": 0.41301775147928993,
+          "bkl": 0.5914893617021276,
+          "df": 0.0,
+          "mel": 0.25,
+          "nv": 0.42213114754098363,
+          "vasc": 0.0
+        },
+        "support": {
+          "akiec": 730,
+          "bcc": 845,
+          "bkl": 235,
+          "df": 0,
+          "mel": 52,
+          "nv": 244,
+          "vasc": 0
+        },
+        "bootstrap_95": {
+          "resamples": 1000,
+          "seed": 0,
+          "balanced_accuracy": {
+            "low": 0.36324223638243536,
+            "high": 0.425590242811598,
+            "draws": 1000
+          },
+          "macro_auroc": {
+            "low": 0.7582636992501978,
+            "high": 0.7930241439327441,
+            "draws": 1000
+          },
+          "melanoma_sensitivity": {
+            "low": 0.14035087719298245,
+            "high": 0.3714451827242525,
+            "draws": 1000
+          }
+        }
+      },
+      "over_seeds": {
+        "image_only__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.3759007994653725,
+            "min": 0.3545891206827084,
+            "max": 0.39254583727156145
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.21153846153846154,
+            "min": 0.21153846153846154,
+            "max": 0.21153846153846154
+          }
+        },
+        "fusion__shipped_effb0": {
+          "balanced_accuracy": {
+            "mean": 0.38220940583874347,
+            "min": 0.3755812977367177,
+            "max": 0.3893235880994552
+          },
+          "melanoma_sensitivity": {
+            "mean": 0.21153846153846154,
+            "min": 0.19230769230769232,
+            "max": 0.25
+          }
+        }
+      },
+      "paired_fusion_minus_image_only": {
+        "seed0": {
+          "balanced_accuracy": {
+            "difference": 0.020992177054009298,
+            "low": 0.00830209796092055,
+            "high": 0.03578703763068915
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.038461538461538464,
+            "low": 0.0,
+            "high": 0.09679386309992127
+          }
+        },
+        "seed1": {
+          "balanced_accuracy": {
+            "difference": 0.0011558912382095277,
+            "low": -0.016683192562087338,
+            "high": 0.016619938661552546
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.019230769230769218,
+            "low": -0.08928571428571427,
+            "high": 0.04545454545454544
+          }
+        },
+        "seed2": {
+          "balanced_accuracy": {
+            "difference": -0.0032222491721062285,
+            "low": -0.02063079395454211,
+            "high": 0.014275194588178386
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.019230769230769218,
+            "low": -0.07999999999999999,
+            "high": 0.048810975609756085
+          }
+        }
+      }
+    }
+  },
+  "note": "descriptive; research use only; never served"
+}
