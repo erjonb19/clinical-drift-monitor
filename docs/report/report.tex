@@ -22,14 +22,15 @@ collections from the ISIC Archive, scores every image with an out-of-distributio
 detector, and evaluates both on two hospitals held out entirely. The data land in a Databricks
 medallion lakehouse with data-quality gates that fail the update, and are also published as
 OMOP CDM v5.4-style research tables with every source value mapped to a cited concept. Every
-test result comes from a specification committed before a single look at the test split, and
-every reported number is logged as an MLflow run tied to a committed file.
+test look follows a specification committed before it (later analyses reuse those
+predictions), and every reported number is logged as an MLflow run tied to a committed file.
 The shipped ensemble reaches 66.46\% balanced accuracy on the training hospitals' test split
 and falls to 55.91\% and 39.40\% at the two new hospitals, where the shipped Mahalanobis
 detector separates the new images with AUROC 67.8\% and 82.3\%. A frozen BiomedCLIP baseline
 trails the ensemble by 15 to 16 points, and subgroup analysis shows uneven drift-alert rates by
 site.
-We report the limits we measured: splits are by lesion rather than patient at one site, detector
+We report the limits we measured: splits are by lesion rather than patient (and patients do
+span splits at the one site that records them), detector
 scores do not reproduce between GPU and CPU, darker skin types are too rare to judge, and site
 is confounded with imaging type.
 \end{abstract}
@@ -47,10 +48,11 @@ than lesions, so images of one lesion appeared on both sides of the split. Fixin
 measuring what it changes, is where the project began.
 
 \section{Data and lakehouse}
-\paragraph{Sources.} 27{,}656 images from the ISIC Archive. Training clients: HAM10000
-\cite{tschandl2018} (Vienna and Queensland), Barcelona and MSK. Held out as new hospitals: Buenos
-Aires and PAD-UFES-20 \cite{pacheco2020}, the latter all smartphone photographs. Two benchmark sets (PathMNIST
-histopathology and CIFAR-10 natural images) only check that a detector works at all.
+\paragraph{Sources.} 27{,}656 images from the ISIC Archive \cite{isic}. Training clients: HAM10000
+\cite{tschandl2018} (Vienna and Queensland), Barcelona (BCN20000 \cite{combalia2019}) and MSK.
+Held out as new hospitals: Buenos Aires \cite{riccilara2023} and PAD-UFES-20 \cite{pacheco2020},
+the latter all smartphone photographs. Two benchmark sets (PathMNIST \cite{yang2023} histopathology
+and CIFAR-10 \cite{krizhevsky2009} natural images) only check that a detector works at all.
 
 \paragraph{Medallion pipeline.} Images and metadata are landed with Auto Loader into bronze,
 decoded and joined into silver, and summarised into gold, as Lakeflow Declarative Pipelines on
@@ -59,7 +61,7 @@ companion job feeds a deliberately broken subset through the same pipeline and m
 the gate. Splits are by lesion and frozen across data versions.
 
 \paragraph{OMOP research tables.} The same silver tables are published as OMOP CDM
-v5.4-style person, observation\_period, condition\_occurrence, procedure\_occurrence,
+\cite{hripcsak2015} v5.4-style person, observation\_period, condition\_occurrence, procedure\_occurrence,
 image\_occurrence (following the OHDSI medical imaging extension proposal), cdm\_source and
 concept tables: 15{,}196 persons, 16{,}238 conditions, 37{,}514 procedures and 27{,}656
 images. Every diagnosis, sex, body site, confirmation method and modality value maps to an
@@ -71,7 +73,7 @@ OMOP table. A person is a real patient only where ISIC records a patient identif
 Dates are placeholders because the sources record none.
 
 \section{Models and detectors}
-\paragraph{Classifier.} EfficientNet-B0, ImageNet-pretrained and fine-tuned at 224 pixels with
+\paragraph{Classifier.} EfficientNet-B0 \cite{tan2019}, ImageNet-pretrained and fine-tuned at 224 pixels with
 class-weighted cross-entropy, trained on Databricks serverless GPU; architecture, image size and
 training length were chosen on validation, and three seeds are averaged into the shipped
 ensemble. Flower FedAvg and FedProx versions treat the four training hospitals as clients.
@@ -94,7 +96,8 @@ re-initialised network \cite{adebayo2018}.
 repository before the look, and a lock file records the look. Choices (architecture, prompt
 templates, probe hyperparameters, detector settings, thresholds) are made on validation only.
 \item \textbf{Seeds and intervals.} Three seeds, reported as mean and range; 95\% bootstrap
-intervals with 1{,}000 resamples by patient where ISIC records one, else by lesion.
+intervals with 1{,}000 resamples. The Phase 2 results resample by lesion; the later research
+analyses resample by patient where ISIC records one, else by lesion.
 \item \textbf{Same scoring for in- and out-of-distribution data,} with detector statistics fit
 on training data only, and a test that scores point the right way.
 \item \textbf{Evidence.} Each results file is logged as an MLflow run on Databricks, and an
@@ -109,26 +112,28 @@ separate dataset.
 \paragraph{Classification.} On the pooled client test split (3{,}262 images, 1{,}857 lesions),
 the shipped ensemble of three EfficientNet-B0 seeds reaches 66.46\% balanced accuracy
 [60.24, 72.85], 71.62\% melanoma sensitivity [64.21, 78.14] and 90.90\% macro AUROC; a single
-model averages 62.99\% (range 62.21--64.28). Federated training with Flower (FedAvg 57.14\%,
-FedProx 58.98\%) trails centralized training, and its rounds were selected on pooled validation,
-which a real federation could not see.
+model averages 62.99\% (range 62.21--64.28). Federated training with Flower \cite{beutel2020} (FedAvg \cite{mcmahan2017} 57.14\%,
+FedProx \cite{li2020} 58.98\%) trails centralized training. Its rounds were selected on pooled
+validation, which a real federation could not see, so the federated numbers are if anything
+optimistic.
 
-\paragraph{Real hospital shift.} At the held-out hospitals the ensemble falls to 55.91\%
+\paragraph{Real hospital shift.} At the held-out hospitals (seven-class accuracy counting only the classes
+that map cleanly to HAM10000's) the ensemble falls to 55.91\%
 [52.3, 59.6] at Buenos Aires and 39.40\% [36.3, 42.3] at PAD-UFES-20, with melanoma sensitivity
 46.64\% and 25.00\%. A melanoma threshold set on validation for 95\% sensitivity holds on the
 client test split (96.2\%) and drops to 81.8\% and 78.8\% at the new sites: the silent
 degradation a drift monitor exists to catch.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering\small
 \begin{tabular}{lcccc}
 \toprule
-Detector (AUROC \%) & Buenos Aires & PAD-UFES-20 & PathMNIST & CIFAR-10\
+Detector (AUROC \%) & Buenos Aires & PAD-UFES-20 & PathMNIST & CIFAR-10\\
 \midrule
-Mahalanobis (shipped) & 67.8 & 82.3 & 94.5 & 96.4\
-Gram & 72.6 & 77.2 & 98.5 & 97.6\
-Energy & 60.3 & 77.2 & 87.8 & 92.3\
-Max softmax & 54.4 & 66.8 & 79.6 & 81.9\
+Mahalanobis (shipped) & 67.8 & 82.3 & 94.5 & 96.4\\
+Gram & 72.6 & 77.2 & 98.5 & 97.6\\
+Energy & 60.3 & 77.2 & 87.8 & 92.3\\
+Max softmax & 54.4 & 66.8 & 79.6 & 81.9\\
 \bottomrule
 \end{tabular}
 \caption{Telling client test images from each shift; EfficientNet, mean of 3 seeds.
@@ -141,7 +146,7 @@ linear probe chosen on validation and one test look, reaches 30.09\% balanced ac
 and 50.84\% with the probe (seed range 50.33--51.24). Paired on the same resamples, each probe
 seed is 15.2 to 16.1 points below the ensemble, every interval excluding zero. One exception: on
 PAD-UFES-20, zero-shot melanoma sensitivity exceeds the ensemble's (71.15\% against 25.00\%).
-On BiomedCLIP features, Mahalanobis separates the real sites well (AUROC 0.752 and 0.959), but
+On BiomedCLIP features, Mahalanobis separates the real sites well (AUROC 75.2\% and 95.9\%), but
 maximum softmax probability scores below chance on every shift: the out-of-distribution images
 receive a \emph{higher} top probability than the test images. We checked the score's direction
 before reporting this.
@@ -150,30 +155,32 @@ before reporting this.
 ensemble is weakest at Barcelona among the training hospitals (53.6\%, against 67.9--69.5\%
 elsewhere) and in patients under 30 (27.2\%, a group of mostly nevi in which the rarer classes
 are missed). Within each held-out site, intervals for Fitzpatrick types I to III overlap, and
-types IV to VI (98 images in total) cannot be judged. A drift alert set to fire on 5\% of client
+types IV to VI (98 images in total, labelled or not) cannot be judged. A drift alert set to fire on 5\% of client
 test images fires unevenly by site, most of all on BiomedCLIP features (13.3\% of MSK images
 against 1.4\% of HAM10000 Queensland), which makes the alert rate itself a fairness question for
 a monitor.
 
-\paragraph{Interpretability for review.} Grad-CAM maps from the shipped checkpoint for 150
+\paragraph{Interpretability for review.} Grad-CAM maps from the shipped seed-0 checkpoint for 150
 images (the worst misses per class and the most out-of-distribution) feed a worksheet for a
 human reviewer. Against a re-initialised network the mean rank correlation is 0.045, so most maps
-depend on the learned weights; 11 maps exceed 0.5 and are flagged as not interpretable. Maps agree
+depend on the learned weights; 11 maps correlate 0.5 or more and are flagged as not interpretable. Maps agree
 across seeds at 0.81 on average. The commonest error is a nevus called melanoma (199 of 3{,}262
 test images). No map has yet been reviewed by a clinician.
 
 \section{Governance and engineering}
 The repository keeps a list of \emph{silent failures}: eleven bugs that reported success while
 being wrong, each with the check that now catches it. Among them: the course notebook reported a
-Mahalanobis AUROC of 4.1\% because it scored in-distribution images its PCA had been fit on, used
-each image's true class for in-distribution but the nearest class for out-of-distribution, and
-projected one benchmark with a PCA refit on itself; a lesion-level split passed every gate while
+Mahalanobis AUROC of 4.1\% against CIFAR-10 because it scored in-distribution images its PCA had
+been fit on and used each image's true class for in-distribution but the nearest class for
+out-of-distribution; it also projected PathMNIST with a PCA refit on itself; a lesion-level split passed every gate while
 patients spanned train and test; and a cohort service's suppressed counts could be worked out by
 subtraction. Long-running jobs are pinned to a commit: the wheel and every input file are
 hash-checked inside the job, and a test look writes its lock only after its results are saved,
 so a crash cannot use up the look. The OMOP tables feed a governed cohort service whose
 definitions run only after a reviewer approves their exact hash, with small counts suppressed
-and every decision in a hash-chained audit log.
+and every decision in a hash-chained audit log. Its requests are synthetic: a portfolio exercise,
+not a clinical service. Serving, the monthly monitoring job and the retraining loop (Phase 3 of the
+project plan) are not built yet.
 
 \section{Limitations}
 \begin{enumerate}
@@ -196,7 +203,29 @@ Code, specifications, results files and the MLflow index are public at
 \url{https://github.com/erjonb19/clinical-drift-monitor} under the MIT license. Images are
 not redistributed; each carries its ISIC license (CC-0, CC-BY or CC-BY-NC) and attribution.
 
-\begin{thebibliography}{9}\small
+\begin{thebibliography}{99}\small
+\bibitem{beutel2020} D.~J.~Beutel et al. Flower: a friendly federated learning research
+framework. \emph{arXiv:2007.14390}, 2020.
+\bibitem{combalia2019} M.~Combalia et al. BCN20000: dermoscopic lesions in the wild.
+\emph{arXiv:1908.02288}, 2019.
+\bibitem{hripcsak2015} G.~Hripcsak et al. Observational Health Data Sciences and Informatics
+(OHDSI): opportunities for observational researchers. \emph{Studies in Health Technology and
+Informatics}, 2015.
+\bibitem{isic} International Skin Imaging Collaboration. ISIC Archive.
+\url{https://www.isic-archive.com}. Each image carries its own license and attribution.
+\bibitem{krizhevsky2009} A.~Krizhevsky. Learning multiple layers of features from tiny images.
+Technical report, University of Toronto, 2009.
+\bibitem{li2020} T.~Li et al. Federated optimization in heterogeneous networks.
+\emph{MLSys}, 2020.
+\bibitem{mcmahan2017} B.~McMahan et al. Communication-efficient learning of deep networks from
+decentralized data. \emph{AISTATS}, 2017.
+\bibitem{riccilara2023} M.~A.~Ricci Lara et al. A dataset of skin lesion images collected in
+Argentina for the evaluation of AI tools in the detection of skin cancer. \emph{Scientific Data},
+2023.
+\bibitem{tan2019} M.~Tan and Q.~V.~Le. EfficientNet: rethinking model scaling for convolutional
+neural networks. \emph{ICML}, 2019.
+\bibitem{yang2023} J.~Yang et al. MedMNIST v2: a large-scale lightweight benchmark for 2D and 3D
+biomedical image classification. \emph{Scientific Data}, 2023.
 \bibitem{adebayo2018} J.~Adebayo et al. Sanity checks for saliency maps. \emph{NeurIPS}, 2018.
 \bibitem{hendrycks2017} D.~Hendrycks and K.~Gimpel. A baseline for detecting misclassified and
 out-of-distribution examples in neural networks. \emph{ICLR}, 2017.
@@ -209,7 +238,8 @@ patient data and clinical images collected from smartphones. \emph{Data in Brief
 matrices. \emph{ICML}, 2020.
 \bibitem{selvaraju2017} R.~R.~Selvaraju et al. Grad-CAM: visual explanations from deep networks
 via gradient-based localization. \emph{ICCV}, 2017.
-\bibitem{tschandl2018} P.~Tschandl, C.~Rosendahl and H.~Kittler. The HAM10000 dataset.
+\bibitem{tschandl2018} P.~Tschandl, C.~Rosendahl and H.~Kittler. The HAM10000 dataset, a large
+collection of multi-source dermatoscopic images of common pigmented skin lesions.
 \emph{Scientific Data}, 2018.
 \bibitem{zhang2023} S.~Zhang et al. BiomedCLIP: a multimodal biomedical foundation model
 pretrained from fifteen million scientific image-text pairs. \emph{arXiv:2303.00915}, 2023.

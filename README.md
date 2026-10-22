@@ -14,7 +14,8 @@ portfolio project and research prototype: **not for clinical use**.
   (research data services) is in progress.
 - Phases 3 to 6 have not started.
 
-A 4-page technical report (LaTeX source; it compiles as-is on Overleaf or any TeX install):
+A 4-page technical report (LaTeX source with standard packages, written to build on Overleaf;
+not yet compiled, since no TeX is installed on the build machine):
 [docs/report/report.tex](docs/report/report.tex).
 
 [PLAN.md](PLAN.md) has scope and order. [docs/BUILT_VS_PLANNED.md](docs/BUILT_VS_PLANNED.md)
