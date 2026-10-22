@@ -114,6 +114,9 @@ meta = (
 )
 chosen = chosen.merge(meta, on=["source", "isic_id"], how="left", validate="one_to_one")
 assert chosen["image"].notna().all()
+assert chosen[["license", "attribution"]].notna().all().all(), (
+    "an image without license or attribution"
+)
 
 manifest = {m["seed"]: m for m in json.loads(Path(dbutils.widgets.get("models_file")).read_text())}
 models = {}
@@ -158,6 +161,9 @@ for b in range(0, len(images), 16):
             float(np.mean([spearmanr(a, o[i].flatten().numpy()).statistic for o in others]))
         )
 maps = {k: torch.cat(v).numpy() for k, v in maps.items()}
+# A constant map gives a NaN correlation; cdm.explain.randomization_check would refuse it.
+if not (np.isfinite(randomization).all() and np.isfinite(agreement).all()):
+    raise RuntimeError("a constant heatmap: the sanity check cannot say anything about it")
 chosen["randomization_spearman"] = randomization
 chosen["seed_agreement_spearman"] = agreement
 chosen["flagged_not_interpreted"] = [flagged(r) for r in randomization]

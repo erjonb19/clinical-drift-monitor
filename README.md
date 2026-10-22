@@ -316,7 +316,8 @@ whole client test split's Mahalanobis scores, so 5% of those images fire overall
 
 A worksheet for a human reviewer, not a finding. Under
 [`spec.json`](results/research/d_review/spec.json) (committed first), one Databricks serverless
-CPU run (624234357242388) picked 150 client-test images from the committed predictions:
+CPU run (624234357242388) picked 150 client-test images from the committed predictions (two
+vascular lesions are on both lists):
 - the shipped ensemble's worst misses: up to 20 per true class, fewer where a class has fewer
   misses (17 dermatofibromas, 15 vascular lesions);
 - the 20 most out-of-distribution images by Mahalanobis.
@@ -329,11 +330,13 @@ largest gap was 0.0000002.
 [`worksheet.csv`](results/research/d_review/worksheet.csv), IDs and values only):
 - **Weight randomization** (Adebayo et al.): the mean rank correlation between each map and the
   same map from a re-initialized network is 0.045 (range -0.63 to 0.64). So for most images
-  the maps depend on what the network learned. 11 maps correlate 0.5 or more and are flagged
+  the maps depend on what the network learned. That is a minimum bar: it does not show the maps
+  are faithful to how the model decides. 11 maps correlate 0.5 or more and are flagged
   "not interpreted".
 - **Agreement across seeds:** seed 0's maps correlate 0.81 on average with seeds 1 and 2
   (range -0.07 to 1.00). Some images get different explanations from equally trained models.
-- The maps are 7x7 upsampled to 224 px: coarse.
+- The maps are 7x7 upsampled to 224 px: coarse. The smooth upsampling likely raises these
+  pixel-level correlations, seed agreement most.
 
 The worksheet is an MLflow artifact (run `885408cb6a9d4f5f8b38ea53598cdfe8`, with each image's
 license and attribution) and the table `workspace.cdm.gold_review_worksheet`, whose

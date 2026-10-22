@@ -71,5 +71,6 @@ def confusion_by(pred: pd.DataFrame, column: str, min_n: int = 0) -> dict[str, A
 
 
 def flagged(randomization: float) -> bool:
-    """A map that barely changes when the weights are randomized is not interpreted."""
-    return randomization >= RANDOMIZATION_FLAG
+    """A map that barely changes when the weights are randomized is not interpreted. A NaN
+    correlation (a constant map) says nothing either, so it is flagged too, never passed."""
+    return bool(np.isnan(randomization)) or randomization >= RANDOMIZATION_FLAG
