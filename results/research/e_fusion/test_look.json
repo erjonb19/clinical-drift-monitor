@@ -1,0 +1,9 @@
+{
+  "started_utc": "2026-10-22T21:28:36+00:00",
+  "spec_sha256": "ab0ba5ffa2c395e438fc9a9dcb872446c964f39e3417ae7e2a0ca4d412dbb62c",
+  "code_version": "cd0653d",
+  "wheel_sha256": "4224bc323aeaf8fbd63f9554268c55e5e5bcadeab58028fc220f8bfde37de81e",
+  "ran_on": "Databricks serverless CPU, job run 75228269324996",
+  "results_sha256": "e8b820399233ee1847e3f268bbc31dba8a07d30c70377f2b1a5cc87b623c11df",
+  "completed_utc": "2026-10-22T21:56:46+00:00"
+}

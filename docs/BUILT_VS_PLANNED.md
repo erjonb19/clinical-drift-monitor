@@ -159,6 +159,15 @@ Known limits:
 - The worksheet exists (MLflow artifact, `gold_review_worksheet`, overlays in the volume).
   **Not reviewed:** `reviewer_notes` is blank until a person fills it in.
 
+### Research Phase E: image plus metadata (built 2026-10-22)
+
+- `cdm.fusion` (metadata encoding fit on train, five variants), tested in CI;
+  `databricks/notebooks/fusion.py` and its job: selection on validation (run
+  230673257459446) committed as the spec, then one test look (run 75228269324996) with an
+  attempt log, results saved before the lock. Spec and results logged to MLflow.
+- Known limit: the ImageNet-feature variants chose the grid's lowest learning rate; the
+  grid was not widened.
+
 ### Research Phase G: research informatics services (2026-10-21 and 22)
 
 - G1: `docs/EVAL_PLAN.md`, `docs/governance.md`, the request issue form and the project board.
@@ -207,7 +216,5 @@ Known limits:
 
 ## Not started
 
-- Research extension Phase E (fusion): no code yet. Detailed plans are in
-  PLAN.md ("Detailed plans for B to F").
 - Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.

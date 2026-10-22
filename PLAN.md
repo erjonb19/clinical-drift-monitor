@@ -135,7 +135,7 @@ Rules on top of CLAUDE.md: each phase is its own branch and PR with CI green; ev
 - [x] **B: BiomedCLIP baseline.** (Done 2026-10-22: `results/research/b_vlm/`, logged to MLflow.) Zero-shot and a 3-seed linear probe on the same client test split as the shipped model; balanced accuracy and melanoma sensitivity with bootstrap intervals for both models; Mahalanobis, max softmax and energy on BiomedCLIP features against the same OOD sets (Gram does not apply to a ViT as built). Research use only, per its model card: never served. **Done when** the spec is committed before the test look and the comparison is logged and committed.
 - [x] **C: Subgroups.** (Done 2026-10-22: `results/research/c_subgroups/`, logged to MLflow.) Performance and drift by age band, sex and body site for both models, with intervals; groups under 100 images get counts and a warning only. HAM10000 has no skin type; the existing within-site skin-type results are restated, and Fitzpatrick17k is a follow-up only. **Done when** the subgroup table is logged and committed.
 - [x] **D: Grad-CAM and human review.** (Done 2026-10-22: `results/research/d_review/`; the worksheet is built, and "reviewed" waits for a reviewer.) Grad-CAM for the shipped EfficientNet with a weight-randomization sanity test; a review worksheet of the worst misclassifications and most out-of-distribution images (image, heatmap, labels, scores, attribution, blank reviewer notes); confusion matrices by site and skin type (closes Phase 2's error analysis). Images stay in the volume and MLflow, not git. **Done when** the worksheet exists and the sanity test passes in CI.
-- [ ] **E: Multimodal fusion.** Image embeddings plus age, sex and body site, against image-only with the same head on the same embeddings and a metadata-only baseline, 3 seeds, same splits; reported as measured even if fusion does not help. **Done when** all three are logged with intervals and committed.
+- [x] **E: Multimodal fusion.** (Done 2026-10-22: `results/research/e_fusion/`, logged to MLflow.) Image embeddings plus age, sex and body site, against image-only with the same head on the same embeddings and a metadata-only baseline, 3 seeds, same splits; reported as measured even if fusion does not help. **Done when** all three are logged with intervals and committed.
 - [ ] **F: Cohort contract (plan only).** `docs/cohort_contract.md`: how the OMOP tables would be exposed to governed-clinical-agent through the G2 cohort service (approved 2026-10-22, replacing the first plan's fixed query templates; see the decisions log), with the table contract, small-cell suppression, audit and groundedness. **Done when** you have reviewed it.
 
 ### Detailed plans for B to F (updated 2026-10-22)
@@ -344,6 +344,13 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-22 (proposed by Claude Code, waiting for the owner)**
+  - **Phase E feature set:** PLAN says the EfficientNet penultimate embeddings are "already in
+    `gold_embeddings`"; that table holds ImageNet-pretrained B0 features, not the shipped
+    model's. Phase E ran on them (disclosed in its README section) before this was raised.
+    Options: accept them as a frozen-backbone comparison, or add the shipped model's own
+    features (a GPU extraction within the Phase B-E cap) as a new variant under a new spec
+    and a separate look.
 - **2026-10-22 (later)**
   - **Phase B embeddings table:** approved: BiomedCLIP embeddings stay in their own table, `workspace.cdm.gold_vlm_embeddings`, not appended to `gold_embeddings` (which the Phase 1 gold task overwrites on every run).
   - **Phase B test look:** not rerun on the laptop as it was (the first attempt was stopped for low system memory before it wrote its started lock, which that code wrote before scoring any test image; no metric was computed or seen). It was first made crash-safe (results saved before the lock is written) and checked by a dry run on validation, and it runs as a Databricks serverless CPU job. Nothing the committed spec chose changed.

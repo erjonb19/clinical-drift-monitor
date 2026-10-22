@@ -1,0 +1,48 @@
+{
+  "name": "cdm-research-e-fusion",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/cd0653d/cdm-0.1.0-py3-none-any.whl",
+          "torch==2.14.0",
+          "torchvision==0.29.0"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "fusion",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 10800,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/fusion",
+        "base_parameters": {
+          "code_version": "cd0653d",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/cd0653d/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "4224bc323aeaf8fbd63f9554268c55e5e5bcadeab58028fc220f8bfde37de81e",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/cd0653d/repo",
+          "files_sha256": "{\"scripts/vlm_baseline.py\": \"517c391c0b036b216f6a65dae2b5ed4ecd12ec61f4d6be66f8a503d24094fade\", \"results/research/b_vlm/spec.json\": \"ed67698ced6aac74629ef8eff169ce5a356af17ad02391574c8967e0fa984c7e\", \"results/research/e_fusion/spec.json\": \"ab0ba5ffa2c395e438fc9a9dcb872446c964f39e3417ae7e2a0ca4d412dbb62c\", \"results/phase2/analysis_look/predictions.csv.gz\": \"65f784b7749c7b6885d41d8edde0724a49ca7e111769b30cdc4638abe556082c\", \"config/patient_overlap_v1.csv\": \"57afcd358a11cc7fa02c4a6845d0e56ee50664fc83840359ab44bd428e406dc6\"}",
+          "embeddings": "/Volumes/workspace/cdm/raw/results/research/b_vlm/embeddings",
+          "out": "/Volumes/workspace/cdm/raw/results/research/e_fusion",
+          "mode": "select",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}
