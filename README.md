@@ -4,13 +4,14 @@ A skin lesion classifier trained across hospitals, with an out-of-distribution (
 tested on real new hospitals. Built on Databricks Free Edition at zero cost. A personal
 portfolio project and research prototype: **not for clinical use**.
 
-**Status (2026-10-21):**
+**Status (2026-10-22):**
 - Phases 0 to 2 are done: fix the science, data engineering, and ML. The one Phase 2 item left,
   error analysis, moved to research Phase D.
 - The research extension (Phases A to F: OMOP data, a vision-language baseline, subgroups,
   interpretability, fusion) is planned in
   [docs/research_extension_plan.md](docs/research_extension_plan.md). Phase A (OMOP tables)
-  is built; Phase G (research data services) is in progress.
+  and Phase B (the BiomedCLIP baseline) are built; Phase G (research data services) is in
+  progress.
 - Phases 3 to 6 have not started.
 
 [PLAN.md](PLAN.md) has scope and order. [docs/BUILT_VS_PLANNED.md](docs/BUILT_VS_PLANNED.md)
@@ -133,6 +134,63 @@ tables through `silver_metadata` and `silver_decoded` into every OMOP table:
 
 Full Phase 2 record: [docs/phase2-note.md](docs/phase2-note.md). Data engineering:
 [docs/phase1-note.md](docs/phase1-note.md).
+
+## Research Phase B: BiomedCLIP baseline
+
+Does a medical vision-language model, frozen, match the shipped EfficientNet ensemble? It does
+not, on any row. BiomedCLIP (pinned revision `9f341de`) embedded every image once on a
+Databricks serverless GPU (job run 1040483728228282, 4.3 minutes). Its prompt template, the
+linear probe's settings and the Mahalanobis PCA size were then chosen on train and validation
+only, and committed in [`spec.json`](results/research/b_vlm/spec.json) before one test look.
+That look ran as a Databricks serverless CPU job (run 930314930675108) and wrote
+[`results.json`](results/research/b_vlm/results.json), then its lock
+[`test_look.json`](results/research/b_vlm/test_look.json). EfficientNet's numbers come from
+its committed analysis-look predictions: no new look. Intervals are 95% bootstrap intervals
+(1,000 resamples by patient where ISIC records one, else by lesion).
+
+**Clients' test split** (3,262 images):
+
+| Model | Balanced accuracy | Melanoma sensitivity | Macro AUROC |
+|---|---|---|---|
+| BiomedCLIP zero-shot | 30.09% (24.95 to 34.70) | 42.74% | 0.694 |
+| BiomedCLIP linear probe, mean of 3 seeds (range) | 50.84% (50.33 to 51.24) | 54.48% (52.09 to 55.76) | 0.835 to 0.843 |
+| EfficientNet-B0 v2 ensemble (shipped) | 66.46% (60.80 to 72.79) | 71.62% | 0.909 |
+
+- **Paired on the same resamples**, each probe seed is 15.2 to 16.1 points below the ensemble
+  in balanced accuracy, and every interval excludes zero (seed 0: -15.50, -20.37 to -11.12).
+  Zero-shot is 36.38 points below (-45.99 to -28.05).
+- **Without the 47 MSK overlap patients** (3,198 images): probe 51.00% mean, ensemble 66.07%.
+- **New hospitals.** Buenos Aires: zero-shot 35.70%, probe 46.58% mean, ensemble 55.91%.
+  PAD-UFES-20 (smartphone photos): zero-shot 27.22%, probe 23.40% mean, ensemble 39.40%. Here
+  the probe falls below zero-shot.
+
+**Drift on BiomedCLIP features** (AUROC, the clients' test split against each set; higher
+means the detector separates them):
+
+| Detector | Buenos Aires | PAD-UFES-20 | PathMNIST | CIFAR-10 |
+|---|---|---|---|---|
+| Mahalanobis (PCA 70, method D) | 0.752 | 0.959 | above 0.9999 | above 0.9999 |
+| Energy, zero-shot logits | 0.610 | 0.843 | 0.9999 | 0.9998 |
+| Energy, probe (mean of 3 seeds) | 0.443 | 0.464 | 0.320 | 0.246 |
+| Max softmax, zero-shot | 0.379 | 0.302 | 0.280 | 0.234 |
+| Max softmax, probe (mean of 3 seeds) | 0.450 | 0.427 | 0.288 | 0.174 |
+
+- **Max softmax points the wrong way**, and this was checked rather than assumed. Its score
+  is the negative top probability, and a CI test checks its direction. The out-of-distribution
+  images get a *higher* top softmax probability than the test images, while matching every
+  class text less closely. Softmax normalizes that difference away; energy (zero-shot) keeps
+  it. The probe's logits fail both ways, which fits a linear head that grows more confident
+  far from its training data. On BiomedCLIP, only Mahalanobis and zero-shot energy are usable
+  drift scores.
+- Gram does not apply: it needs convolutional feature maps, and BiomedCLIP is a ViT.
+
+**Caveats.**
+- BiomedCLIP was pretrained on PMC-15M figure-caption pairs, which may include figures of ISIC
+  or HAM10000 images, so "zero-shot" cannot be shown to be on unseen images.
+- The probe is linear on frozen features; fine-tuning was out of scope.
+- Research use only, per the BiomedCLIP model card; never served.
+- The spec was chosen on the owner's Windows computer and the look ran on Linux. A dry run of
+  the whole look on validation gave identical numbers on both.
 
 ## Research informatics services (Phase G)
 

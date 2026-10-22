@@ -135,6 +135,18 @@ Known limits:
 
 ## Scaffolded
 
+### Research Phase B: BiomedCLIP baseline (built 2026-10-22)
+
+- `cdm.vlm` (pinned BiomedCLIP, zero-shot, drift metrics, paired bootstrap) and `cdm.probe`
+  (3-seed linear probe), tested in CI with a fake model, including that drift scores point
+  the right way.
+- One Databricks serverless GPU job embedded every image (`databricks/vlm_job.json`, run
+  1040483728228282, 4.3 GPU minutes); embeddings in `workspace.cdm.gold_vlm_embeddings`.
+- `scripts/vlm_baseline.py`: `select` on train and validation wrote the committed spec; one
+  test look ran as a serverless CPU job (`databricks/vlm_look_job.json`, run
+  930314930675108) after a dry run on validation. The lock is written only after the
+  results are saved. Results and spec are logged to MLflow; numbers in the README.
+
 ### Research Phases C, D and F: CPU-only prep (2026-10-22)
 
 - C: `cdm.eval.subgroup_table`, with the minimum-100 rule and a test. No subgroup results yet.
@@ -167,7 +179,7 @@ Known limits:
 
 ## Not started
 
-- Research extension Phases B (BiomedCLIP) and E (fusion): no code yet. Detailed plans are in
+- Research extension Phase E (fusion): no code yet. Detailed plans are in
   PLAN.md ("Detailed plans for B to F").
 - Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.
