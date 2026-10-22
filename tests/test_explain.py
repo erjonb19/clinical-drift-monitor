@@ -3,6 +3,9 @@ uses, and change when its weights are randomized. No training, no data."""
 
 from __future__ import annotations
 
+import copy
+
+import pytest
 import torch
 from torch import nn
 
@@ -59,3 +62,48 @@ def test_efficientnet_target_layer_and_map_shape() -> None:
     model = build_model(pretrained=False)
     cam = grad_cam(model, last_conv_block(model), torch.rand(2, 3, 64, 64))
     assert cam.shape == (2, 64, 64)
+
+
+def varied_images() -> torch.Tensor:
+    noise = torch.rand(4, 3, 32, 32, generator=torch.Generator().manual_seed(0))
+    return bright_corner() + noise
+
+
+def test_positive_control_an_identical_model_correlates_fully() -> None:
+    model = brightness_model()
+    a = grad_cam(model, first_conv(model), varied_images()).flatten(1)
+    twin = copy.deepcopy(model)
+    b = grad_cam(twin, first_conv(twin), varied_images()).flatten(1)
+    assert torch.allclose(a, b)
+
+
+def test_randomized_batchnorm_statistics_are_reset_and_maps_vary_by_input() -> None:
+    model = build_model(pretrained=False)
+    bn = next(m for m in model.modules() if isinstance(m, nn.BatchNorm2d))
+    assert bn.running_var is not None
+    with torch.no_grad():
+        bn.running_var.fill_(5.0)  # pretend these were learned
+    copy_ = randomized_copy(model, seed=0)
+    bn_copy = next(m for m in copy_.modules() if isinstance(m, nn.BatchNorm2d))
+    assert bn_copy.running_var is not None
+    assert torch.equal(bn_copy.running_var, torch.ones_like(bn_copy.running_var))
+    assert float(bn.running_var[0]) == 5.0  # the original is untouched
+    maps = grad_cam(copy_, last_conv_block(copy_), torch.rand(3, 3, 64, 64))
+    assert not torch.allclose(maps[0], maps[1])
+
+
+def test_a_constant_map_raises_instead_of_passing() -> None:
+    model = brightness_model()
+    flat = torch.zeros(2, 3, 32, 32)  # no evidence anywhere: a flat map
+    with pytest.raises(ValueError):
+        randomization_check(model, flat, first_conv, seed=1)
+
+
+def test_hooks_are_removed_and_mode_restored_after_an_error() -> None:
+    model = brightness_model()
+    model.train()
+    layer = first_conv(model)
+    with pytest.raises(RuntimeError):
+        grad_cam(model, layer, torch.rand(1, 5, 32, 32))  # wrong channel count
+    assert not layer._forward_hooks
+    assert model.training

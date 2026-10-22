@@ -37,44 +37,49 @@ def grad_cam(
     model: nn.Module, layer: nn.Module, images: torch.Tensor, target: torch.Tensor | None = None
 ) -> torch.Tensor:
     """Heatmaps (N, H, W) in [0, 1] at the input's size, for ``target`` classes (default: the
-    predicted class). The model is left unchanged and in eval mode."""
+    predicted class). Runs in eval mode; the model's mode is restored and its gradients
+    cleared afterwards."""
     saved: dict[str, torch.Tensor] = {}
 
     def keep(_: nn.Module, __: object, output: torch.Tensor) -> None:
         output.retain_grad()
         saved["maps"] = output
 
+    was_training = model.training
     model.eval()
     handle = layer.register_forward_hook(keep)
     try:
-        images = images.detach().clone().requires_grad_(True)
         logits = model(images)
         classes = logits.argmax(dim=1) if target is None else target
         model.zero_grad(set_to_none=True)
         logits.gather(1, classes.view(-1, 1)).sum().backward()
+        maps = saved["maps"]
+        assert maps.grad is not None
+        weights = maps.grad.mean(dim=(2, 3), keepdim=True)
+        cam = F.relu((weights * maps).sum(dim=1, keepdim=True)).detach()
     finally:
         handle.remove()
-    maps = saved["maps"]
-    assert maps.grad is not None
-    weights = maps.grad.mean(dim=(2, 3), keepdim=True)
-    cam = F.relu((weights * maps).sum(dim=1, keepdim=True))
+        model.zero_grad(set_to_none=True)
+        model.train(was_training)
     cam = F.interpolate(cam, size=images.shape[-2:], mode="bilinear", align_corners=False)
-    cam = cam.squeeze(1).detach()
+    cam = cam.squeeze(1)
     low = cam.flatten(1).min(dim=1).values.view(-1, 1, 1)
     high = cam.flatten(1).max(dim=1).values.view(-1, 1, 1)
     return (cam - low) / (high - low).clamp_min(1e-12)
 
 
 def randomized_copy(model: nn.Module, seed: int = 0) -> nn.Module:
-    """A copy with every parameter re-drawn (normal, scaled like the original), the "full
-    randomization" of Adebayo et al."""
+    """A copy with every layer re-initialised by its own default init and BatchNorm running
+    statistics reset: the "full randomization" of Adebayo et al. The original is untouched."""
     clone = copy.deepcopy(model)
-    generator = torch.Generator().manual_seed(seed)
-    with torch.no_grad():
-        for param in clone.parameters():
-            scale = float(param.std()) if param.numel() > 1 else 1.0
-            noise = torch.randn(param.shape, generator=generator, dtype=param.dtype)
-            param.copy_(noise * (scale or 1.0))
+    with torch.random.fork_rng():
+        torch.manual_seed(seed)
+        for module in clone.modules():
+            reset = getattr(module, "reset_parameters", None)
+            if callable(reset):
+                reset()
+            if isinstance(module, nn.modules.batchnorm._BatchNorm):
+                module.reset_running_stats()
     return clone
 
 
@@ -85,13 +90,17 @@ def randomization_check(
     seed: int = 0,
 ) -> float:
     """Mean Spearman correlation, per image, between the trained model's maps and a randomized
-    copy's. Near 1 means the maps do not depend on the weights. ``layer`` picks the target
-    layer from a model (default: EfficientNet's last block)."""
+    copy's. Near 1 means the maps do not depend on the weights. A constant map, or randomized
+    maps that are the same for every input, make the check meaningless, so they raise instead
+    of passing quietly."""
     random_model = randomized_copy(model, seed)
     a = grad_cam(model, layer(model), images).flatten(1).numpy()
     b = grad_cam(random_model, layer(random_model), images).flatten(1).numpy()
+    if len(b) > 1 and np.allclose(b, b[0]):
+        raise ValueError("the randomized model gives the same map for every input")
     correlations = []
     for x, y in zip(a, b, strict=True):
-        rho = spearmanr(x, y).statistic
-        correlations.append(0.0 if np.isnan(rho) else float(rho))
+        if np.ptp(x) == 0 or np.ptp(y) == 0:
+            raise ValueError("a constant heatmap: the check cannot say anything about it")
+        correlations.append(float(spearmanr(x, y).statistic))
     return float(np.mean(correlations))
