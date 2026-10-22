@@ -1,0 +1,44 @@
+{
+  "name": "cdm-research-e-shipped-features",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "gpu",
+      "spec": {
+        "base_environment": "databricks_ai_v6"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "features",
+      "environment_key": "gpu",
+      "compute": {
+        "hardware_accelerator": "GPU_1xA10"
+      },
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/shipped_features",
+        "base_parameters": {
+          "code_version": "4f5f829",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/4f5f829/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "6b1a52e1dabcf89fd79f259be6e296c2fd80275bfcd80343624461ba96968fc7",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/4f5f829/repo",
+          "files_sha256": "{\"results/phase2/analysis_look/predictions.csv.gz\": \"65f784b7749c7b6885d41d8edde0724a49ca7e111769b30cdc4638abe556082c\", \"databricks/notebooks/shipped_features.py\": \"be77d414d372ad8c5859b54ab527928be3664150827af4e8675b89e5884633a8\"}",
+          "deadline_minutes": "45",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}

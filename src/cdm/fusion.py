@@ -9,12 +9,17 @@ the encoding is fit on the training split only. The image's source is never an i
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import dataclass, field
+from collections.abc import Mapping, Sequence
+from dataclasses import asdict, dataclass, field
+from itertools import product
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
+from sklearn.metrics import balanced_accuracy_score
+
+from cdm.probe import GRID, ProbeConfig, train_probe
 
 FEATURE_SETS = ("biomedclip", "imagenet_effb0")
 VARIANTS = (
@@ -93,3 +98,40 @@ def check_order(ids: Sequence[str], other: Sequence[str], what: str) -> None:
     """Two tables must list the same images in the same order before they are joined by row."""
     if list(ids) != list(other):
         raise ValueError(f"{what}: the image order differs")
+
+
+SHIPPED = "shipped_effb0"
+SHIPPED_VARIANTS = (f"image_only__{SHIPPED}", f"fusion__{SHIPPED}")
+
+
+def select_per_seed(
+    x_train: Mapping[int, NDArray[np.float32]],
+    y_train: NDArray[np.int64],
+    x_val: Mapping[int, NDArray[np.float32]],
+    y_val: NDArray[np.int64],
+    n_classes: int,
+    grid: Mapping[str, Sequence[float]] = GRID,
+) -> tuple[ProbeConfig, list[dict[str, Any]]]:
+    """Like :func:`cdm.probe.select_config`, for inputs that differ by seed: the shipped
+    model's features come from three checkpoints, so probe seed ``s`` trains on checkpoint
+    ``s``'s features. The grid point with the highest mean validation balanced accuracy over
+    the seeds wins (ties: the earlier point)."""
+    if set(x_train) != set(x_val):
+        raise ValueError("train and validation inputs must cover the same seeds")
+    table = []
+    for lr, wd in product(grid["lr"], grid["weight_decay"]):
+        cfg = ProbeConfig(lr=lr, weight_decay=wd)
+        scores = [
+            float(
+                balanced_accuracy_score(
+                    y_val,
+                    train_probe(x_train[s], y_train, n_classes, s, cfg).logits(x_val[s]).argmax(1),
+                )
+            )
+            for s in sorted(x_train)
+        ]
+        table.append(
+            {**asdict(cfg), "val_balanced_accuracy": scores, "mean": float(np.mean(scores))}
+        )
+    best = max(range(len(table)), key=lambda i: table[i]["mean"])
+    return ProbeConfig(**{k: table[best][k] for k in asdict(ProbeConfig())}), table

@@ -167,6 +167,10 @@ Known limits:
   attempt log, results saved before the lock. Spec and results logged to MLflow.
 - Known limit: the ImageNet-feature variants chose the grid's lowest learning rate; the
   grid was not widened.
+- Follow-up (owner's option b): the shipped model's own features, extracted on GPU
+  (`databricks/shipped_features_job.json`, run 498023462798649), scored as a new variant
+  pair with `cdm.fusion.select_per_seed` and its own spec and single look
+  (`databricks/fusion_shipped_job.json`, mode=look committed; run 124072636853443).
 
 ### Research Phase G: research informatics services (2026-10-21 and 22)
 

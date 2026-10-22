@@ -1,0 +1,464 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "decision": "owner, 2026-10-22, option (b): add the shipped model's own features as a new variant, with its own spec and a separate single test look",
+  "selection_code_version": "dca63ed",
+  "selection_job_run": "188952920098874",
+  "wheel_sha256": "d94275949f3a32b2b2e216a23cb967394ac6942555829eacac6ec95b01daaf3e",
+  "features": {
+    "job_run_id": "498023462798649",
+    "sha256": {
+      "features.npz": "afb0643af1abd8c90f7245e5b26b4df2c8adc9b6b0769fda9faa1688e3d5a8b6"
+    },
+    "models": {
+      "seed0": "538b9a8188528706",
+      "seed1": "b8092ff952d4db13",
+      "seed2": "5e1b02ef8638c5e9"
+    },
+    "test_top_probability_gap": {
+      "seed0": 0.00579520521344172,
+      "seed1": 0.0064587766185158135,
+      "seed2": 0.006180754798374899
+    }
+  },
+  "train_val_inputs_sha256": "f3389fcb57d1353e89733a98d9c11f7e0ec2aa2127fef484c5f16ede559d4a82",
+  "variants": [
+    "image_only__shipped_effb0",
+    "fusion__shipped_effb0"
+  ],
+  "seed_pairing": "probe seed s trains on shipped checkpoint s's features",
+  "metadata": {
+    "columns": [
+      "age",
+      "age_missing",
+      "sex:8507",
+      "sex:8532",
+      "sex:unknown",
+      "site:4055938",
+      "site:4078238",
+      "site:4092246",
+      "site:4144227",
+      "site:4145302",
+      "site:4159862",
+      "site:4159864",
+      "site:4160209",
+      "site:4160210",
+      "site:4182240",
+      "site:4182739",
+      "site:4237609",
+      "site:4238998",
+      "site:4246735",
+      "site:4250773",
+      "site:4252576",
+      "site:4254263",
+      "site:4263673",
+      "site:4272029",
+      "site:4280364",
+      "site:4282616",
+      "site:4297782",
+      "site:4313445",
+      "site:4318817",
+      "site:4321847",
+      "site:4327352",
+      "site:4327489",
+      "site:unknown"
+    ],
+    "rule": "as Phase E: fit on train; the image's source is never an input"
+  },
+  "chosen": {
+    "image_only__shipped_effb0": {
+      "lr": 0.0001,
+      "weight_decay": 0.0,
+      "epochs": 30,
+      "batch_size": 256
+    },
+    "fusion__shipped_effb0": {
+      "lr": 0.0001,
+      "weight_decay": 0.0,
+      "epochs": 30,
+      "batch_size": 256
+    }
+  },
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "validation_grid": {
+    "image_only__shipped_effb0": [
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6397924616894869,
+          0.6416839483905711,
+          0.6256414864521567
+        ],
+        "mean": 0.6357059655107382
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6397924616894869,
+          0.6416839483905711,
+          0.6256414864521567
+        ],
+        "mean": 0.6357059655107382
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6397924616894869,
+          0.6416839483905711,
+          0.6256414864521567
+        ],
+        "mean": 0.6357059655107382
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6256223406795142,
+          0.6148663796247451,
+          0.6065309482071284
+        ],
+        "mean": 0.6156732228371292
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6256223406795142,
+          0.6148663796247451,
+          0.6065309482071284
+        ],
+        "mean": 0.6156732228371292
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6248517186181798,
+          0.6149522312730967,
+          0.6061900003721472
+        ],
+        "mean": 0.6153313167544746
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6119974610735468,
+          0.5896487445918911,
+          0.5859879979527062
+        ],
+        "mean": 0.5958780678727146
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6119974610735468,
+          0.5895628929435395,
+          0.5859879979527062
+        ],
+        "mean": 0.5958494506565976
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6119974610735468,
+          0.5893911896468362,
+          0.5859879979527062
+        ],
+        "mean": 0.5957922162243631
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5983270909173412,
+          0.5754051593837836,
+          0.5858467856072311
+        ],
+        "mean": 0.5865263453027852
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5983270909173412,
+          0.5754051593837836,
+          0.5858467856072311
+        ],
+        "mean": 0.5865263453027852
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6024306722425068,
+          0.5753185314999134,
+          0.586958355503547
+        ],
+        "mean": 0.5882358530819891
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5674588846254844,
+          0.5751430392406315,
+          0.5812274468097841
+        ],
+        "mean": 0.5746097902253
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5707364867887008,
+          0.581897383955372,
+          0.5824500050306811
+        ],
+        "mean": 0.578361291924918
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5757991805888437,
+          0.5706477003515763,
+          0.5836490192180559
+        ],
+        "mean": 0.5766986333861587
+      }
+    ],
+    "fusion__shipped_effb0": [
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6311665020441427,
+          0.6491792858233106,
+          0.6345738780998714
+        ],
+        "mean": 0.6383065553224415
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6311665020441427,
+          0.6491792858233106,
+          0.6345738780998714
+        ],
+        "mean": 0.6383065553224415
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6311665020441427,
+          0.6491792858233106,
+          0.6345738780998714
+        ],
+        "mean": 0.6383065553224415
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6165707323799635,
+          0.6396573600555707,
+          0.6170368334690676
+        ],
+        "mean": 0.6244216419682006
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6165707323799635,
+          0.6396573600555707,
+          0.6170368334690676
+        ],
+        "mean": 0.6244216419682006
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6165707323799635,
+          0.6396573600555707,
+          0.6170368334690676
+        ],
+        "mean": 0.6244216419682006
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6147146304755085,
+          0.6060203804148446,
+          0.598098345439429
+        ],
+        "mean": 0.6062777854432606
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6147146304755085,
+          0.6060203804148446,
+          0.598098345439429
+        ],
+        "mean": 0.6062777854432606
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.615698954720446,
+          0.6099522584433072,
+          0.5985247846718382
+        ],
+        "mean": 0.6080586659451972
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6020793967307417,
+          0.5869565209460875,
+          0.5964439425057037
+        ],
+        "mean": 0.5951599533941776
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6023377279113152,
+          0.5869565209460875,
+          0.5964439425057037
+        ],
+        "mean": 0.5952460637877022
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.6027645273946481,
+          0.5887074560228971,
+          0.5977692145856223
+        ],
+        "mean": 0.5964137326677225
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5761800814948483,
+          0.6034775714799588,
+          0.5848058888788075
+        ],
+        "mean": 0.5881545139512049
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5771554403759341,
+          0.5905677196829379,
+          0.5801564633816847
+        ],
+        "mean": 0.5826265411468522
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5828743392591939,
+          0.6139247615535297,
+          0.5943319479099728
+        ],
+        "mean": 0.5970436829075654
+      }
+    ]
+  },
+  "rule": "per variant, the highest mean validation balanced accuracy over the 3 seed pairs (cdm.fusion.select_per_seed)",
+  "test_look": {
+    "rows": "client_test, client_test_without_overlap_patients, ham10000_test, buenos_aires, pad_ufes (as in Phase E)",
+    "bootstrap": "1000 resamples, seed 0, by patient, else lesion, else image",
+    "paired": "image + metadata minus image only, same seed, same resamples",
+    "reference": "the shipped EfficientNet v2 ensemble from the committed analysis-look predictions"
+  },
+  "caveat": "the features come from networks trained on the train split, so the head is fit on training images the network already fits; validation-chosen settings guard against this only partly",
+  "known_limits": [
+    "both variants chose lr 1e-4, the grid's lowest; the grid was not widened (as for Phase E's ImageNet variants)"
+  ]
+}

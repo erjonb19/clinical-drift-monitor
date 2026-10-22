@@ -54,3 +54,18 @@ def test_order_check() -> None:
     check_order(["a", "b"], ["a", "b"], "x")
     with pytest.raises(ValueError, match="order"):
         check_order(["a", "b"], ["b", "a"], "x")
+
+
+def test_per_seed_selection_trains_each_seed_on_its_own_inputs() -> None:
+    from cdm.fusion import select_per_seed
+
+    rng = np.random.default_rng(0)
+    y = np.repeat(np.arange(7), 20)
+    good = (np.eye(7)[y] * 3 + rng.normal(0, 0.1, (140, 7))).astype(np.float32)
+    noise = rng.normal(0, 1, (140, 7)).astype(np.float32)
+    grid = {"lr": (1e-2,), "weight_decay": (0.0,)}
+    _, table = select_per_seed({0: good, 1: noise}, y, {0: good, 1: noise}, y, 7, grid)
+    first, second = table[0]["val_balanced_accuracy"]
+    assert first > 0.9 and second < first  # seed 1 really saw the noise
+    with pytest.raises(ValueError, match="same seeds"):
+        select_per_seed({0: good}, y, {1: good}, y, 7, grid)
