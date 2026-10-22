@@ -1,0 +1,9 @@
+# Concept IDs come from config/omop_concepts.csv; their names are in the workspace concept table.
+name: melanoma_any
+version: 2
+title: People with any melanoma (invasive, not otherwise specified, or in situ)
+purpose: Feasibility count for a melanoma imaging study; shows why in situ must be listed (it is not under the NOS concept)
+author: Claude Code, drafted for synthetic request #8
+index:
+  condition_concept_ids: [4162276, 141232, 40391314]  # Melanoma NOS (mel), invasive, in situ
+breakdown: [gender_concept_id, age_band]

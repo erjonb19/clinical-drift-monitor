@@ -1,5 +1,5 @@
 {
-  "queried_utc": "2026-10-22T05:21:08+00:00",
+  "queried_utc": "2026-10-22T21:08:08+00:00",
   "query": "gh issue list --label data-request --state all",
   "issues": [
     {
