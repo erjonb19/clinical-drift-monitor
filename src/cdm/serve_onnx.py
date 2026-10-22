@@ -48,6 +48,7 @@ def export(model: nn.Module, path: Path, size: int = 224) -> Path:
         input_names=["image"],
         output_names=list(OUTPUTS),
         dynamic_shapes={"image": {0: batch}},
+        verbose=False,
     )
     if program is None:
         raise RuntimeError("torch.onnx.export returned no program")
@@ -71,12 +72,20 @@ def softmax(logits: Array) -> Array:
 
 
 @torch.no_grad()
-def parity(model: nn.Module, onnx_session: Any, images: torch.Tensor) -> dict[str, float]:
-    """How far ONNX Runtime's outputs are from PyTorch's on the same inputs."""
-    feats_t, logits_t = (x.double().numpy() for x in features_and_logits(model.eval(), images))
+def parity(
+    model: nn.Module, onnx_session: Any, images: torch.Tensor, batch: int = 32
+) -> dict[str, float]:
+    """How far ONNX Runtime's outputs are from PyTorch's on the same inputs, both run in
+    batches of ``batch`` (one large batch ran a serverless machine out of memory)."""
+    model.eval()
+    parts_t, parts_o = [], []
+    for start in range(0, len(images), batch):
+        x = images[start : start + batch]
+        parts_t.append([v.double().numpy() for v in features_and_logits(model, x)])
+        parts_o.append(onnx_session.run(list(OUTPUTS), {"image": x.numpy()}))
+    feats_t, logits_t = (np.concatenate([p[i] for p in parts_t]) for i in range(2))
     feats_o, logits_o = (
-        np.asarray(x, dtype=np.float64)
-        for x in onnx_session.run(list(OUTPUTS), {"image": images.numpy()})
+        np.concatenate([np.asarray(p[i], dtype=np.float64) for p in parts_o]) for i in range(2)
     )
     scale = np.abs(feats_t).max()
     return {
