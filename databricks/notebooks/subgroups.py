@@ -74,9 +74,16 @@ for rel, digest in expected.items():
     assert got == digest, f"{rel}: sha256 {got}, expected {digest}"
 if RESULT.exists():
     raise RuntimeError(f"{RESULT} exists: this Phase C run already happened")
-SILVER_VERSION = int(
-    spark.sql("DESCRIBE HISTORY workspace.cdm.silver_images LIMIT 1").collect()[0]["version"]
-)
+# silver_images is a view (no Delta history): fingerprint the image list instead.
+_ids = spark.sql(
+    "SELECT source, isic_id FROM workspace.cdm.silver_images ORDER BY source, isic_id"
+).toPandas()
+SILVER_FINGERPRINT = {
+    "images": len(_ids),
+    "sha256_of_ordered_source_isic_id": hashlib.sha256(
+        "\n".join(_ids["source"] + ":" + _ids["isic_id"]).encode()
+    ).hexdigest(),
+}
 
 spec = importlib.util.spec_from_file_location("vlm_baseline", REPO / "scripts" / "vlm_baseline.py")
 assert spec is not None and spec.loader is not None
@@ -103,7 +110,8 @@ committed_b = json.loads((vb.OUT / "results.json").read_text(encoding="utf-8"))
 # Group values for every image of the populations, by ISIC ID.
 attrs = spark.sql(
     """
-    SELECT s.source, s.isic_id, m.age_approx, p.gender_concept_id, i.anatomic_site_concept_id
+    SELECT s.source, s.isic_id, s.client, m.age_approx, m.fitzpatrick_skin_type,
+           p.gender_concept_id, i.anatomic_site_concept_id
     FROM workspace.cdm.silver_images s
     LEFT JOIN workspace.cdm.silver_metadata m USING (source, isic_id)
     LEFT JOIN workspace.cdm.omop_image_occurrence i ON i.image_source_value = s.isic_id
@@ -120,6 +128,10 @@ def groups_of(rows: pd.DataFrame) -> dict[str, list[str]]:
         "age_band": [age_band(v) for v in a["age_approx"]],
         "sex": [concept_group(v) for v in a["gender_concept_id"]],
         "body_site": [concept_group(v) for v in a["anatomic_site_concept_id"]],
+        "skin_type": [
+            v if isinstance(v, str) and v else "not recorded" for v in a["fitzpatrick_skin_type"]
+        ],
+        "client": [v if isinstance(v, str) and v else "none" for v in a["client"]],
     }
 
 
@@ -252,7 +264,7 @@ results = {
     "spec": "results/research/c_subgroups/spec_v2.json (amending spec.json)",
     "spec_sha256": expected["results/research/c_subgroups/spec_v2.json"],
     "first_spec_sha256": expected["results/research/c_subgroups/spec.json"],
-    "silver_images_delta_version": SILVER_VERSION,
+    "silver_images_fingerprint": SILVER_FINGERPRINT,
     "alignment_gate_mean_gaps": alignment,
     "alert_rate_client_test": alerts,
     "code_version": CODE,
@@ -264,7 +276,6 @@ results = {
     "reproduction_gate": "passed: every model's overall balanced accuracy equals results/research/b_vlm/results.json",
     "performance": performance_out,
     "drift": drift_out,
-    "skin_type": "not recomputed; see results/phase2/analysis_look/skin_type_drift.json",
     "note": "descriptive only; groups differ in class mix, site and imaging type, so no gap is attributed to the attribute",
 }
 vb.write_json(RESULT, results)
