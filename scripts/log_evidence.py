@@ -3,10 +3,13 @@ results/mlflow_runs.json (cdm.evidence explains the rule).
 
 Refuses a file that is not committed or has local changes: the run must describe exactly
 what the repository holds. A file already indexed with the same hash is skipped; one whose
-hash changed is refused, because its earlier run would then describe a different file.
+hash changed is refused, because its earlier run would then describe a different file,
+unless --supersede is given: then a new run is logged, tagged with the run it supersedes,
+and the index keeps every earlier run ID (a results file regenerated on purpose, such as a
+concept check after a vocabulary was added). The earlier MLflow run is never changed.
 
 Usage: python scripts/log_evidence.py results/phase2/triage/test.json [...]
-           [--job-run ID] [--after-the-fact] [--note TEXT]
+           [--job-run ID] [--after-the-fact] [--note TEXT] [--supersede]
 Needs ``pip install -e ".[evidence]"`` and a logged-in Databricks CLI profile.
 """
 
@@ -42,6 +45,9 @@ def main() -> None:
         help="the file was produced before MLflow logging was required",
     )
     parser.add_argument("--note", default="")
+    parser.add_argument(
+        "--supersede", action="store_true", help="log a new run for a file that changed on purpose"
+    )
     args = parser.parse_args()
 
     os.environ.setdefault("MLFLOW_DISABLE_AGENT_HINT", "1")
@@ -68,11 +74,14 @@ def main() -> None:
         if git("status", "--porcelain", "--", name):
             sys.exit(f"{name}: not committed or has local changes")
         digest = sha256(REPO / name)
+        earlier: list[str] = []
         if name in index:
             if index[name]["file_sha256"] == digest:
                 print(f"{name}: already logged as run {index[name]['run_id']}")
                 continue
-            sys.exit(f"{name}: changed since run {index[name]['run_id']} logged it")
+            if not args.supersede:
+                sys.exit(f"{name}: changed since run {index[name]['run_id']} logged it")
+            earlier = [*index[name].get("superseded_runs", []), index[name]["run_id"]]
         metrics = numeric_leaves(json.loads((REPO / name).read_text(encoding="utf-8")))
         commit = git("log", "-1", "--format=%h", "--", name)
         tags = {"source_file": name, "file_sha256": digest, "file_commit": commit,
@@ -81,6 +90,8 @@ def main() -> None:
             tags["databricks_job_run"] = args.job_run
         if args.note:
             tags["note"] = args.note
+        if earlier:
+            tags["supersedes_run"] = earlier[-1]
         with mlflow.start_run(run_name=name, tags=tags) as run:
             now = int(datetime.now(UTC).timestamp() * 1000)
             items = [Metric(k, v, now, 0) for k, v in sorted(metrics.items())]
@@ -91,6 +102,8 @@ def main() -> None:
                        "file_sha256": digest, "file_commit": commit, "metrics": len(metrics),
                        "logged_after_the_fact": args.after_the_fact,
                        "databricks_job_run": args.job_run}  # fmt: skip
+        if earlier:
+            index[name]["superseded_runs"] = earlier
         # Written after every file, so a failure later in the list cannot orphan this run.
         (REPO / INDEX).write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", "utf-8")
         print(f"{name}: run {run.info.run_id} ({len(metrics)} metrics)")

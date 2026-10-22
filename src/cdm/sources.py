@@ -115,10 +115,12 @@ def flatten(record: Record, source: str, collection: int) -> Row:
         "sex": clinical.get("sex"),
         "age_approx": clinical.get("age_approx"),
         "anatom_site_1": clinical.get("anatom_site_1"),
+        "anatom_site_2": clinical.get("anatom_site_2"),
         "diagnosis_1": clinical.get("diagnosis_1"),
         "diagnosis_2": clinical.get("diagnosis_2"),
         "diagnosis_3": clinical.get("diagnosis_3"),
         "isic_label": map_diagnosis(clinical.get("diagnosis_2"), clinical.get("diagnosis_3")),
+        "diagnosis_confirm_type": clinical.get("diagnosis_confirm_type"),
         "url": record["files"]["full"]["url"],
     }
 
@@ -207,6 +209,9 @@ def ham_rows(ham_meta: pd.DataFrame, collection: int, fetch: Fetch = http_json) 
             row["label"] = by_id.loc[record["isic_id"], "dx"]
             # HAM10000's own record of which institution the image came from.
             row["ham_dataset"] = by_id.loc[record["isic_id"], "dataset"]
+            # Body site and how the diagnosis was made, as HAM10000 records them (OMOP tables).
+            row["ham_localization"] = by_id.loc[record["isic_id"], "localization"]
+            row["ham_dx_type"] = by_id.loc[record["isic_id"], "dx_type"]
             rows.append(row)
     missing = set(by_id.index) - {r["isic_id"] for r in rows}
     if missing:
