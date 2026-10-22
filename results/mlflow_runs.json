@@ -868,5 +868,23 @@
     "superseded_runs": [
       "494f15aa457b46a48271ccfb5a80ecbe"
     ]
+  },
+  "results/research/b_vlm/results.json": {
+    "databricks_job_run": "930314930675108",
+    "experiment_id": "3252981153928765",
+    "file_commit": "d3567f3",
+    "file_sha256": "4409a742165cb9f31fb401b1f1a853df70defe9c334ed33c4ac1e95f3216c9df",
+    "logged_after_the_fact": false,
+    "metrics": 1321,
+    "run_id": "d3cfbfda2f324541b08b593124bc9101"
+  },
+  "results/research/b_vlm/spec.json": {
+    "databricks_job_run": "1040483728228282",
+    "experiment_id": "3252981153928765",
+    "file_commit": "9dd957c",
+    "file_sha256": "ed67698ced6aac74629ef8eff169ce5a356af17ad02391574c8967e0fa984c7e",
+    "logged_after_the_fact": false,
+    "metrics": 144,
+    "run_id": "484c0390a6a44285afd4677cc1311a92"
   }
 }
