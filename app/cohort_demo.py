@@ -11,7 +11,14 @@ import pandas as pd
 import streamlit as st
 
 from cdm.cohort import Refused, load
-from cdm.demo import ATTRIBUTION, DemoSession, custom_definition, diagnosis_options, fetch_tables
+from cdm.demo import (
+    ATTRIBUTION,
+    DemoSession,
+    concepts_in,
+    custom_definition,
+    diagnosis_options,
+    fetch_tables,
+)
 from cdm.demo import library as phenotype_library
 
 st.set_page_config(page_title="Governed cohort counts", page_icon=":bar_chart:", layout="wide")
@@ -60,6 +67,12 @@ with left:
     pheno = load(path)
     st.code(path.read_text(encoding="utf-8"), language="yaml")
     st.write(f"Definition hash `{pheno.sha256[:12]}`, status: **{session.status(path)}**")
+    with st.expander("Concepts in this definition"):
+        st.dataframe(
+            concepts_in(pheno.definition),
+            hide_index=True,
+            column_config={"name (Athena)": st.column_config.LinkColumn()},
+        )
 
 with right:
     st.subheader("2. Approve, then run")
@@ -84,5 +97,9 @@ with right:
                 st.dataframe(pd.DataFrame(result.breakdown), hide_index=True)
             st.info(result.note)
     st.subheader("3. Audit log")
-    st.write("Every refusal, decision and run, each entry chained to the one before by hash.")
+    st.write(
+        "Every refusal, decision and run, each entry chained to the one before by hash. In "
+        "this demo each visitor has their own log, so the check against earlier results "
+        "covers this session only."
+    )
     st.dataframe(session.audit(), hide_index=True)

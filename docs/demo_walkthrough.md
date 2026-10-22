@@ -17,7 +17,7 @@ occurrence and image occurrence. Diagnoses and body sites are OMOP concept IDs, 
 Athena. The SNOMED names aren't redistributed, so concepts show as IDs with an Athena link."
 
 **0:50 – 1:20. A phenotype is a versioned file**
-[Pick melanoma_any. Point at the YAML and the hash.]
+[Pick melanoma_any. Point at the YAML and the hash, then open "Concepts in this definition".]
 "An investigator's question becomes a phenotype: a versioned YAML file in an allowlisted
 language. No free SQL. The service hashes the exact definition. Status: pending."
 
@@ -32,7 +32,8 @@ to the hash. Change one concept ID and it's a new version that needs a new appro
 [Point at the attrition table, then the breakdown.]
 "The output is an attrition table and a breakdown. Any count from 1 to 10 is suppressed,
 and so is anything that would let you work it out by subtraction. That includes subtraction
-against earlier results for nested definitions. Every hidden cell carries the same label,
+against results released earlier in this session for nested definitions (each visitor has
+their own log here; the real service keeps one). Every hidden cell carries the same label,
 because a label like 'under 11' would itself give numbers away."
 
 **2:20 – 2:45. Build your own**
