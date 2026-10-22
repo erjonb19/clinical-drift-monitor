@@ -117,6 +117,17 @@ Known limits:
 
 ## Scaffolded
 
+### Research Phase G: research informatics services (2026-10-21 and 22)
+
+- G1: `docs/EVAL_PLAN.md`, `docs/governance.md`, the request issue form and the project board.
+- G2: the governed cohort service and phenotype library, with tests; run on the workspace OMOP
+  tables for seven synthetic requests (#8 to #14). Stand-in decisions are in
+  `results/research/g2_cohort/synthetic_approvals.jsonl`; `phenotypes/approvals.jsonl` is for
+  the project owner's own decisions and is empty.
+- G3: dataset metadata, `CITATION.cff` and the quickstart notebook, run in CI offline. The
+  Zenodo release is not made: it needs the owner to connect Zenodo.
+- G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests.
+
 ### Tooling
 
 - CI: ruff, ruff format, mypy (strict) and pytest on every push. No eval gate yet
@@ -124,6 +135,7 @@ Known limits:
 
 ## Not started
 
-- Research extension Phases B to F and G ([research_extension_plan.md](research_extension_plan.md)).
+- Research extension Phases B to F ([research_extension_plan.md](research_extension_plan.md)), and
+  G6 (the Streamlit demo).
 - Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.
