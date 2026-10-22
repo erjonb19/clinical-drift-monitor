@@ -243,8 +243,9 @@ counts from silver. From the research extension on:
 
 **Symptom.** The cohort service's tests passed, and every count from 1 to 10 in its output
 was labelled. Pre-merge reviews of G2 on 2026-10-22 found four ways to get a hidden count
-back from one result. None was ever released from this code (the only results run before the
-fix were synthetic and are checked in #15).
+back from one result. Results from the earlier code were released only for the seven
+synthetic requests (#8 to #14), under the old labels; each was checked by hand against these
+attacks, and none gives a count exactly (the tightest leaves five hidden cells between 1 and 3).
 - An attrition step right after a hidden step was shown when nothing dropped in between, so
   `100, suppressed, 95` gave the hidden 95 away.
 - When the final count was hidden, the breakdown cells were still shown, and they add up to it.
@@ -284,8 +285,8 @@ it as "not detected; the reviewer checks". Here the reviewer was a script, and n
 
 **Caught by.**
 - Before release, `cdm.cohort.guard_releases` compares every number in a new result with every
-  number already released for a nested definition (same index conditions, age range within,
-  criteria a superset). Releases are recorded in the audit log, with the definition. Two kinds
+  number already released for a nested definition (the same or fewer index conditions, an
+  age range within, criteria a superset). Releases are recorded in the audit log, with the definition. Two kinds
   of group are hidden:
   - a group where the two results differ by 1 to 10 people;
   - a group where they are equal and one result shows exactly what the other hid.

@@ -284,8 +284,8 @@ def suppress_attrition(persons: pd.Series) -> list[str]:
 # still give a person away: their difference may be a group of 1 to 10, or one may pin down a
 # cell the other hid. So before a result is released, every number in it is compared with the
 # numbers already released for nested definitions, and the groups that would disclose are
-# hidden too. Only nesting that the definitions show is detected (same index conditions, age
-# range within, criteria a superset); overlap of any other kind is still the reviewer's check.
+# hidden too. Only nesting that the definitions show is detected (the same or fewer index
+# conditions, an age range within, criteria a superset); other overlap is the reviewer's check.
 
 AGE_CEILING = 200
 
@@ -301,16 +301,14 @@ class Scope:
     exclude: frozenset[str]
 
     def within(self, other: Scope) -> bool:
-        """Whether every person in this scope is in ``other`` too, as the definitions show."""
-        if self.conditions != other.conditions:
-            # Age is measured at the earliest index condition, so with an age limit a smaller
-            # condition set can give a different age; nesting is only clear without limits.
-            no_limits = {self.age_min, other.age_min} == {0} and {
-                self.age_max, other.age_max} == {AGE_CEILING}  # fmt: skip
-            if not (no_limits and self.conditions <= other.conditions):
-                return False
+        """Whether every person in this scope is in ``other`` too, as the definitions show.
+        The age filter applies to each index condition row, so fewer conditions in a narrower
+        age range is nested. (A person's age band can still differ between the two, because
+        age is the earliest qualifying condition; age-band cells are compared anyway, which
+        can only hide more.)"""
         return (
-            other.age_min <= self.age_min
+            self.conditions <= other.conditions
+            and other.age_min <= self.age_min
             and self.age_max <= other.age_max
             and other.include <= self.include
             and other.exclude <= self.exclude
@@ -412,7 +410,9 @@ def guard_releases(new: list[Release], old: list[Release]) -> list[str]:
         for release in new:
             for earlier in old:
                 for cell in disclosing_cells(release, earlier):
-                    if release.shown[cell].isdigit():
+                    # Zero reveals no one, and is shown everywhere else: hiding it only
+                    # sometimes would make the pattern of hidden cells a clue.
+                    if release.shown[cell].isdigit() and release.true[cell] > 0:
                         release.shown[cell] = COMPLEMENT
                         causes.add(earlier.label)
                         changed = True
@@ -428,7 +428,14 @@ def guard_releases(new: list[Release], old: list[Release]) -> list[str]:
                 changed = True
             hidden = [c for c, s in table.shown.items() if not s.isdigit()]
             total = final.true[()]
-            if hidden and final.shown[()].isdigit() and total < len(hidden) + MIN_CELL - 1:
+            # A hidden cell is only safe if the shown total is spread over at least two of
+            # them; one non-zero row under a shown total is that total.
+            rows = sum(1 for c in table.true if table.true[c] > 0)
+            if (
+                hidden
+                and final.shown[()].isdigit()
+                and (total < len(hidden) + MIN_CELL - 1 or rows < 2)
+            ):
                 final.shown[()] = SUPPRESSED
                 changed = True
     return sorted(causes)
