@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import re
 from pathlib import Path
 from types import ModuleType
@@ -119,3 +120,22 @@ def test_recorded_jobs_render_with_only_the_user(path: Path) -> None:
     spec = deploy_module().render(path.read_text(encoding="utf-8"), {"DATABRICKS_USER": "u@x.org"})
     paths = [t["notebook_task"]["notebook_path"] for t in spec["tasks"] if "notebook_task" in t]
     assert paths and all(p.startswith("/Users/u@x.org/cdm/") for p in paths)
+
+
+def test_job_mode_creates_one_recorded_job_without_an_email(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    module = deploy_module()
+    path = REPO / "databricks" / "drift_job.json"
+    monkeypatch.setattr("sys.argv", ["deploy", "--job", str(path), "--dry-run"])
+    assert module.main() == 0
+    name = json.loads(path.read_text(encoding="utf-8"))["name"]
+    assert f"job {name} = DRY-RUN-JOB-ID" in capsys.readouterr().out
+    written = (REPO / "dist" / f"{name}.job.json").read_text(encoding="utf-8")
+    assert "DRY-RUN-USER" in written and "@" not in written
+
+
+def test_job_mode_refuses_the_deploy_templates(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("sys.argv", ["deploy", "--job", str(REPO / "databricks" / "job.json")])
+    with pytest.raises(SystemExit, match="full run"):
+        deploy_module().main()

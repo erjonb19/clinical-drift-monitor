@@ -124,7 +124,7 @@ Known limits:
   `results/research/g2_cohort/synthetic_approvals.jsonl`; `phenotypes/approvals.jsonl` is for
   the project owner's own decisions and is empty.
 - G3: dataset metadata, `CITATION.cff` and the quickstart notebook, run in CI offline. The
-  Zenodo release is not made: it needs the owner to connect Zenodo.
+  Zenodo release is not made yet: the owner deferred it until after the phenotype approvals.
 - G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests; request numbers
   come from a committed snapshot of the issue tracker.
 
@@ -156,7 +156,7 @@ Known limits:
 - `app/cohort_demo.py` and `cdm.demo`: the cohort service on public PAD-UFES-20 metadata,
   fetched at start-up; each visitor approves in a scratch file. Its logic is tested in CI on a
   made-up stand-in, and the page ran once locally against live ISIC metadata (Streamlit's
-  test harness). Not deployed: deploying needs the owner's approval.
+  test harness). Not deployed yet: the owner approved deploying on 2026-10-22.
 
 ### Tooling
 

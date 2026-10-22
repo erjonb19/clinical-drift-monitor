@@ -141,6 +141,11 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.job:
+        # job.json and job_broken.json take the deploy's own values; only recorded jobs here.
+        if not args.job.name.endswith("_job.json"):
+            sys.exit("--job takes a databricks/<name>_job.json file; the full run deploys the rest")
+        if git("status", "--porcelain", "--", str(args.job.resolve())):
+            sys.exit(f"{args.job} has uncommitted changes: commit the definition first")
         cli = Cli(args.profile, args.dry_run)
         user = current_user(cli, args.dry_run)
         spec = render(args.job.read_text(encoding="utf-8"), {"DATABRICKS_USER": user})

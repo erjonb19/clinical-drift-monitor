@@ -186,7 +186,7 @@ The full first plan is in [docs/research_extension_plan.md](docs/research_extens
 - *Prep done:* [docs/cohort_contract.md](docs/cohort_contract.md), a draft. It now routes the agent through the G2 cohort service (library phenotypes run autonomously; new definitions are gated on a human approval by hash) instead of new SQL templates.
 - *Done when:* the owner has reviewed it and the agent repo's plan notes the item.
 
-**Order:** C (CPU, shipped model) and F (review) can go first; B needs GPU approval; D needs a CPU job; E needs B.
+**Order:** C (CPU, shipped model) and F (review) can go first; B is approved (capped at 2 GPU hours); D needs a CPU job; E needs B.
 
 ## Research extension: Phase G, research informatics services (added 2026-10-21)
 
@@ -263,9 +263,9 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - **Done when** the labelled set is scored, the results are logged in MLflow, and the spend is reported.
 - [ ] **G6: Public Streamlit demo** of the cohort service.
   - It shows source labels and OMOP concept IDs only, never SNOMED names.
-  - The ISIC and HAM10000 metadata licenses are checked first; I stop and ask before deploying.
+  - The ISIC and HAM10000 metadata licenses are checked first (done: counts-only, non-commercial use with attribution fits). Deployment approved 2026-10-22.
   - `docs/demo_walkthrough.md`: a 3-minute walkthrough you can record.
-  - **Done when** you approve deployment and the app is live on Streamlit Community Cloud.
+  - **Done when** the app is live on Streamlit Community Cloud.
 
 ## Phase 3: Serving and MLOps (about 1 week)
 
@@ -348,10 +348,10 @@ Owner decisions that change scope, cost or process, newest first.
   - **Phase F:** approved. governed-clinical-agent reaches the OMOP tables only through the G2 cohort service (library phenotypes run autonomously; new definitions wait for a human approval by hash), replacing the first plan's fixed SQL templates. See [docs/cohort_contract.md](docs/cohort_contract.md).
   - **Haiku:** allowed for G5 and evals, capped at $5 in total across the project. No other paid keys. CLAUDE.md updated to match.
   - **Phase B GPU:** approved, capped at 2 hours of Databricks serverless GPU time in total. Stop and report if it would go over.
-  - **History rewrite:** approved once. Old concept-map notes that quoted SNOMED wording and the email address in `databricks/*_job.json` were removed from all history with `git filter-repo`; commit author emails moved to the GitHub noreply address; `main` was force-pushed once and the merged feature branches deleted. Job files now hold `{{DATABRICKS_USER}}`, filled by `scripts/deploy_databricks.py --job`.
+  - **History rewrite:** approved once. Old concept-map notes that quoted SNOMED wording and the email address in `databricks/*_job.json` were removed from all history with `git filter-repo`; commit author emails moved to the GitHub noreply address; `main` was force-pushed once and the merged feature branches deleted. The pre-rewrite history is kept only in a local backup (a tag and a bundle on the owner's machine, never pushed). Job files now hold `{{DATABRICKS_USER}}`, filled by `scripts/deploy_databricks.py --job`.
   - **Project board:** made public.
   - **Streamlit demo (G6):** public deployment approved: counts only, source labels and concept IDs only, no SNOMED names, attribution shown.
-  - **Release and Zenodo DOI:** deferred until the owner has recorded the phenotype approvals. The owner records those approvals; Claude Code does not.
+  - **Release and Zenodo DOI:** not yet. The owner will create them after recording the phenotype approvals; Claude Code records no approvals in the owner's name.
 
 ## Open questions
 
