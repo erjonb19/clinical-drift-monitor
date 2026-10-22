@@ -37,6 +37,9 @@ def test_turnaround_separates_synthetic_requests() -> None:
     assert got["synthetic"]["median_days_to_close"] == 1.5
     page = m.render(got, None, None, {"rows_by_match": {"exact": 1}}, [])
     assert "says nothing about a real service" in page
+    quiet = m.request_metrics([issue("2026-10-01T00:00:00Z", None)])
+    page = m.render(quiet, None, None, {"rows_by_match": {"exact": 1}}, [], ["A note."])
+    assert "says nothing about a real service" not in page and "A note." in page
 
 
 def test_reuse_refusals_and_time_to_approval_from_the_audit_log() -> None:

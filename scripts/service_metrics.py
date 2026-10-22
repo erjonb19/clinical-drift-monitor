@@ -9,7 +9,8 @@ Four parts, each read from a source, never typed in:
 - **Output quality:** OMOP gate results of the latest committed build, and the concept map's
   match quality.
 - **Model performance:** the rows in config/service_metrics.json, each read from a committed
-  results file, with the commit date of that file.
+  results file, with the commit date of that file. Notes on the audit log's history are
+  in the same file (``cohort_notes``).
 
     python scripts/service_metrics.py            (needs gh, logged in)
     python scripts/service_metrics.py --offline  (no issue tracker: requests section says so)
@@ -119,6 +120,7 @@ def render(
     build: dict[str, Any] | None,
     concepts: dict[str, Any],
     models: list[dict[str, Any]],
+    cohort_notes: list[str] | tuple[str, ...] = (),
 ) -> str:
     lines = [
         "# Service metrics",
@@ -144,8 +146,8 @@ def render(
         if requests["synthetic"]["opened"]:
             lines += [
                 "",
-                "Synthetic requests were opened and worked by a script in one "
-                "sitting, so their turnaround says nothing about a real service.",
+                "Synthetic requests are made up and may be worked by a script, so their "
+                "turnaround says nothing about a real service.",
             ]
     lines += ["", "## Cohort service (reuse and refusals)", ""]
     if not cohort or not cohort["events"]:
@@ -157,6 +159,7 @@ def render(
         lines += [f"| {k} | {v} |" for k, v in cohort["runs_by_phenotype"].items()]
         lines += ["", "| Refusal reason | Count |", "| --- | ---: |"]
         lines += [f"| {k} | {v} |" for k, v in cohort["refusals_by_reason"].items()]
+    lines += [line for note in cohort_notes for line in ("", note)]
     lines += ["", "## Output quality", ""]
     if build is None:
         lines.append("OMOP build: not yet recorded (`results/research/a_omop/build.json`).")
@@ -215,7 +218,8 @@ def main() -> None:
     build = json.loads(BUILD.read_text(encoding="utf-8")) if BUILD.exists() else None
     concepts = json.loads(CONCEPT_CHECK.read_text(encoding="utf-8"))
     spec = json.loads(SPEC.read_text(encoding="utf-8"))
-    page = render(requests, cohort_metrics(entries), build, concepts, model_rows(spec))
+    page = render(requests, cohort_metrics(entries), build, concepts, model_rows(spec),
+                  spec.get("cohort_notes", []))  # fmt: skip
     PAGE.write_bytes(page.encode())
     print(f"wrote {PAGE}")
 
