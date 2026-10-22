@@ -118,7 +118,9 @@ workspace; the repository holds concept IDs only.
 Build `0239a19`, pipeline update `5992b755`, all seven gates passed:
 `results/research/a_omop/build.json`. Concepts: `results/research/a_omop/concept_check.json`.
 Column-by-column definitions, null rates and caveats are in
-[docs/data_dictionary.md](docs/data_dictionary.md).
+[docs/data_dictionary.md](docs/data_dictionary.md). Unity Catalog lineage runs from the bronze
+tables through `silver_metadata` and `silver_decoded` into every OMOP table:
+`results/research/a_omop/lineage.json`, read from `system.access.table_lineage`.
 
 **Caveats**
 - Dates are placeholders, because the sources record none.
