@@ -977,6 +977,24 @@
     "metrics": 2459,
     "run_id": "7da5a8f00d9f4ad9b5a7d20dc2cf3a1e"
   },
+  "results/research/e_fusion/shipped/features_summary.json": {
+    "databricks_job_run": null,
+    "experiment_id": "3252981153928765",
+    "file_commit": "e7069d6",
+    "file_sha256": "ed5b8ec82afe40b0ec5070c853dc39ee2c40481cba97723148fcf126f0982b9a",
+    "logged_after_the_fact": false,
+    "metrics": 34,
+    "run_id": "ac26b4d984e74806a09960618ef25ef1"
+  },
+  "results/research/e_fusion/shipped/results.json": {
+    "databricks_job_run": null,
+    "experiment_id": "3252981153928765",
+    "file_commit": "e7069d6",
+    "file_sha256": "4cca65cc23288f4502266b5e3a482f3131761996d6d003f09bdcd04c0f0d1a15",
+    "logged_after_the_fact": false,
+    "metrics": 1175,
+    "run_id": "8b60e2609f2f41f8b2b7486f2d7bd38d"
+  },
   "results/research/e_fusion/spec.json": {
     "databricks_job_run": "230673257459446",
     "experiment_id": "3252981153928765",
@@ -985,5 +1003,14 @@
     "logged_after_the_fact": false,
     "metrics": 625,
     "run_id": "b58a8e2bfa2347e7bc45844173e52257"
+  },
+  "results/research/e_fusion/spec_shipped.json": {
+    "databricks_job_run": null,
+    "experiment_id": "3252981153928765",
+    "file_commit": "ce9dfed",
+    "file_sha256": "3a517b716ccabf4e41d5377270b7e778caa5eb65d74e1df4f08978de83bc707f",
+    "logged_after_the_fact": false,
+    "metrics": 254,
+    "run_id": "3a1acf24dd2443b7bcc93981ef678232"
   }
 }
