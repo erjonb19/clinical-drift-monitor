@@ -1,0 +1,10 @@
+name: nevus_without_histopathology
+version: 1
+title: People with a nevus and no histopathology procedure
+purpose: Size of the cohort whose benign labels rest on follow-up or consensus, not biopsy (weaker labels)
+author: Erjon Brucaj
+index:
+  condition_concept_ids: [4271013]  # Nevus
+exclude:
+  - procedure_concept_ids: [43531286]  # histopathology
+breakdown: [age_band]

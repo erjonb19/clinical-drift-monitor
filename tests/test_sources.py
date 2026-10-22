@@ -131,6 +131,8 @@ def test_ham_rows_take_labels_and_lesions_from_ham_metadata() -> None:
             "lesion_id": ["HAM_1", "HAM_1"],
             "dx": ["nv", "nv"],
             "dataset": ["rosendahl", "rosendahl"],
+            "localization": ["back", "back"],
+            "dx_type": ["follow_up", "follow_up"],
         }  # fmt: skip
     )
     pages = {212: [record("ISIC_1", "IL_9"), record("ISIC_2", "IL_9"), record("ISIC_99")]}
@@ -139,6 +141,7 @@ def test_ham_rows_take_labels_and_lesions_from_ham_metadata() -> None:
         ("ISIC_1", "HAM_1", "nv"),
         ("ISIC_2", "HAM_1", "nv"),
     ]
+    assert (rows[0]["ham_localization"], rows[0]["ham_dx_type"]) == ("back", "follow_up")
     with pytest.raises(DataError, match="missing from ISIC"):
         ham_rows(meta, 212, fake_fetch({212: [record("ISIC_1")]}))
 

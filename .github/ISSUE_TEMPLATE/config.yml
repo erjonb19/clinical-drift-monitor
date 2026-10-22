@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Governance and access tiers
+    url: https://github.com/erjonb19/clinical-drift-monitor/blob/main/docs/governance.md
+    about: Read how requests are approved, what is suppressed, and how to escalate.

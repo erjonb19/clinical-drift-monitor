@@ -1,0 +1,926 @@
+{
+  "built_utc": "2026-10-21T16:48:45+00:00",
+  "update_id": "5992b755-b67a-4a97-8fb2-a37405c286c0",
+  "etl_reference": "0239a19",
+  "report_code_version": "0239a19",
+  "row_counts": {
+    "person": 15196,
+    "observation_period": 15196,
+    "condition_occurrence": 16238,
+    "procedure_occurrence": 37514,
+    "image_occurrence": 27656,
+    "cdm_source": 1,
+    "concept": 67
+  },
+  "gates": [
+    {
+      "name": "omop_concepts_resolve",
+      "violations": "0",
+      "detail": "ok"
+    },
+    {
+      "name": "omop_every_value_mapped",
+      "violations": "0",
+      "detail": "ok"
+    },
+    {
+      "name": "omop_foreign_keys_resolve",
+      "violations": "0",
+      "detail": "ok"
+    },
+    {
+      "name": "omop_one_diagnosis_per_lesion",
+      "violations": "0",
+      "detail": "ok"
+    },
+    {
+      "name": "omop_primary_keys_unique",
+      "violations": "0",
+      "detail": "ok"
+    },
+    {
+      "name": "omop_required_not_null",
+      "violations": "0",
+      "detail": "ok"
+    },
+    {
+      "name": "omop_row_counts",
+      "violations": "0",
+      "detail": "ok"
+    }
+  ],
+  "profile": [
+    {
+      "table_name": "person",
+      "column_name": "person_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "person",
+      "column_name": "gender_concept_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "person",
+      "column_name": "year_of_birth",
+      "rows": "15196",
+      "nulls": "197"
+    },
+    {
+      "table_name": "person",
+      "column_name": "month_of_birth",
+      "rows": "15196",
+      "nulls": "15196"
+    },
+    {
+      "table_name": "person",
+      "column_name": "day_of_birth",
+      "rows": "15196",
+      "nulls": "15196"
+    },
+    {
+      "table_name": "person",
+      "column_name": "birth_datetime",
+      "rows": "15196",
+      "nulls": "15196"
+    },
+    {
+      "table_name": "person",
+      "column_name": "race_concept_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "person",
+      "column_name": "ethnicity_concept_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "person",
+      "column_name": "location_id",
+      "rows": "15196",
+      "nulls": "15196"
+    },
+    {
+      "table_name": "person",
+      "column_name": "provider_id",
+      "rows": "15196",
+      "nulls": "15196"
+    },
+    {
+      "table_name": "person",
+      "column_name": "care_site_id",
+      "rows": "15196",
+      "nulls": "15196"
+    },
+    {
+      "table_name": "person",
+      "column_name": "person_source_value",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "person",
+      "column_name": "gender_source_value",
+      "rows": "15196",
+      "nulls": "746"
+    },
+    {
+      "table_name": "person",
+      "column_name": "gender_source_concept_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "person",
+      "column_name": "race_source_value",
+      "rows": "15196",
+      "nulls": "15196"
+    },
+    {
+      "table_name": "person",
+      "column_name": "race_source_concept_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "person",
+      "column_name": "ethnicity_source_value",
+      "rows": "15196",
+      "nulls": "15196"
+    },
+    {
+      "table_name": "person",
+      "column_name": "ethnicity_source_concept_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "observation_period",
+      "column_name": "observation_period_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "observation_period",
+      "column_name": "person_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "observation_period",
+      "column_name": "observation_period_start_date",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "observation_period",
+      "column_name": "observation_period_end_date",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "observation_period",
+      "column_name": "period_type_concept_id",
+      "rows": "15196",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_occurrence_id",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "person_id",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_concept_id",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_start_date",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_start_datetime",
+      "rows": "16238",
+      "nulls": "16238"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_end_date",
+      "rows": "16238",
+      "nulls": "16238"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_end_datetime",
+      "rows": "16238",
+      "nulls": "16238"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_type_concept_id",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_status_concept_id",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "stop_reason",
+      "rows": "16238",
+      "nulls": "16238"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "provider_id",
+      "rows": "16238",
+      "nulls": "16238"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "visit_occurrence_id",
+      "rows": "16238",
+      "nulls": "16238"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "visit_detail_id",
+      "rows": "16238",
+      "nulls": "16238"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_source_value",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_source_concept_id",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_status_source_value",
+      "rows": "16238",
+      "nulls": "1101"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "condition_label",
+      "rows": "16238",
+      "nulls": "971"
+    },
+    {
+      "table_name": "condition_occurrence",
+      "column_name": "lesion_source_value",
+      "rows": "16238",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_occurrence_id",
+      "rows": "37514",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "person_id",
+      "rows": "37514",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_concept_id",
+      "rows": "37514",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_date",
+      "rows": "37514",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_datetime",
+      "rows": "37514",
+      "nulls": "37514"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_end_date",
+      "rows": "37514",
+      "nulls": "37514"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_end_datetime",
+      "rows": "37514",
+      "nulls": "37514"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_type_concept_id",
+      "rows": "37514",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "modifier_concept_id",
+      "rows": "37514",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "quantity",
+      "rows": "37514",
+      "nulls": "37514"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "provider_id",
+      "rows": "37514",
+      "nulls": "37514"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "visit_occurrence_id",
+      "rows": "37514",
+      "nulls": "37514"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "visit_detail_id",
+      "rows": "37514",
+      "nulls": "37514"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_source_value",
+      "rows": "37514",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "procedure_source_concept_id",
+      "rows": "37514",
+      "nulls": "0"
+    },
+    {
+      "table_name": "procedure_occurrence",
+      "column_name": "modifier_source_value",
+      "rows": "37514",
+      "nulls": "37514"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "image_occurrence_id",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "person_id",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "procedure_occurrence_id",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "visit_occurrence_id",
+      "rows": "27656",
+      "nulls": "27656"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "anatomic_site_concept_id",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "wadors_uri",
+      "rows": "27656",
+      "nulls": "27656"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "local_path",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "image_occurrence_date",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "image_study_uid",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "image_series_uid",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "modality_concept_id",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "image_source_value",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "anatomic_site_source_value",
+      "rows": "27656",
+      "nulls": "740"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "condition_occurrence_id",
+      "rows": "27656",
+      "nulls": "677"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "license",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "image_occurrence",
+      "column_name": "attribution",
+      "rows": "27656",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "cdm_source_name",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "cdm_source_abbreviation",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "cdm_holder",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "source_description",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "source_documentation_reference",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "cdm_etl_reference",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "source_release_date",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "cdm_release_date",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "cdm_version",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "cdm_version_concept_id",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "cdm_source",
+      "column_name": "vocabulary_version",
+      "rows": "1",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "concept_id",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "concept_name",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "domain_id",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "vocabulary_id",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "concept_class_id",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "standard_concept",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "concept_code",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "valid_start_date",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "valid_end_date",
+      "rows": "67",
+      "nulls": "0"
+    },
+    {
+      "table_name": "concept",
+      "column_name": "invalid_reason",
+      "rows": "67",
+      "nulls": "67"
+    }
+  ],
+  "persons_by_rule": [
+    {
+      "source": "barcelona",
+      "rule": "lesion",
+      "persons": "2936"
+    },
+    {
+      "source": "buenos_aires",
+      "rule": "patient",
+      "persons": "623"
+    },
+    {
+      "source": "ham10000",
+      "rule": "lesion",
+      "persons": "7470"
+    },
+    {
+      "source": "msk",
+      "rule": "lesion",
+      "persons": "2014"
+    },
+    {
+      "source": "msk",
+      "rule": "patient",
+      "persons": "780"
+    },
+    {
+      "source": "pad_ufes",
+      "rule": "patient",
+      "persons": "1373"
+    }
+  ],
+  "conditions_by_concept": [
+    {
+      "condition_concept_id": "0",
+      "condition_label": null,
+      "lesions": "182"
+    },
+    {
+      "condition_concept_id": "138825",
+      "condition_label": "akiec",
+      "lesions": "1072"
+    },
+    {
+      "condition_concept_id": "141232",
+      "condition_label": "mel",
+      "lesions": "101"
+    },
+    {
+      "condition_concept_id": "441818",
+      "condition_label": "vasc",
+      "lesions": "168"
+    },
+    {
+      "condition_concept_id": "1244922",
+      "condition_label": null,
+      "lesions": "86"
+    },
+    {
+      "condition_concept_id": "1244983",
+      "condition_label": null,
+      "lesions": "1"
+    },
+    {
+      "condition_concept_id": "1245180",
+      "condition_label": null,
+      "lesions": "58"
+    },
+    {
+      "condition_concept_id": "4066849",
+      "condition_label": null,
+      "lesions": "1"
+    },
+    {
+      "condition_concept_id": "4078628",
+      "condition_label": "vasc",
+      "lesions": "4"
+    },
+    {
+      "condition_concept_id": "4081088",
+      "condition_label": null,
+      "lesions": "4"
+    },
+    {
+      "condition_concept_id": "4110709",
+      "condition_label": "bkl",
+      "lesions": "855"
+    },
+    {
+      "condition_concept_id": "4112745",
+      "condition_label": "akiec",
+      "lesions": "145"
+    },
+    {
+      "condition_concept_id": "4112752",
+      "condition_label": "bcc",
+      "lesions": "2227"
+    },
+    {
+      "condition_concept_id": "4115280",
+      "condition_label": null,
+      "lesions": "4"
+    },
+    {
+      "condition_concept_id": "4116061",
+      "condition_label": "vasc",
+      "lesions": "10"
+    },
+    {
+      "condition_concept_id": "4116203",
+      "condition_label": null,
+      "lesions": "1"
+    },
+    {
+      "condition_concept_id": "4136464",
+      "condition_label": null,
+      "lesions": "14"
+    },
+    {
+      "condition_concept_id": "4141247",
+      "condition_label": null,
+      "lesions": "1"
+    },
+    {
+      "condition_concept_id": "4141299",
+      "condition_label": null,
+      "lesions": "1"
+    },
+    {
+      "condition_concept_id": "4144608",
+      "condition_label": "df",
+      "lesions": "173"
+    },
+    {
+      "condition_concept_id": "4162276",
+      "condition_label": "mel",
+      "lesions": "1370"
+    },
+    {
+      "condition_concept_id": "4169984",
+      "condition_label": null,
+      "lesions": "75"
+    },
+    {
+      "condition_concept_id": "4217502",
+      "condition_label": null,
+      "lesions": "1"
+    },
+    {
+      "condition_concept_id": "4217502",
+      "condition_label": "bkl",
+      "lesions": "93"
+    },
+    {
+      "condition_concept_id": "4246665",
+      "condition_label": "vasc",
+      "lesions": "24"
+    },
+    {
+      "condition_concept_id": "4271013",
+      "condition_label": "nv",
+      "lesions": "8144"
+    },
+    {
+      "condition_concept_id": "4300118",
+      "condition_label": null,
+      "lesions": "529"
+    },
+    {
+      "condition_concept_id": "4300676",
+      "condition_label": null,
+      "lesions": "9"
+    },
+    {
+      "condition_concept_id": "4308074",
+      "condition_label": "vasc",
+      "lesions": "2"
+    },
+    {
+      "condition_concept_id": "36716929",
+      "condition_label": null,
+      "lesions": "4"
+    },
+    {
+      "condition_concept_id": "40391314",
+      "condition_label": "mel",
+      "lesions": "120"
+    },
+    {
+      "condition_concept_id": "40568467",
+      "condition_label": "bkl",
+      "lesions": "759"
+    }
+  ],
+  "images_by_site_concept": [
+    {
+      "anatomic_site_concept_id": "0",
+      "images": "981"
+    },
+    {
+      "anatomic_site_concept_id": "4055938",
+      "images": "5048"
+    },
+    {
+      "anatomic_site_concept_id": "4078238",
+      "images": "56"
+    },
+    {
+      "anatomic_site_concept_id": "4092246",
+      "images": "17"
+    },
+    {
+      "anatomic_site_concept_id": "4144227",
+      "images": "250"
+    },
+    {
+      "anatomic_site_concept_id": "4145302",
+      "images": "103"
+    },
+    {
+      "anatomic_site_concept_id": "4159862",
+      "images": "4468"
+    },
+    {
+      "anatomic_site_concept_id": "4159864",
+      "images": "2713"
+    },
+    {
+      "anatomic_site_concept_id": "4160209",
+      "images": "321"
+    },
+    {
+      "anatomic_site_concept_id": "4160210",
+      "images": "7"
+    },
+    {
+      "anatomic_site_concept_id": "4182240",
+      "images": "128"
+    },
+    {
+      "anatomic_site_concept_id": "4182739",
+      "images": "379"
+    },
+    {
+      "anatomic_site_concept_id": "4237609",
+      "images": "3077"
+    },
+    {
+      "anatomic_site_concept_id": "4238998",
+      "images": "529"
+    },
+    {
+      "anatomic_site_concept_id": "4246735",
+      "images": "58"
+    },
+    {
+      "anatomic_site_concept_id": "4250773",
+      "images": "745"
+    },
+    {
+      "anatomic_site_concept_id": "4252576",
+      "images": "407"
+    },
+    {
+      "anatomic_site_concept_id": "4254263",
+      "images": "16"
+    },
+    {
+      "anatomic_site_concept_id": "4263673",
+      "images": "402"
+    },
+    {
+      "anatomic_site_concept_id": "4272029",
+      "images": "31"
+    },
+    {
+      "anatomic_site_concept_id": "4280364",
+      "images": "3500"
+    },
+    {
+      "anatomic_site_concept_id": "4282616",
+      "images": "30"
+    },
+    {
+      "anatomic_site_concept_id": "4297782",
+      "images": "282"
+    },
+    {
+      "anatomic_site_concept_id": "4313445",
+      "images": "1504"
+    },
+    {
+      "anatomic_site_concept_id": "4318817",
+      "images": "40"
+    },
+    {
+      "anatomic_site_concept_id": "4321847",
+      "images": "1405"
+    },
+    {
+      "anatomic_site_concept_id": "4327352",
+      "images": "137"
+    },
+    {
+      "anatomic_site_concept_id": "4327489",
+      "images": "1022"
+    }
+  ]
+}

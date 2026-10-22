@@ -1,35 +1,35 @@
 # Status
 
-Updated 2026-09-29. Phase 0 is done (signed off 2026-09-29). **Phase 1 (data engineering) is
-built on Databricks and awaiting your sign-off.** Phase 2 has not started.
+Updated 2026-10-20.
 
-## Phase 1 outcome
-
-- "Done when" demonstrated: job run `606896740511548` rebuilt bronze to gold with all 11
-  gates passing on 22,657 real images, and the broken-input demo (run `161990905473833`)
-  failed its update once on `gate_results` with exactly the six expected gates failing.
-- All five Phase 1 checkboxes in PLAN.md ticked, each with a "(Built: …)" note where the
-  build differs from the wording (Auto Loader's incremental pickup not yet exercised;
-  duplicate files fail a gate; gold runs as a job task after the pipeline).
-- Evidence: `results/phase1/run_evidence.json`. Explanation: `docs/phase1-note.md`.
+- **Phases 0 to 2 are built.** Phase 2's last open item, error analysis, moved to research
+  Phase D. The research-extension prep is on branch `research/0-prep`:
+  - patient-level split check and gate;
+  - analysis look results exported;
+  - MLflow evidence logging;
+  - PLAN.md amendment and docs refresh.
+- **Next:** research Phase A (OMOP and SNOMED CT gold tables), once the prep PR is merged.
+- **Phases 3 to 6** have not started.
 
 ## Deployed in your workspace
 
-- Jobs: `cdm-phase1` (143178896044655), `cdm-phase1-broken-demo` (1119799696513742).
-- Pipelines: `cdm-phase1`, `cdm-phase1-broken`; both stop on the first failed update.
-- Tables in `workspace.cdm` (and the demo's in `workspace.cdm_broken`); files in the volume
-  `workspace.cdm.raw`. How to rerun: `docs/phase1-runbook.md`.
-
-## Waiting on you
-
-- Sign-off on Phase 1.
-- Before Phase 2: its plan, for your OK (CLAUDE.md).
-- Still open in PLAN.md: checks B (bundles) and C (data quality monitoring); not needed for
-  the CLI route.
+- **Phase 1 jobs:** `cdm-phase1` (143178896044655), `cdm-phase1-broken-demo` (1119799696513742).
+- **Phase 2 jobs:**
+  - `cdm-phase2-overnight` (409896132564474)
+  - `cdm-phase2-v2` (403273250846193)
+  - `cdm-phase2-v2-test` (778954396717951)
+  - `cdm-phase2-drift-table` (144921606000493)
+  - `cdm-phase2-triage` (462468285107739)
+  - `cdm-phase2-batch-drift-reference` (1057242575787924)
+  - `cdm-phase2-ba-recalibration` (296642112747510)
+  - `cdm-phase2-analysis-look` (509088198910916)
+- **Tables** are in `workspace.cdm`, with the demo's in `workspace.cdm_broken`. Files are in the
+  volume `workspace.cdm.raw`.
+- **MLflow experiments:** `cdm-phase2` (training) and `cdm-evidence` (one run per committed
+  results file).
 
 ## Local files (outside the repo)
 
-- Data: `C:\Users\Erjon\data\cdm` (HAM10000, PathMNIST 224, CIFAR-10).
-- Weights and checkpoints: `C:\Users\Erjon\data\cdm\checkpoints\`,
-  `C:\Users\Erjon\.cache\torch\hub\checkpoints\`.
-- Run logs: `logs\` (gitignored). Built wheel and rendered definitions: `dist\` (gitignored).
+- **Data:** `C:\Users\Erjon\data\cdm` (HAM10000, PathMNIST 224, CIFAR-10).
+- **Weights and checkpoints:** `C:\Users\Erjon\data\cdm\checkpoints\` and
+  `C:\Users\Erjon\.cache\torch\hub\checkpoints\`. Phase 2 checkpoints are in the volume.

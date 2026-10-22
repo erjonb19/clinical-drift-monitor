@@ -95,6 +95,30 @@ exactly these gates failing (the `make_broken` task's log lists them too):
 expectation, read the gate details in the pipeline's event log (the failed flow's
 expectation message), or recompute them from `workspace.cdm_broken.silver_metadata`.
 
+## OMOP tables and lineage (research Phase A)
+
+The same pipeline update builds `workspace.cdm.omop_*` and `omop_gate_results`. To record a
+build and regenerate the data dictionary, run this after the update (it needs the deploy
+step's resolved concepts, made by `scripts/omop_concepts.py` from an Athena download):
+
+```
+python scripts/omop_build_report.py --update-id <pipeline update ID>
+```
+
+To show the tables derive from silver, either open any `omop_*` table in Catalog Explorer
+and choose **Lineage**, or query the lineage system table:
+
+```sql
+SELECT source_table_full_name, target_table_full_name, MAX(event_time)
+FROM system.access.table_lineage
+WHERE target_table_full_name LIKE 'workspace.cdm.omop_%'
+GROUP BY 1, 2;
+```
+
+`python scripts/omop_build_report.py --lineage` saves the same query's result to
+`results/research/a_omop/lineage.json`. The system table lags the pipeline by hours, so run
+it the next day.
+
 ## If something fails
 
 - **ingest fails with "HAM10000_metadata.csv is missing" or an MD5 error:** rerun step 3.
