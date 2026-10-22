@@ -23,8 +23,9 @@ by hand, so they are counted apart from real ones.
 
 **Rules that hold at every tier**
 - **Small cells:** a count under 11 is suppressed in any output leaving tier 1 or 2. So is
-  any count from which a suppressed cell could be recovered by subtraction (the cohort
-  service enforces both; Phase G2).
+  any count from which a suppressed cell could be recovered by subtraction. The cohort
+  service enforces both within one result (G2). Across requests it is a reviewer's check
+  (phenotypes/README.md, limits).
 - **No SNOMED text in tier 0.** OMOP concept IDs are public; SNOMED codes and names are not
   redistributed.
 - **Licenses travel with the data.** Per-image license and attribution are kept from ingest
@@ -71,7 +72,7 @@ AI outputs carry their own controls (G5):
 | Trigger | First response | Escalate to | Record |
 | --- | --- | --- | --- |
 | A data or OMOP gate fails | The pipeline update stops by design; investigate | Data owner, if the source changed | Gate result table; `docs/silent-failures.md` if it had passed wrongly |
-| A request asks for a suppressed cell, or for counts that recover one | Refuse; explain the small-cell rule | Approver, if the requester disputes it | Cohort service audit log (refusal entry) (G2) |
+| A request asks for a suppressed cell, or for counts that would recover one | Suppress it in the output, or refuse the definition; explain the small-cell rule | Approver, if the requester disputes it | Cohort service audit log (refusal entry) (G2) |
 | A cohort definition changes after approval | The service refuses to run it (hash mismatch) | Approver re-approves the new version | Audit log (G2) |
 | Unexpected identifiers or free text in an output | Stop release; delete the output | Data owner; for tier 2, the privacy office | Issue comment and audit log |
 | A license conflict (for example a commercial use of CC-BY-NC data) | Stop | Project owner | Issue |
