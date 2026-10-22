@@ -217,17 +217,17 @@ OMOP tables as concept IDs (no vocabulary names); age and skin type from silver.
 - **Results:** [`results_v2.json`](results/research/c_subgroups/results_v2.json), Databricks
   serverless CPU job run 534810524836120. Every group the first run
   ([`results.json`](results/research/c_subgroups/results.json)) reported is identical in v2.
-- **Two gates ran before any subgroup was computed:**
-  - each model's regenerated predictions had to match Phase B's overall numbers to 1e-9;
-  - the saved per-image drift scores, which carry no IDs, had to line up with the images row
-    by row.
-
-  Both passed.
+- **Two gates, both passed:**
+  - before any subgroup, each model's regenerated predictions had to match Phase B's overall
+    numbers to 1e-9;
+  - before any drift result, the saved per-image drift scores, which carry no IDs, had to line
+    up with the images row by row.
 - **Reporting rules:** groups under 100 images get counts only, and melanoma sensitivity needs
   100 melanomas. Intervals are 95% bootstrap within each group, for the metrics a group
   reports. Probe results are the mean and range over 3 seeds.
 
-**By site, on the clients' test split** (balanced accuracy):
+**By site, on the clients' test split** (balanced accuracy; ensemble: 95% bootstrap interval;
+probe: range over 3 seeds):
 
 | Client | Images | Ensemble | Probe | Zero-shot |
 |---|---|---|---|---|
@@ -236,8 +236,8 @@ OMOP tables as concept IDs (no vocabulary names); age and skin type from silver.
 | MSK | 460 | 68.9% (61.3 to 74.8) | 44.6% (43.5 to 45.1) | 20.4% |
 | Barcelona | 1,274 | 53.6% (45.1 to 67.5) | 38.0% (37.6 to 38.7) | 30.6% |
 
-Barcelona is the hardest training hospital for every model. Its melanoma sensitivity is still
-71.4% (58.5 to 81.0), over 350 melanomas.
+Barcelona is the hardest training hospital for the ensemble and the probe (zero-shot does worst
+on MSK). Its melanoma sensitivity is still 71.4% (58.5 to 81.0), across 350 melanomas.
 
 **By Fitzpatrick skin type, within each new hospital** (skin type is recorded nowhere else):
 
@@ -253,11 +253,14 @@ Barcelona is the hardest training hospital for every model. Its melanoma sensiti
 - Types IV to VI have 25 images at Buenos Aires and 68 at PAD-UFES-20: counts only. **Darker
   skin cannot be judged with this data.**
 - Within each site, every interval overlaps, so no skin-type effect is claimed for types I to
-  III. Drift counts in the last column include unlabelled images, so they are slightly larger.
+  III. Drift uses all images, labelled or not (114 rather than 106 for type I at Buenos Aires).
+  Images with no skin type recorded (113 at Buenos Aires, 804 at PAD-UFES-20) have results in
+  the file but are not in this table.
 - EfficientNet's drift numbers at Buenos Aires reproduce Phase 2's committed skin-type file
   exactly, an independent check that scores were matched to the right images.
 
-**By age band, on the clients' test split** (balanced accuracy):
+**By age band, on the clients' test split** (balanced accuracy; ensemble: 95% bootstrap
+interval; probe: range over 3 seeds):
 
 | Age | Images | Ensemble | Probe |
 |---|---|---|---|
@@ -268,11 +271,17 @@ Barcelona is the hardest training hospital for every model. Its melanoma sensiti
 | 75+ | 561 | 69.5% (55.0 to 76.4) | 52.4% (51.7 to 52.7) |
 | unknown | 62 | counts only | counts only |
 
-- **Under 30 is the weakest group for both models.** It is mostly nevi (149 of 194 images), and
+- **Under 30 is the weakest group for the ensemble and the probe** (zero-shot does its best
+  there, 46.6%). It is mostly nevi (149 of 194 images), and
   the ensemble misses all 6 benign keratoses and all 10 vascular lesions there. It has 29
   melanomas, under the minimum, so its melanoma sensitivity is not reported.
 - Balanced accuracy averages only the classes present, and here the rare classes drop in and
   out of resamples, which makes the interval wide and lopsided.
+- **Without the 47 MSK overlap patients** (PLAN's rule for every test result): most groups
+  barely move, but 75+ drops from 69.5% to 64.4% (52.9 to 73.1) for the ensemble and from
+  52.4% to 44.2% for the probe, after removing only 7 of its 561 images. One rare-class image
+  can move balanced accuracy this much in a small group. MSK itself goes from 68.9% to 68.3%
+  (59.8 to 75.0).
 
 **Sex** (OMOP concepts 8507 and 8532):
 - Ensemble balanced accuracy: 63.5% (56.9 to 75.2) and 68.8% (61.4 to 75.7).
@@ -288,13 +297,15 @@ is attributed to the site.
 whole client test split's Mahalanobis scores, so 5% of those images fire overall.
 - **EfficientNet (mean of 3 seeds):** Barcelona images fire 7.1%, MSK 2.6%. Age bands range
   from 3.3% (0-29) to 5.9% (30-44), and sex from 4.7% to 5.1%.
-- **BiomedCLIP features:** much more uneven by site: MSK 13.3%, HAM10000 Vienna 1.9%.
+- **BiomedCLIP features:** much more uneven by site: MSK 13.3%, Barcelona 6.0%, HAM10000
+  Vienna 1.9% and Queensland 1.4%.
 - An alert rate that differs by group is a fairness question for the Phase 3 monitor. It is
   reported here, not corrected.
 
 **Drift by subgroup at the new hospitals** (Mahalanobis AUROC, EfficientNet mean of 3 seeds):
 - At Buenos Aires, drift rises with age: 0.543 (30-44) to 0.786 (75+) for EfficientNet, and
-  0.706 to 0.818 on BiomedCLIP features. The two sex groups are within 0.01.
+  0.706 to 0.818 on BiomedCLIP features. The two sex groups differ by 0.008 for EfficientNet
+  and 0.013 on BiomedCLIP features.
 - At PAD-UFES-20, every group with at least 100 images is far from the training data: 0.790 to
   0.883 for EfficientNet and 0.931 to 0.972 on BiomedCLIP features. That range includes the
   804 images with no sex recorded.

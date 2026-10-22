@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Research Phase C: subgroups (serverless CPU)
-# MAGIC Performance and drift by age band, sex and body site, for the shipped EfficientNet
+# MAGIC Performance and drift by age band, sex, body site, skin type and site, for the shipped EfficientNet
 # MAGIC ensemble and BiomedCLIP (probe and zero-shot), under `results/research/c_subgroups/spec.json`
 # MAGIC as amended by `spec_v2.json` (the MSK-overlap row, zero-shot, alert rates by group, intervals
 # MAGIC only for reported metrics, and a check that saved drift scores line up with the images).
