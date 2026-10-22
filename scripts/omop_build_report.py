@@ -82,12 +82,14 @@ def collect(update_id: str) -> dict[str, Any]:
 
 
 def lineage() -> dict[str, Any]:
-    """Unity Catalog's lineage edges into the OMOP tables: proof they derive from silver."""
+    """Unity Catalog's lineage edges from bronze through silver into the OMOP tables. Bronze
+    tables read files from the volume, so their edges have no source table."""
     edges = sql_client()(
         "SELECT source_table_full_name AS source, target_table_full_name AS target, "
         "MAX(event_time) AS last_seen FROM system.access.table_lineage "
-        f"WHERE target_table_full_name LIKE '{SCHEMA}.omop_%' AND source_table_full_name IS "
-        "NOT NULL GROUP BY 1, 2 ORDER BY 2, 1"
+        f"WHERE target_table_full_name LIKE '{SCHEMA}.omop_%' "
+        f"OR target_table_full_name IN ('{SCHEMA}.silver_metadata', '{SCHEMA}.silver_decoded') "
+        f"OR target_table_full_name LIKE '{SCHEMA}.bronze_%' GROUP BY 1, 2 ORDER BY 2, 1"
     )
     return {"queried_utc": datetime.now(UTC).isoformat(timespec="seconds"),
             "table": "system.access.table_lineage", "edges": records(edges)}  # fmt: skip

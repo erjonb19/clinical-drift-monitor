@@ -11,8 +11,9 @@ images and sex, and an optional breakdown. The service:
 3. **compiles** it to SQL against generic OMOP CDM v5.4 table and column names, so it runs on
    DuckDB (tests, local), on Databricks SQL (``workspace.cdm.omop_*``), or on any other OMOP
    that supplies a table map;
-4. **suppresses small cells**: a count from 1 to 10 is shown as "<11", and a second cell is
-   suppressed where the suppressed one could otherwise be recovered by subtraction;
+4. **suppresses small cells**: a count from 1 to 10 is hidden, and so are other cells where
+   subtraction would recover it. Every hidden cell carries the same label, with no stated
+   range, because a range ("under 11", "11 or more") is itself enough to pin a count;
 5. writes every request, refusal, approval and run to a **hash-chained audit log** that
    :func:`verify_chain` checks.
 
@@ -38,9 +39,10 @@ import pandas as pd
 import yaml
 
 MIN_CELL = 11
-SUPPRESSED = "<11"
-# A cell of 11 or more hidden only so a "<11" cell next to it cannot be recovered.
-COMPLEMENT = "suppressed"
+SUPPRESSED = "suppressed"
+# A cell hidden only so a small one cannot be recovered. Same label on purpose: two labels
+# would tell a reader which hidden cells are under 11.
+COMPLEMENT = SUPPRESSED
 OMOP_TABLES = (
     "person",
     "condition_occurrence",
@@ -110,7 +112,8 @@ def parse(definition: Mapping[str, Any], path: str = "<memory>") -> Phenotype:
     for key in ("name", "version", "title", "index"):
         if key not in definition:
             raise PhenotypeError(f"missing {key!r}")
-    if not isinstance(definition["version"], int) or definition["version"] < 1:
+    version = definition["version"]
+    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
         raise PhenotypeError("version must be a positive integer")
     index = definition["index"]
     if not isinstance(index, dict) or set(index) - INDEX_KEYS:
@@ -123,6 +126,8 @@ def parse(definition: Mapping[str, Any], path: str = "<memory>") -> Phenotype:
             if not isinstance(index[bound], int) or not 0 <= index[bound] <= 120:
                 raise PhenotypeError(f"index.{bound}: an integer age from 0 to 120")
             clean_index[bound] = index[bound]
+    if clean_index.get("age_min", 0) > clean_index.get("age_max", 120):
+        raise PhenotypeError("index: age_min is above age_max")
     clean: dict[str, Any] = {
         "name": str(definition["name"]),
         "version": definition["version"],
@@ -229,36 +234,48 @@ def compile_sql(pheno: Phenotype, tables: Mapping[str, str]) -> dict[str, str]:
 
 
 def suppress(counts: pd.Series, total: int | None = None) -> list[str]:
-    """Counts as strings with cells from 1 to 10 shown as "<11". If exactly one cell is
-    hidden and the total is published, the next smallest cell is hidden too ("suppressed"),
-    so the first cannot be recovered by subtraction. Zero is shown: it reveals no person."""
+    """Counts as strings with cells from 1 to 10 hidden. If the total is published and any
+    cell is small, every non-zero cell is hidden: partial hiding (the smallest other cells)
+    was tried first, and a brute-force test showed that a reader who knows the rule can undo
+    it. Zero is shown: it reveals no person. Ask for a coarser breakdown to see more."""
     values = [int(v) for v in counts]
-    small = {i for i, v in enumerate(values) if 0 < v < MIN_CELL}
-    extra: set[int] = set()
-    if total is not None and len(small) == 1:
-        rest = [i for i, v in enumerate(values) if i not in small and v > 0]
-        if rest:
-            extra.add(min(rest, key=lambda i: values[i]))
-    return [
-        SUPPRESSED if i in small else COMPLEMENT if i in extra else str(v)
-        for i, v in enumerate(values)
-    ]
+    small = any(0 < v < MIN_CELL for v in values)
+    hide_all = total is not None and small
+    return [SUPPRESSED if (0 < v < MIN_CELL) or (hide_all and v > 0) else str(v) for v in values]
+
+
+def suppress_breakdown(counts: pd.Series, final: int, final_shown: str) -> tuple[list[str], str]:
+    """A breakdown of the final cohort, and how the final count may be shown with it. The
+    cells add up to the final count, so when it is hidden every non-zero cell is hidden too.
+    When the cells are hidden and the count is shown, ``k`` hidden cells adding up to it
+    could each still be 11 or more only if it is at least ``k + 10``; below that the final
+    count is hidden as well."""
+    values = [int(v) for v in counts]
+    if not final_shown.isdigit():
+        return [str(v) if v == 0 else SUPPRESSED for v in values], final_shown
+    cells = suppress(counts, total=final)
+    hidden = sum(1 for c in cells if c == SUPPRESSED)
+    if hidden and final < hidden + MIN_CELL - 1:
+        return [str(v) if v == 0 else SUPPRESSED for v in values], SUPPRESSED
+    return cells, final_shown
 
 
 def suppress_attrition(persons: pd.Series) -> list[str]:
-    """Attrition counts: a step from 1 to 10 shows "<11". A step's drop from the step before
-    is also a count of people, so a step whose drop is from 1 to 10 is hidden too
-    ("suppressed")."""
+    """Attrition counts: a step from 1 to 10 is hidden. The drop between two shown steps is
+    also a count of people, so a step is hidden too ("suppressed") while its drop from the last
+    *shown* step is from 1 to 10; hiding one step does not make the next one safe."""
     values = [int(v) for v in persons]
     out = []
-    for i, v in enumerate(values):
-        drop = values[i - 1] - v if i else 0
+    shown: int | None = None
+    for v in values:
+        drop = shown - v if shown is not None else 0
         if 0 < v < MIN_CELL:
             out.append(SUPPRESSED)
         elif 0 < drop < MIN_CELL:
             out.append(COMPLEMENT)
         else:
             out.append(str(v))
+            shown = v
     return out
 
 
@@ -313,7 +330,8 @@ class Approvals:
 
 class AuditLog:
     """Append-only JSON lines; each entry carries the hash of the one before, so an edited
-    or deleted line breaks :func:`verify_chain`."""
+    or deleted line breaks :func:`verify_chain`. Dropping the last lines does not: nothing
+    outside the log anchors its head (a limit, listed in phenotypes/README.md)."""
 
     def __init__(self, path: Path) -> None:
         self.path = path
@@ -361,8 +379,8 @@ class CohortResult:
     attrition: list[dict[str, Any]]
     breakdown: list[dict[str, Any]]
     note: str = (
-        "Counts from 1 to 10 show as <11; a cell marked suppressed is 11 or more, hidden so "
-        "that a <11 cell cannot be worked out by subtraction."
+        "Counts from 1 to 10 are suppressed, and so are other cells where subtraction would "
+        "reveal one. A suppressed cell can be any size: the label says nothing about it."
     )
 
 
@@ -402,7 +420,7 @@ class CohortService:
         if "breakdown" in sql:
             frame = self.engine(sql["breakdown"])
             final = int(attrition["persons"].iloc[-1])
-            cells = suppress(frame["persons"], total=final)
+            cells, rows[-1]["persons"] = suppress_breakdown(frame["persons"], final, shown[-1])
             keys = [c for c in frame.columns if c != "persons"]
             breakdown = [
                 {**{k: (None if pd.isna(r[k]) else int(r[k])) for k in keys}, "persons": cell}

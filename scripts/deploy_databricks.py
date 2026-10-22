@@ -30,7 +30,7 @@ import pandas as pd
 
 from cdm.data import data_root
 from cdm.gold import WEIGHTS_FILE
-from cdm.omop import load_concept_map
+from cdm.omop import load_concept_map, notes_quoting_concepts
 
 REPO = Path(__file__).resolve().parents[1]
 CODE = ["src", "pipelines", "config", "pyproject.toml"]
@@ -49,6 +49,10 @@ def check_resolved(cmap_path: Path, resolved: Path) -> None:
     have = set(pd.read_csv(resolved, dtype=str)["concept_id"].astype(int))
     if wanted != have:
         sys.exit(f"{resolved} is stale ({len(have ^ wanted)} concepts differ): rerun omop_concepts")
+    quoting = notes_quoting_concepts(load_concept_map(cmap_path), pd.read_csv(resolved, dtype=str))
+    if quoting:
+        problems = "; ".join(quoting)
+        sys.exit(f"concept map notes quote SNOMED names, which must not be published: {problems}")
 
 
 def render(template: str, values: dict[str, str]) -> dict[str, Any]:

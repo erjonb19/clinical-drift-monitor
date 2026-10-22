@@ -147,7 +147,12 @@ def main() -> None:
         "by_source": per_source(frame),
     }
     if args.predictions:
-        shared = set(result["by_source"]["msk"]["test_lesion_ids_sharing_a_patient_with_train"])
+        # Every source that records patient IDs (only MSK among the clients today).
+        shared = {
+            lesion
+            for row in result["by_source"].values()
+            for lesion in row.get("test_lesion_ids_sharing_a_patient_with_train", [])
+        }
         result["test_sensitivity"] = sensitivity(frame, args.predictions, shared)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "patient_overlap.json").write_text(json.dumps(result, indent=2) + "\n", "utf-8")

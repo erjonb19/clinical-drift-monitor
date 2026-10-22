@@ -4,9 +4,14 @@ Version 1, 2026-10-21.
 
 How data access, requests and AI outputs are governed in this project, and where the evidence
 for each control lives. This is a **portfolio build on public research data**. No protected
-health information is held anywhere in it. The restricted tier below is designed and enforced
-in code, but it is empty today. It exists so that credentialed data, such as MIMIC-IV-Note or
-an institution's own OMOP, can plug in without redesigning the controls.
+health information is held anywhere in it. The restricted tier below is designed but not yet
+enforced in code, and it is empty today. It exists so that credentialed data, such as
+MIMIC-IV-Note or an institution's own OMOP, can plug in without redesigning the controls.
+
+**Status.** A control marked with a phase, such as (G2) or (G5), is built in that phase and is
+only a plan until that phase's PR is merged. [BUILT_VS_PLANNED.md](BUILT_VS_PLANNED.md) says
+what runs today. Requests the owner makes up to exercise the service get the `synthetic` label
+by hand, so they are counted apart from real ones.
 
 ## 1. Access tiers
 
@@ -18,8 +23,9 @@ an institution's own OMOP, can plug in without redesigning the controls.
 
 **Rules that hold at every tier**
 - **Small cells:** a count under 11 is suppressed in any output leaving tier 1 or 2. So is
-  any count from which a suppressed cell could be recovered by subtraction (the cohort
-  service enforces both; Phase G2).
+  any count from which a suppressed cell could be recovered by subtraction. The cohort
+  service enforces both within one result (G2). Across requests it is a reviewer's check
+  (phenotypes/README.md, limits).
 - **No SNOMED text in tier 0.** OMOP concept IDs are public; SNOMED codes and names are not
   redistributed.
 - **Licenses travel with the data.** Per-image license and attribution are kept from ingest
@@ -55,7 +61,7 @@ before work starts. The answers are recorded in the issue.
 | **Medium** | A new phenotype; row-level export of public data; any model or LLM output shown to a requester | Human approval of the exact definition version; reviewer sign-off in the issue |
 | **High** | Anything touching tier 2; LLM processing of clinical notes; outputs that could identify a person; anything used to make a decision about a patient | Approval by the data owner and, for real clinical data, IRB or privacy office; output review by a second person; escalation (section 4) if anything is unexpected |
 
-AI outputs carry their own controls:
+AI outputs carry their own controls (G5):
 - extraction results are scored against hand labels before use (`docs/EVAL_PLAN.md` Q7);
 - LLM calls are logged with model, prompt hash and cost;
 - CI never calls a live model;
@@ -66,12 +72,12 @@ AI outputs carry their own controls:
 | Trigger | First response | Escalate to | Record |
 | --- | --- | --- | --- |
 | A data or OMOP gate fails | The pipeline update stops by design; investigate | Data owner, if the source changed | Gate result table; `docs/silent-failures.md` if it had passed wrongly |
-| A request asks for a suppressed cell, or for counts that recover one | Refuse; explain the small-cell rule | Approver, if the requester disputes it | Cohort service audit log (refusal entry) |
-| A cohort definition changes after approval | The service refuses to run it (hash mismatch) | Approver re-approves the new version | Audit log |
+| A request asks for a suppressed cell, or for counts that would recover one | Suppress it in the output, or refuse the definition; explain the small-cell rule | Approver, if the requester disputes it | Cohort service audit log (refusal entry) (G2) |
+| A cohort definition changes after approval | The service refuses to run it (hash mismatch) | Approver re-approves the new version | Audit log (G2) |
 | Unexpected identifiers or free text in an output | Stop release; delete the output | Data owner; for tier 2, the privacy office | Issue comment and audit log |
 | A license conflict (for example a commercial use of CC-BY-NC data) | Stop | Project owner | Issue |
-| An LLM returns a concept not in the map, or extraction accuracy falls below the baseline | Reject the output | Project owner, before any further use | G5 results and MLflow |
-| LLM spend reaches the daily budget ($5) | Stop calls | Project owner | Spend log |
+| An LLM returns a concept not in the map, or extraction accuracy falls below the baseline | Reject the output | Project owner, before any further use | G5 results and MLflow (G5) |
+| LLM spend reaches the daily budget ($5) | Stop calls | Project owner | Spend log (G5) |
 
 In this portfolio, every role (data engineer, approver, data owner) is the project owner,
 and the privacy office is named only as the step a real deployment would add. The roles are
@@ -95,9 +101,9 @@ kept separate in the audit log so the workflow is visible.
 | --- | --- |
 | Lesion-level splits; patients documented | `patients_in_one_split` and split gates; `tests/test_frozen_splits.py` |
 | Data quality gates fail the update | `gate_results`, `omop_gate_results`; the broken demo job |
-| Every number traceable | `results/mlflow_runs.json`; the CI hash check |
+| Every number traceable | `results/mlflow_runs.json`; `tests/test_evidence.py` checks the hashes in CI |
 | Bugs that reported success | `docs/silent-failures.md` |
-| Test looks decided in advance | `spec.json` files with `committed_before_running`; locks |
+| Test looks decided in advance | `spec.json` files with `committed_before_running`; look locks in the workspace volume (`databricks/notebooks/analysis_look.py`, `drift_table.py`) |
 | Concept mapping verified, not guessed | `results/research/a_omop/concept_check.json` |
 | Requests scoped and tracked | GitHub issues from the request form; project board |
 | Cohort access governed | Phase G2: allowlist, approval by hash, audit log, suppression tests |
