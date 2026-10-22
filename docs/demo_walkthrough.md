@@ -1,6 +1,6 @@
 # Cohort demo: 3-minute walkthrough script
 
-For a screen recording of `app/cohort_demo.py`. About 3 minutes at a normal pace. Words to
+For a screen recording of `app/cohort_demo.py` (live at https://cdm-cohort-demo.streamlit.app/). About 3 minutes at a normal pace. Words to
 say are in quotes; what to do is in brackets.
 
 **0:00 – 0:20. What this is**
