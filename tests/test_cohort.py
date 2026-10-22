@@ -19,8 +19,11 @@ from cdm.cohort import (
     CohortService,
     PhenotypeError,
     Refused,
+    Release,
+    Scope,
     compile_sql,
     duckdb_engine,
+    guard_releases,
     load,
     parse,
     suppress,
@@ -311,12 +314,9 @@ def approved(svc: CohortService, tmp_path: Path, definition: dict[str, object]) 
     return path
 
 
-def test_a_nested_result_cannot_reveal_a_small_group_by_age() -> None:
+def test_a_nested_result_cannot_reveal_a_small_group_by_age(tmp_path: Path) -> None:
     """Each result is safe on its own (34 people; 30 adults), but together they say four
     people with melanoma are under 18. The second count is hidden."""
-    import tempfile
-
-    tmp_path = Path(tempfile.mkdtemp())
     svc = service_on(tmp_path, people([(30, "female", 45, True), (4, "male", 15, True)]))
     first = svc.run(approved(svc, tmp_path, BASE | {"name": "everyone"}), "fellow")
     assert first.attrition[-1]["persons"] == "34"
@@ -367,3 +367,74 @@ def test_stand_in_approvals_stay_apart_and_serve_only_synthetic_requests(tmp_pat
     assert (library.read_bytes() if library.exists() else None) == before
     real = cli(*files, "run", pheno, "--requester", "fellow", "--data", str(tmp_path))
     assert real.returncode == 2 and "only serves synthetic" in real.stderr
+
+
+def scope(conditions: set[int], low: int = 0, high: int = 200, inc: set[str] | None = None,
+          exc: set[str] | None = None) -> Scope:  # fmt: skip
+    return Scope(frozenset(conditions), low, high, frozenset(inc or ()), frozenset(exc or ()))
+
+
+def test_nesting_follows_conditions_age_ranges_and_criteria() -> None:
+    assert scope({1}, 18).within(scope({1, 2}))  # fewer conditions, narrower ages
+    assert not scope({1, 2}).within(scope({1}, 18))
+    assert scope({1}, inc={"a", "b"}).within(scope({1}, inc={"a"}))
+    assert not scope({1}, inc={"a"}).within(scope({1}, inc={"a", "b"}))
+    assert scope({1}, exc={"x"}).within(scope({1}))
+    assert not scope({1}, 0, 50).within(scope({1}, 18, 200))
+
+
+def release(s: Scope, total: int, cells: dict[int, int] | None, label: str) -> list[Release]:
+    """A total and an optional sex breakdown, suppressed on their own as the service does."""
+    step = Release(s, (), {(): total}, {(): suppress_attrition(pd.Series([total]))[0]}, label)
+    if cells is None:
+        return [step]
+    keys = sorted(cells)
+    shown, step.shown[()] = suppress_breakdown(
+        pd.Series([cells[k] for k in keys]), total, step.shown[()]
+    )
+    table = Release(s, ("gender_concept_id",), {(k,): cells[k] for k in keys},
+                    {(k,): v for k, v in zip(keys, shown, strict=True)}, label)  # fmt: skip
+    return [step, table]
+
+
+def test_one_hidden_row_under_a_shown_total_hides_the_total() -> None:
+    """Review case: earlier 80 = 50 men + 30 women; now 45, all men, hidden by the guard.
+    Shown, the 45 would be the men's count, and 50 - 45 = 5."""
+    old = release(scope({1}), 80, {8507: 50, 8532: 30}, "old")
+    new = release(scope({1}, inc={"x"}), 45, {8507: 45}, "new")
+    guard_releases(new, old)
+    assert new[0].shown[()] == SUPPRESSED
+
+
+def test_fewer_conditions_with_an_age_limit_is_still_nested() -> None:
+    old = release(scope({1, 2}), 100, None, "old")
+    new = release(scope({1}, 18), 95, None, "new")
+    assert guard_releases(new, old) == ["old"] and new[0].shown[()] == SUPPRESSED
+
+
+def test_no_small_difference_can_be_worked_out_from_two_nested_releases() -> None:
+    """Brute force: an earlier cohort (men, women up to 20 each) and a nested one inside it,
+    both with a sex breakdown, released through the guard. Grouped by everything shown, no
+    count or difference from 1 to 10 may be the same in every case behind one output."""
+    from itertools import product
+
+    seen: dict[tuple[str, ...], list[tuple[int, ...]]] = {}
+    for a, b in product(range(21), repeat=2):
+        old = release(scope({1}), a + b, {8507: a, 8532: b}, "old")
+        old_shown = tuple(v for r in old for v in r.shown.values())
+        for c, d in product(range(a + 1), range(b + 1)):
+            new = release(scope({1}, inc={"x"}), c + d, {8507: c, 8532: d}, "new")
+            guard_releases(new, old)
+            shown = old_shown + ("|",) + tuple(v for r in new for v in r.shown.values())
+            seen.setdefault(shown, []).append((a, b, c, d, a - c, b - d, a + b - c - d))
+    leaks = [
+        (shown, i)
+        for shown, cases in seen.items()
+        for i in range(7)
+        if len({x[i] for x in cases}) == 1
+        and 0 < cases[0][i] < 11
+        # The search stops at 20 per cell, which a reader does not know: skip cases where a
+        # cell sits at that edge, since there the "pin" is the search's, not the data's.
+        and all(max(x[:2]) < 20 for x in cases)
+    ]
+    assert leaks == []
