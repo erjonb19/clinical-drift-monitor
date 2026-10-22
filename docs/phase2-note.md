@@ -203,7 +203,11 @@ Spec committed before running (`results/phase2/analysis_look/spec.json`). The lo
 - it is descriptive only: no model or threshold changes.
 
 Evidence: `results/phase2/analysis_look/results.json` (part B) and `skin_type_drift.json`
-(part A). Per-image probabilities are in `predictions.csv.gz`.
+(part A). Per-image probabilities are in `predictions.csv.gz`: ISIC image and lesion IDs,
+source, client, split, label, skin type, image type, a bordered flag, and each model's class
+probabilities. It
+holds no patient IDs and no images; the IDs and labels are public ISIC metadata, and each
+image's license and attribution are kept in silver.
 
 **Seven-class accuracy at the held-out sites** (ensemble; 95% bootstrap intervals by lesion).
 This counts only classes that map cleanly to HAM10000's, so "SCC, NOS" is excluded:
