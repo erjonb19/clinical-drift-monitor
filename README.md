@@ -9,9 +9,9 @@ portfolio project and research prototype: **not for clinical use**.
   error analysis, moved to research Phase D.
 - The research extension (Phases A to F: OMOP data, a vision-language baseline, subgroups,
   interpretability, fusion) is planned in
-  [docs/research_extension_plan.md](docs/research_extension_plan.md). Phase A (OMOP tables)
-  and Phase B (the BiomedCLIP baseline) are built; Phase G (research data services) is in
-  progress.
+  [docs/research_extension_plan.md](docs/research_extension_plan.md). Phase A (OMOP tables),
+  Phase B (the BiomedCLIP baseline) and Phase C (subgroups and bias) are built; Phase G
+  (research data services) is in progress.
 - Phases 3 to 6 have not started.
 
 [PLAN.md](PLAN.md) has scope and order. [docs/BUILT_VS_PLANNED.md](docs/BUILT_VS_PLANNED.md)
@@ -203,6 +203,114 @@ means the detector separates them):
 - The spec was chosen on the owner's Windows computer and the look ran on Linux. A dry run of
   the whole look on validation gave identical classification numbers on both, and drift AUROCs
   within 0.000001 ([`dry_run/`](results/research/b_vlm/dry_run/)).
+
+## Research Phase C: subgroups and bias
+
+Performance and drift by site, Fitzpatrick skin type, age band, sex and body site, for the
+shipped ensemble and BiomedCLIP (linear probe and zero-shot). Sex and body site come from the
+OMOP tables as concept IDs (no vocabulary names); age and skin type from silver.
+
+- **Specs:** [`spec.json`](results/research/c_subgroups/spec.json), then
+  [`spec_v2.json`](results/research/c_subgroups/spec_v2.json). v2 was committed after the
+  first run and a fresh review, to add the MSK-overlap row, zero-shot, skin type, site and
+  alert rates.
+- **Results:** [`results_v2.json`](results/research/c_subgroups/results_v2.json), Databricks
+  serverless CPU job run 534810524836120. Every group the first run
+  ([`results.json`](results/research/c_subgroups/results.json)) reported is identical in v2.
+- **Two gates, both passed:**
+  - before any subgroup, each model's regenerated predictions had to match Phase B's overall
+    numbers to 1e-9;
+  - before any drift result, the saved per-image drift scores, which carry no IDs, had to line
+    up with the images row by row.
+- **Reporting rules:** groups under 100 images get counts only, and melanoma sensitivity needs
+  100 melanomas. Intervals are 95% bootstrap within each group, for the metrics a group
+  reports. Probe results are the mean and range over 3 seeds.
+
+**By site, on the clients' test split** (balanced accuracy; ensemble: 95% bootstrap interval;
+probe: range over 3 seeds):
+
+| Client | Images | Ensemble | Probe | Zero-shot |
+|---|---|---|---|---|
+| HAM10000 Vienna | 1,172 | 67.9% (62.8 to 82.0) | 56.8% (56.3 to 57.8) | 38.1% |
+| HAM10000 Queensland | 356 | 69.5% (56.3 to 78.8) | 43.4% (43.3 to 43.6) | 32.0% |
+| MSK | 460 | 68.9% (61.3 to 74.8) | 44.6% (43.5 to 45.1) | 20.4% |
+| Barcelona | 1,274 | 53.6% (45.1 to 67.5) | 38.0% (37.6 to 38.7) | 30.6% |
+
+Barcelona is the hardest training hospital for the ensemble and the probe (zero-shot does worst
+on MSK). Its melanoma sensitivity is still 71.4% (58.5 to 81.0), across 350 melanomas.
+
+**By Fitzpatrick skin type, within each new hospital** (skin type is recorded nowhere else):
+
+| Site | Type | Images | Ensemble | Probe | Drift AUROC, EfficientNet / BiomedCLIP |
+|---|---|---|---|---|---|
+| Buenos Aires | I | 106 | 56.7% (41.9 to 70.5) | 42.1% | 0.687 / 0.732 |
+| Buenos Aires | II | 945 | 52.8% (48.5 to 56.7) | 45.7% | 0.736 / 0.754 |
+| Buenos Aires | III | 269 | 61.3% (49.5 to 72.5) | 52.3% | 0.510 / 0.740 |
+| PAD-UFES-20 | I | 137 | 39.4% (18.5 to 54.0) | 35.1% | 0.814 / 0.961 |
+| PAD-UFES-20 | II | 750 | 43.7% (37.2 to 50.2) | 25.6% | 0.815 / 0.959 |
+| PAD-UFES-20 | III | 347 | 43.9% (32.5 to 58.4) | 30.4% | 0.811 / 0.960 |
+
+- Types IV to VI have 25 images at Buenos Aires and 68 at PAD-UFES-20: counts only. **Darker
+  skin cannot be judged with this data.**
+- Within each site, every interval overlaps, so no skin-type effect is claimed for types I to
+  III. Drift uses all images, labelled or not (114 rather than 106 for type I at Buenos Aires).
+  Images with no skin type recorded (113 at Buenos Aires, 804 at PAD-UFES-20) have results in
+  the file but are not in this table.
+- EfficientNet's drift numbers at Buenos Aires reproduce Phase 2's committed skin-type file
+  exactly, an independent check that scores were matched to the right images.
+
+**By age band, on the clients' test split** (balanced accuracy; ensemble: 95% bootstrap
+interval; probe: range over 3 seeds):
+
+| Age | Images | Ensemble | Probe |
+|---|---|---|---|
+| 0-29 | 194 | 27.2% (19.3 to 50.6) | 24.9% (24.6 to 25.3) |
+| 30-44 | 660 | 60.6% (49.0 to 76.9) | 57.4% (56.5 to 58.6) |
+| 45-59 | 961 | 71.8% (64.2 to 79.9) | 50.8% (50.1 to 51.7) |
+| 60-74 | 824 | 72.3% (59.5 to 79.6) | 56.8% (56.2 to 57.2) |
+| 75+ | 561 | 69.5% (55.0 to 76.4) | 52.4% (51.7 to 52.7) |
+| unknown | 62 | counts only | counts only |
+
+- **Under 30 is the weakest group for the ensemble and the probe** (zero-shot does its best
+  there, 46.6%). It is mostly nevi (149 of 194 images), and
+  the ensemble misses all 6 benign keratoses and all 10 vascular lesions there. It has 29
+  melanomas, under the minimum, so its melanoma sensitivity is not reported.
+- Balanced accuracy averages only the classes present, and here the rare classes drop in and
+  out of resamples, which makes the interval wide and lopsided.
+- **Without the 47 MSK overlap patients** (PLAN's rule for every test result): most groups
+  barely move, but 75+ drops from 69.5% to 64.4% (52.9 to 73.1) for the ensemble and from
+  52.4% to 44.2% for the probe, after removing only 7 of its 561 images. One rare-class image
+  can move balanced accuracy this much in a small group. MSK itself goes from 68.9% to 68.3%
+  (59.8 to 75.0).
+
+**Sex** (OMOP concepts 8507 and 8532):
+- Ensemble balanced accuracy: 63.5% (56.9 to 75.2) and 68.8% (61.4 to 75.7).
+- Melanoma sensitivity: 75.3% (65.5 to 83.3) and 67.4% (56.0 to 77.9).
+- Both pairs of intervals overlap.
+
+**Body site:** 9 of the 28 body-site groups in the client test split (27 concepts and
+"unknown") reach 100 images. The ensemble ranges from 49.1% (concept 4237609, 259 images) to
+80.7% (concept 4280364, 421 images). Body site is mixed up with source and class mix, so no gap
+is attributed to the site.
+
+**Would a drift alert fire unevenly?** The alert threshold is set at the 95th percentile of the
+whole client test split's Mahalanobis scores, so 5% of those images fire overall.
+- **EfficientNet (mean of 3 seeds):** Barcelona images fire 7.1%, MSK 2.6%. Age bands range
+  from 3.3% (0-29) to 5.9% (30-44), and sex from 4.7% to 5.1%.
+- **BiomedCLIP features:** much more uneven by site: MSK 13.3%, Barcelona 6.0%, HAM10000
+  Vienna 1.9% and Queensland 1.4%.
+- An alert rate that differs by group is a fairness question for the Phase 3 monitor. It is
+  reported here, not corrected.
+
+**Drift by subgroup at the new hospitals** (Mahalanobis AUROC, EfficientNet mean of 3 seeds):
+- At Buenos Aires, drift rises with age: 0.543 (30-44) to 0.786 (75+) for EfficientNet, and
+  0.706 to 0.818 on BiomedCLIP features. The two sex groups differ by 0.008 for EfficientNet
+  and 0.013 on BiomedCLIP features.
+- At PAD-UFES-20, every group with at least 100 images is far from the training data: 0.790 to
+  0.883 for EfficientNet and 0.931 to 0.972 on BiomedCLIP features. That range includes the
+  804 images with no sex recorded.
+- These are descriptive. Age at Buenos Aires also changes the class mix and the lesions
+  imaged, so this does not show that age itself causes drift.
 
 ## Research informatics services (Phase G)
 

@@ -136,6 +136,20 @@ Known limits:
   `47e1bc6fe2f3ebdc2c5c7b782f16b75f306cd6bdfa459a114c0aee43ba1e4afa` when uploaded; the job
   did not check it (later jobs do).
 
+### Research Phase C: subgroups (built 2026-10-22)
+
+- `cdm.subgroups` (age bands, concept-ID groups, intervals within groups, drift by group, the
+  reproduction gate), tested in CI; `databricks/notebooks/subgroups.py` and
+  `databricks/subgroups_job.json` (serverless CPU, wheel and inputs hash-checked), staged by
+  `scripts/stage_research_job.py`.
+- First run (570257730256860) under `spec.json`; after a fresh review, `spec_v2.json` added the
+  MSK-overlap row, zero-shot, Fitzpatrick type, site and alert rates by group, and an
+  alignment gate for saved drift scores. Second run 534810524836120 (a first v2 attempt failed
+  at its first query, before any metric). Both results files and specs are logged to MLflow.
+- Known limits: the first run's `results.json` carries intervals for some withheld metrics
+  (v2 does not); the notebook in the workspace is imported from the staged commit but its
+  source hash is recorded by the staging script, not checked inside the job.
+
 ### Research Phase G: research informatics services (2026-10-21 and 22)
 
 - G1: `docs/EVAL_PLAN.md`, `docs/governance.md`, the request issue form and the project board.
@@ -155,9 +169,8 @@ Known limits:
 
 ## Scaffolded
 
-### Research Phases C, D and F: CPU-only prep (2026-10-22)
+### Research Phases D and F: CPU-only prep (2026-10-22)
 
-- C: `cdm.eval.subgroup_table`, with the minimum-100 rule and a test. No subgroup results yet.
 - D: `cdm.explain`, Grad-CAM and the weight-randomization sanity check, tested on a model whose
   evidence is known. Not run on the shipped model; no worksheet yet.
 - F: `docs/cohort_contract.md`, a draft waiting for the owner's review.
