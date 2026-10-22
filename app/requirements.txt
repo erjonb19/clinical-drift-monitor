@@ -1,0 +1,3 @@
+# For Streamlit Community Cloud, if the owner approves deploying (not deployed yet).
+# Installs this repository's package with the cohort and demo extras.
+.[cohort,demo]
