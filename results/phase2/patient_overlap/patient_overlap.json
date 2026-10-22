@@ -1,0 +1,278 @@
+{
+  "computed_utc": "2026-10-20T23:10:35+00:00",
+  "code_version": "4f6db44",
+  "table": "workspace.cdm.silver_metadata",
+  "rule": "splits are by lesion; a patient is counted once per source by ISIC patient_id",
+  "silver_images": 27656,
+  "patients_in_more_than_one_split": 47,
+  "by_source": {
+    "barcelona": {
+      "role": "client",
+      "images": 9999,
+      "lesions": 2936,
+      "images_with_patient_id": 0,
+      "patients": 0,
+      "patients_with_more_than_one_lesion": 0,
+      "checkable": false
+    },
+    "buenos_aires": {
+      "role": "held_out",
+      "images": 1616,
+      "lesions": 1246,
+      "images_with_patient_id": 1616,
+      "patients": 623,
+      "patients_with_more_than_one_lesion": 199,
+      "checkable": true
+    },
+    "ham10000": {
+      "role": "client",
+      "images": 10015,
+      "lesions": 7470,
+      "images_with_patient_id": 0,
+      "patients": 0,
+      "patients_with_more_than_one_lesion": 0,
+      "checkable": false
+    },
+    "msk": {
+      "role": "client",
+      "images": 3728,
+      "lesions": 2937,
+      "images_with_patient_id": 1678,
+      "patients": 780,
+      "patients_with_more_than_one_lesion": 92,
+      "checkable": "partly: only images with patient_id",
+      "patients_in_split_rows": 730,
+      "patients_in_more_than_one_split": 47,
+      "lesions_of_those_patients": 139,
+      "test_lesions": 130,
+      "test_lesions_sharing_a_patient_with_train": 30,
+      "test_images_sharing_a_patient_with_train": 55,
+      "test_lesion_ids_sharing_a_patient_with_train": [
+        "IL_1124427",
+        "IL_1705341",
+        "IL_1719782",
+        "IL_1956212",
+        "IL_1984416",
+        "IL_2197088",
+        "IL_2401252",
+        "IL_2577060",
+        "IL_3091948",
+        "IL_3553675",
+        "IL_4099618",
+        "IL_4118534",
+        "IL_4642935",
+        "IL_5067418",
+        "IL_5255361",
+        "IL_5257306",
+        "IL_5351477",
+        "IL_6039768",
+        "IL_6301291",
+        "IL_6450146",
+        "IL_6600114",
+        "IL_7134105",
+        "IL_7449056",
+        "IL_7471700",
+        "IL_8656691",
+        "IL_8779031",
+        "IL_8852371",
+        "IL_9017716",
+        "IL_9090741",
+        "IL_9922482"
+      ]
+    },
+    "pad_ufes": {
+      "role": "held_out",
+      "images": 2298,
+      "lesions": 1891,
+      "images_with_patient_id": 2298,
+      "patients": 1373,
+      "patients_with_more_than_one_lesion": 355,
+      "checkable": true
+    }
+  },
+  "test_sensitivity": {
+    "predictions": "results/phase2/analysis_look/predictions.csv.gz",
+    "views": {
+      "pooled_client_test": {
+        "v2-ensemble-final-seeds0-1-2": {
+          "all": {
+            "images": 3262,
+            "balanced_accuracy": 0.6646288355327806,
+            "melanoma_sensitivity": 0.7161936560934892,
+            "macro_auroc": 0.9090028131675861,
+            "bootstrap_by_patient_or_lesion": {
+              "resamples": 1000,
+              "seed": 0,
+              "balanced_accuracy": {
+                "low": 0.6065764226873158,
+                "high": 0.7301319526195965
+              },
+              "macro_auroc": {
+                "low": 0.8732747799170967,
+                "high": 0.9469041178402066
+              },
+              "melanoma_sensitivity": {
+                "low": 0.6363596421153539,
+                "high": 0.7894757053925135
+              }
+            }
+          },
+          "without_shared_patients": {
+            "images": 3207,
+            "balanced_accuracy": 0.6608543102872954,
+            "melanoma_sensitivity": 0.7172413793103448,
+            "macro_auroc": 0.9075955790478842,
+            "bootstrap_by_patient_or_lesion": {
+              "resamples": 1000,
+              "seed": 0,
+              "balanced_accuracy": {
+                "low": 0.6033607260778917,
+                "high": 0.7277270449788903
+              },
+              "macro_auroc": {
+                "low": 0.8714319146037431,
+                "high": 0.9460985456215825
+              },
+              "melanoma_sensitivity": {
+                "low": 0.6391694112603044,
+                "high": 0.7848738643086787
+              }
+            }
+          }
+        },
+        "v2-final-seed0": {
+          "all": {
+            "images": 3262,
+            "balanced_accuracy": 0.6220509467561675,
+            "melanoma_sensitivity": 0.664440734557596,
+            "macro_auroc": 0.8898585818481831
+          },
+          "without_shared_patients": {
+            "images": 3207,
+            "balanced_accuracy": 0.6180543291377861,
+            "melanoma_sensitivity": 0.6637931034482759,
+            "macro_auroc": 0.8883944807145993
+          }
+        },
+        "v2-final-seed1": {
+          "all": {
+            "images": 3262,
+            "balanced_accuracy": 0.6247790220564775,
+            "melanoma_sensitivity": 0.7011686143572621,
+            "macro_auroc": 0.8962695231001476
+          },
+          "without_shared_patients": {
+            "images": 3207,
+            "balanced_accuracy": 0.6191281480967729,
+            "melanoma_sensitivity": 0.7,
+            "macro_auroc": 0.8943260975831512
+          }
+        },
+        "v2-final-seed2": {
+          "all": {
+            "images": 3262,
+            "balanced_accuracy": 0.6427729825239854,
+            "melanoma_sensitivity": 0.6894824707846411,
+            "macro_auroc": 0.9042990194164405
+          },
+          "without_shared_patients": {
+            "images": 3207,
+            "balanced_accuracy": 0.6433145630276415,
+            "melanoma_sensitivity": 0.6948275862068966,
+            "macro_auroc": 0.9030353644258576
+          }
+        }
+      },
+      "msk_test": {
+        "v2-ensemble-final-seeds0-1-2": {
+          "all": {
+            "images": 460,
+            "balanced_accuracy": 0.688581698815689,
+            "melanoma_sensitivity": 0.7011494252873564,
+            "macro_auroc": 0.9088433385263659,
+            "bootstrap_by_patient_or_lesion": {
+              "resamples": 1000,
+              "seed": 0,
+              "balanced_accuracy": {
+                "low": 0.6175604835885499,
+                "high": 0.7477080880537963
+              },
+              "macro_auroc": {
+                "low": 0.8862320308973588,
+                "high": 0.9290332680250127
+              },
+              "melanoma_sensitivity": {
+                "low": 0.5903459993821439,
+                "high": 0.7976223916532906
+              }
+            }
+          },
+          "without_shared_patients": {
+            "images": 405,
+            "balanced_accuracy": 0.6842189482720242,
+            "melanoma_sensitivity": 0.7058823529411765,
+            "macro_auroc": 0.9058001163101238,
+            "bootstrap_by_patient_or_lesion": {
+              "resamples": 1000,
+              "seed": 0,
+              "balanced_accuracy": {
+                "low": 0.5973965681841072,
+                "high": 0.7493218133922055
+              },
+              "macro_auroc": {
+                "low": 0.8788561207231724,
+                "high": 0.9275497840600421
+              },
+              "melanoma_sensitivity": {
+                "low": 0.5780161372950819,
+                "high": 0.8219742586180941
+              }
+            }
+          }
+        },
+        "v2-final-seed0": {
+          "all": {
+            "images": 460,
+            "balanced_accuracy": 0.5904495600185256,
+            "melanoma_sensitivity": 0.6206896551724138,
+            "macro_auroc": 0.8785355264701477
+          },
+          "without_shared_patients": {
+            "images": 405,
+            "balanced_accuracy": 0.5479556175977108,
+            "melanoma_sensitivity": 0.6029411764705882,
+            "macro_auroc": 0.8724264116740198
+          }
+        },
+        "v2-final-seed1": {
+          "all": {
+            "images": 460,
+            "balanced_accuracy": 0.6562808032143008,
+            "melanoma_sensitivity": 0.7586206896551724,
+            "macro_auroc": 0.9053795027539058
+          },
+          "without_shared_patients": {
+            "images": 405,
+            "balanced_accuracy": 0.6322444915350586,
+            "melanoma_sensitivity": 0.7647058823529411,
+            "macro_auroc": 0.8997640754800814
+          }
+        },
+        "v2-final-seed2": {
+          "all": {
+            "images": 460,
+            "balanced_accuracy": 0.5874975339384206,
+            "melanoma_sensitivity": 0.5632183908045977,
+            "macro_auroc": 0.896750740341808
+          },
+          "without_shared_patients": {
+            "images": 405,
+            "balanced_accuracy": 0.5993728688319898,
+            "melanoma_sensitivity": 0.5735294117647058,
+            "macro_auroc": 0.8936398697997403
+          }
+        }
+      }
+    }
+  }
+}

@@ -5,7 +5,8 @@ Run from the repository root on a clean commit, with the CLI installed and logge
 
 1. refuses to deploy uncommitted code, and pins everything to the commit hash;
 2. creates the schemas and the raw volume if missing;
-3. uploads the cdm wheel, config/sites.json, HAM10000_metadata.csv (MD5-checked) and the
+3. uploads the cdm wheel, config/sites.json (with splits_v1.csv and
+   patient_overlap_v1.csv beside it), HAM10000_metadata.csv (MD5-checked) and the
    ImageNet weights (hash-checked) into the volume, and the pipeline source into the workspace;
 4. creates or updates the pipelines ``cdm-phase1`` and ``cdm-phase1-broken`` and the jobs
    ``cdm-phase1`` and ``cdm-phase1-broken-demo`` from databricks/*.json.
@@ -140,6 +141,7 @@ def main() -> int:
         REPO / "dist" / WHEEL: f"{deploy}/{WHEEL}",
         REPO / "config" / "sites.json": f"{deploy}/sites.json",
         REPO / "config" / "splits_v1.csv": f"{deploy}/splits_v1.csv",
+        REPO / "config" / "patient_overlap_v1.csv": f"{deploy}/patient_overlap_v1.csv",
         ham_csv: f"{raw}/uploads/{ham_csv.name}",
         weights: f"{raw}/deploy/weights/{WEIGHTS_FILE}",
     }
