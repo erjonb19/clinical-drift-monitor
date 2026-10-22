@@ -141,6 +141,12 @@ def render(
             med = "n/a" if m["median_days_to_close"] is None else m["median_days_to_close"]
             top = "n/a" if m["max_days_to_close"] is None else m["max_days_to_close"]
             lines.append(f"| {label} | {m['opened']} | {m['closed']} | {med} | {top} |")
+        if requests["synthetic"]["opened"]:
+            lines += [
+                "",
+                "Synthetic requests were opened and worked by a script in one "
+                "sitting, so their turnaround says nothing about a real service.",
+            ]
     lines += ["", "## Cohort service (reuse and refusals)", ""]
     if not cohort or not cohort["events"]:
         lines.append("No audit log committed yet (`results/research/g2_cohort/audit.jsonl`).")
