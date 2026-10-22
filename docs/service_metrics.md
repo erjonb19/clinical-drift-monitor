@@ -11,9 +11,25 @@ From the issue tracker snapshot taken 2026-10-22T05:21:08+00:00 (`results/resear
 | Not labelled synthetic | 0 | 0 | n/a | n/a |
 | Synthetic (labelled `synthetic`) | 7 | 7 | 0.0 | 0.0 |
 
+Synthetic requests are made up and may be worked by a script, so their turnaround says nothing about a real service.
+
 ## Cohort service (reuse and refusals)
 
-No audit log committed yet (`results/research/g2_cohort/audit.jsonl`).
+21 audited events; 5 approvals; median time from first request to approval: 0.0 hours.
+
+| Phenotype | Runs |
+| --- | ---: |
+| keratinocyte_cancer_head_neck v1 | 2 |
+| melanoma_any v1 | 4 |
+| melanoma_histopathology_adults v1 | 2 |
+| melanoma_under_18 v1 | 2 |
+| nevus_without_histopathology v1 | 2 |
+
+| Refusal reason | Count |
+| --- | ---: |
+| definition not approved | 2 |
+
+History of this log: the synthetic requests (#8 to #14) were answered first in a pass that was discarded before pushing, because it recorded decisions in the owner's name. The decisions and runs were then replayed into this log after the issues had closed, so its time to approval measures the replay, not the requests. After a review found two results that together revealed a suppressed count (`docs/silent-failures.md` 11), the six delivered runs were run again in their original order with the cross-request guard; so each delivered request is counted twice in the runs table.
 
 ## Output quality
 

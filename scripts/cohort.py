@@ -6,6 +6,8 @@
     python scripts/cohort.py verify                      the audit log's hash chain
 
 Approvals go to phenotypes/approvals.jsonl (committed: who approved which exact definition).
+Pass --approvals to keep a separate file, as the synthetic request exercise does. Decisions in
+such a file authorise runs only for requesters marked "synthetic: ...".
 The audit log defaults to logs/cohort_audit.jsonl (not committed); pass --audit to keep one
 with the results. The databricks engine queries workspace.cdm.omop_* through the SQL
 warehouse; the duckdb engine reads OMOP tables saved as parquet in --data.
@@ -69,7 +71,7 @@ def service(args: argparse.Namespace) -> CohortService:
         frames = {t: pd.read_parquet(Path(args.data) / f"{t}.parquet") for t in OMOP_TABLES}
         engine, tables = duckdb_engine(frames)
         source = f"duckdb {args.data}"
-    return CohortService(engine, tables, Approvals(LIBRARY / "approvals.jsonl"),
+    return CohortService(engine, tables, Approvals(Path(args.approvals)),
                          AuditLog(Path(args.audit)), source)  # fmt: skip
 
 
@@ -78,6 +80,7 @@ def main() -> int:
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("--audit", default=str(REPO / "logs" / "cohort_audit.jsonl"))
+    parser.add_argument("--approvals", default=str(LIBRARY / "approvals.jsonl"))
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("check")
     decide = sub.add_parser("decide")
@@ -95,7 +98,7 @@ def main() -> int:
     sub.add_parser("verify")
     args = parser.parse_args()
 
-    approvals = Approvals(LIBRARY / "approvals.jsonl")
+    approvals = Approvals(Path(args.approvals))
     if args.command == "check":
         bad = 0
         for path in sorted(LIBRARY.glob("*/v*.yaml")):
@@ -116,6 +119,10 @@ def main() -> int:
         print(json.dumps(asdict(svc.decide(args.file, args.decision, args.reviewer, args.reason,
                                            args.request)), indent=1))  # fmt: skip
         return 0
+    stand_in = Path(args.approvals).resolve() != (LIBRARY / "approvals.jsonl").resolve()
+    if stand_in and not args.requester.startswith("synthetic:"):
+        print("REFUSED: a separate approvals file only serves synthetic requests", file=sys.stderr)
+        return 2
     try:
         result = service(args).run(args.file, args.requester, args.request)
     except Refused as exc:

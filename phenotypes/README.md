@@ -16,6 +16,8 @@ the workspace's concept table, because SNOMED text is not published here.
 | `melanoma_histopathology_adults` | Trial feasibility: adults with melanoma and a histopathology procedure |
 | `keratinocyte_cancer_head_neck` | Basal or squamous cell carcinoma with an image of the head or neck |
 | `nevus_without_histopathology` | Nevi with no biopsy: the cohort whose labels are weaker |
+| `melanoma_under_18` | Pediatric melanoma feasibility. Small by design: it shows suppression |
+| `melanoma_dermoscopy` | Proposed for a commercial image export (synthetic issue #14); rejected by the stand-in reviewer |
 
 ## The language
 
@@ -58,6 +60,8 @@ on one lesion and a procedure on another meets both.
    `python scripts/cohort.py decide <file> approve --reviewer "<name>" --reason "<why>" --request <issue URL>`.
    - Decisions go to `phenotypes/approvals.jsonl`.
    - `escalate` hands the item to someone else and does not approve it.
+   - The synthetic request exercise keeps its stand-in decisions apart, with
+     `--approvals results/research/g2_cohort/synthetic_approvals.jsonl`.
 4. **Run.** `python scripts/cohort.py run <file> --requester "<role>" --request <issue URL> --engine databricks`.
    - The output is an attrition table (people left after each step) and the breakdown.
    - Counts from 1 to 10 show as `suppressed`. An attrition step is also hidden while its drop
@@ -73,8 +77,17 @@ on one lesion and a procedure on another meets both.
 
 ## Limits
 
-- Differencing across two separate requests (two cohorts that differ by a few people) is not
-  detected. A reviewer checks for it when approving similar definitions.
+- Differencing across requests is checked only where the definitions show nesting: the same
+  or fewer index conditions, an age range within the other's, and a superset of its criteria.
+  Then a
+  group that differs from an earlier release by 1 to 10 people, or that would pin a cell the
+  other hid, is hidden (`docs/silent-failures.md` 11). Other overlap, such as two different
+  site lists, is not detected; a reviewer checks for it when approving similar definitions.
+- The guard recomputes earlier releases' true counts from the tables as they are now. If the
+  tables are rebuilt with different data, its comparisons are against the new data, not what
+  was released; rerun the earlier definitions after a rebuild.
+- Results released before 2026-10-22 (the synthetic issues #8 to #14) used two labels, "<11"
+  and "suppressed" (11 or more). Every hidden cell is now just "suppressed".
 - In this data, a person is a real patient only where ISIC records a patient ID. Elsewhere one
   person is one lesion (`docs/data_dictionary.md`).
 - People with no recorded sex have `gender_concept_id` 0, a group of their own in a
