@@ -1,0 +1,50 @@
+{
+  "name": "cdm-phase3-onnx",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/d9e3288/cdm-0.1.0-py3-none-any.whl",
+          "torch==2.14.0",
+          "torchvision==0.29.0",
+          "onnx==1.23.2",
+          "onnxruntime==1.31.0",
+          "onnxscript==0.7.2"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "onnx_export",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 10800,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/onnx_export",
+        "base_parameters": {
+          "code_version": "d9e3288",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/d9e3288/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "d1140b865d669867b147e04ff6ddd6b5e76d1eb667b5d6af3bda82de1a54ca12",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/d9e3288/repo",
+          "files_sha256": "{\"results/phase3/onnx/spec.json\": \"4386404c3143ae0b5b2a89e3275309177cbfc709e95c9ebd8712f867c4210eca\", \"results/phase3/onnx/spec_v2.json\": \"7bcfd8b3383aeabef99f88df2a22cf72b93cf68c6cf772f8b7e4d709000d022f\", \"databricks/notebooks/onnx_export.py\": \"36bc80d837ca202ea908553e6d3bb07e2f79af143b218e79a16f825e6209e1a9\"}",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/onnx",
+          "mode": "parity",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}

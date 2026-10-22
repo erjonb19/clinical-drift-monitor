@@ -1,0 +1,51 @@
+{
+  "code_version": "51403e3",
+  "wheel_sha256": "55d1196dcc439f13334595740337c6e2ca91b3ed78eccc7131805b4e36acba88",
+  "ran_on": "Databricks serverless CPU, job run 540132085766008",
+  "completed_utc": "2026-10-22T23:27:59+00:00",
+  "images": 512,
+  "images_sha256": "ca9cfd64ed307c4001ab2ce71a81f31eaedcc862c40803619158dbd8fc3e9b7a",
+  "versions": {
+    "torch": "2.14.0",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.31.0",
+    "onnxscript": "0.7.2"
+  },
+  "machine": {
+    "cpu_count": 4,
+    "torch_threads": 4
+  },
+  "what": "PyTorch at batch 1 against PyTorch at batch 32, same images and weights",
+  "noise": {
+    "v2-final-seed0": {
+      "logits_max_abs_diff": 0.059487104415893555,
+      "probabilities_max_abs_diff": 0.013366717206105272,
+      "features_max_abs_diff_relative": 0.009956448992323988,
+      "top1_disagreements": [
+        9,
+        28,
+        38
+      ]
+    },
+    "v2-final-seed1": {
+      "logits_max_abs_diff": 0.06111550331115723,
+      "probabilities_max_abs_diff": 0.017942960992219814,
+      "features_max_abs_diff_relative": 0.007747783870983791,
+      "top1_disagreements": [
+        152
+      ]
+    },
+    "v2-final-seed2": {
+      "logits_max_abs_diff": 0.06987524032592773,
+      "probabilities_max_abs_diff": 0.01252158553747329,
+      "features_max_abs_diff_relative": 0.006835055988646541,
+      "top1_disagreements": []
+    },
+    "ensemble": {
+      "probabilities_max_abs_diff": 0.007854649833520244,
+      "top1_disagreements": [
+        139
+      ]
+    }
+  }
+}

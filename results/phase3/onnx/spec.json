@@ -1,0 +1,22 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "plan": "PLAN.md Phase 3: export to ONNX, confirm outputs match PyTorch within tolerance, benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency)",
+  "models": "the shipped EfficientNet-B0 v2 checkpoints, seeds 0 to 2 (results/phase2/overnight/v2/final_models.json in the volume), each checked by weight hash",
+  "export": "torch.onnx.export with dynamo, outputs features (1,280-d penultimate) and logits, dynamic batch 1 to 1,024; one file per seed; the ensemble is the mean of the three softmax outputs, computed outside the graph as in Phase 2",
+  "parity_images": "512 validation images (positions drawn with numpy default_rng(0) from the clients' validation split), evaluation transform: resize 224, centre crop, ImageNet normalisation. No test image is used",
+  "tolerance": {
+    "per_seed": {"logits_max_abs_diff": 0.001, "probabilities_max_abs_diff": 0.0001, "features_max_abs_diff_relative": 0.001, "top1_agreement": 1.0},
+    "ensemble": {"probabilities_max_abs_diff": 0.0001, "top1_agreement": 1.0}
+  },
+  "failure": "a tolerance miss is recorded in the results and fails the job; tolerances are not loosened afterwards",
+  "latency": {
+    "where": "Databricks serverless CPU (the job's machine; Render's free tier is not measured here)",
+    "what": "one image (batch 1), already preprocessed; PyTorch eval with no_grad against ONNX Runtime CPUExecutionProvider; per seed and for the 3-model ensemble",
+    "how": "50 untimed warm-up calls, then 300 timed calls; p50 and p95 in milliseconds; thread counts and CPU count recorded"
+  },
+  "outputs": {
+    "volume": "/Volumes/workspace/cdm/raw/deploy/onnx/<code_version>/v2-final-seed<k>.onnx, never in git",
+    "repo": "results/phase3/onnx/results.json: parity, latency, versions, file hashes and sizes"
+  }
+}

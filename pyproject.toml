@@ -43,6 +43,12 @@ vlm = [
     "open_clip_torch==3.3.0",
     "transformers==4.57.6",
 ]
+# Phase 3 serving (cdm.serve_onnx): ONNX export and ONNX Runtime on CPU. In CI.
+serve = [
+    "onnx==1.23.2",
+    "onnxruntime==1.31.0",
+    "onnxscript==0.7.2",
+]
 # Logging committed results files to Databricks MLflow (scripts/log_evidence.py). Not in CI.
 evidence = [
     "mlflow-skinny>=2.16",
@@ -87,7 +93,8 @@ mypy_path = "scripts"
 strict = true
 # None of these ship type information.
 [[tool.mypy.overrides]]
-module = ["medmnist.*", "sklearn.*", "torchvision.*", "pyspark.*", "scipy.*", "mlflow.*", "open_clip.*"]
+module = ["medmnist.*", "sklearn.*", "torchvision.*", "pyspark.*", "scipy.*", "mlflow.*", "open_clip.*",
+          "onnxruntime.*"]
 ignore_missing_imports = true
 
 # The pipeline's decorators come from pyspark, which is not installed outside Databricks.

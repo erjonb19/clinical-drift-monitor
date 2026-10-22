@@ -191,6 +191,16 @@ Known limits:
 
 ## Scaffolded
 
+### Phase 3: ONNX export (tried 2026-10-22; parity failed)
+
+- `cdm.serve_onnx` exports each shipped seed with features and logits and a dynamic batch,
+  measures parity and latency, and applies the noise-based rule; tested in CI on a toy
+  model. `databricks/notebooks/onnx_export.py` measured PyTorch's own batch-size noise
+  (run 540132085766008) and then ran the parity check once under the amended spec
+  (run 885785618939922): **failed**, ONNX gaps 3 to 7x PyTorch's noise and top-class changes
+  on stable images. The root cause is unknown (both the noise and the gap are far above
+  usual float32 differences). The ONNX files are in the volume; nothing serves them.
+
 ### Research Phase F: prep (2026-10-22)
 
 - F: `docs/cohort_contract.md`, a draft waiting for the owner's review.

@@ -1,0 +1,166 @@
+{
+  "code_version": "d9e3288",
+  "wheel_sha256": "d1140b865d669867b147e04ff6ddd6b5e76d1eb667b5d6af3bda82de1a54ca12",
+  "ran_on": "Databricks serverless CPU, job run 885785618939922",
+  "completed_utc": "2026-10-22T23:41:44+00:00",
+  "images": 512,
+  "images_sha256": "ca9cfd64ed307c4001ab2ce71a81f31eaedcc862c40803619158dbd8fc3e9b7a",
+  "versions": {
+    "torch": "2.14.0",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.31.0",
+    "onnxscript": "0.7.2"
+  },
+  "machine": {
+    "cpu_count": 4,
+    "torch_threads": 4
+  },
+  "spec": "results/phase3/onnx/spec_v2.json",
+  "spec_sha256": "7bcfd8b3383aeabef99f88df2a22cf72b93cf68c6cf772f8b7e4d709000d022f",
+  "parity": {
+    "v2-final-seed0": {
+      "logits_max_abs_diff": 0.18441462516784668,
+      "probabilities_max_abs_diff": 0.051321816752598615,
+      "features_max_abs_diff_relative": 0.04380994332824111,
+      "top1_disagreements": [
+        9,
+        38,
+        327
+      ]
+    },
+    "v2-final-seed1": {
+      "logits_max_abs_diff": 0.2625330686569214,
+      "probabilities_max_abs_diff": 0.05885756009121712,
+      "features_max_abs_diff_relative": 0.053714623298698104,
+      "top1_disagreements": [
+        120,
+        177
+      ]
+    },
+    "v2-final-seed2": {
+      "logits_max_abs_diff": 0.19610214233398438,
+      "probabilities_max_abs_diff": 0.05474822927576756,
+      "features_max_abs_diff_relative": 0.021271528349368275,
+      "top1_disagreements": [
+        55,
+        111,
+        153,
+        262,
+        387,
+        454
+      ]
+    },
+    "ensemble": {
+      "probabilities_max_abs_diff": 0.02689616778236359,
+      "top1_disagreements": [
+        93,
+        180,
+        252,
+        436,
+        443,
+        469,
+        504
+      ]
+    }
+  },
+  "failures": {
+    "v2-final-seed0": [
+      "logits_max_abs_diff 0.184 > 2 x noise 0.0595",
+      "probabilities_max_abs_diff 0.0513 > 2 x noise 0.0134",
+      "features_max_abs_diff_relative 0.0438 > 2 x noise 0.00996",
+      "top-class disagreements outside the allowed images: [327]"
+    ],
+    "v2-final-seed1": [
+      "logits_max_abs_diff 0.263 > 2 x noise 0.0611",
+      "probabilities_max_abs_diff 0.0589 > 2 x noise 0.0179",
+      "features_max_abs_diff_relative 0.0537 > 2 x noise 0.00775",
+      "top-class disagreements outside the allowed images: [177]"
+    ],
+    "v2-final-seed2": [
+      "logits_max_abs_diff 0.196 > 2 x noise 0.0699",
+      "probabilities_max_abs_diff 0.0547 > 2 x noise 0.0125",
+      "features_max_abs_diff_relative 0.0213 > 2 x noise 0.00684",
+      "top-class disagreements outside the allowed images: [55, 111, 262, 387]"
+    ],
+    "ensemble": [
+      "probabilities_max_abs_diff 0.0269 > 2 x noise 0.00785",
+      "top-class disagreements outside the allowed images: [93, 180, 436]"
+    ]
+  },
+  "passed": false,
+  "latency_ms_batch_1": {
+    "v2-final-seed0": {
+      "pytorch": {
+        "p50": 93.05197650007813,
+        "p95": 187.80079509998586,
+        "repeats": 300,
+        "warmup": 50
+      },
+      "onnxruntime": {
+        "p50": 52.50022050006464,
+        "p95": 87.63317204998202,
+        "repeats": 300,
+        "warmup": 50
+      }
+    },
+    "v2-final-seed1": {
+      "pytorch": {
+        "p50": 93.1160570000884,
+        "p95": 195.6050806500912,
+        "repeats": 300,
+        "warmup": 50
+      },
+      "onnxruntime": {
+        "p50": 56.769672499854096,
+        "p95": 90.46606940016777,
+        "repeats": 300,
+        "warmup": 50
+      }
+    },
+    "v2-final-seed2": {
+      "pytorch": {
+        "p50": 92.42132750000565,
+        "p95": 184.3365985000105,
+        "repeats": 300,
+        "warmup": 50
+      },
+      "onnxruntime": {
+        "p50": 42.76765700001306,
+        "p95": 86.55232244992705,
+        "repeats": 300,
+        "warmup": 50
+      }
+    },
+    "ensemble": {
+      "pytorch": {
+        "p50": 288.6060884999324,
+        "p95": 487.2468746000778,
+        "repeats": 300,
+        "warmup": 50
+      },
+      "onnxruntime": {
+        "p50": 235.8767529999568,
+        "p95": 331.31446999989294,
+        "repeats": 300,
+        "warmup": 50
+      }
+    }
+  },
+  "files": {
+    "v2-final-seed0": {
+      "sha256": "9c4b8df72c1b31348b16a6ecdb4e8d42423bbfd195d4d5f1190eed359fbce864",
+      "bytes": 16705167,
+      "volume_path": "/Volumes/workspace/cdm/raw/deploy/onnx/d9e3288/v2-final-seed0.onnx"
+    },
+    "v2-final-seed1": {
+      "sha256": "0d25c93f99d9974d52897956e4dc277f75be72c1bd9266b363025cfb906b4c23",
+      "bytes": 16705167,
+      "volume_path": "/Volumes/workspace/cdm/raw/deploy/onnx/d9e3288/v2-final-seed1.onnx"
+    },
+    "v2-final-seed2": {
+      "sha256": "0d1aeb8ffb427443f69d7e5289ad46d075de9383bd34cb9faa93e41baf8abf88",
+      "bytes": 16705167,
+      "volume_path": "/Volumes/workspace/cdm/raw/deploy/onnx/d9e3288/v2-final-seed2.onnx"
+    }
+  }
+}
