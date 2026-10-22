@@ -61,8 +61,10 @@ def test_public_concepts_carry_ids_and_links_but_no_vocabulary_text() -> None:
 def test_silver_from_isic_falls_back_to_the_image_as_lesion() -> None:
     from cdm.omop import silver_from_isic
 
-    rows = [{"isic_id": "ISIC_1", "isic_lesion_id": "IL_1", "isic_label": "nv"},
-            {"isic_id": "ISIC_2", "isic_lesion_id": None, "isic_label": None}]  # fmt: skip
+    rows: list[dict[str, object]] = [
+        {"isic_id": "ISIC_1", "isic_lesion_id": "IL_1", "isic_label": "nv"},
+        {"isic_id": "ISIC_2", "isic_lesion_id": None, "isic_label": None},
+    ]
     frame = silver_from_isic(rows)
     assert frame["lesion_id"].tolist() == ["IL_1", "ISIC_2"]
     assert frame["label"].tolist()[0] == "nv"
