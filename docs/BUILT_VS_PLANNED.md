@@ -142,8 +142,13 @@ Known limits:
   reproduction gate), tested in CI; `databricks/notebooks/subgroups.py` and
   `databricks/subgroups_job.json` (serverless CPU, wheel and inputs hash-checked), staged by
   `scripts/stage_research_job.py`.
-- One run (570257730256860) under the committed spec; results and spec logged to MLflow.
-  Skin type is restated from Phase 2, not recomputed.
+- First run (570257730256860) under `spec.json`; after a fresh review, `spec_v2.json` added the
+  MSK-overlap row, zero-shot, Fitzpatrick type, site and alert rates by group, and an
+  alignment gate for saved drift scores. Second run 534810524836120 (a first v2 attempt failed
+  at its first query, before any metric). Both results files and specs are logged to MLflow.
+- Known limits: the first run's `results.json` carries intervals for some withheld metrics
+  (v2 does not); the notebook in the workspace is imported from the staged commit but its
+  source hash is recorded by the staging script, not checked inside the job.
 
 ### Research Phase G: research informatics services (2026-10-21 and 22)
 
