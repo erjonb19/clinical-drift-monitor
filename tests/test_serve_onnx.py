@@ -45,3 +45,27 @@ def test_within_reports_each_broken_tolerance() -> None:
 def test_latency_percentiles_are_ordered() -> None:
     out = latency_ms(lambda: np.zeros(1000).sum(), warmup=2, repeats=20)
     assert 0 <= out["p50"] <= out["p95"] and out["repeats"] == 20
+
+
+def test_the_noise_rule_allows_flips_only_where_pytorch_flips_or_the_top_two_are_close() -> None:
+    from cdm.serve_onnx import passes_against_noise
+
+    noise = {"logits_max_abs_diff": 0.04, "top1_disagreements": [3]}
+    margin = np.array([0.5, 0.005, 0.5, 0.5, 0.5])
+    ok = {"logits_max_abs_diff": 0.07, "top1_disagreements": [1, 3]}
+    assert passes_against_noise(ok, noise, margin) == []
+    too_far = {"logits_max_abs_diff": 0.09, "top1_disagreements": []}
+    assert "noise" in passes_against_noise(too_far, noise, margin)[0]
+    bad_flip = {"logits_max_abs_diff": 0.01, "top1_disagreements": [0]}
+    assert "[0]" in passes_against_noise(bad_flip, noise, margin)[0]
+
+
+def test_noise_between_batch_sizes_is_measured_the_same_way(tmp_path: Path) -> None:
+    from cdm.serve_onnx import gaps, onnx_outputs, torch_outputs
+
+    model = Tiny().eval()
+    x = torch.randn(6, 3, 32, 32)
+    noise = gaps(torch_outputs(model, x, 1), torch_outputs(model, x, 4))
+    assert noise["logits_max_abs_diff"] < 1e-4 and noise["top1_disagreements"] == []
+    sess = session(export(model, tmp_path / "t.onnx", size=32), threads=1)
+    assert gaps(torch_outputs(model, x, 4), onnx_outputs(sess, x, 4))["logits_max_abs_diff"] < 1e-4
