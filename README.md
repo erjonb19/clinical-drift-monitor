@@ -109,4 +109,10 @@ read-only history.
 The code in this repository is released under the [MIT License](LICENSE). MIT covers the
 code only. ISIC images and metadata, and every other source dataset, keep their own
 licenses (CC-0, CC-BY or CC-BY-NC per ISIC image, and the terms listed per source in
-[docs/DATA_CARD.md](docs/DATA_CARD.md)). No data is committed here.
+[docs/DATA_CARD.md](docs/DATA_CARD.md)). The course notebook and slides in
+[reference/](reference/) are not covered by the MIT License either; third-party figures and
+images in them keep their original terms.
+
+No dataset files or model weights are committed. `config/splits_v1.csv` lists source and
+lesion IDs only, and the notebook in reference/ shows a few HAM10000 sample images (CC BY-NC
+4.0, Tschandl et al. 2018).

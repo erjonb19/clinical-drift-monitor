@@ -4,8 +4,11 @@ What data this project uses, where it comes from, and the terms it is used under
 The full card (what the model saw, per-skin-type results, where it fails) is a Phase 5
 item; this file starts with the sources so the licensing record exists from the first run.
 
-No image, metadata file or derived array is committed to this repository. Every file is
-downloaded by `src/cdm/data.py` and checked against the checksum listed here before use.
+No dataset file, image file or derived array is committed to this repository. Every file
+is downloaded by `src/cdm/data.py` and checked against the checksum listed here before use.
+Two exceptions are small: `config/splits_v1.csv` lists source and lesion IDs with their
+split, and the ECE 570 notebook in `reference/` (read-only history) shows a few HAM10000
+sample images in one cell's output (CC BY-NC 4.0, Tschandl et al. 2018).
 
 ## Sources
 
