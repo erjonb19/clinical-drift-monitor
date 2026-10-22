@@ -10,7 +10,7 @@ portfolio project and research prototype: **not for clinical use**.
 - The research extension (Phases A to F: OMOP data, a vision-language baseline, subgroups,
   interpretability, fusion) is planned in
   [docs/research_extension_plan.md](docs/research_extension_plan.md). Phase A (OMOP tables)
-  and Phase B (the BiomedCLIP baseline) are built; Phase G (research data services) is in
+  Phase B (the BiomedCLIP baseline) and Phase C (subgroups) are built; Phase G (research data services) is in
   progress.
 - Phases 3 to 6 have not started.
 
@@ -203,6 +203,52 @@ means the detector separates them):
 - The spec was chosen on the owner's Windows computer and the look ran on Linux. A dry run of
   the whole look on validation gave identical classification numbers on both, and drift AUROCs
   within 0.000001 ([`dry_run/`](results/research/b_vlm/dry_run/)).
+
+## Research Phase C: subgroups
+
+Performance and drift by age band, sex and body site, for the shipped ensemble and the
+BiomedCLIP probe. Sex and body site come from the OMOP tables as concept IDs (no vocabulary
+names); age from silver. The spec ([`spec.json`](results/research/c_subgroups/spec.json)) was
+committed before the run. Results: [`results.json`](results/research/c_subgroups/results.json)
+(Databricks serverless CPU, job run 570257730256860). Before any subgroup was computed, the
+regenerated probe and the committed ensemble predictions had to reproduce Phase B's overall
+balanced accuracy exactly; they did. Groups under 100 images get counts only, and melanoma
+sensitivity needs 100 melanomas. Intervals: 95% bootstrap within each group.
+
+**Clients' test split, balanced accuracy by age band:**
+
+| Age | Images | Ensemble | Probe (mean of 3 seeds) |
+|---|---|---|---|
+| 0-29 | 194 | 27.2% (19.3 to 50.6) | 24.9% |
+| 30-44 | 660 | 60.6% (49.0 to 76.9) | 57.4% |
+| 45-59 | 961 | 71.8% (64.2 to 79.9) | 50.8% |
+| 60-74 | 824 | 72.3% (59.5 to 79.6) | 56.8% |
+| 75+ | 561 | 69.5% (55.0 to 76.4) | 52.4% |
+
+- **Under 30 is the weakest group, for both models.** It is mostly nevi (149 of 194 images),
+  and the ensemble misses all 6 benign keratoses and all 10 vascular lesions there. It has 29
+  melanomas, under the minimum, so its melanoma sensitivity is not reported. Balanced accuracy
+  averages only the classes present, so groups with different class mixes are not directly
+  comparable.
+- **Sex** (OMOP concepts 8507 and 8532): ensemble 63.5% (56.9 to 75.2) and 68.8% (61.4 to
+  75.7); melanoma sensitivity 75.3% and 67.4%. The intervals overlap.
+- **Body site:** 9 of the 28 body-site groups in the client test split (27 concepts and
+  "unknown") reach 100 images. The
+  ensemble ranges from 49.1% (concept 4237609, 259 images) to 80.7% (concept 4280364, 421
+  images). Body site is mixed up with source and class mix, so no gap is attributed to the
+  site.
+
+**Drift by subgroup** (Mahalanobis AUROC, the whole client test split against each group of a
+new hospital, EfficientNet mean of 3 seeds):
+- At Buenos Aires, drift rises with age: 0.543 (30-44) to 0.786 (75+) for EfficientNet, and
+  0.706 to 0.818 on BiomedCLIP features. By sex the two groups are within 0.01 (EfficientNet).
+- At PAD-UFES-20, every group is far from the training data: 0.790 to 0.883 for EfficientNet,
+  0.931 to 0.972 on BiomedCLIP features.
+- These are descriptive: age at Buenos Aires also changes the class mix and the lesions
+  imaged, so this does not show that age itself causes drift.
+
+Skin type is not recomputed: the Phase 2 within-site results stand (98 images of types IV to
+VI in total, too few to judge darker skin).
 
 ## Research informatics services (Phase G)
 
