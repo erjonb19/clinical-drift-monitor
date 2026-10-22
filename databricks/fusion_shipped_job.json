@@ -15,7 +15,7 @@
       "spec": {
         "environment_version": "4",
         "dependencies": [
-          "/Volumes/workspace/cdm/raw/deploy/dca63ed/cdm-0.1.0-py3-none-any.whl",
+          "/Volumes/workspace/cdm/raw/deploy/ce9dfed/cdm-0.1.0-py3-none-any.whl",
           "torch==2.14.0",
           "torchvision==0.29.0"
         ]
@@ -32,15 +32,15 @@
       "notebook_task": {
         "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/fusion_shipped",
         "base_parameters": {
-          "code_version": "dca63ed",
-          "wheel": "/Volumes/workspace/cdm/raw/deploy/dca63ed/cdm-0.1.0-py3-none-any.whl",
-          "wheel_sha256": "d94275949f3a32b2b2e216a23cb967394ac6942555829eacac6ec95b01daaf3e",
-          "repo": "/Volumes/workspace/cdm/raw/deploy/dca63ed/repo",
-          "files_sha256": "{\"scripts/vlm_baseline.py\": \"517c391c0b036b216f6a65dae2b5ed4ecd12ec61f4d6be66f8a503d24094fade\", \"results/research/b_vlm/spec.json\": \"ed67698ced6aac74629ef8eff169ce5a356af17ad02391574c8967e0fa984c7e\", \"results/phase2/analysis_look/predictions.csv.gz\": \"65f784b7749c7b6885d41d8edde0724a49ca7e111769b30cdc4638abe556082c\", \"config/patient_overlap_v1.csv\": \"57afcd358a11cc7fa02c4a6845d0e56ee50664fc83840359ab44bd428e406dc6\", \"databricks/notebooks/fusion_shipped.py\": \"a135f9a42742d03ec638ad76f3a08c4b3d74756427eba4dee152e7d5378cda50\"}",
+          "code_version": "ce9dfed",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/ce9dfed/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "800e7481d41e7f26dbafc9558947b6f5d661c643947e11d5e2d0c77173e2087f",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/ce9dfed/repo",
+          "files_sha256": "{\"scripts/vlm_baseline.py\": \"517c391c0b036b216f6a65dae2b5ed4ecd12ec61f4d6be66f8a503d24094fade\", \"results/research/b_vlm/spec.json\": \"ed67698ced6aac74629ef8eff169ce5a356af17ad02391574c8967e0fa984c7e\", \"results/research/e_fusion/spec_shipped.json\": \"3a517b716ccabf4e41d5377270b7e778caa5eb65d74e1df4f08978de83bc707f\", \"results/phase2/analysis_look/predictions.csv.gz\": \"65f784b7749c7b6885d41d8edde0724a49ca7e111769b30cdc4638abe556082c\", \"config/patient_overlap_v1.csv\": \"57afcd358a11cc7fa02c4a6845d0e56ee50664fc83840359ab44bd428e406dc6\", \"databricks/notebooks/fusion_shipped.py\": \"a135f9a42742d03ec638ad76f3a08c4b3d74756427eba4dee152e7d5378cda50\"}",
           "embeddings": "/Volumes/workspace/cdm/raw/results/research/b_vlm/embeddings",
           "features": "/Volumes/workspace/cdm/raw/results/research/e_fusion/shipped_features",
           "out": "/Volumes/workspace/cdm/raw/results/research/e_fusion/shipped",
-          "mode": "select",
+          "mode": "look",
           "job_run_id": "{{job.run_id}}"
         }
       }
