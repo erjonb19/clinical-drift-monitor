@@ -344,6 +344,16 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-22 (night)**
+  - **Phase 3 ONNX parity, first run failed (job run 436369232677286).** It ran out of memory
+    (all 512 parity images in one batch) and wrote no results file. Before that, its log showed
+    seed 0 outside `results/phase3/onnx/spec.json`'s absolute tolerances: largest logit gap 0.18,
+    top-1 agreement 99.4%. Investigation: the export is deterministic, and PyTorch itself differs
+    by 0.038 in logits on the same image between batch sizes 1 and 8, so 1e-3 was below
+    PyTorch's own noise. Owner's decision, option (a): measure PyTorch's batch-size noise on the
+    same 512 validation images first, commit an amended spec quoting it (`spec_v2.json`): an
+    ONNX gap of at most 2x that noise, and a top-class disagreement only where PyTorch also
+    disagrees with itself or the top two classes are within 0.01; then run the parity check once.
 - **2026-10-22 (evening)**
   - **Phase E feature set:** PLAN said the EfficientNet penultimate embeddings were "already in
     `gold_embeddings`"; that table holds ImageNet-pretrained B0 features, not the shipped
