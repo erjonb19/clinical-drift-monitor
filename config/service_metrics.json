@@ -1,5 +1,5 @@
 {
-  "note": "Model performance rows for docs/service_metrics.md. Each value is read from a committed results file at a JSON path; nothing is typed in. Test sets differ between rows, as the 'evaluated on' column says.",
+  "note": "Model performance rows for docs/service_metrics.md. Each value is read from a committed results file at a JSON path; nothing is typed in. Test sets differ between rows, as the 'evaluated on' column says. The v1 and v2 client test splits differ (v2 adds Barcelona images), so those two rows are not a like-for-like comparison. Each row is the 3-seed ensemble, one model; per-seed ranges are in the results files.",
   "model_performance": [
     {
       "model": "v1 ensemble (3 seeds)",
@@ -38,8 +38,8 @@
       "high": "external_seven_class/pad_ufes/v2-ensemble-final-seeds0-1-2/bootstrap_95/balanced_accuracy/high"
     },
     {
-      "model": "v2 ensemble at the triage threshold",
-      "evaluated_on": "client test split, pooled",
+      "model": "v2 ensemble, triage threshold (set on v2 validation)",
+      "evaluated_on": "client test split, v2 data",
       "metric": "melanoma sensitivity",
       "file": "results/phase2/triage/test.json",
       "value": "models/v2-ensemble-final-seeds0-1-2/client_test_pooled/sensitivity",
@@ -47,7 +47,7 @@
       "high": "models/v2-ensemble-final-seeds0-1-2/client_test_pooled/bootstrap_95/sensitivity/high"
     },
     {
-      "model": "v2 ensemble at the triage threshold",
+      "model": "v2 ensemble, triage threshold (set on v2 validation)",
       "evaluated_on": "Buenos Aires (held-out site)",
       "metric": "melanoma sensitivity",
       "file": "results/phase2/triage/test.json",
@@ -56,7 +56,7 @@
       "high": "models/v2-ensemble-final-seeds0-1-2/external_buenos_aires/bootstrap_95/sensitivity/high"
     },
     {
-      "model": "v2 ensemble at the triage threshold",
+      "model": "v2 ensemble, triage threshold (set on v2 validation)",
       "evaluated_on": "PAD-UFES-20 (held-out site)",
       "metric": "melanoma sensitivity",
       "file": "results/phase2/triage/test.json",
@@ -66,6 +66,6 @@
     }
   ],
   "cohort_notes": [
-    "History of this log: the synthetic requests (#8 to #14) were answered first in a pass that was discarded before pushing, because it recorded decisions in the owner's name. The decisions and runs were then replayed into this log after the issues had closed, so its time to approval measures the replay, not the requests. After a review found two results that together revealed a suppressed count (`docs/silent-failures.md` 10), the six delivered runs were run again in their original order with the cross-request guard; so each delivered request is counted twice in the runs table."
+    "History of this log: the synthetic requests (#8 to #14) were answered first in a pass that was discarded before pushing, because it recorded decisions in the owner's name. The decisions and runs were then replayed into this log after the issues had closed, so its time to approval measures the replay, not the requests. After a review found two results that together revealed a suppressed count (`docs/silent-failures.md` 11), the six delivered runs were run again in their original order with the cross-request guard; so each delivered request is counted twice in the runs table."
   ]
 }

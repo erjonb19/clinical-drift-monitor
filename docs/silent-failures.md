@@ -239,7 +239,34 @@ counts from silver. From the research extension on:
 
 ---
 
-## 10. Two suppressed cohort results that together gave away a suppressed count
+## 10. Suppressed cohort counts that could still be worked out
+
+**Symptom.** The cohort service's tests passed, and every count from 1 to 10 in its output
+was labelled. Pre-merge reviews of G2 on 2026-10-22 found four ways to get a hidden count
+back from one result. Results from the earlier code were released only for the seven
+synthetic requests (#8 to #14), under the old labels; each was checked by hand against these
+attacks, and none gives a count exactly (the tightest leaves five hidden cells between 1 and 3).
+- An attrition step right after a hidden step was shown when nothing dropped in between, so
+  `100, suppressed, 95` gave the hidden 95 away.
+- When the final count was hidden, the breakdown cells were still shown, and they add up to it.
+- Two small cells under a published total (`1, 1, 50` of 52) were each pinned at 1.
+- The labels themselves: "<11" (1 to 10) and "suppressed" (11 or more) next to a total pinned
+  counts (`1, 11, 100` of 112 makes the "<11" cell exactly 1). Hiding the next smallest cells
+  instead could also be undone by anyone who knows the rule.
+
+**Cause.** Each rule was checked against the case it was written for, not against a reader
+who knows the rule and every number shown.
+
+**Caught by.** `tests/test_cohort.py::test_no_small_count_can_be_worked_out_from_any_output`
+tries every three-cell breakdown with counts up to 24 and every three-step attrition up to 39,
+groups them by what is shown, and fails if any count from 1 to 10 is the same in every true
+vector behind one output. The rules that pass it: one label for every hidden cell; a step's
+drop counts from the last shown step; a breakdown with any small cell is hidden whole, and its
+final count too if the hidden cells could still be worked out from it.
+
+---
+
+## 11. Two suppressed cohort results that together gave away a suppressed count
 
 **Symptom.** The cohort service suppressed every result it released: counts from 1 to 10 show
 as `<11`, and a second cell is hidden where subtraction would recover the first. Each result
@@ -258,8 +285,8 @@ it as "not detected; the reviewer checks". Here the reviewer was a script, and n
 
 **Caught by.**
 - Before release, `cdm.cohort.guard_releases` compares every number in a new result with every
-  number already released for a nested definition (same index conditions, age range within,
-  criteria a superset). Releases are recorded in the audit log, with the definition. Two kinds
+  number already released for a nested definition (the same or fewer index conditions, an
+  age range within, criteria a superset). Releases are recorded in the audit log, with the definition. Two kinds
   of group are hidden:
   - a group where the two results differ by 1 to 10 people;
   - a group where they are equal and one result shows exactly what the other hid.
