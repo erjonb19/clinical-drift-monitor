@@ -116,13 +116,6 @@ Known limits:
 - Not built: the `observation` table listed in PLAN.md. Every mapped field has a home in
   another table, so it would be empty.
 
-### Tooling
-
-- `scripts/log_evidence.py`: committed results file to MLflow run, refusing uncommitted files.
-  CI checks every indexed file still matches its logged hash.
-
-## Scaffolded
-
 ### Research Phase G: research informatics services (2026-10-21 and 22)
 
 - G1: `docs/EVAL_PLAN.md`, `docs/governance.md`, the request issue form and the project board.
@@ -132,7 +125,24 @@ Known limits:
   the project owner's own decisions and is empty.
 - G3: dataset metadata, `CITATION.cff` and the quickstart notebook, run in CI offline. The
   Zenodo release is not made: it needs the owner to connect Zenodo.
-- G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests.
+- G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests; request numbers
+  come from a committed snapshot of the issue tracker.
+
+### Tooling
+
+- `scripts/log_evidence.py`: committed results file to MLflow run, refusing uncommitted files.
+  CI checks every indexed file still matches its logged hash.
+
+## Scaffolded
+
+### Research Phase G5: clinical text extraction
+
+- `cdm.extract` and `scripts/extraction.py`: note sources (MTSamples; MIMIC-IV-Note behind a
+  tier 2 switch, never sent to an outside API), label choices from the concept map, the Haiku
+  extractor with a spend log and budget cap, a keyword baseline, the labelling sheet, scoring
+  and error categories. Tested with made-up notes and a recorded transport. One live call on a
+  made-up note checked the connection. Not run on any real note: no MTSamples file and no
+  labels yet, so nothing is scored or logged to MLflow.
 
 ### Tooling
 

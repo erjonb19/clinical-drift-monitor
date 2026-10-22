@@ -207,7 +207,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - **Done when** the page regenerates from one command and a test checks its numbers against fixtures.
 - [ ] **G5: Clinical text extraction.**
   - Haiku extracts diagnosis, body site and confirmation method from MTSamples dermatology and pathology notes into OMOP fields, using Phase A's concept map.
-  - It is scored against a 50 to 100 note labelling sheet that you label, with per-field precision and recall and an error analysis.
+  - It is scored against a 50 to 100 note labelling sheet that you label: per-field accuracy on the concept, precision and recall of "stated" (docs/EVAL_PLAN.md section 5), and an error analysis.
   - A loader interface lets MIMIC-IV-Note swap in later, with code and aggregates only in the repo.
   - The MTSamples license is checked first. If it does not allow redistribution, the note text stays out of git.
   - **Done when** the labelled set is scored, the results are logged in MLflow, and the spend is reported.

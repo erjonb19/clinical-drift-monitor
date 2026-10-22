@@ -13,7 +13,9 @@ results/research/g5_extraction/score.json, aggregates only.
 
 Protocol (docs/EVAL_PLAN.md): the dev split is for prompt design; the first LLM run on the
 scoring split freezes the prompt hash, and a later prompt is refused there. A score from fewer
-than 50 labelled scoring notes is written but marked not reportable.
+than 50 fully labelled scoring notes, or from predictions made with another prompt, is
+written but marked not reportable. LLM spend is logged in ~/.cdm/llm_spend.jsonl for every
+work folder, so the $5 cap cannot be reset by switching folders.
 """
 
 from __future__ import annotations
@@ -37,6 +39,7 @@ from cdm.extract import (
     SpendLog,
     anthropic_transport,
     choices,
+    error_kind,
     keyword_extract,
     llm_extract,
     outside_repo,
@@ -49,6 +52,8 @@ from cdm.omop import load_concept_map
 REPO = Path(__file__).resolve().parents[1]
 WORK = Path(os.environ.get("CDM_NOTES_DIR", Path.home() / "data" / "mtsamples" / "work"))
 OUT = REPO / "results" / "research" / "g5_extraction" / "score.json"
+# One spend log for every work folder, so the cap cannot be reset by switching folders.
+SPEND = Path.home() / ".cdm" / "llm_spend.jsonl"
 MIN_SCORING_NOTES = 50
 SMOKE_NOTE = Note(
     "smoke", "made-up", "Dermatology", "smoke test",
@@ -75,7 +80,7 @@ def run(split: str, method: str, limit: int | None) -> None:
     rows = rows[rows["split"] == split]
     if limit is not None:
         rows = rows.head(limit)
-    spend = SpendLog(WORK / "llm_spend.jsonl")
+    spend = SpendLog(SPEND)
     if method == "llm" and split == "scoring":
         frozen = WORK / "scoring_prompt_sha.txt"
         sha = prompt_hash(allowed)
@@ -85,6 +90,7 @@ def run(split: str, method: str, limit: int | None) -> None:
                      f"{sha}. A changed prompt cannot be scored (protocol).")  # fmt: skip
         frozen.write_text(sha)
     send = anthropic_transport() if method == "llm" else None
+    sha = prompt_hash(allowed) if method == "llm" else "keyword"
     out = []
     for _, row in rows.iterrows():
         note = as_note(row)
@@ -92,8 +98,8 @@ def run(split: str, method: str, limit: int | None) -> None:
             got = keyword_extract(note, allowed)
         else:
             got = llm_extract(note, allowed, send, spend, WORK / "llm_cache.jsonl")
-        out.append({"note_id": note.note_id, **got})
-    pd.DataFrame(out, columns=["note_id", *FIELDS]).to_csv(
+        out.append({"note_id": note.note_id, **got, "prompt_sha": sha})
+    pd.DataFrame(out, columns=["note_id", *FIELDS, "prompt_sha"]).to_csv(
         predictions_path(method, split), index=False
     )
     print(f"{len(out)} notes; LLM spend so far ${spend.total():.4f}")
@@ -102,7 +108,22 @@ def run(split: str, method: str, limit: int | None) -> None:
 def score_all() -> None:
     allowed = choices(load_concept_map(REPO / "config" / "omop_concepts.csv"))
     rows = sheet_rows()
-    labelled = rows[(rows["split"] == "scoring") & rows["label_diagnosis"].ne("")]
+    scoring = rows[rows["split"] == "scoring"]
+    filled = (scoring[[f"label_{f}" for f in FIELDS]] != "").all(axis=1)
+    labelled = scoring[filled]
+    bad = [
+        f"{r['note_id']} {f}: {r[f'label_{f}']!r}"
+        for _, r in labelled.iterrows()
+        for f in FIELDS
+        if r[f"label_{f}"] not in allowed.labels(f)
+    ]
+    if bad:
+        sys.exit("labels not in labelling_choices.csv (fix them first): " + "; ".join(bad))
+    reasons = []
+    if len(labelled) < MIN_SCORING_NOTES:
+        reasons.append(
+            f"{len(labelled)} fully labelled scoring notes, fewer than {MIN_SCORING_NOTES}"
+        )
     result: dict[str, Any] = {
         "scored_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "code_version": subprocess.run(
@@ -110,9 +131,10 @@ def score_all() -> None:
         ).stdout.strip(),
         "notes_source": sorted(set(labelled["source"])),
         "labelled_scoring_notes": len(labelled),
-        "reportable": len(labelled) >= MIN_SCORING_NOTES,
+        "reportable": None,
+        "not_reportable_because": reasons,
         "model": MODEL,
-        "prompt_sha": prompt_hash(allowed),
+        "prompt_sha": None,
         "methods": {},
     }
     errors = []
@@ -125,15 +147,24 @@ def score_all() -> None:
         missing = len(labelled) - len(preds)
         if missing:
             sys.exit(f"{method}: {missing} labelled scoring notes have no prediction; run first")
+        if method == "llm":
+            shas = {p["prompt_sha"] for p in preds.values()}
+            frozen = WORK / "scoring_prompt_sha.txt"
+            first = frozen.read_text().strip() if frozen.exists() else None
+            result["prompt_sha"] = sorted(shas)
+            if len(shas) != 1 or first is None or shas != {first}:
+                reasons.append(f"LLM predictions come from prompts {sorted(shas)}, but the "
+                               f"scoring split was first run with {first}")  # fmt: skip
         result["methods"][method] = score(labelled, preds, allowed)
         for _, row in labelled.iterrows():
             for field in FIELDS:
                 truth, guess = row[f"label_{field}"], preds[row["note_id"]][field]
-                if allowed.value(field, truth) != allowed.value(field, guess):
+                if error_kind(field, truth, guess, allowed) is not None:
                     errors.append({"method": method, "note_id": row["note_id"], "field": field,
                                    "label": truth, "predicted": guess, "text": row["text"],
                                    "label_error (you)": ""})  # fmt: skip
-    spend = SpendLog(WORK / "llm_spend.jsonl")
+    result["reportable"] = not reasons
+    spend = SpendLog(SPEND)
     result["llm_calls"] = len(spend.entries())
     result["llm_spend_usd"] = round(spend.total(), 4)
     OUT.parent.mkdir(parents=True, exist_ok=True)
@@ -169,12 +200,12 @@ def main() -> None:
         score_all()
     elif args.command == "smoke":
         allowed = choices(load_concept_map(REPO / "config" / "omop_concepts.csv"))
-        spend = SpendLog(WORK / "llm_spend.jsonl")
+        spend = SpendLog(SPEND)
         got = llm_extract(SMOKE_NOTE, allowed, anthropic_transport(), spend,
                           WORK / "llm_cache.jsonl")  # fmt: skip
         print(json.dumps(got), f"spend so far ${spend.total():.6f}")
     else:
-        spend = SpendLog(WORK / "llm_spend.jsonl")
+        spend = SpendLog(SPEND)
         print(f"{len(spend.entries())} calls, ${spend.total():.6f}")
 
 
