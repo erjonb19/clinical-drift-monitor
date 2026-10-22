@@ -156,7 +156,9 @@ Known limits:
 - `app/cohort_demo.py` and `cdm.demo`: the cohort service on public PAD-UFES-20 metadata,
   fetched at start-up; each visitor approves in a scratch file. Its logic is tested in CI on a
   made-up stand-in, and the page ran once locally against live ISIC metadata (Streamlit's
-  test harness). Not deployed yet: the owner approved deploying on 2026-10-22.
+  test harness). Deployed on Streamlit Community Cloud on 2026-10-22, with the owner's approval:
+  https://cdm-cohort-demo.streamlit.app/. The live page was opened once: it loaded the live metadata, and Run refused an
+  unapproved definition and logged the refusal.
 
 ### Tooling
 

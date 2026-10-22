@@ -2,7 +2,8 @@
 
 Run locally: ``streamlit run app/cohort_demo.py`` (needs ``pip install -e ".[cohort,demo]"``).
 The logic lives in ``cdm.demo``; this file is the page. Counts only, no images, concept IDs
-and ISIC source labels only (no SNOMED text). Not deployed until the owner approves it.
+and ISIC source labels only (no SNOMED text). Deployed on Streamlit Community Cloud:
+https://cdm-cohort-demo.streamlit.app/
 """
 
 from __future__ import annotations

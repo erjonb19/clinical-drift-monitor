@@ -155,8 +155,8 @@ data and **synthetic** requests, not a clinical service.
 - **Protocol and governance:** [docs/EVAL_PLAN.md](docs/EVAL_PLAN.md) and
   [docs/governance.md](docs/governance.md).
 - **Public demo** (`app/cohort_demo.py`, logic in `src/cdm/demo.py`): the cohort service on
-  public PAD-UFES-20 metadata, counts only, concept IDs only. Built and run locally; not
-  deployed. Walkthrough script: [docs/demo_walkthrough.md](docs/demo_walkthrough.md).
+  public PAD-UFES-20 metadata, counts only, concept IDs only. Live at
+  [cdm-cohort-demo.streamlit.app](https://cdm-cohort-demo.streamlit.app/) (Streamlit Community Cloud, deployed 2026-10-22). Walkthrough script: [docs/demo_walkthrough.md](docs/demo_walkthrough.md).
 - **Clinical text extraction** (`src/cdm/extract.py`, `scripts/extraction.py`): Claude Haiku
   reads a note and returns diagnosis, body site and histopathology confirmation as Phase A
   concept IDs, against a keyword baseline. It is built and tested on made-up notes only. It has
