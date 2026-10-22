@@ -80,6 +80,11 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def text_sha256(path: Path) -> str:
+    """Of a text file as git stores it (LF line endings), so a checkout on any system matches."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
 class Embeddings:
     """The GPU job's files, checked against the hashes in its summary."""
 
@@ -171,7 +176,7 @@ def select(emb: Embeddings) -> None:
         "caveat": CAVEAT,
     }
     OUT.mkdir(parents=True, exist_ok=True)
-    SPEC.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
+    SPEC.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {SPEC}: zero-shot {choice}, probe {cfg}")
     print("commit it, then run: python scripts/vlm_baseline.py test")
 
@@ -244,11 +249,11 @@ def test(emb: Embeddings) -> None:
     look = {
         "status": "started",
         "started_utc": datetime.now(UTC).isoformat(timespec="seconds"),
-        "spec_sha256": sha256(SPEC),
+        "spec_sha256": text_sha256(SPEC),
         "code_version": git("rev-parse", "--short", "HEAD"),
         "embeddings_job_run_id": emb.summary["job_run_id"],
     }
-    LOCK.write_text(json.dumps(look, indent=2) + "\n", encoding="utf-8")
+    LOCK.write_text(json.dumps(look, indent=2) + "\n", encoding="utf-8", newline="\n")
 
     sets = ["train", "val", "test", *SHIFTS]
     text = class_text(emb.text, template_choices(len(TEMPLATES))[spec["zero_shot"]["chosen"]])
@@ -317,10 +322,10 @@ def test(emb: Embeddings) -> None:
         "caveat": CAVEAT,
         "note": "Research use only, per the BiomedCLIP model card; never served.",
     }
-    RESULTS.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    RESULTS.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8", newline="\n")
     json.loads(RESULTS.read_text(encoding="utf-8"))
     look.update(status="completed", completed_utc=datetime.now(UTC).isoformat(timespec="seconds"))
-    LOCK.write_text(json.dumps(look, indent=2) + "\n", encoding="utf-8")
+    LOCK.write_text(json.dumps(look, indent=2) + "\n", encoding="utf-8", newline="\n")
     head = table["client_test"]["models"]
     for m in ("zero_shot", seeds[0], EFFNET_MODELS[0]):
         print(
