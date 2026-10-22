@@ -1,5 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software or its OMOP build, please cite it as below, and cite the data sources (HAM10000 and the ISIC Archive collections) as listed in docs/DATA_CARD.md."
+type: software
+license: MIT
 title: "Clinical Drift Monitor: skin lesion classification with drift detection, and OMOP research tables from public dermoscopy archives"
 authors:
   - family-names: Brucaj
