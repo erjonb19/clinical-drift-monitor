@@ -3,6 +3,7 @@ HAM10000's Phase 0 split never moves."""
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 
@@ -117,5 +118,37 @@ def test_committed_v1_splits_match_v1_and_the_config_points_to_them() -> None:
 def test_committed_patient_overlap_is_the_documented_msk_list() -> None:
     config = json.loads((REPO / "config" / "sites.json").read_text(encoding="utf-8"))
     documented = load_patient_overlap(REPO / "config" / config["patient_overlap"]["file"])
-    # results/phase2/patient_overlap/patient_overlap.json: 47 MSK patients, no other source.
-    assert {s: len(v) for s, v in documented.items()} == {"msk": 47}
+    # The list and the committed overlap results must agree: same total, same sources.
+    overlap = json.loads(
+        (REPO / "results/phase2/patient_overlap/patient_overlap.json").read_text("utf-8")
+    )
+    assert sum(len(v) for v in documented.values()) == overlap["patients_in_more_than_one_split"]
+    crossing = {
+        s for s, r in overlap["by_source"].items() if r.get("patients_in_more_than_one_split")
+    }
+    assert set(documented) == crossing == {"msk"}
+
+
+def test_per_source_counts_patients_across_splits_and_shared_test_lesions() -> None:
+    spec = importlib.util.spec_from_file_location(
+        "patient_overlap", REPO / "scripts" / "patient_overlap.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    frame = pd.DataFrame(
+        {
+            "source": ["msk"] * 4 + ["ham10000"],
+            "isic_id": ["a", "b", "c", "d", "e"],
+            "lesion_id": ["L1", "L2", "L3", "L4", "L5"],
+            "patient_id": ["P1", "P1", "P2", None, None],
+            "split": ["train", "test", "test", "test", "train"],
+            "role": ["client"] * 4 + ["client"],
+            "label": ["nv"] * 5,
+        }
+    )
+    rows = module.per_source(frame)
+    assert rows["msk"]["patients_in_more_than_one_split"] == 1
+    assert rows["msk"]["test_lesion_ids_sharing_a_patient_with_train"] == ["L2"]
+    assert rows["msk"]["checkable"] == "partly: only images with patient_id"
+    assert rows["ham10000"]["checkable"] is False

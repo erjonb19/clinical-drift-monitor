@@ -64,9 +64,14 @@ on one lesion and a procedure on another meets both.
      `--approvals results/research/g2_cohort/synthetic_approvals.jsonl`.
 4. **Run.** `python scripts/cohort.py run <file> --requester "<role>" --request <issue URL> --engine databricks`.
    - The output is an attrition table (people left after each step) and the breakdown.
-   - Counts from 1 to 10 show as `<11`.
-   - A count of 11 or more is shown as `suppressed` where it would let someone work out a
-     hidden one by subtraction.
+   - Counts from 1 to 10 show as `suppressed`. An attrition step is also hidden while its drop
+     from the last shown step is from 1 to 10.
+   - If any cell of a breakdown is small, every non-zero cell of it is hidden, and so is the
+     final count if the hidden cells could still be worked out from it. Ask for a coarser
+     breakdown (age band only, say) to see more.
+   - Every hidden cell has the same label. Two labels ("under 11", "11 or more") and hiding
+     only the next smallest cells were both tried first. A review and a brute-force test
+     (`tests/test_cohort.py`) showed that either lets a reader who knows the rule pin a count.
 5. **Audit.** Every refusal, decision and run is appended to a hash-chained log.
    `python scripts/cohort.py verify` checks the chain.
 
@@ -75,9 +80,13 @@ on one lesion and a procedure on another meets both.
 - Differencing across requests is checked only where the definitions show nesting: the same
   index conditions, an age range within the other's, and a superset of its criteria. Then a
   group that differs from an earlier release by 1 to 10 people, or that would pin a cell the
-  other hid, is hidden (`docs/silent-failures.md` 10). Other overlap, such as two different
+  other hid, is hidden (`docs/silent-failures.md` 11). Other overlap, such as two different
   site lists, is not detected; a reviewer checks for it when approving similar definitions.
 - In this data, a person is a real patient only where ISIC records a patient ID. Elsewhere one
   person is one lesion (`docs/data_dictionary.md`).
 - People with no recorded sex have `gender_concept_id` 0, a group of their own in a
   breakdown.
+- The audit log's hash chain catches an edited, reordered or deleted line, but not the last
+  lines being cut off: nothing outside the log records its head. Git history is the backstop.
+- `approvals.jsonl` is not hash-chained. Each decision is also written to the audit log, and
+  git history shows who changed the file.
