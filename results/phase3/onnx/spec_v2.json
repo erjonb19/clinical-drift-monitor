@@ -1,0 +1,60 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "amends": "results/phase3/onnx/spec.json",
+  "why": "the first run (job run 436369232677286) ran out of memory and wrote no results; its log showed seed 0 outside the original absolute tolerances, which turned out to be below PyTorch's own batch-size noise. Owner's decision, option (a), recorded in PLAN's decisions log",
+  "unchanged": {
+    "models": "the shipped EfficientNet-B0 v2 checkpoints, seeds 0 to 2 (results/phase2/overnight/v2/final_models.json in the volume), each checked by weight hash",
+    "export": "torch.onnx.export with dynamo, outputs features (1,280-d penultimate) and logits, dynamic batch 1 to 1,024; one file per seed; the ensemble is the mean of the three softmax outputs, computed outside the graph as in Phase 2",
+    "parity_images": "512 validation images (positions drawn with numpy default_rng(0) from the clients' validation split), evaluation transform: resize 224, centre crop, ImageNet normalisation. No test image is used",
+    "latency": {
+      "where": "Databricks serverless CPU (the job's machine; Render's free tier is not measured here)",
+      "what": "one image (batch 1), already preprocessed; PyTorch eval with no_grad against ONNX Runtime CPUExecutionProvider; per seed and for the 3-model ensemble",
+      "how": "50 untimed warm-up calls, then 300 timed calls; p50 and p95 in milliseconds; thread counts and CPU count recorded"
+    },
+    "outputs": {
+      "volume": "/Volumes/workspace/cdm/raw/deploy/onnx/<code_version>/v2-final-seed<k>.onnx, never in git",
+      "repo": "results/phase3/onnx/results.json: parity, latency, versions, file hashes and sizes"
+    }
+  },
+  "noise_measured_by": "results/phase3/onnx/noise.json (job run 540132085766008): PyTorch at batch 1 against batch 32, same 512 validation images and weights; no ONNX",
+  "noise_sha256": "ae96fcff027aca60b4044fefa69168e8a6efcf140ce1bd63f36d450fba92871a",
+  "noise": {
+    "v2-final-seed0": {
+      "logits_max_abs_diff": 0.059487104415893555,
+      "probabilities_max_abs_diff": 0.013366717206105272,
+      "features_max_abs_diff_relative": 0.009956448992323988,
+      "top1_disagreements": [
+        9,
+        28,
+        38
+      ]
+    },
+    "v2-final-seed1": {
+      "logits_max_abs_diff": 0.06111550331115723,
+      "probabilities_max_abs_diff": 0.017942960992219814,
+      "features_max_abs_diff_relative": 0.007747783870983791,
+      "top1_disagreements": [
+        152
+      ]
+    },
+    "v2-final-seed2": {
+      "logits_max_abs_diff": 0.06987524032592773,
+      "probabilities_max_abs_diff": 0.01252158553747329,
+      "features_max_abs_diff_relative": 0.006835055988646541,
+      "top1_disagreements": []
+    },
+    "ensemble": {
+      "probabilities_max_abs_diff": 0.007854649833520244,
+      "top1_disagreements": [
+        139
+      ]
+    }
+  },
+  "rule": {
+    "factor": 2.0,
+    "top2_close": 0.01,
+    "statement": "ONNX Runtime and PyTorch both at batch 32: every gap (logits, probabilities, relative features; ensemble probabilities) at most 2x PyTorch's own noise above, and a top-class disagreement only on an image where PyTorch also disagrees with itself or the top two class probabilities are within 0.01",
+    "run_once": "the parity check runs once under this spec; a miss is recorded and fails the job"
+  }
+}
