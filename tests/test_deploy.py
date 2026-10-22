@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 from pathlib import Path
 from types import ModuleType
 
@@ -101,3 +102,20 @@ def test_deploy_refuses_missing_or_stale_resolved_concepts(tmp_path: Path) -> No
     cmap.write_text(cmap.read_text("utf-8").replace(",why", ",a melanocytic naevus"), "utf-8")
     with pytest.raises(SystemExit, match="quote SNOMED names"):
         check(cmap, resolved)
+
+
+def test_no_committed_definition_holds_an_email_address() -> None:
+    """The workspace user name is an email address; the job files carry a placeholder."""
+    for path in (REPO / "databricks").rglob("*"):
+        if path.is_file():
+            text = path.read_text(encoding="utf-8")
+            assert not re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", text), path.name
+
+
+@pytest.mark.parametrize(
+    "path", sorted((REPO / "databricks").glob("*_job.json")), ids=lambda p: p.name
+)
+def test_recorded_jobs_render_with_only_the_user(path: Path) -> None:
+    spec = deploy_module().render(path.read_text(encoding="utf-8"), {"DATABRICKS_USER": "u@x.org"})
+    paths = [t["notebook_task"]["notebook_path"] for t in spec["tasks"] if "notebook_task" in t]
+    assert paths and all(p.startswith("/Users/u@x.org/cdm/") for p in paths)

@@ -12,6 +12,10 @@ Run from the repository root on a clean commit, with the CLI installed and logge
 4. creates or updates the pipelines ``cdm-phase1`` and ``cdm-phase1-broken`` and the jobs
    ``cdm-phase1`` and ``cdm-phase1-broken-demo`` from databricks/*.json.
 
+``--job databricks/<name>_job.json`` only creates or updates that one job. The committed job
+files hold ``{{DATABRICKS_USER}}`` where the workspace user name goes (no email in git); it is
+filled with the logged-in user.
+
 ``--dry-run`` prints every command and rendered definition without running anything.
 """
 
@@ -122,11 +126,27 @@ def upsert_job(cli: Cli, spec: dict[str, Any], dry_run: bool) -> str:
     return "DRY-RUN-JOB-ID" if dry_run else str(json.loads(out)["job_id"])
 
 
+def current_user(cli: Cli, dry_run: bool) -> str:
+    if dry_run:
+        return "DRY-RUN-USER"
+    name: str = json.loads(cli("current-user", "me", "--output", "json"))["userName"]
+    return name
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", default=None, help="Databricks CLI profile")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--job", type=Path, help="only create or update this job definition")
     args = parser.parse_args()
+
+    if args.job:
+        cli = Cli(args.profile, args.dry_run)
+        user = current_user(cli, args.dry_run)
+        spec = render(args.job.read_text(encoding="utf-8"), {"DATABRICKS_USER": user})
+        (REPO / "dist").mkdir(exist_ok=True)
+        print(f"job {spec['name']} = {upsert_job(cli, spec, args.dry_run)}")
+        return 0
 
     if git("status", "--porcelain", "--", *CODE):
         sys.exit("uncommitted changes in src/, pipelines/, config/ or pyproject.toml: commit first")
@@ -145,11 +165,7 @@ def main() -> int:
         sys.exit(f"{weights} missing: run any Phase 0 command once to download it")
 
     cli = Cli(args.profile, args.dry_run)
-    me = (
-        "DRY-RUN-USER"
-        if args.dry_run
-        else json.loads(cli("current-user", "me", "--output", "json"))["userName"]
-    )
+    me = current_user(cli, args.dry_run)
     for s in (schema, f"{schema}_broken"):
         cli("schemas", "create", s, catalog, ok_if="already exists")
     cli("volumes", "create", catalog, schema, volume, "MANAGED", ok_if="already exists")

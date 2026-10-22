@@ -21,7 +21,7 @@ PLAN.md is the source of truth for scope and order. Do not add features that are
 - If a result looks too good or too bad (for example an AUROC far below 50%), stop and investigate before reporting it.
 
 ## Hard constraints
-- Zero cost. No paid services, no paid API keys. Allowed: Databricks Free Edition, Colab Pro (already paid for), Kaggle free GPU, Render free tier, Streamlit Community Cloud, Gemini API free tier, GitHub Actions on a public repo.
+- Zero cost. No paid services, and no paid API keys except one: Claude Haiku, through `ANTHROPIC_API_KEY` in `.env`, for G5 clinical text extraction and evals, capped at $5 in total across the project and logged per call. Allowed: Databricks Free Edition, Colab Pro (already paid for), Kaggle free GPU, Render free tier, Streamlit Community Cloud, Gemini API free tier, GitHub Actions on a public repo.
 - No Azure and no GCP billing for this project.
 - Databricks is central (I am working toward the Databricks Data Engineer Associate and ML Associate certifications). Prefer native Databricks features (Unity Catalog, Delta, Auto Loader, Lakeflow Declarative Pipelines, Lakeflow Jobs, MLflow with Unity Catalog registry) where Free Edition supports them. Free Edition is serverless only and non-commercial.
 - One ML framework: PyTorch. Do not use TensorFlow or Keras.
