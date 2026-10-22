@@ -93,6 +93,8 @@ def lookup(data: Any, path: str) -> float:
 
 
 def first_commit_date(path: str) -> str:
+    """The date ``path`` was first committed. Needs full history: a shallow clone gives the
+    date of its oldest commit instead."""
     out = subprocess.run(
         ["git", "log", "--diff-filter=A", "--format=%as", "--", path],
         cwd=REPO, capture_output=True, text=True, check=True,
