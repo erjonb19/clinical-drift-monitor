@@ -65,7 +65,7 @@ Each gate is a row in `omop_gate_results`. Any violation fails the pipeline upda
 
 | Column | Type | Required | From | Note | Null |
 | --- | --- | --- | --- | --- | --- |
-| `observation_period_id` | BIGINT | yes | hash of person_source_value |  | 0.0% |
+| `observation_period_id` | BIGINT | yes | hash of "op" + person_source_value |  | 0.0% |
 | `person_id` | BIGINT | yes | the person's person_id |  | 0.0% |
 | `observation_period_start_date` | DATE | yes | constant | placeholder date 2000-01-01; not a real date | 0.0% |
 | `observation_period_end_date` | DATE | yes | constant | placeholder date 2000-01-01; not a real date | 0.0% |
@@ -183,7 +183,7 @@ These map to concept 0 on purpose. Each gives its reason. Modality is among them
 
 | Field | Scope | Source value | Reason |
 | --- | --- | --- | --- |
-| diagnosis_3 | all | Melanoma metastasis | no standard Condition concept found for cutaneous melanoma metastasis (searched: metastatic melanoma, secondary malignant melanoma) |
+| diagnosis_3 | all | Melanoma metastasis | no standard Condition concept found for cutaneous melanoma metastasis |
 | diagnosis_3 | all | Atypical melanocytic neoplasm | no standard Condition concept found |
 | diagnosis_3 | all | Lentigo NOS | only a morphology concept exists |
 | diagnosis_3 | all | Tattoo | the only concept for a skin tattoo is in the Observation domain, so it cannot be a condition |

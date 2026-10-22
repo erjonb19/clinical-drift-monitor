@@ -1,0 +1,131 @@
+{
+  "queried_utc": "2026-10-22T02:49:02+00:00",
+  "table": "system.access.table_lineage",
+  "edges": [
+    {
+      "source": null,
+      "target": "workspace.cdm.bronze_images",
+      "last_seen": "2026-10-21T16:43:36.398Z"
+    },
+    {
+      "source": null,
+      "target": "workspace.cdm.bronze_manifest",
+      "last_seen": "2026-10-21T16:43:31.892Z"
+    },
+    {
+      "source": null,
+      "target": "workspace.cdm.bronze_metadata",
+      "last_seen": "2026-10-21T16:43:31.862Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_cdm_source",
+      "last_seen": "2026-10-21T16:47:16.197Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_cdm_source",
+      "last_seen": "2026-10-21T16:47:16.197Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_concept",
+      "last_seen": "2026-10-21T16:47:15.713Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_concept",
+      "last_seen": "2026-10-21T16:47:15.713Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_condition_occurrence",
+      "last_seen": "2026-10-21T16:47:15.621Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_condition_occurrence",
+      "last_seen": "2026-10-21T16:47:15.621Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_gate_results",
+      "last_seen": "2026-10-21T16:47:16.003Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_gate_results",
+      "last_seen": "2026-10-21T16:47:16.003Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_image_occurrence",
+      "last_seen": "2026-10-21T16:47:15.960Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_image_occurrence",
+      "last_seen": "2026-10-21T16:47:15.960Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_observation_period",
+      "last_seen": "2026-10-21T16:47:15.588Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_observation_period",
+      "last_seen": "2026-10-21T16:47:15.588Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_person",
+      "last_seen": "2026-10-21T16:47:15.832Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_person",
+      "last_seen": "2026-10-21T16:47:15.832Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_procedure_occurrence",
+      "last_seen": "2026-10-21T16:47:15.505Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_procedure_occurrence",
+      "last_seen": "2026-10-21T16:47:15.505Z"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_profile",
+      "last_seen": "2026-10-21T16:47:15.554Z"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_profile",
+      "last_seen": "2026-10-21T16:47:15.554Z"
+    },
+    {
+      "source": "workspace.cdm.bronze_images",
+      "target": "workspace.cdm.silver_decoded",
+      "last_seen": "2026-10-21T16:46:29.995Z"
+    },
+    {
+      "source": "workspace.cdm.bronze_images",
+      "target": "workspace.cdm.silver_metadata",
+      "last_seen": "2026-10-21T16:46:19.262Z"
+    },
+    {
+      "source": "workspace.cdm.bronze_manifest",
+      "target": "workspace.cdm.silver_metadata",
+      "last_seen": "2026-10-21T16:46:19.262Z"
+    },
+    {
+      "source": "workspace.cdm.bronze_metadata",
+      "target": "workspace.cdm.silver_metadata",
+      "last_seen": "2026-10-21T16:46:19.262Z"
+    }
+  ]
+}
