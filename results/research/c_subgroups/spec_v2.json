@@ -1,0 +1,28 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "amends": "results/research/c_subgroups/spec.json, after its run (results.json, job run 570257730256860) and a fresh review; that run's file is kept unchanged",
+  "why": [
+    "PLAN.md's shared rule: every test result also gets a row without the 47 documented MSK patients; the first spec left it out",
+    "the detailed plan (docs/research_extension_plan.md) also lists BiomedCLIP zero-shot per group and the in-distribution alert rate per group; the first spec left both out",
+    "the first run attached bootstrap intervals for metrics the minimums withhold, and did not check that saved drift scores line up with the images"
+  ],
+  "unchanged": "everything in the first spec not listed under changes: attributes, age bands, group keys, minimums, bootstrap, drift definition, models, reproduction gate",
+  "changes": {
+    "populations": {
+      "client_test": "the clients' pooled test split (3,262 images), as in Phase 2 and Phase B",
+      "buenos_aires": "labelled images, the analysis look's seven-class mapping",
+      "pad_ufes": "labelled images, the analysis look's seven-class mapping",
+      "client_test_without_overlap_patients": "the client test split without every image of the 47 patients in config/patient_overlap_v1.csv (as in Phase B)"
+    },
+    "models": {
+      "v2-ensemble-final-seeds0-1-2": "the shipped EfficientNet-B0 ensemble, from results/phase2/analysis_look/predictions.csv.gz",
+      "probe_seed0, probe_seed1, probe_seed2": "the BiomedCLIP linear probe of results/research/b_vlm/spec.json, regenerated from the same embeddings with the same settings and seeds",
+      "zero_shot": "BiomedCLIP zero-shot with the Phase B spec's template, regenerated and gated like the probe"
+    },
+    "intervals": "only for metrics a group reports (balanced accuracy, and melanoma sensitivity where it has 100 melanomas), with the number of usable resamples",
+    "alert_rate": "within the client test split, the share of each group's images whose Mahalanobis score is above the 95th percentile of the whole client test split's scores (so 5% overall by construction): EfficientNet per seed (mean and range) and BiomedCLIP; groups under 100 images get counts only. It shows whether a drift alert would fire more often for some in-distribution groups.",
+    "alignment_gate": "for each EfficientNet seed and each of test, Buenos Aires and PAD-UFES-20, the saved GPU max-softmax scores must match the negative top probability in results/phase2/analysis_look/predictions.csv.gz row for row, mean absolute difference at most 0.02 (aligned rows differ by about 0.006 between GPU and CPU; rows shifted by one differ by about 0.23), or the run stops",
+    "provenance": "the Delta version of workspace.cdm.silver_images at run time is recorded"
+  }
+}

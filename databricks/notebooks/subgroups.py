@@ -2,7 +2,9 @@
 # MAGIC %md
 # MAGIC # Research Phase C: subgroups (serverless CPU)
 # MAGIC Performance and drift by age band, sex and body site, for the shipped EfficientNet
-# MAGIC ensemble and the BiomedCLIP probe, under `results/research/c_subgroups/spec.json`.
+# MAGIC ensemble and BiomedCLIP (probe and zero-shot), under `results/research/c_subgroups/spec.json`
+# MAGIC as amended by `spec_v2.json` (the MSK-overlap row, zero-shot, alert rates by group, intervals
+# MAGIC only for reported metrics, and a check that saved drift scores line up with the images).
 # MAGIC Sex and body site come from the OMOP tables as concept IDs; age from silver.
 # MAGIC
 # MAGIC No new model and no new choice: EfficientNet's predictions are the committed analysis-look
@@ -22,6 +24,7 @@ for name, default in {
     "effnet_scores": "/Volumes/workspace/cdm/raw/results/phase2/drift/v2",
     "out": "/Volumes/workspace/cdm/raw/results/research/c_subgroups",
     "bootstrap": "1000",
+    "result_name": "results_v2.json",
     "job_run_id": "",
 }.items():
     dbutils.widgets.text(name, default)
@@ -41,7 +44,15 @@ import pandas as pd
 from cdm.ood import MahalanobisDetector
 from cdm.probe import ProbeConfig, train_probe
 from cdm.splits import CLASSES
-from cdm.subgroups import age_band, check_reproduced, concept_group, drift, performance
+from cdm.subgroups import (
+    age_band,
+    alert_rate,
+    check_aligned,
+    check_reproduced,
+    concept_group,
+    drift,
+    performance,
+)
 from cdm.vlm import clusters
 
 CODE = dbutils.widgets.get("code_version")
@@ -49,6 +60,7 @@ REPO = Path(dbutils.widgets.get("repo"))
 OUT = Path(dbutils.widgets.get("out"))
 N_BOOT = int(dbutils.widgets.get("bootstrap"))
 JOB_RUN = dbutils.widgets.get("job_run_id") or "manual"
+RESULT = OUT / dbutils.widgets.get("result_name")
 SITES = ("buenos_aires", "pad_ufes")
 ENS = "v2-ensemble-final-seeds0-1-2"
 EFFNET_SEEDS = ("v2-final-seed0", "v2-final-seed1", "v2-final-seed2")
@@ -60,8 +72,11 @@ assert expected, "files_sha256 is empty"
 for rel, digest in expected.items():
     got = hashlib.sha256((REPO / rel).read_bytes()).hexdigest()
     assert got == digest, f"{rel}: sha256 {got}, expected {digest}"
-if (OUT / "results.json").exists():
-    raise RuntimeError(f"{OUT / 'results.json'} exists: Phase C already ran")
+if RESULT.exists():
+    raise RuntimeError(f"{RESULT} exists: this Phase C run already happened")
+SILVER_VERSION = int(
+    spark.sql("DESCRIBE HISTORY workspace.cdm.silver_images LIMIT 1").collect()[0]["version"]
+)
 
 spec = importlib.util.spec_from_file_location("vlm_baseline", REPO / "scripts" / "vlm_baseline.py")
 assert spec is not None and spec.loader is not None
@@ -119,14 +134,20 @@ probe = {}
 for seed, name in zip(spec_b["probe"]["seeds"], seeds, strict=True):
     head = train_probe(emb.feats["train"], y_train, len(CLASSES), seed, cfg)
     probe[name] = {s: head.logits(emb.feats[s]) for s in sets}
+text = vb.class_text(
+    emb.text, vb.template_choices(len(vb.TEMPLATES))[spec_b["zero_shot"]["chosen"]]
+)
+zero_shot = {s: vb.zero_shot_logits(emb.feats[s], text, emb.scale) for s in sets}
 
 populations = {}
 for row, (source, mask) in vb.evaluation_rows(emb, vb.LOOK).items():
-    if row not in ("client_test", *SITES):
+    if row not in ("client_test", "client_test_without_overlap_patients", *SITES):
         continue
     sub = emb.rows(source)[mask]
     labels = emb.labels(source)[mask]
-    logits = {ENS: vb.effnet_logits(sub)[ENS]} | {m: probe[m][source][mask] for m in seeds}
+    logits = {ENS: vb.effnet_logits(sub)[ENS], "zero_shot": zero_shot[source][mask]} | {
+        m: probe[m][source][mask] for m in seeds
+    }
     for m, z in logits.items():
         bal = vb.classification_metrics(labels, z)["balanced_accuracy"]
         check_reproduced(
@@ -155,6 +176,15 @@ for row, (sub, labels, logits, units) in populations.items():
 score_files = {
     k: Path(dbutils.widgets.get("effnet_scores")) / f"{k}_scores.npz" for k in EFFNET_SEEDS
 }
+# The saved scores carry no image IDs: check they line up with the images row for row.
+alignment = {}
+for k, path in score_files.items():
+    with np.load(path) as z:
+        for s in ("test", *SITES):
+            recomputed = -np.exp(vb.effnet_logits(emb.rows(s))[k].max(axis=1))
+            alignment[f"{k}/{s}"] = check_aligned(f"{k} {s}", z[f"{s}__max_softmax"], recomputed)
+print(f"alignment gate passed: {alignment}", flush=True)
+
 x_train = emb.feats["train"].astype(np.float64)
 maha = MahalanobisDetector(spec_b["drift"]["pca_components_method_d"]).fit(x_train, y_train)
 vlm_test = maha.score(emb.feats["test"].astype(np.float64))
@@ -191,11 +221,40 @@ for site in SITES:
         },
     }
 
+# Alert rate by group inside the client test split (5% overall by construction).
+test_groups = groups_of(emb.rows("test"))
+alerts_by_seed = {}
+for k, path in score_files.items():
+    with np.load(path) as z:
+        alerts_by_seed[k] = {
+            a: alert_rate(z["test__mahalanobis"], g) for a, g in test_groups.items()
+        }
+alerts = {"efficientnet_mean_over_seeds": {}, "efficientnet_by_seed": alerts_by_seed,
+          "biomedclip": {a: alert_rate(vlm_test, g) for a, g in test_groups.items()}}  # fmt: skip
+for a in test_groups:
+    first = alerts_by_seed[EFFNET_SEEDS[0]][a]
+    alerts["efficientnet_mean_over_seeds"][a] = {
+        group: {
+            "images": v["images"],
+            "alert_rate": vb.summarize(
+                [alerts_by_seed[k][a][group]["alert_rate"] for k in EFFNET_SEEDS]
+            ),
+        }
+        if "alert_rate" in v
+        else v
+        for group, v in first.items()
+        if group != "threshold"
+    }
+
 # COMMAND ----------
 
 results = {
-    "spec": "results/research/c_subgroups/spec.json",
-    "spec_sha256": expected["results/research/c_subgroups/spec.json"],
+    "spec": "results/research/c_subgroups/spec_v2.json (amending spec.json)",
+    "spec_sha256": expected["results/research/c_subgroups/spec_v2.json"],
+    "first_spec_sha256": expected["results/research/c_subgroups/spec.json"],
+    "silver_images_delta_version": SILVER_VERSION,
+    "alignment_gate_mean_gaps": alignment,
+    "alert_rate_client_test": alerts,
     "code_version": CODE,
     "ran_on": f"Databricks serverless CPU, job run {JOB_RUN}",
     "completed_utc": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -208,5 +267,5 @@ results = {
     "skin_type": "not recomputed; see results/phase2/analysis_look/skin_type_drift.json",
     "note": "descriptive only; groups differ in class mix, site and imaging type, so no gap is attributed to the attribute",
 }
-vb.write_json(OUT / "results.json", results)
-print(f"wrote {OUT / 'results.json'} sha256 {vb.sha256(OUT / 'results.json')}")
+vb.write_json(RESULT, results)
+print(f"wrote {RESULT} sha256 {vb.sha256(RESULT)}")
