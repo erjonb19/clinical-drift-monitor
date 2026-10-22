@@ -128,6 +128,13 @@ Known limits:
   Zenodo release is not made: it needs the owner to connect Zenodo.
 - G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests.
 
+### Research Phase G6: public cohort demo
+
+- `app/cohort_demo.py` and `cdm.demo`: the cohort service on public PAD-UFES-20 metadata,
+  fetched at start-up; each visitor approves in a scratch file. Its logic is tested in CI on a
+  made-up stand-in, and the page ran once locally against live ISIC metadata (Streamlit's
+  test harness). Not deployed: deploying needs the owner's approval.
+
 ### Tooling
 
 - CI: ruff, ruff format, mypy (strict) and pytest on every push. No eval gate yet
@@ -135,7 +142,6 @@ Known limits:
 
 ## Not started
 
-- Research extension Phases B to F ([research_extension_plan.md](research_extension_plan.md)), and
-  G6 (the Streamlit demo).
+- Research extension Phases B to F ([research_extension_plan.md](research_extension_plan.md)).
 - Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.
