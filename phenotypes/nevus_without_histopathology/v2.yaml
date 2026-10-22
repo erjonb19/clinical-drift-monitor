@@ -2,7 +2,7 @@ name: nevus_without_histopathology
 version: 2
 title: People with a nevus and no histopathology procedure
 purpose: Size of the cohort whose benign labels rest on follow-up or consensus, not biopsy (weaker labels)
-author: Claude Code, drafted for synthetic request #11
+author: Claude Code, drafted for the phenotype library; later used for synthetic request #11
 index:
   condition_concept_ids: [4271013]  # Nevus
 exclude:
