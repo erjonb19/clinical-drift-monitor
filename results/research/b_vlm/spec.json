@@ -1,0 +1,295 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "code_version": "4223916",
+  "model": {
+    "version": "biomedclip-9f341de",
+    "pins": {
+      "models--microsoft--BiomedCLIP-PubMedBERT_256-vit_base_patch16_224": "9f341de24bfb00180f1b847274256e9b65a3a32e",
+      "models--microsoft--BiomedNLP-BiomedBERT-base-uncased-abstract": "d673b8835373c6fa116d6d8006b33d48734e305d"
+    },
+    "logit_scale": 85.2322769165039
+  },
+  "embeddings": {
+    "job_run_id": "1040483728228282",
+    "code_version": "7e267e1",
+    "images": {
+      "train": 15277,
+      "val": 3210,
+      "test": 3262,
+      "buenos_aires": 1616,
+      "pad_ufes": 2298,
+      "pathmnist_eval": 2000,
+      "cifar10_eval": 2000,
+      "pathmnist_select": 1000,
+      "cifar10_select": 1000
+    },
+    "sha256": {
+      "embeddings.npz": "c1dcede7f87e40e7a3cc4048029abfe8371c0fec6f5fade29f793736c9a9c01d",
+      "text.npz": "6b1d2be742c49ab02d57a43c55aa361faeccb61f4d23fc4c58f4b5ccfa621566",
+      "meta.csv": "c4912cc1114967a5e0a65caf205dd325502df3edc173de5a74eeabebbc236fc0"
+    }
+  },
+  "zero_shot": {
+    "class_text": {
+      "akiec": "actinic keratosis or intraepithelial carcinoma",
+      "bcc": "basal cell carcinoma",
+      "bkl": "benign keratosis",
+      "df": "dermatofibroma",
+      "mel": "melanoma",
+      "nv": "melanocytic nevus",
+      "vasc": "vascular lesion"
+    },
+    "templates": [
+      "{}",
+      "a dermoscopy image of {}.",
+      "this is a dermoscopy image of {}.",
+      "a dermatoscopic photo of a skin lesion: {}.",
+      "an image of {}, a type of skin lesion."
+    ],
+    "chosen": "template_2",
+    "chosen_templates": [
+      "this is a dermoscopy image of {}."
+    ],
+    "validation_balanced_accuracy": {
+      "template_0": 0.21306365591388404,
+      "template_1": 0.2909522393875418,
+      "template_2": 0.30660663092315205,
+      "template_3": 0.23130633796839603,
+      "template_4": 0.2334034912540753,
+      "all_templates": 0.23527966741046422
+    }
+  },
+  "probe": {
+    "chosen": {
+      "lr": 0.001,
+      "weight_decay": 0.01,
+      "epochs": 30,
+      "batch_size": 256
+    },
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "validation_grid": [
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5346186978703497,
+          0.5339299806492742,
+          0.5260323398123757
+        ],
+        "mean": 0.5315270061106666
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5346186978703497,
+          0.5339299806492742,
+          0.5260323398123757
+        ],
+        "mean": 0.5315270061106666
+      },
+      {
+        "lr": 0.0001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5346186978703497,
+          0.5339299806492742,
+          0.5260323398123757
+        ],
+        "mean": 0.5315270061106666
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.531666463589372,
+          0.5349209555828939,
+          0.5325412772341853
+        ],
+        "mean": 0.5330428988021504
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.531666463589372,
+          0.5349209555828939,
+          0.5325412772341853
+        ],
+        "mean": 0.5330428988021504
+      },
+      {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.531666463589372,
+          0.5349209555828939,
+          0.532627128882537
+        ],
+        "mean": 0.5330715160182676
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5352518217863789,
+          0.5335970377335243,
+          0.540327498825763
+        ],
+        "mean": 0.5363921194485554
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5352518217863789,
+          0.5335970377335243,
+          0.540327498825763
+        ],
+        "mean": 0.5363921194485554
+      },
+      {
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5353376734347306,
+          0.5335999124765447,
+          0.5403242638318192
+        ],
+        "mean": 0.5364206165810316
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5134584963781269,
+          0.5147118562954525,
+          0.5386732742988507
+        ],
+        "mean": 0.5222812089908101
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5134584963781269,
+          0.5147118562954525,
+          0.5386732742988507
+        ],
+        "mean": 0.5222812089908101
+      },
+      {
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.5171320432260158,
+          0.5140652448915523,
+          0.5353414515214616
+        ],
+        "mean": 0.5221795798796766
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.49337902258080973,
+          0.49301789850264915,
+          0.5190953947591372
+        ],
+        "mean": 0.501830771947532
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.0001,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.49337902258080973,
+          0.49310375015100083,
+          0.5190095431107855
+        ],
+        "mean": 0.501830771947532
+      },
+      {
+        "lr": 0.01,
+        "weight_decay": 0.01,
+        "epochs": 30,
+        "batch_size": 256,
+        "val_balanced_accuracy": [
+          0.4920613012415494,
+          0.49296607901594375,
+          0.5220857502675137
+        ],
+        "mean": 0.5023710435083356
+      }
+    ],
+    "rule": "highest mean validation balanced accuracy over the seeds; class-weighted cross-entropy; features standardized on train"
+  },
+  "drift": {
+    "detectors": [
+      "mahalanobis (PCA by method D, fit on train)",
+      "max_softmax",
+      "energy"
+    ],
+    "pca_components_method_d": 70,
+    "logits": "zero-shot, and each probe seed",
+    "in_distribution": "the clients' test split",
+    "shifts": [
+      "buenos_aires",
+      "pad_ufes",
+      "pathmnist_eval",
+      "cifar10_eval"
+    ],
+    "gram": "not applicable: it needs convolutional feature maps and BiomedCLIP is a ViT",
+    "not_used": "the PathMNIST and CIFAR-10 selection draws were embedded but are not used: Phase 2's method C (PCA chosen on them) is not run for BiomedCLIP",
+    "mahalanobis": "reported once: it uses features only, not logits"
+  },
+  "test_look": {
+    "lock": "results/research/b_vlm/test_look.json",
+    "rows": {
+      "client_test": "the clients' pooled test split",
+      "client_test_without_overlap_patients": "minus images of the patients in config/patient_overlap_v1.csv",
+      "ham10000_test": "the HAM10000 part of the test split",
+      "buenos_aires": "labelled images, the analysis look's seven-class mapping",
+      "pad_ufes": "labelled images, the analysis look's seven-class mapping"
+    },
+    "metrics": "balanced accuracy (over the classes present), melanoma sensitivity, macro AUROC, per-class recall",
+    "bootstrap": "1000 resamples, seed 0, 95% percentile intervals; resampling unit: the patient where ISIC records one, else the lesion, else the image",
+    "comparison": "EfficientNet v2-ensemble-final-seeds0-1-2, v2-final-seed0, v2-final-seed1, v2-final-seed2 from results/phase2/analysis_look/predictions.csv.gz (sha256 65f784b7749c7b6885d41d8edde0724a49ca7e111769b30cdc4638abe556082c), no new look",
+    "seeds": "probe results as each seed, and mean and range over the 3 seeds",
+    "paired": "differences against v2-ensemble-final-seeds0-1-2 in balanced accuracy and melanoma sensitivity, both scored on the same resamples (paired bootstrap)",
+    "lock_rule": "the lock file is committed with the results; the look is refused if the lock exists or has git history, if src/, scripts/, config/ or the spec have uncommitted changes, or if the embeddings are not the spec's"
+  },
+  "caveat": "BiomedCLIP was pretrained on PMC-15M figure-caption pairs, which may include figures of ISIC or HAM10000 images, so zero-shot results cannot be shown to be on unseen images."
+}
