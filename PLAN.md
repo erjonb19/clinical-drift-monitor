@@ -136,7 +136,7 @@ Rules on top of CLAUDE.md: each phase is its own branch and PR with CI green; ev
 - [ ] **C: Subgroups.** Performance and drift by age band, sex and body site for both models, with intervals; groups under 100 images get counts and a warning only. HAM10000 has no skin type; the existing within-site skin-type results are restated, and Fitzpatrick17k is a follow-up only. **Done when** the subgroup table is logged and committed.
 - [ ] **D: Grad-CAM and human review.** Grad-CAM for the shipped EfficientNet with a weight-randomization sanity test; a review worksheet of the worst misclassifications and most out-of-distribution images (image, heatmap, labels, scores, attribution, blank reviewer notes); confusion matrices by site and skin type (closes Phase 2's error analysis). Images stay in the volume and MLflow, not git. **Done when** the worksheet exists and the sanity test passes in CI.
 - [ ] **E: Multimodal fusion.** Image embeddings plus age, sex and body site, against image-only with the same head on the same embeddings and a metadata-only baseline, 3 seeds, same splits; reported as measured even if fusion does not help. **Done when** all three are logged with intervals and committed.
-- [ ] **F: Cohort contract (plan only).** `docs/cohort_contract.md`: how the OMOP tables would be exposed to governed-clinical-agent through the G2 cohort service (proposed change, 2026-10-22, waiting for your approval: the first plan said fixed query templates), with the table contract, small-cell suppression, audit and groundedness. **Done when** you have reviewed it.
+- [ ] **F: Cohort contract (plan only).** `docs/cohort_contract.md`: how the OMOP tables would be exposed to governed-clinical-agent through the G2 cohort service (approved 2026-10-22, replacing the first plan's fixed query templates; see the decisions log), with the table contract, small-cell suppression, audit and groundedness. **Done when** you have reviewed it.
 
 ### Detailed plans for B to F (updated 2026-10-22)
 
@@ -145,7 +145,7 @@ The full first plan is in [docs/research_extension_plan.md](docs/research_extens
 **Shared rules.** Each phase commits a `spec.json` with `committed_before_running: true` before any test look (docs/EVAL_PLAN.md section 6). Results land in `results/research/<phase>/` and are logged with `scripts/log_evidence.py`. Intervals resample by patient where ISIC records one and by lesion elsewhere. Every test result also gets a row without the 47 documented MSK patients.
 
 **B: BiomedCLIP baseline.**
-- *Needs from the owner:* approval for Databricks serverless GPU time (one notebook that embeds every silver image once plus the OOD sets; my estimate, not a measurement, is 1 to 2 GPU hours; the probes then run on CPU), and the `vlm` extra (open_clip) pinned on the serverless image.
+- *Approved 2026-10-22:* Databricks serverless GPU, capped at 2 GPU hours in total; stop and report if it would go over. One notebook embeds every silver image once plus the OOD sets; the probes then run on CPU. The `vlm` extra (open_clip) is pinned on the serverless image.
 - *Steps:*
   1. `src/cdm/vlm.py`: load BiomedCLIP at a pinned revision, embed, zero-shot with prompt templates.
   2. `src/cdm/probe.py`: a torch linear head on frozen embeddings, 3 seeds.
@@ -186,7 +186,7 @@ The full first plan is in [docs/research_extension_plan.md](docs/research_extens
 - *Prep done:* [docs/cohort_contract.md](docs/cohort_contract.md), a draft. It now routes the agent through the G2 cohort service (library phenotypes run autonomously; new definitions are gated on a human approval by hash) instead of new SQL templates.
 - *Done when:* the owner has reviewed it and the agent repo's plan notes the item.
 
-**Order:** C (CPU, shipped model) and F (review) can go first; B needs GPU approval; D needs a CPU job; E needs B.
+**Order:** C (CPU, shipped model) and F (review) can go first; B is approved (capped at 2 GPU hours); D needs a CPU job; E needs B.
 
 ## Research extension: Phase G, research informatics services (added 2026-10-21)
 
@@ -203,7 +203,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - installing system software;
   - anything that needs your login.
 - No SNOMED codes or names, vocabulary files, caches, pickles or `.env` in git. OMOP concept IDs only.
-- **Exception to the zero-cost rule (your instruction, 2026-10-21):** G5 may call Claude Haiku through `ANTHROPIC_API_KEY` in `.env`, under $5 for the day. Spend is logged per call and reported at each checkpoint. Gemini's free tier is the zero-cost fallback if you would rather keep CLAUDE.md's rule unbroken.
+- **Exception to the zero-cost rule (your instruction, 2026-10-21; made permanent 2026-10-22, see the decisions log):** G5 and evals may call Claude Haiku through `ANTHROPIC_API_KEY` in `.env`, capped at $5 in total across the project. CLAUDE.md records the same exception. Spend is logged per call in one log (`~/.cdm/llm_spend.jsonl`) and reported at each checkpoint. No other paid keys.
 
 **Job description lines covered:**
 
@@ -263,9 +263,9 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - **Done when** the labelled set is scored, the results are logged in MLflow, and the spend is reported.
 - [ ] **G6: Public Streamlit demo** of the cohort service.
   - It shows source labels and OMOP concept IDs only, never SNOMED names.
-  - The ISIC and HAM10000 metadata licenses are checked first; I stop and ask before deploying.
+  - The ISIC and HAM10000 metadata licenses are checked first (done: counts-only, non-commercial use with attribution fits). Deployment approved 2026-10-22.
   - `docs/demo_walkthrough.md`: a 3-minute walkthrough you can record.
-  - **Done when** you approve deployment and the app is live on Streamlit Community Cloud.
+  - **Done when** the app is live on Streamlit Community Cloud.
 
 ## Phase 3: Serving and MLOps (about 1 week)
 
@@ -339,6 +339,19 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 | LLMOps and applied AI | Phase 4 | Generated grounded drift incident reports from an LLM, scored on a scenario eval with cost and latency tracked |
 | Forward deployed | Phases 3 and 5 | Shipped a one-command demo and runbook a clinical ops team could operate |
 | Healthcare data | Phase 6 | Pointed the same drift monitor at a CMS readmission model on monthly public hospital data, with feature drift each month and performance checked once the next refresh arrives |
+
+## Decisions log
+
+Owner decisions that change scope, cost or process, newest first.
+
+- **2026-10-22**
+  - **Phase F:** approved. governed-clinical-agent reaches the OMOP tables only through the G2 cohort service (library phenotypes run autonomously; new definitions wait for a human approval by hash), replacing the first plan's fixed SQL templates. See [docs/cohort_contract.md](docs/cohort_contract.md).
+  - **Haiku:** allowed for G5 and evals, capped at $5 in total across the project. No other paid keys. CLAUDE.md updated to match.
+  - **Phase B GPU:** approved, capped at 2 hours of Databricks serverless GPU time in total. Stop and report if it would go over.
+  - **History rewrite:** approved once. Old concept-map notes that quoted SNOMED wording and the email address in `databricks/*_job.json` were removed from all history with `git filter-repo`; commit author emails moved to the GitHub noreply address; `main` was force-pushed once and the merged feature branches deleted. The pre-rewrite history is kept only in a local backup (a tag and a bundle on the owner's machine, never pushed). Job files now hold `{{DATABRICKS_USER}}`, filled by `scripts/deploy_databricks.py --job`.
+  - **Project board:** made public.
+  - **Streamlit demo (G6):** public deployment approved: counts only, source labels and concept IDs only, no SNOMED names, attribution shown.
+  - **Release and Zenodo DOI:** not yet. The owner will create them after recording the phenotype approvals; Claude Code records no approvals in the owner's name.
 
 ## Open questions
 

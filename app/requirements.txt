@@ -1,3 +1,4 @@
-# For Streamlit Community Cloud, if the owner approves deploying (not deployed yet).
-# Installs this repository's package with the cohort and demo extras.
-.[cohort,demo]
+# For Streamlit Community Cloud (deployment approved 2026-10-22). Installs this repository's
+# package with the cohort and demo extras. Editable, so cdm reads config/ and phenotypes/
+# from the checkout (a regular install would look for them inside site-packages).
+-e .[cohort,demo]
