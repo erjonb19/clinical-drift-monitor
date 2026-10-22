@@ -93,7 +93,12 @@ def bootstrap_by_lesion(
         "resamples": n,
         "seed": seed,
         **{
-            m: {"low": float(np.percentile(v, 2.5)), "high": float(np.percentile(v, 97.5))}
+            m: {
+                "low": float(np.percentile(v, 2.5)),
+                "high": float(np.percentile(v, 97.5)),
+                # Resamples where the metric was defined (a draw without melanoma has none).
+                "draws": len(v),
+            }
             for m, v in draws.items()
             if v
         },

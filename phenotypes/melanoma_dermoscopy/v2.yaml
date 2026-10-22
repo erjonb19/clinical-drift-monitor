@@ -1,0 +1,11 @@
+name: melanoma_dermoscopy
+version: 2
+title: People with any melanoma and a dermoscopic image
+purpose: Proposed for a request to export melanoma dermoscopy images for a commercial product
+author: Claude Code, drafted for synthetic request #14
+index:
+  condition_concept_ids: [4162276, 141232, 40391314]  # Melanoma NOS (mel), invasive, in situ
+include:
+  - procedure_concept_ids: [37153789]  # dermoscopy
+breakdown: [gender_concept_id, age_band]
+# Concept IDs come from config/omop_concepts.csv; their names are in the workspace concept table.

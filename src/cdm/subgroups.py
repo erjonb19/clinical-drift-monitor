@@ -64,9 +64,11 @@ def performance(
         for row in rows:
             if "balanced_accuracy" in row:
                 mask = keys == row["group"]
-                row["bootstrap_95"] = bootstrap_by_lesion(
-                    z[mask], labels[mask], list(unit_arr[mask]), n=n_boot
-                )
+                boot = bootstrap_by_lesion(z[mask], labels[mask], list(unit_arr[mask]), n=n_boot)
+                # Intervals only for the metrics this group reports.
+                row["bootstrap_95"] = {
+                    k: v for k, v in boot.items() if k in ("resamples", "seed") or k in row
+                }
         tables[model] = rows
     over_seeds: dict[str, dict[str, dict[str, float]]] = {}
     if probe_seeds:
@@ -99,6 +101,42 @@ def drift(
             else {"images": n, "warning": f"fewer than {min_n} images: count only"}
         )
     return out
+
+
+def alert_rate(
+    reference: Array,
+    groups: Sequence[str],
+    quantile: float = 0.95,
+    min_n: int = MIN_GROUP,
+) -> dict[str, Any]:
+    """The share of each group whose score is above the ``quantile`` of all of ``reference``
+    (the same images, so the overall rate is 1 - quantile by construction): whether an alert
+    would fire more often for some in-distribution groups."""
+    keys = np.asarray(groups, dtype=object)
+    if len(keys) != len(reference):
+        raise ValueError(f"{len(keys)} group values for {len(reference)} scores")
+    threshold = float(np.quantile(reference, quantile))
+    out: dict[str, Any] = {"threshold": threshold}
+    for group in sorted(set(keys.tolist()), key=str):
+        mask = keys == group
+        n = int(mask.sum())
+        out[group] = (
+            {"images": n, "alert_rate": float(np.mean(reference[mask] > threshold))}
+            if n >= min_n
+            else {"images": n, "warning": f"fewer than {min_n} images: count only"}
+        )
+    return out
+
+
+def check_aligned(name: str, saved: Array, recomputed: Array, tol: float = 0.02) -> float:
+    """Saved per-image scores carry no IDs; they must match scores recomputed from the
+    committed predictions row for row, or they would be credited to the wrong images."""
+    if len(saved) != len(recomputed):
+        raise RuntimeError(f"{name}: {len(saved)} saved scores, {len(recomputed)} recomputed")
+    gap = float(np.mean(np.abs(saved - recomputed)))
+    if gap > tol:
+        raise RuntimeError(f"{name}: mean gap {gap:.4f} over {tol}: the rows do not line up")
+    return gap
 
 
 def check_reproduced(name: str, got: float, committed: float, tol: float = 1e-9) -> None:
