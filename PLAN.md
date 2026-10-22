@@ -138,6 +138,56 @@ Rules on top of CLAUDE.md: each phase is its own branch and PR with CI green; ev
 - [ ] **E: Multimodal fusion.** Image embeddings plus age, sex and body site, against image-only with the same head on the same embeddings and a metadata-only baseline, 3 seeds, same splits; reported as measured even if fusion does not help. **Done when** all three are logged with intervals and committed.
 - [ ] **F: Cohort contract (plan only).** `docs/cohort_contract.md`: how the OMOP tables would be exposed to governed-clinical-agent through fixed query templates, with the table contract, small-cell suppression, audit and groundedness. **Done when** you have reviewed it.
 
+### Detailed plans for B to F (updated 2026-10-22)
+
+The full first plan is in [docs/research_extension_plan.md](docs/research_extension_plan.md). These notes bring it up to date with what Phases A and G built, and say what each phase needs from the owner. **No training has run for any of them.** CPU-only prep is marked "prep done".
+
+**Shared rules.** Each phase commits a `spec.json` with `committed_before_running: true` before any test look (docs/EVAL_PLAN.md section 6). Results land in `results/research/<phase>/` and are logged with `scripts/log_evidence.py`. Intervals resample by patient where ISIC records one and by lesion elsewhere. Every test result also gets a row without the 47 documented MSK patients.
+
+**B: BiomedCLIP baseline.**
+- *Needs from the owner:* approval for Databricks serverless GPU time (one notebook that embeds every silver image once plus the OOD sets; my estimate, not a measurement, is 1 to 2 GPU hours; the probes then run on CPU), and the `vlm` extra (open_clip) pinned on the serverless image.
+- *Steps:*
+  1. `src/cdm/vlm.py`: load BiomedCLIP at a pinned revision, embed, zero-shot with prompt templates.
+  2. `src/cdm/probe.py`: a torch linear head on frozen embeddings, 3 seeds.
+  3. Embeddings appended to `workspace.cdm.gold_embeddings` (model version `biomedclip-<rev>`).
+  4. Prompts and probe hyperparameters chosen on validation, then the spec.
+  5. One test look: balanced accuracy and melanoma sensitivity with intervals, next to the shipped v2 ensemble's committed numbers.
+  6. Drift: Mahalanobis (PCA by Phase 2's method D), max softmax and energy on BiomedCLIP features against Buenos Aires, PAD-UFES-20, PathMNIST and CIFAR-10. Gram is stated as not applicable to a ViT.
+- *Caveat in every table:* BiomedCLIP's pretraining (PMC-15M) may include figures of these images, so "zero-shot" cannot be shown to be unseen.
+- *Done when:* spec, results and MLflow run are committed; CI has a fake-model test that scores point the right way.
+
+**C: Subgroups.**
+- *Prep done:* `cdm.eval.subgroup_table` (minimum 100 images per group, and 100 melanoma images for melanoma sensitivity; smaller groups get counts and a warning), with a test.
+- *Needs from the owner:* nothing for the shipped model, because it reads the committed `results/phase2/analysis_look/predictions.csv.gz` and person and site concepts from `workspace.cdm.omop_*` (read-only). The BiomedCLIP rows wait for B.
+- *Steps:*
+  1. Spec: age bands from `age_approx`, sex concepts, body-site concepts (Phase A), skin type where recorded.
+  2. `scripts/subgroups.py` joins predictions to OMOP by ISIC ID.
+  3. One table per model with intervals and warnings.
+  4. Restate the existing skin-type drift finding (98 images of types IV to VI) without new claims.
+- *Done when:* the subgroup table is logged and committed. (The Phase 2 skin-type item is already ticked; C adds age, sex and body site.)
+
+**D: Grad-CAM and review worksheet.**
+- *Prep done:* `cdm.explain` (Grad-CAM on EfficientNet's last block; `randomized_copy` and `randomization_check`, the weight-randomization sanity check), with tests on a model whose evidence is known and on an untrained EfficientNet-B0 for shapes.
+- *Needs from the owner:* a CPU Databricks job (no GPU needed for a few hundred images) that loads the shipped checkpoints from the volume.
+- *Steps:*
+  1. Spec: which images (the 20 worst misses per class, and the most OOD by Mahalanobis).
+  2. `databricks/notebooks/review_worksheet.py` writes heatmaps to `/Volumes/workspace/cdm/raw/review/<run>/` and an HTML worksheet as an MLflow artifact.
+  3. `workspace.cdm.gold_review_worksheet` gets a blank `reviewer_notes` column.
+  4. The repo holds a CSV of IDs and values only.
+  5. Maps whose randomization correlation is high are flagged, not interpreted.
+- *Done when:* the worksheet exists, the sanity test passes in CI (it does now, on the test model), and the Phase 2 error-analysis item is ticked. "Reviewed" waits for a real reviewer.
+
+**E: Fusion.**
+- *Needs:* B's embeddings and the EfficientNet penultimate embeddings already in `gold_embeddings`. CPU heads; no GPU.
+- *Steps:* same head type on the same embeddings for image-only, metadata-only and image + metadata (age, sex and body-site concepts from OMOP, plus missing-value indicators); 3 seeds; selection on validation; one test look; external sites separately; the MSK patient-overlap row, since shared age and sex are what fusion could exploit.
+- *Done when:* all three are logged with intervals and a README section states the result, including "no gain" if that is what it is.
+
+**F: Cohort contract.**
+- *Prep done:* [docs/cohort_contract.md](docs/cohort_contract.md), a draft. It now routes the agent through the G2 cohort service (library phenotypes run autonomously; new definitions are gated on a human approval by hash) instead of new SQL templates.
+- *Done when:* the owner has reviewed it and the agent repo's plan notes the item.
+
+**Order:** C (CPU, shipped model) and F (review) can go first; B needs GPU approval; D needs a CPU job; E needs B.
+
 ## Research extension: Phase G, research informatics services (added 2026-10-21)
 
 Phase G turns the OMOP tables from Phase A into a small research data service. It covers the parts of research informatics that a model alone does not show: an evaluation protocol, governance evidence, tracked investigator requests, a governed cohort and feasibility service with a phenotype library, FAIR packaging, service metrics, clinical text extraction, and a public demo. It is a portfolio build on public data (ISIC, HAM10000, MTSamples) and synthetic requests. It is not a clinical service, and the docs say so.

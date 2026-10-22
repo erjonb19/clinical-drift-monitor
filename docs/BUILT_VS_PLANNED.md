@@ -135,6 +135,13 @@ Known limits:
 
 ## Scaffolded
 
+### Research Phases C, D and F: CPU-only prep (2026-10-22)
+
+- C: `cdm.eval.subgroup_table`, with the minimum-100 rule and a test. No subgroup results yet.
+- D: `cdm.explain`, Grad-CAM and the weight-randomization sanity check, tested on a model whose
+  evidence is known. Not run on the shipped model; no worksheet yet.
+- F: `docs/cohort_contract.md`, a draft waiting for the owner's review.
+
 ### Research Phase G5: clinical text extraction
 
 - `cdm.extract` and `scripts/extraction.py`: note sources (MTSamples; MIMIC-IV-Note behind a
@@ -158,6 +165,7 @@ Known limits:
 
 ## Not started
 
-- Research extension Phases B to F ([research_extension_plan.md](research_extension_plan.md)).
+- Research extension Phases B (BiomedCLIP) and E (fusion): no code yet. Detailed plans are in
+  PLAN.md ("Detailed plans for B to F").
 - Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.
