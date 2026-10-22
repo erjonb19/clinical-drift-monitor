@@ -156,7 +156,7 @@ def test_note_text_never_lands_in_the_repository(tmp_path: Path) -> None:
     assert outside_repo(tmp_path) == tmp_path
     sheet = write_sheet([BIOPSY, NO_DX, PSORIASIS], tmp_path, ALLOWED, n=3)
     rows = pd.read_csv(sheet, dtype=str, keep_default_na=False)
-    assert list(rows["split"]).count("dev") == 0 and len(rows) == 3  # 10% of 3 rounds to 0
+    assert list(rows["split"]).count("dev") == 1 and len(rows) == 3  # at least one per group
     assert set(rows["label_diagnosis"]) == {""}
     legend = pd.read_csv(tmp_path / "labelling_choices.csv", dtype=str, keep_default_na=False)
     assert {"label_diagnosis", "label_body_site", "label_confirmation"} == set(legend["column"])
@@ -278,11 +278,42 @@ def test_labels_outside_the_choices_stop_scoring(
         module.score_all()
 
 
-def test_lesion_rule_takes_lesion_notes_and_leaves_incidental_skin() -> None:
-    from cdm.extract import LESION
+def test_lesion_rules_take_lesion_notes_and_leave_incidental_skin() -> None:
+    from cdm.extract import GENERIC, SPECIFIC
 
-    assert LESION.search("Shave biopsy of a pigmented lesion on the back.")
-    assert LESION.search("History of basal cell carcinoma of the nose.")
-    assert LESION.search("SKIN: No skin lesions.")  # a negative control, on purpose
-    assert not LESION.search("The skin was closed with 4-0 nylon.")
-    assert not LESION.search("Squamous cell carcinoma of the larynx.")
+    assert SPECIFIC.search("Shave biopsy of a pigmented lesion on the back.")
+    assert SPECIFIC.search("History of basal cell carcinomas of the nose.")
+    assert SPECIFIC.search("Biopsy of the skin of the left arm.")
+    assert GENERIC.search("SKIN: No skin lesions.") and not SPECIFIC.search(
+        "SKIN: No skin lesions."
+    )
+    for text in ("The skin was closed with 4-0 nylon.", "Squamous cell carcinoma of the larynx."):
+        assert not SPECIFIC.search(text) and not GENERIC.search(text)
+
+
+def test_widened_selection_and_a_development_split_from_every_group(tmp_path: Path) -> None:
+    from cdm.extract import MTSamples, selection_summary, stratum
+
+    rows = [
+        ("Dermatology", "derm", "Nevus on the arm, observed."),
+        ("Surgery", "excision", "Excision of a basal cell carcinoma of the cheek."),
+        ("General Medicine", "ros", "SKIN: No skin lesions. HEENT: normal."),
+        ("Surgery", "closure", "The skin was closed with staples."),
+        ("Surgery", "dup", "Nevus on the arm, observed."),  # same text as the Dermatology note
+    ]
+    csv_path = tmp_path / "m.csv"
+    pd.DataFrame(rows, columns=["medical_specialty", "sample_name", "transcription"]).to_csv(
+        csv_path, index=False
+    )
+    notes = list(MTSamples(csv_path).notes())
+    assert len(notes) == 4  # the closure note is left out; the duplicate text is kept once below
+    split = split_notes(notes)
+    assert len(split) == 3 and {stratum(x) for x, _ in split} == {
+        "dermatology",
+        "specific_mention",
+        "generic_mention_only",
+    }
+    assert [s for _, s in split].count("dev") == 3  # at least one from each group
+    summary = selection_summary(notes)
+    assert summary["by_group_and_split"]["dermatology"] == {"dev": 1, "scoring": 0}
+    assert "text" not in json.dumps(summary)
