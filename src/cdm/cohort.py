@@ -411,7 +411,7 @@ class CohortService:
             frame = self.engine(sql["breakdown"])
             final = int(attrition["persons"].iloc[-1])
             cells = suppress(frame["persons"], total=final)
-            if not rows[-1]["persons"].isdigit():
+            if not shown[-1].isdigit():
                 # The cells would add up to the hidden total, so none of them is shown.
                 cells = [c if c == SUPPRESSED or c == "0" else COMPLEMENT for c in cells]
             keys = [c for c in frame.columns if c != "persons"]
