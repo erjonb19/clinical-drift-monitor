@@ -29,6 +29,11 @@ train = [
 federated = [
     "flwr==1.39.0",
 ]
+# The governed cohort service (cdm.cohort, scripts/cohort.py): phenotype files and DuckDB.
+cohort = [
+    "duckdb>=1.1",
+    "pyyaml>=6.0",
+]
 # Logging committed results files to Databricks MLflow (scripts/log_evidence.py). Not in CI.
 evidence = [
     "mlflow-skinny>=2.16",
