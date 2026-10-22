@@ -59,4 +59,39 @@ def test_model_rows_read_committed_files() -> None:
     assert len(rows) == len(spec["model_performance"])
     assert all(r["low"] <= r["value"] <= r["high"] for r in rows)
     page = m.render(None, None, None, {"rows_by_match": {"exact": 1}}, rows)
-    assert "Not read" in page and "| Model |" in page
+    assert "No snapshot of the issue tracker" in page and "| Model |" in page
+
+
+def test_render_shows_cohort_reuse_and_a_failed_gate() -> None:
+    m = metrics()
+    cohort = {"events": 3, "approvals": 1, "median_hours_to_approval": 2.5,
+              "runs_by_phenotype": {"p v1": 2}, "refusals_by_reason": {"x": 1}}  # fmt: skip
+    build = {"etl_reference": "abc", "gates": [{"name": "a", "violations": "0"},
+                                               {"name": "b", "violations": "3"}]}  # fmt: skip
+    page = m.render(None, cohort, build, {"rows_by_match": {"exact": 1}}, [], None)
+    assert "| p v1 | 2 |" in page and "| x | 1 |" in page
+    assert "1 of 2 gates passed; failed: b." in page
+
+
+def test_the_issue_snapshot_keeps_times_and_labels_only(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    m = metrics()
+    raw = [{"number": 8, "createdAt": "2026-10-22T02:00:00Z", "closedAt": None, "title": "t",
+            "labels": [{"name": "synthetic", "color": "c5def5"}]}]  # fmt: skip
+
+    class Done:
+        stdout = json.dumps(raw)
+
+    monkeypatch.setattr(m.subprocess, "run", lambda *a, **k: Done())
+    got = m.issues_from_github()
+    assert got == [{"number": 8, "createdAt": "2026-10-22T02:00:00Z", "closedAt": None,
+                    "labels": [{"name": "synthetic"}]}]  # fmt: skip
+    assert set(m.snapshot(got)) == {"queried_utc", "query", "issues"}
+
+
+def test_committed_page_matches_its_model_rows() -> None:
+    m = metrics()
+    spec = json.loads((REPO / "config" / "service_metrics.json").read_text(encoding="utf-8"))
+    page = (REPO / "docs" / "service_metrics.md").read_text(encoding="utf-8")
+    fresh = m.render(None, None, None, {"rows_by_match": {"exact": 1}}, m.model_rows(spec))
+    table = fresh[fresh.index("| Model |") :]
+    assert table in page
