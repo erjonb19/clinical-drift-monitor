@@ -131,7 +131,7 @@ Aimed at research informatics work: research-ready OMOP data with a data diction
 
 Rules on top of CLAUDE.md: each phase is its own branch and PR with CI green; every reported number comes from a committed results file that is also logged in MLflow (`scripts/log_evidence.py`, index `results/mlflow_runs.json`); every new test look has a spec committed first and its own lock; intervals resample by patient where ISIC records one, by lesion elsewhere, and test results carry a row without the documented cross-split patients.
 
-- [ ] **A: OMOP and SNOMED CT gold tables.** Every diagnosis, sex, body site, diagnosis-confirmation and modality value mapped to a cited OMOP concept (looked up in Athena, never from memory; unverified rows get concept 0 and are listed); OMOP-style person, condition_occurrence, procedure_occurrence, image_occurrence (OHDSI medical imaging extension proposal), observation, concept and cdm_source tables built in the pipeline from silver, all labelled sources; `docs/data_dictionary.md`; quality checks as gates and tests; Unity Catalog lineage silver to OMOP. Person is one per lesion where no patient ID exists (an assumption), and dates are placeholders (documented). **Done when** one pipeline update builds every table with all OMOP gates passing, every value is mapped or listed as unverified, and the dictionary covers every column.
+- [x] **A: OMOP and SNOMED CT gold tables.** Every diagnosis, sex, body site, diagnosis-confirmation and modality value mapped to a cited OMOP concept (looked up in Athena, never from memory; unverified rows get concept 0 and are listed); OMOP-style person, condition_occurrence, procedure_occurrence, image_occurrence (OHDSI medical imaging extension proposal), observation_period, concept and cdm_source tables (the observation table first listed here was dropped: every mapped field has a home in another table, so it would be empty) built in the pipeline from silver, all labelled sources; `docs/data_dictionary.md`; quality checks as gates and tests; Unity Catalog lineage silver to OMOP. Person is one per lesion where no patient ID exists (an assumption), and dates are placeholders (documented). **Done when** one pipeline update builds every table with all OMOP gates passing, every value is mapped or listed as unverified, and the dictionary covers every column.
 - [ ] **B: BiomedCLIP baseline.** Zero-shot and a 3-seed linear probe on the same client test split as the shipped model; balanced accuracy and melanoma sensitivity with bootstrap intervals for both models; Mahalanobis, max softmax and energy on BiomedCLIP features against the same OOD sets (Gram does not apply to a ViT as built). Research use only, per its model card: never served. **Done when** the spec is committed before the test look and the comparison is logged and committed.
 - [ ] **C: Subgroups.** Performance and drift by age band, sex and body site for both models, with intervals; groups under 100 images get counts and a warning only. HAM10000 has no skin type; the existing within-site skin-type results are restated, and Fitzpatrick17k is a follow-up only. **Done when** the subgroup table is logged and committed.
 - [ ] **D: Grad-CAM and human review.** Grad-CAM for the shipped EfficientNet with a weight-randomization sanity test; a review worksheet of the worst misclassifications and most out-of-distribution images (image, heatmap, labels, scores, attribution, blank reviewer notes); confusion matrices by site and skin type (closes Phase 2's error analysis). Images stay in the volume and MLflow, not git. **Done when** the worksheet exists and the sanity test passes in CI.
@@ -145,7 +145,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 **Order:** A, then G1 to G6, then B to F as planned. G2 and G6 need Phase A's tables. G4 needs G1's issue form and G2's audit log. G5 needs Phase A's concept map. Everything else is independent.
 
 **Rules on top of the A to F rules:**
-- One PR per item. Never push to `main`, never merge. Ruff, mypy and pytest pass before every push.
+- One PR per item. Never push to `main`. Merge only under the owner's merge rules (given 2026-10-21: stack order, merge commits, green CI, a diff check and a fresh review first). Ruff, mypy and pytest pass before every push.
 - CI makes no live LLM calls.
 - Stop and ask before:
   - anything that costs money, including a Databricks re-ingest, a pipeline run or GPU time;
@@ -182,7 +182,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 
 - [ ] **G1: Docs, quick wins.**
   - `docs/EVAL_PLAN.md`, written as a study protocol: baselines, splits, human review, error analysis, reproducibility, subgroups and bias, failure criteria.
-  - `docs/governance/`: public and restricted access tiers, a data use checklist, risk tiering and the escalation path.
+  - `docs/governance.md`: public and restricted access tiers, a data use checklist, risk tiering and the escalation path.
   - `.github/ISSUE_TEMPLATE/data_request.yml`: question, cohort, data needed, approval status. Plus a GitHub project board: [Research data requests](https://github.com/users/erjonb19/projects/2), created 2026-10-21; the form adds each new request to it.
   - **Done when** the docs are merged and a test request issue renders from the form.
 - [ ] **G2: Governed cohort and feasibility service** (`src/cdm/cohort.py`).
@@ -202,8 +202,8 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - Request turnaround from the issue tracker.
   - Cohort output quality from the gates and audit log.
   - Method reuse: phenotype runs per definition.
-  - Model performance over time, from `results/mlflow_runs.json`.
-  - Every number comes from committed or queried sources. Synthetic requests are labelled synthetic.
+  - Model performance where it holds and where it does not: rows read from committed results files (`config/service_metrics.json`), each with the date it was first committed. Not a trend line, because the rows are different test sets. (Changed 2026-10-22 from "over time, from `results/mlflow_runs.json`", which would have drawn different test sets as one line.)
+  - Every number comes from committed sources; request numbers from a committed snapshot of the issue tracker. Synthetic requests are labelled synthetic.
   - **Done when** the page regenerates from one command and a test checks its numbers against fixtures.
 - [ ] **G5: Clinical text extraction.**
   - Haiku extracts diagnosis, body site and confirmation method from MTSamples dermatology and pathology notes into OMOP fields, using Phase A's concept map.
