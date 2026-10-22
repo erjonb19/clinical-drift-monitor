@@ -66,6 +66,6 @@
     }
   ],
   "cohort_notes": [
-    "History of this log: the synthetic requests (#8 to #14) were answered first in a pass that was discarded before pushing, because it recorded decisions in the owner's name. The decisions and runs were then replayed into this log after the issues had closed, so its time to approval measures the replay, not the requests. After a review found two results that together revealed a suppressed count (`docs/silent-failures.md` 10), the six delivered runs were run again in their original order with the cross-request guard; those re-runs are the second run of each phenotype here."
+    "History of this log: the synthetic requests (#8 to #14) were answered first in a pass that was discarded before pushing, because it recorded decisions in the owner's name. The decisions and runs were then replayed into this log after the issues had closed, so its time to approval measures the replay, not the requests. After a review found two results that together revealed a suppressed count (`docs/silent-failures.md` 10), the six delivered runs were run again in their original order with the cross-request guard; so each delivered request is counted twice in the runs table."
   ]
 }
