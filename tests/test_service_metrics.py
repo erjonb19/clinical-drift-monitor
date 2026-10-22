@@ -25,7 +25,8 @@ def issue(created: str, closed: str | None, *labels: str) -> dict[str, object]:
 
 
 def test_turnaround_separates_synthetic_requests() -> None:
-    got = metrics().request_metrics([
+    m = metrics()
+    got = m.request_metrics([
         issue("2026-10-01T00:00:00Z", "2026-10-03T00:00:00Z"),
         issue("2026-10-01T00:00:00Z", "2026-10-07T00:00:00Z"),
         issue("2026-10-01T00:00:00Z", None),
@@ -34,6 +35,8 @@ def test_turnaround_separates_synthetic_requests() -> None:
     assert got["real"] == {"opened": 3, "closed": 2, "median_days_to_close": 4.0,
                            "max_days_to_close": 6.0}  # fmt: skip
     assert got["synthetic"]["median_days_to_close"] == 1.5
+    page = m.render(got, None, None, {"rows_by_match": {"exact": 1}}, [])
+    assert "says nothing about a real service" in page
 
 
 def test_reuse_refusals_and_time_to_approval_from_the_audit_log() -> None:
