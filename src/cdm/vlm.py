@@ -208,3 +208,42 @@ def drift_metrics(
         for det in scores[in_distribution]
     }
     return {"pca_components_method_d": k, "metrics": table}
+
+
+def paired_bootstrap(
+    logits_a: Array,
+    logits_b: Array,
+    labels: NDArray[np.int64],
+    units: Sequence[str],
+    n: int = 1000,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """95% percentile intervals of the difference a minus b in balanced accuracy and melanoma
+    sensitivity, both models scored on the same resample each time (paired), resampling
+    ``units`` with replacement."""
+    from cdm.eval import classification_metrics
+
+    ids = np.asarray(units, dtype=object)
+    rows_by_unit = [np.flatnonzero(ids == u) for u in np.unique(ids)]
+    rng = np.random.default_rng(seed)
+    keys = ("balanced_accuracy", "melanoma_sensitivity")
+    draws: dict[str, list[float]] = {k: [] for k in keys}
+    for _ in range(n):
+        picked = rng.integers(0, len(rows_by_unit), len(rows_by_unit))
+        rows = np.concatenate([rows_by_unit[i] for i in picked])
+        a = classification_metrics(labels[rows], logits_a[rows])
+        b = classification_metrics(labels[rows], logits_b[rows])
+        for k in keys:
+            if a[k] is not None and b[k] is not None:
+                draws[k].append(float(a[k]) - float(b[k]))  # type: ignore[arg-type]
+    point_a = classification_metrics(labels, logits_a)
+    point_b = classification_metrics(labels, logits_b)
+    return {
+        k: {
+            "difference": float(point_a[k]) - float(point_b[k]),  # type: ignore[arg-type]
+            "low": float(np.percentile(v, 2.5)),
+            "high": float(np.percentile(v, 97.5)),
+        }
+        for k, v in draws.items()
+        if v
+    }

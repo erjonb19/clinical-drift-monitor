@@ -44,6 +44,7 @@ from cdm.vlm import (
     class_text,
     clusters,
     drift_metrics,
+    paired_bootstrap,
     select_templates,
     template_choices,
     zero_shot_logits,
@@ -140,9 +141,12 @@ def select(emb: Embeddings) -> None:
             "in_distribution": "the clients' test split",
             "shifts": list(SHIFTS),
             "gram": "not applicable: it needs convolutional feature maps and BiomedCLIP is a ViT",
+            "not_used": "the PathMNIST and CIFAR-10 selection draws were embedded but are not "
+            "used: Phase 2's method C (PCA chosen on them) is not run for BiomedCLIP",
+            "mahalanobis": "reported once: it uses features only, not logits",
         },
         "test_look": {
-            "lock": str(LOCK.relative_to(REPO)).replace("\\", "/"),
+            "lock": LOCK.relative_to(REPO).as_posix(),
             "rows": {
                 "client_test": "the clients' pooled test split",
                 "client_test_without_overlap_patients": "minus images of the patients in "
@@ -158,6 +162,11 @@ def select(emb: Embeddings) -> None:
             "comparison": f"EfficientNet {', '.join(EFFNET_MODELS)} from "
             f"{EFFNET.relative_to(REPO).as_posix()} (sha256 {sha256(EFFNET)}), no new look",
             "seeds": "probe results as each seed, and mean and range over the 3 seeds",
+            "paired": f"differences against {EFFNET_MODELS[0]} in balanced accuracy and "
+            "melanoma sensitivity, both scored on the same resamples (paired bootstrap)",
+            "lock_rule": "the lock file is committed with the results; the look is refused "
+            "if the lock exists or has git history, if src/, scripts/, config/ or the spec "
+            "have uncommitted changes, or if the embeddings are not the spec's",
         },
         "caveat": CAVEAT,
     }
@@ -168,11 +177,16 @@ def select(emb: Embeddings) -> None:
 
 
 def effnet_logits(rows: pd.DataFrame) -> dict[str, np.ndarray]:
-    pred = pd.read_csv(EFFNET).set_index("isic_id")
+    """Log-probabilities of the committed EfficientNet predictions, row for row with ``rows``
+    (matched by ISIC ID, and the label cross-checked against silver's)."""
+    pred = pd.read_csv(EFFNET, dtype={"label": str}).set_index("isic_id")
     missing = set(rows["isic_id"]) - set(pred.index)
     if missing:
-        sys.exit(f"{len(missing)} images have no EfficientNet prediction")
-    pred = pred.loc[rows["isic_id"]]
+        raise ValueError(f"{len(missing)} images have no EfficientNet prediction")
+    pred = pred.loc[list(rows["isic_id"])]
+    ours, theirs = rows["label"].fillna("").to_numpy(), pred["label"].fillna("").to_numpy()
+    if not np.array_equal(ours, theirs):
+        raise ValueError(f"{int((ours != theirs).sum())} labels differ from the predictions file")
     return {
         m: np.log(np.clip(pred[[f"{m}__{c}" for c in CLASSES]].to_numpy(np.float64), 1e-12, 1))
         for m in EFFNET_MODELS
@@ -184,17 +198,55 @@ def scored(logits: np.ndarray, labels: np.ndarray, units: list[str]) -> dict[str
     return {**point, "bootstrap_95": bootstrap_by_lesion(logits, labels, units, n=BOOTSTRAP)}
 
 
+def evaluation_rows(emb: Embeddings) -> dict[str, tuple[str, np.ndarray]]:
+    """Each reported row: the embedding set it comes from and the mask of its images."""
+    overlap = set(pd.read_csv(OVERLAP, dtype=str)["patient_id"])
+    test_rows = emb.rows("test")
+    rows = {
+        "client_test": ("test", np.ones(len(test_rows), bool)),
+        "client_test_without_overlap_patients": (
+            "test",
+            ~test_rows["patient_id"].isin(overlap).to_numpy(),
+        ),
+        "ham10000_test": ("test", (test_rows["source"] == "ham10000").to_numpy()),
+    }
+    for site in ("buenos_aires", "pad_ufes"):
+        rows[site] = (site, emb.rows(site)["label"].notna().to_numpy())
+    return rows
+
+
+def preflight(emb: Embeddings) -> dict[str, Any]:
+    """Everything that can fail without looking at a test result, run before the lock is
+    written, so a broken input cannot use up the one look."""
+    if git("ls-files", "--", str(SPEC)) == "":
+        sys.exit(f"{SPEC} must be committed before the test look")
+    if git("status", "--porcelain", "--", "src", "scripts", "config", str(SPEC)):
+        sys.exit("uncommitted changes in src/, scripts/, config/ or the spec: commit first")
+    if LOCK.exists() or git("log", "--oneline", "--", str(LOCK)):
+        sys.exit(f"the test look already happened (see {LOCK} and its history)")
+    spec: dict[str, Any] = json.loads(SPEC.read_text(encoding="utf-8"))
+    for key in ("job_run_id", "sha256"):
+        if spec["embeddings"][key] != emb.summary[key]:
+            sys.exit(f"these embeddings are not the ones the spec was chosen on ({key})")
+    pca = pca_size_for_variance(emb.feats["train"].astype(np.float64))
+    if pca != spec["drift"]["pca_components_method_d"]:
+        sys.exit("the PCA size recomputed on train differs from the spec's")
+    for name, (source, mask) in evaluation_rows(emb).items():
+        labels = emb.labels(source)[mask]
+        if (labels < 0).any() or len(labels) == 0:
+            sys.exit(f"{name}: unlabelled or empty")
+        effnet_logits(emb.rows(source)[mask])
+    return spec
+
+
 def test(emb: Embeddings) -> None:
-    if git("ls-files", "--", str(SPEC)) == "" or git("status", "--porcelain", "--", str(SPEC)):
-        sys.exit(f"{SPEC} must be committed, unchanged, before the test look")
-    if LOCK.exists():
-        sys.exit(f"the test look already happened: {LOCK.read_text(encoding='utf-8')}")
-    spec = json.loads(SPEC.read_text(encoding="utf-8"))
+    spec = preflight(emb)
     look = {
         "status": "started",
         "started_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "spec_sha256": sha256(SPEC),
         "code_version": git("rev-parse", "--short", "HEAD"),
+        "embeddings_job_run_id": emb.summary["job_run_id"],
     }
     LOCK.write_text(json.dumps(look, indent=2) + "\n", encoding="utf-8")
 
@@ -203,56 +255,62 @@ def test(emb: Embeddings) -> None:
     logits = {"zero_shot": {s: zero_shot_logits(emb.feats[s], text, emb.scale) for s in sets}}
     cfg = ProbeConfig(**spec["probe"]["chosen"])
     y_train = emb.labels("train")
-    for seed in spec["probe"]["seeds"]:
+    seeds = [f"probe_seed{s}" for s in spec["probe"]["seeds"]]
+    for seed, name in zip(spec["probe"]["seeds"], seeds, strict=True):
         probe = train_probe(emb.feats["train"], y_train, len(CLASSES), seed, cfg)
-        logits[f"probe_seed{seed}"] = {s: probe.logits(emb.feats[s]) for s in sets}
+        logits[name] = {s: probe.logits(emb.feats[s]) for s in sets}
 
-    overlap = set(pd.read_csv(OVERLAP, dtype=str)["patient_id"])
-    test_rows = emb.rows("test")
-    masks = {
-        "client_test": np.ones(len(test_rows), bool),
-        "client_test_without_overlap_patients": ~test_rows["patient_id"].isin(overlap).to_numpy(),
-        "ham10000_test": (test_rows["source"] == "ham10000").to_numpy(),
-    }
     table: dict[str, dict[str, Any]] = {}
-    for row, mask in masks.items():
-        sub = test_rows[mask]
+    for row, (source, mask) in evaluation_rows(emb).items():
+        sub = emb.rows(source)[mask]
         units = clusters(list(sub["patient_id"]), list(sub["lesion_id"]), list(sub["isic_id"]))
-        labels = emb.labels("test")[mask]
-        models = {m: v["test"][mask] for m, v in logits.items()} | effnet_logits(sub)
-        table[row] = {
+        labels = emb.labels(source)[mask]
+        effnet = effnet_logits(sub)
+        models = {m: v[source][mask] for m, v in logits.items()} | effnet
+        entry: dict[str, Any] = {
             "images": int(mask.sum()),
             "units": len(set(units)),
             "models": {m: scored(z, labels, units) for m, z in models.items()},
         }
-    for site in ("buenos_aires", "pad_ufes"):
-        rows = emb.rows(site)
-        mask = rows["label"].notna().to_numpy()
-        sub = rows[mask]
-        units = clusters(list(sub["patient_id"]), list(sub["lesion_id"]), list(sub["isic_id"]))
-        labels = emb.labels(site)[mask]
-        models = {m: v[site][mask] for m, v in logits.items()} | effnet_logits(sub)
-        table[site] = {
-            "images": int(mask.sum()),
-            "units": len(set(units)),
-            "models": {m: scored(z, labels, units) for m, z in models.items()},
-        }
-    for entry in table.values():
-        seeds = [entry["models"][f"probe_seed{s}"] for s in spec["probe"]["seeds"]]
         entry["probe_over_seeds"] = {
-            k: summarize([float(s[k]) for s in seeds])
+            k: summarize([float(entry["models"][s][k]) for s in seeds])
             for k in ("balanced_accuracy", "melanoma_sensitivity")
-            if all(s[k] is not None for s in seeds)
+            if all(entry["models"][s][k] is not None for s in seeds)
         }
+        entry["paired_vs_" + EFFNET_MODELS[0]] = {
+            m: paired_bootstrap(models[m], effnet[EFFNET_MODELS[0]], labels, units, n=BOOTSTRAP)
+            for m in ("zero_shot", *seeds)
+        }
+        table[row] = entry
 
     x_train = emb.feats["train"].astype(np.float64)
     feats = {s: emb.feats[s].astype(np.float64) for s in ["test", *SHIFTS]}
-    drift = {m: drift_metrics(x_train, y_train, feats, v, SHIFTS) for m, v in logits.items()}
+    by_logits = {m: drift_metrics(x_train, y_train, feats, v, SHIFTS) for m, v in logits.items()}
+    first = by_logits["zero_shot"]
+    drift: dict[str, Any] = {
+        "pca_components_method_d": first["pca_components_method_d"],
+        "mahalanobis": first["metrics"]["mahalanobis"],
+        "zero_shot": {d: first["metrics"][d] for d in ("max_softmax", "energy")},
+        "probe_by_seed": {
+            s: {d: by_logits[s]["metrics"][d] for d in ("max_softmax", "energy")} for s in seeds
+        },
+        "probe_over_seeds": {
+            d: {
+                shift: {
+                    k: summarize([by_logits[s]["metrics"][d][shift][k] for s in seeds])
+                    for k in ("auroc", "fpr95")
+                }
+                for shift in SHIFTS
+            }
+            for d in ("max_softmax", "energy")
+        },
+    }
 
     results = {
-        "spec": str(SPEC.relative_to(REPO)).replace("\\", "/"),
+        "spec": SPEC.relative_to(REPO).as_posix(),
         "spec_sha256": look["spec_sha256"],
         "code_version": look["code_version"],
+        "embeddings_job_run_id": emb.summary["job_run_id"],
         "device": "cpu (probe and scoring); embeddings from the GPU job",
         "classification": table,
         "drift": drift,
@@ -264,7 +322,7 @@ def test(emb: Embeddings) -> None:
     look.update(status="completed", completed_utc=datetime.now(UTC).isoformat(timespec="seconds"))
     LOCK.write_text(json.dumps(look, indent=2) + "\n", encoding="utf-8")
     head = table["client_test"]["models"]
-    for m in ("zero_shot", "probe_seed0", EFFNET_MODELS[0]):
+    for m in ("zero_shot", seeds[0], EFFNET_MODELS[0]):
         print(
             m, round(head[m]["balanced_accuracy"], 4), head[m]["bootstrap_95"]["balanced_accuracy"]
         )

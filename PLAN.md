@@ -149,7 +149,7 @@ The full first plan is in [docs/research_extension_plan.md](docs/research_extens
 - *Steps:*
   1. `src/cdm/vlm.py`: load BiomedCLIP at a pinned revision, embed, zero-shot with prompt templates.
   2. `src/cdm/probe.py`: a torch linear head on frozen embeddings, 3 seeds.
-  3. Embeddings appended to `workspace.cdm.gold_embeddings` (model version `biomedclip-<rev>`).
+  3. Embeddings written to `workspace.cdm.gold_vlm_embeddings` (model version `biomedclip-9f341de`); the analysis reads the job's files in the volume. *Proposed change, 2026-10-22, waiting for your approval:* this plan said append to `gold_embeddings`, but the Phase 1 gold task overwrites that table on every run, which would delete appended rows.
   4. Prompts and probe hyperparameters chosen on validation, then the spec.
   5. One test look: balanced accuracy and melanoma sensitivity with intervals, next to the shipped v2 ensemble's committed numbers.
   6. Drift: Mahalanobis (PCA by Phase 2's method D), max softmax and energy on BiomedCLIP features against Buenos Aires, PAD-UFES-20, PathMNIST and CIFAR-10. Gram is stated as not applicable to a ViT.
