@@ -214,7 +214,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 - [ ] **G6: Public Streamlit demo** of the cohort service.
   - It shows source labels and OMOP concept IDs only, never SNOMED names.
   - The ISIC and HAM10000 metadata licenses are checked first; I stop and ask before deploying.
-  - `docs/demo_script.md`: a 3-minute walkthrough you can record.
+  - `docs/demo_walkthrough.md`: a 3-minute walkthrough you can record.
   - **Done when** you approve deployment and the app is live on Streamlit Community Cloud.
 
 ## Phase 3: Serving and MLOps (about 1 week)
