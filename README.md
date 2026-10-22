@@ -381,24 +381,39 @@ test look: Databricks serverless CPU job run 75228269324996,
   the six 95% intervals include zero.
 - **Buenos Aires:** +5.0 to +6.6 for BiomedCLIP, every interval clear of zero. ImageNet B0 gains
   +0.8 to +2.4, with intervals spanning zero.
-- **PAD-UFES-20:** +2.4 to +4.2 for BiomedCLIP and +1.7 to +2.1 for ImageNet B0.
+- **PAD-UFES-20:** +2.4 to +4.2 for BiomedCLIP and +1.7 to +2.1 for ImageNet B0 (one of
+  the six intervals includes zero).
+- **HAM10000 test images alone:** all six intervals include zero.
 
 **Shortcut checks:**
 - **Metadata alone carries signal:** 36.4% against 14.3% for chance over seven classes. Part of
-  the gain may be prevalence by age and body site rather than anything about the lesion.
+  the gain may be prevalence by age and body site rather than anything about the lesion, and
+  metadata, including which fields are missing, can encode the source.
+- **At PAD-UFES-20, metadata alone (31.7%) beats every image and fusion variant (23.4% to
+  29.1%):** the clearest sign in this table that metadata works partly as a shortcut there.
 - **Source held out:** trained without one hospital and scored on that hospital's test images.
   - With BiomedCLIP, metadata helped at all three: Barcelona 26.9% to 29.9%, HAM10000 45.0% to
     46.9%, MSK 33.2% to 37.9%.
-  - With ImageNet B0 it hurt at MSK: 49.7% to 41.6%.
-  - These are point estimates over 3 seeds, without intervals.
-- **Without the MSK overlap patients**, the gains are the same size or larger. So they do not
-  come from shared age and sex across a patient's lesions in train and test.
+  - With ImageNet B0 it helped at Barcelona (28.3% to 31.7%), barely moved HAM10000 (44.3%
+    to 44.9%) and hurt at MSK (49.7% to 41.6%).
+  - These are point estimates over 3 seeds, without intervals, and they reuse the settings
+    chosen with every source in train and validation.
+- **Without the MSK overlap patients**, the gains are the same size or larger, so they are not
+  explained by those 47 patients. Patient overlap elsewhere cannot be checked (HAM10000 and
+  Barcelona record no patient ID).
 
 **Result:** metadata adds a few points to a frozen embedding, most clearly for BiomedCLIP at
 Buenos Aires. No variant comes near the fine-tuned ensemble.
 
-**Known limit:** both ImageNet-feature variants chose the grid's lowest learning rate, and the
-grid was not widened.
+**Known limits:**
+- Both ImageNet-feature variants chose the grid's lowest learning rate, and the grid was not
+  widened.
+- PLAN asked for the shipped EfficientNet's own penultimate features, "already in
+  `gold_embeddings`". That table holds ImageNet-pretrained B0 features (the Phase 1 job wrote
+  them; recomputing with the shipped model is a Phase 3 item), so those were used. This
+  departs from the plan's wording and waits for the owner's decision (PLAN decisions log).
+- The committed job definition says `mode: select`; the look ran with the run-time
+  override `mode=look`, which Databricks records for run 75228269324996.
 
 ## Research informatics services (Phase G)
 

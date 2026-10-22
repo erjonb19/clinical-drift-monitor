@@ -344,6 +344,13 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-22 (proposed by Claude Code, waiting for the owner)**
+  - **Phase E feature set:** PLAN says the EfficientNet penultimate embeddings are "already in
+    `gold_embeddings`"; that table holds ImageNet-pretrained B0 features, not the shipped
+    model's. Phase E ran on them (disclosed in its README section) before this was raised.
+    Options: accept them as a frozen-backbone comparison, or add the shipped model's own
+    features (a GPU extraction within the Phase B-E cap) as a new variant under a new spec
+    and a separate look.
 - **2026-10-22 (later)**
   - **Phase B embeddings table:** approved: BiomedCLIP embeddings stay in their own table, `workspace.cdm.gold_vlm_embeddings`, not appended to `gold_embeddings` (which the Phase 1 gold task overwrites on every run).
   - **Phase B test look:** not rerun on the laptop as it was (the first attempt was stopped for low system memory before it wrote its started lock, which that code wrote before scoring any test image; no metric was computed or seen). It was first made crash-safe (results saved before the lock is written) and checked by a dry run on validation, and it runs as a Databricks serverless CPU job. Nothing the committed spec chose changed.
