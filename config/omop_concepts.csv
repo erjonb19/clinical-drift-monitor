@@ -35,9 +35,9 @@ diagnosis_3,all,Foreign body granuloma,4141299,Condition,exact,skin-specific con
 diagnosis_3,all,Angiofibroma,4116203,Condition,exact,
 diagnosis_3,all,Fibroepithelial polyp,4066849,Condition,synonym,the same lesion under its other common name (see Athena)
 diagnosis_3,all,Neurofibroma,4300676,Condition,exact,
-label,all,akiec,4110707,Condition,class_lca,lowest common ancestor of the actinic keratosis and SCC in situ concepts; broad (it also contains other epithelial skin neoplasms)
+label,all,akiec,4110707,Condition,class_lca,lowest common ancestor of the AK and SCC in situ concepts; broad (it also contains other epithelial skin neoplasms)
 label,all,bcc,4112752,Condition,exact,
-label,all,bkl,4110709,Condition,class_lca,lowest common ancestor of seborrheic keratosis and solar lentigo; broad (it also contains actinic keratosis); lichen planus-like keratosis has no Condition concept
+label,all,bkl,4110709,Condition,class_lca,lowest common ancestor of seborrheic keratosis and solar lentigo; broad (it also contains the AK concept); lichen planus-like keratosis has no Condition concept
 label,all,df,4144608,Condition,exact,
 label,all,mel,4162276,Condition,broader,melanoma in situ is not a descendant; the only common ancestor with it is a melanocytic tumour concept that also includes nevi
 label,all,nv,4271013,Condition,exact,
