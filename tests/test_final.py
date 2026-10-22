@@ -56,3 +56,30 @@ def test_bootstrap_interval_brackets_the_estimate_and_resamples_whole_lesions() 
     for m in ("balanced_accuracy", "macro_auroc"):
         assert out[m]["low"] <= point[m] <= out[m]["high"]
         assert out[m]["high"] - out[m]["low"] < 0.2
+
+
+def test_subgroups_below_the_minimum_get_counts_and_a_warning_only() -> None:
+    from cdm.eval import subgroup_table
+
+    rng = np.random.default_rng(0)
+    labels = np.array([4] * 120 + [5] * 130 + [5] * 30, dtype=np.int64)  # mel, nv, nv
+    logits = rng.normal(size=(280, 7))
+    logits[np.arange(280), labels] += 3  # mostly right
+    groups = ["60-69"] * 250 + ["90+"] * 30
+    rows = {r["group"]: r for r in subgroup_table(labels, logits, groups)}
+    assert rows["90+"] == {"group": "90+", "images": 30, "melanoma_images": 0,
+                           "warning": "fewer than 100 images: count only"}  # fmt: skip
+    assert rows["60-69"]["images"] == 250 and rows["60-69"]["melanoma_images"] == 120
+    assert 0 <= float(rows["60-69"]["balanced_accuracy"]) <= 1  # type: ignore[arg-type]
+    assert "melanoma_sensitivity" in rows["60-69"]
+    # Groups partition the data.
+    assert sum(int(r["images"]) for r in rows.values()) == 280  # type: ignore[call-overload]
+
+
+def test_missing_group_values_become_unknown_and_nothing_is_dropped() -> None:
+    from cdm.eval import subgroup_table
+
+    labels = np.array([5] * 4, dtype=np.int64)
+    groups: list[object] = ["a", None, float("nan"), "a"]
+    rows = subgroup_table(labels, np.zeros((4, 7)), groups, min_n=1)  # type: ignore[arg-type]
+    assert {r["group"]: r["images"] for r in rows} == {"a": 2, "unknown": 2}
