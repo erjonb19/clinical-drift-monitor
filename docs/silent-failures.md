@@ -236,3 +236,34 @@ frozen v1 lesions and invalidate every Phase 2 result. `scripts/patient_overlap.
 counts from silver. From the research extension on:
 - intervals resample by patient where ISIC records one;
 - test results carry a row without these lesions.
+
+---
+
+## 10. Two suppressed cohort results that together gave away a suppressed count
+
+**Symptom.** The cohort service suppressed every result it released: counts from 1 to 10 show
+as `<11`, and a second cell is hidden where subtraction would recover the first. Each result
+passed that check. On 2026-10-21 two synthetic requests were answered in public issues:
+- #8, melanoma by sex and age band: men aged 20 to 29 `<11`, women 16, no other sex row;
+- #9, adults with melanoma and a histopathology procedure, by age band: 20 to 29 was 26.
+
+The second cohort sits inside the first, so the band holds at most `<11` + 16 people in #8 and
+at least 26 in #9. That makes the men exactly 10. A fresh reviewer found it before any merge.
+The data is public ISIC metadata, so no one was exposed, but the service claimed a protection
+it did not give.
+
+**Cause.** Suppression looked at one result at a time. Nested cohorts released to different
+requesters are the textbook differencing attack, and `phenotypes/README.md` already listed
+it as "not detected; the reviewer checks". Here the reviewer was a script, and no one checked.
+
+**Caught by.**
+- Before release, `cdm.cohort.guard_releases` compares every number in a new result with every
+  number already released for a nested definition (same index conditions, age range within,
+  criteria a superset). Releases are recorded in the audit log, with the definition. Two kinds
+  of group are hidden:
+  - a group where the two results differ by 1 to 10 people;
+  - a group where they are equal and one result shows exactly what the other hid.
+- `tests/test_cohort.py` reproduces this case and a total that differs by four people.
+- The #9 result was removed from the issue and posted again with the guard.
+- Overlap that the definitions do not show as nesting is still a reviewer's check, and the README
+  says so.
