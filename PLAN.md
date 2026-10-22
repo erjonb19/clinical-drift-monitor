@@ -183,7 +183,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 - [ ] **G1: Docs, quick wins.**
   - `docs/EVAL_PLAN.md`, written as a study protocol: baselines, splits, human review, error analysis, reproducibility, subgroups and bias, failure criteria.
   - `docs/governance/`: public and restricted access tiers, a data use checklist, risk tiering and the escalation path.
-  - `.github/ISSUE_TEMPLATE/data_request.yml`: question, cohort, data needed, approval status. Plus a GitHub project board; you create it, since it needs your login.
+  - `.github/ISSUE_TEMPLATE/data_request.yml`: question, cohort, data needed, approval status. Plus a GitHub project board: [Research data requests](https://github.com/users/erjonb19/projects/2), created 2026-10-21; the form adds each new request to it.
   - **Done when** the docs are merged and a test request issue renders from the form.
 - [ ] **G2: Governed cohort and feasibility service** (`src/cdm/cohort.py`).
   - Cohort definitions are versioned YAML files in `phenotypes/`, built only from allowlisted OMOP tables, columns and operators. No free SQL.
