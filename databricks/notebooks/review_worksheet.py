@@ -39,7 +39,6 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-import matplotlib
 import mlflow
 import numpy as np
 import pandas as pd
@@ -166,14 +165,20 @@ chosen["flagged_not_interpreted"] = [flagged(r) for r in randomization]
 # COMMAND ----------
 
 # Overlays: the 224 px crop the model saw, with each map on top.
-jet = matplotlib.colormaps["jet"]
+
+
+def jet(x: np.ndarray) -> np.ndarray:
+    """The jet colormap: blue (0) through green to red (1)."""
+    return np.clip(1.5 - np.abs(4 * x[..., None] - np.array([3.0, 2.0, 1.0])), 0, 1)
+
+
 mean, std = np.array(IMAGENET_MEAN)[:, None, None], np.array(IMAGENET_STD)[:, None, None]
 REVIEW.mkdir(parents=True, exist_ok=True)
 
 
 def overlay(i: int, which: str) -> bytes:
     rgb = np.clip(images[i].numpy() * std + mean, 0, 1).transpose(1, 2, 0)
-    mixed = 0.6 * rgb + 0.4 * jet(maps[which][i])[..., :3]
+    mixed = 0.6 * rgb + 0.4 * jet(maps[which][i])
     buf = io.BytesIO()
     Image.fromarray((mixed * 255).astype(np.uint8)).save(buf, format="JPEG", quality=85)
     return buf.getvalue()
