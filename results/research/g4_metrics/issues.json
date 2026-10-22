@@ -1,0 +1,118 @@
+{
+  "queried_utc": "2026-10-22T05:21:08+00:00",
+  "query": "gh issue list --label data-request --state all",
+  "issues": [
+    {
+      "number": 14,
+      "createdAt": "2026-10-22T02:36:51Z",
+      "closedAt": "2026-10-22T02:37:07Z",
+      "labels": [
+        {
+          "name": "data-request"
+        },
+        {
+          "name": "status: declined"
+        },
+        {
+          "name": "synthetic"
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "createdAt": "2026-10-22T02:36:32Z",
+      "closedAt": "2026-10-22T02:36:49Z",
+      "labels": [
+        {
+          "name": "data-request"
+        },
+        {
+          "name": "status: delivered"
+        },
+        {
+          "name": "synthetic"
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "createdAt": "2026-10-22T02:36:16Z",
+      "closedAt": "2026-10-22T02:36:30Z",
+      "labels": [
+        {
+          "name": "data-request"
+        },
+        {
+          "name": "status: delivered"
+        },
+        {
+          "name": "synthetic"
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "createdAt": "2026-10-22T02:35:34Z",
+      "closedAt": "2026-10-22T02:36:14Z",
+      "labels": [
+        {
+          "name": "data-request"
+        },
+        {
+          "name": "status: delivered"
+        },
+        {
+          "name": "synthetic"
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "createdAt": "2026-10-22T02:35:14Z",
+      "closedAt": "2026-10-22T02:35:31Z",
+      "labels": [
+        {
+          "name": "data-request"
+        },
+        {
+          "name": "status: delivered"
+        },
+        {
+          "name": "synthetic"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "createdAt": "2026-10-22T02:34:50Z",
+      "closedAt": "2026-10-22T02:35:11Z",
+      "labels": [
+        {
+          "name": "data-request"
+        },
+        {
+          "name": "status: delivered"
+        },
+        {
+          "name": "synthetic"
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "createdAt": "2026-10-22T02:34:23Z",
+      "closedAt": "2026-10-22T02:34:48Z",
+      "labels": [
+        {
+          "name": "data-request"
+        },
+        {
+          "name": "status: delivered"
+        },
+        {
+          "name": "synthetic"
+        }
+      ]
+    }
+  ]
+}

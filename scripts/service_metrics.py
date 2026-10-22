@@ -2,8 +2,9 @@
 
 Four parts, each read from a source, never typed in:
 
-- **Requests:** turnaround of data-request issues from the GitHub issue tracker (``gh``).
-  Issues labelled ``synthetic`` are counted separately and marked as such.
+- **Requests:** turnaround of data-request issues, from a snapshot of the GitHub issue
+  tracker committed at results/research/g4_metrics/issues.json (refreshed with ``gh`` unless
+  ``--offline``). Issues labelled ``synthetic`` are counted separately and marked as such.
 - **Cohort service:** runs per phenotype (reuse), refusals by reason, and time from first
   request to approval, from the committed audit log of the cohort service.
 - **Output quality:** OMOP gate results of the latest committed build, and the concept map's
@@ -11,8 +12,8 @@ Four parts, each read from a source, never typed in:
 - **Model performance:** the rows in config/service_metrics.json, each read from a committed
   results file, with the commit date of that file.
 
-    python scripts/service_metrics.py            (needs gh, logged in)
-    python scripts/service_metrics.py --offline  (no issue tracker: requests section says so)
+    python scripts/service_metrics.py            (refreshes the issue snapshot; needs gh)
+    python scripts/service_metrics.py --offline  (renders from the committed snapshot)
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ import json
 import statistics
 import subprocess
 from collections import Counter
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +33,8 @@ AUDIT = REPO / "results" / "research" / "g2_cohort" / "audit.jsonl"
 BUILD = REPO / "results" / "research" / "a_omop" / "build.json"
 CONCEPT_CHECK = REPO / "results" / "research" / "a_omop" / "concept_check.json"
 SPEC = REPO / "config" / "service_metrics.json"
+ISSUES = REPO / "results" / "research" / "g4_metrics" / "issues.json"
+ISSUE_LIMIT = 500
 
 
 def _time(stamp: str) -> datetime:
@@ -119,6 +122,7 @@ def render(
     build: dict[str, Any] | None,
     concepts: dict[str, Any],
     models: list[dict[str, Any]],
+    snapshot_utc: str | None = None,
 ) -> str:
     lines = [
         "# Service metrics",
@@ -132,12 +136,15 @@ def render(
         "",
     ]
     if requests is None:
-        lines.append("Not read: generated offline, without the issue tracker.")
+        lines.append("No snapshot of the issue tracker committed yet.")
     else:
+        lines += [f"From the issue tracker snapshot taken {snapshot_utc} "
+                  "(`results/research/g4_metrics/issues.json`).", ""]  # fmt: skip
         lines += ["| Requests | Opened | Closed | Median days to close | Longest |",
                   "| --- | ---: | ---: | ---: | ---: |"]  # fmt: skip
         for kind, m in requests.items():
-            label = "Synthetic (labelled `synthetic`)" if kind == "synthetic" else "Real"
+            synthetic = kind == "synthetic"
+            label = "Synthetic (labelled `synthetic`)" if synthetic else "Not labelled synthetic"
             med = "n/a" if m["median_days_to_close"] is None else m["median_days_to_close"]
             top = "n/a" if m["max_days_to_close"] is None else m["max_days_to_close"]
             lines.append(f"| {label} | {m['opened']} | {m['closed']} | {med} | {top} |")
@@ -187,20 +194,36 @@ def render(
 
 
 def issues_from_github() -> list[dict[str, Any]]:
+    """Data-request issues: number, open and close times, label names. No titles or text."""
     out = subprocess.run(
-        ["gh", "issue", "list", "--label", "data-request", "--state", "all", "--limit", "500",
-         "--json", "number,createdAt,closedAt,labels"],
+        ["gh", "issue", "list", "--label", "data-request", "--state", "all", "--limit",
+         str(ISSUE_LIMIT), "--json", "number,createdAt,closedAt,labels"],
         cwd=REPO, capture_output=True, text=True, check=True,
     ).stdout  # fmt: skip
     issues: list[dict[str, Any]] = json.loads(out)
-    return issues
+    if len(issues) >= ISSUE_LIMIT:
+        raise SystemExit(f"{len(issues)} issues: the query limit may have cut some off")
+    return [{"number": i["number"], "createdAt": i["createdAt"], "closedAt": i["closedAt"],
+             "labels": [{"name": lb["name"]} for lb in i["labels"]]} for i in issues]  # fmt: skip
+
+
+def snapshot(issues: list[dict[str, Any]]) -> dict[str, Any]:
+    query = "gh issue list --label data-request --state all"
+    return {"queried_utc": datetime.now(UTC).isoformat(timespec="seconds"), "query": query,
+            "issues": issues}  # fmt: skip
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--offline", action="store_true")
     args = parser.parse_args()
-    requests = None if args.offline else request_metrics(issues_from_github())
+    if not args.offline:
+        ISSUES.parent.mkdir(parents=True, exist_ok=True)
+        ISSUES.write_bytes(
+            (json.dumps(snapshot(issues_from_github()), indent=2) + chr(10)).encode()
+        )
+    taken = json.loads(ISSUES.read_text(encoding="utf-8")) if ISSUES.exists() else None
+    requests = request_metrics(taken["issues"]) if taken else None
     entries = (
         [json.loads(x) for x in AUDIT.read_text(encoding="utf-8").splitlines() if x.strip()]
         if AUDIT.exists()
@@ -209,7 +232,8 @@ def main() -> None:
     build = json.loads(BUILD.read_text(encoding="utf-8")) if BUILD.exists() else None
     concepts = json.loads(CONCEPT_CHECK.read_text(encoding="utf-8"))
     spec = json.loads(SPEC.read_text(encoding="utf-8"))
-    page = render(requests, cohort_metrics(entries), build, concepts, model_rows(spec))
+    page = render(requests, cohort_metrics(entries), build, concepts, model_rows(spec),
+                  taken["queried_utc"] if taken else None)  # fmt: skip
     PAGE.write_bytes(page.encode())
     print(f"wrote {PAGE}")
 
