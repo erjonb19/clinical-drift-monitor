@@ -15,7 +15,7 @@
       "spec": {
         "environment_version": "4",
         "dependencies": [
-          "/Volumes/workspace/cdm/raw/deploy/a482468/cdm-0.1.0-py3-none-any.whl",
+          "/Volumes/workspace/cdm/raw/deploy/893be35/cdm-0.1.0-py3-none-any.whl",
           "torch==2.14.0",
           "torchvision==0.29.0"
         ]
@@ -28,19 +28,20 @@
       "environment_key": "cpu",
       "max_retries": 0,
       "retry_on_timeout": false,
-      "timeout_seconds": 7200,
+      "timeout_seconds": 10800,
       "notebook_task": {
         "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/subgroups",
         "base_parameters": {
-          "code_version": "a482468",
-          "wheel": "/Volumes/workspace/cdm/raw/deploy/a482468/cdm-0.1.0-py3-none-any.whl",
-          "wheel_sha256": "ca126430d28ee36ef430d3f11ec51198a832c6dbc810fc5b0e1d0c22f9404b57",
-          "repo": "/Volumes/workspace/cdm/raw/deploy/a482468/repo",
-          "files_sha256": "{\"scripts/vlm_baseline.py\": \"517c391c0b036b216f6a65dae2b5ed4ecd12ec61f4d6be66f8a503d24094fade\", \"results/research/b_vlm/spec.json\": \"ed67698ced6aac74629ef8eff169ce5a356af17ad02391574c8967e0fa984c7e\", \"results/research/b_vlm/results.json\": \"4409a742165cb9f31fb401b1f1a853df70defe9c334ed33c4ac1e95f3216c9df\", \"results/research/c_subgroups/spec.json\": \"7f5c8c50b06e21553b367143133ff26f95181ef070a9a43d47b2bc1078d37a7d\", \"results/phase2/analysis_look/predictions.csv.gz\": \"65f784b7749c7b6885d41d8edde0724a49ca7e111769b30cdc4638abe556082c\", \"config/patient_overlap_v1.csv\": \"57afcd358a11cc7fa02c4a6845d0e56ee50664fc83840359ab44bd428e406dc6\"}",
+          "code_version": "893be35",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/893be35/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "67a1596ac0bacc74287ca56c73b26850e36e02b22b12b2f495561a5c4531e870",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/893be35/repo",
+          "files_sha256": "{\"scripts/vlm_baseline.py\": \"517c391c0b036b216f6a65dae2b5ed4ecd12ec61f4d6be66f8a503d24094fade\", \"results/research/b_vlm/spec.json\": \"ed67698ced6aac74629ef8eff169ce5a356af17ad02391574c8967e0fa984c7e\", \"results/research/b_vlm/results.json\": \"4409a742165cb9f31fb401b1f1a853df70defe9c334ed33c4ac1e95f3216c9df\", \"results/research/c_subgroups/spec.json\": \"7f5c8c50b06e21553b367143133ff26f95181ef070a9a43d47b2bc1078d37a7d\", \"results/research/c_subgroups/spec_v2.json\": \"5244065ff635b0fcca75bdcb94e0c67f0f58fb52993d36b60c5b0a974b86bd9e\", \"results/phase2/analysis_look/predictions.csv.gz\": \"65f784b7749c7b6885d41d8edde0724a49ca7e111769b30cdc4638abe556082c\", \"config/patient_overlap_v1.csv\": \"57afcd358a11cc7fa02c4a6845d0e56ee50664fc83840359ab44bd428e406dc6\", \"databricks/notebooks/subgroups.py\": \"8923cb11095b0a84bbd7a6252452d9c5b50c41bb3d88a55c3aeed846ceff913b\"}",
           "embeddings": "/Volumes/workspace/cdm/raw/results/research/b_vlm/embeddings",
           "effnet_scores": "/Volumes/workspace/cdm/raw/results/phase2/drift/v2",
           "out": "/Volumes/workspace/cdm/raw/results/research/c_subgroups",
           "bootstrap": "1000",
+          "result_name": "results_v2.json",
           "job_run_id": "{{job.run_id}}"
         }
       }
