@@ -1,0 +1,37 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "plan": "PLAN.md, research Phase C",
+  "populations": {
+    "client_test": "the clients' pooled test split (3,262 images), as in Phase 2 and Phase B",
+    "buenos_aires": "labelled images, the analysis look's seven-class mapping",
+    "pad_ufes": "labelled images, the analysis look's seven-class mapping"
+  },
+  "attributes": {
+    "age_band": "silver_metadata.age_approx in bands 0-29, 30-44, 45-59, 60-74, 75+ (lower bound inclusive); missing is unknown",
+    "sex": "omop_person.gender_concept_id of the image's person (omop_image_occurrence.image_source_value = ISIC ID); 0 is unknown",
+    "body_site": "omop_image_occurrence.anatomic_site_concept_id; 0 is unknown"
+  },
+  "group_keys": "age bands, and concept IDs written concept:<id>; no vocabulary names",
+  "models": {
+    "v2-ensemble-final-seeds0-1-2": "the shipped EfficientNet-B0 ensemble, from results/phase2/analysis_look/predictions.csv.gz",
+    "probe_seed0, probe_seed1, probe_seed2": "the BiomedCLIP linear probe of results/research/b_vlm/spec.json, regenerated from the same embeddings with the same settings and seeds"
+  },
+  "reproduction_gate": "before any subgroup is computed, each model's overall balanced accuracy on each population must equal results/research/b_vlm/results.json to 1e-9, or the run stops and reports nothing",
+  "metrics": "balanced accuracy (over the classes present in the group), melanoma sensitivity, per-class recall and support (cdm.eval.subgroup_table)",
+  "minimums": "at least 100 images for a metric, and 100 melanoma images for melanoma sensitivity; smaller groups get counts and a warning",
+  "bootstrap": "1000 resamples, seed 0, 95% percentile intervals, within each group; resampling unit: the patient where ISIC records one, else the lesion, else the image",
+  "seeds": "probe: each seed, and mean and range over the 3 seeds per group",
+  "drift": {
+    "what": "Mahalanobis AUROC and FPR@95TPR, the whole client test split against each group of all images (labelled or not) at Buenos Aires and at PAD-UFES-20",
+    "efficientnet": "the per-image scores saved by the Phase 2 v2 drift run (results/phase2/drift/v2, PCA by method D), 3 seeds, mean and range",
+    "biomedclip": "Mahalanobis on BiomedCLIP features, PCA size 70 (method D, from the Phase B spec), fit on train",
+    "minimum": "100 images per group"
+  },
+  "skin_type": "not recomputed: results/phase2/analysis_look/skin_type_drift.json and the analysis look's within-site results stand (98 images of types IV to VI in total; no skin-type effect claimed)",
+  "comparisons": "descriptive only: no test between groups, no threshold or model change; groups differ in class mix, site and imaging type, so a gap between groups is not attributed to the attribute",
+  "caveats": [
+    "HAM10000 and Barcelona record no patient ID, so a person there is a lesion and the sex of a person is the sex recorded on that lesion's images",
+    "body site is the finest recorded site; sites with different vocabularies across sources map to different concepts"
+  ]
+}
