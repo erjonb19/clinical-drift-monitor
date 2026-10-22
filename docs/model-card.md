@@ -65,8 +65,8 @@ out-of-distribution detection, drift monitoring, federated learning, research pr
   a real federated deployment could not see.
 
 **Known biases or ethical considerations:** the four training sources are European, Australian
-and US dermatology collections; fairness across skin types is not assessed (a stated gap, PLAN.md
-Phase 2). Barcelona is 39.3% of training images and therefore also of FedAvg's
+and US dermatology collections. Skin type is recorded only at the two held-out sites; within
+them, types I to III are assessed (section 7) and types IV to VI are too rare to judge. Barcelona is 39.3% of training images and therefore also of FedAvg's
 aggregation weight.
 
 **Clinical risk level:** not assessed. The model is not for clinical use.
@@ -86,12 +86,14 @@ aggregation weight.
   3,262 test images, split by lesion; training shares HAM10000 Vienna 35.7%, HAM10000 Queensland 10.4%, Barcelona 39.3%, MSK 14.6%
   (`results/phase2/v2/training/data_summary.json`).
 - **Bias mitigation approaches:** lesion-level splits (no lesion in two splits, gated); class-
-  weighted loss; per-site and bordered/non-bordered reporting. No skin-type mitigation.
+  weighted loss; per-site, bordered/non-bordered, skin-type, age, sex and body-site reporting
+  (research Phase C). No mitigation beyond reporting.
 - **Ongoing maintenance:** planned in Phase 3 (monthly drift job, retraining with a champion/
   challenger test); not built. A stated gap.
 - **Security:** not served yet; no endpoint exists. A stated gap until Phase 3.
 - **Transparency:** code, configuration, evidence files and the silent-failure log are public in
   the repository.
+- **Explanations:** Grad-CAM maps for 150 client-test images (the worst misses per class and the most out-of-distribution), from the shipped seed-0 checkpoint, are on a review worksheet (MLflow artifact and `workspace.cdm.gold_review_worksheet`). Weight-randomization check: mean rank correlation 0.045 (range -0.63 to 0.64) with a re-initialized network; 11 maps are flagged as not interpretable. Mean agreement across seeds 0.81. The maps are coarse (7x7) and **not reviewed** by a clinician (`results/research/d_review/results.json`).
 
 ### Transparency information
 - **Funding source:** none (zero-cost project). **Third-party information:** dataset providers as
@@ -129,8 +131,45 @@ aggregation weight.
 | Barcelona, bordered images | 639 | 46.0% |
 | Barcelona, not bordered | 635 | 59.5% |
 
-- **Interpretation:** Barcelona, the largest client, is the weakest. Skin type is not assessed.
+- **Interpretation:** Barcelona, the largest client, is the weakest.
 - **Test type / data:** internal test split, per client.
+- **By Fitzpatrick skin type, within each held-out site** (95% bootstrap by patient, else lesion,
+  else image; images with no skin type recorded are listed too;
+  `results/research/c_subgroups/results_v2.json`):
+
+| Site, Fitzpatrick type | Images | Balanced accuracy (ensemble) |
+| --- | ---: | --- |
+| Buenos Aires, type I | 106 | 56.7% [41.9%, 70.5%] |
+| Buenos Aires, type II | 945 | 52.8% [48.5%, 56.7%] |
+| Buenos Aires, type III | 269 | 61.3% [49.5%, 72.5%] |
+| Buenos Aires, type IV | 25 | counts only (under 100 images) |
+| Buenos Aires, not recorded | 113 | 71.9% [52.9%, 83.0%] |
+| PAD-UFES-20, type I | 137 | 39.4% [18.5%, 54.0%] |
+| PAD-UFES-20, type II | 750 | 43.7% [37.2%, 50.2%] |
+| PAD-UFES-20, type III | 347 | 43.9% [32.5%, 58.4%] |
+| PAD-UFES-20, type IV | 59 | counts only (under 100 images) |
+| PAD-UFES-20, type V | 8 | counts only (under 100 images) |
+| PAD-UFES-20, type VI | 1 | counts only (under 100 images) |
+| PAD-UFES-20, not recorded | 804 | 41.4% [37.6%, 45.5%] |
+
+  Within each site the intervals overlap, so no skin-type effect is claimed for types I to III;
+  types IV to VI cannot be judged.
+- **By age band, client test split:**
+
+| Age band | Images | Balanced accuracy (ensemble) |
+| --- | ---: | --- |
+| 0-29 | 194 | 27.2% [19.3%, 50.6%] |
+| 30-44 | 660 | 60.6% [49.0%, 76.9%] |
+| 45-59 | 961 | 71.8% [64.2%, 79.9%] |
+| 60-74 | 824 | 72.3% [59.5%, 79.6%] |
+| 75+ | 561 | 69.5% [55.0%, 76.4%] |
+| unknown | 62 | counts only (under 100 images) |
+
+  Under 30 has the lowest point estimate, though its interval overlaps the 30-44 band's: it
+  is mostly nevi, with the rarer classes missed. Balanced accuracy
+  averages only the classes present, so groups with different class mixes are not directly
+  comparable.
+- **Drift alerts by group.** With the alert threshold at the 95th percentile of the client test split's scores (5% overall), the shipped detector (mean of 3 seeds) fires on HAM10000 Vienna 4.0%, HAM10000 Queensland 4.0%, Barcelona 7.1%, MSK 2.6%; on BiomedCLIP features, HAM10000 Vienna 1.9%, HAM10000 Queensland 1.4%, Barcelona 6.0%, MSK 13.3% (`results/research/c_subgroups/results_v2.json`). An uneven alert rate is a fairness question for the Phase 3 monitor; it is reported, not corrected.
 
 ### Safety and reliability
 - **Goal:** know when the model is outside its data, and how its errors move at new sites.
@@ -160,11 +199,31 @@ aggregation weight.
   Calibration: the ensemble's expected calibration error on test is 2.00%; temperature
   scaling fitted on validation made it worse (3.56%), so the ensemble is used uncalibrated.
 - **External validation:** Buenos Aires and PAD-UFES-20 never contributed to training or model
-  choice. Seven-class accuracy at these sites is not computed yet (a stated gap); the external
-  results are the triage and drift results above.
+  choice. Seven-class results, labelled images only, with the analysis look's class mapping
+  (`results/phase2/analysis_look/results.json`, 95% bootstrap by lesion):
+
+| Site | Images | Melanomas | Balanced accuracy | Melanoma sensitivity | Macro AUROC |
+| --- | ---: | ---: | --- | --- | --- |
+| Buenos Aires | 1,458 | 253 | 55.9% [52.3%, 59.6%] | 46.6% [39.3%, 53.7%] | 87.5% [86.0%, 89.0%] |
+| PAD-UFES-20 | 2,106 | 52 | 39.4% [36.3%, 42.3%] | 25.0% [14.7%, 36.1%] | 77.5% [75.8%, 79.1%] |
+
+  PAD-UFES-20's melanoma sensitivity rests on few melanomas, so its interval is wide. (The research subgroup analyses report melanoma sensitivity only from 100 melanomas.)
+
+### Comparison with an alternative model (research Phase B)
+A frozen medical vision-language model, BiomedCLIP, scored on the same client test split under its
+own committed specification and one test look (research use only, never served):
+
+| Model | Balanced accuracy | Melanoma sensitivity |
+| --- | --- | --- |
+| BiomedCLIP zero-shot | 30.1% [24.9%, 34.7%] | 42.7% |
+| BiomedCLIP linear probe, 3 seeds | 50.8% (range 50.3%–51.2%) | 54.5% (range 52.1%–55.8%) |
+| Shipped ensemble | 66.5% [60.8%, 72.8%] | 71.6% |
+
+  Paired on the same resamples, each probe seed is 15.2 to 16.1 points below the ensemble in balanced accuracy, every interval excluding zero (`results/research/b_vlm/results.json`). These intervals resample by patient where ISIC records one, so the ensemble's differs slightly from the by-lesion interval above.
 
 ## 8. Resources
-- **Evaluation references:** `results/phase2/` (all files named above); `docs/phase2-note.md`.
+- **Evaluation references:** `results/phase2/` and `results/research/` (all files named above);
+  `docs/phase2-note.md`.
 - **Clinical trial:** none. **Peer-reviewed publications:** none. **Reimbursement status:** none.
 - **Patient consent or disclosure:** public, de-identified datasets used under their licences;
   no new patient data were collected.
@@ -189,7 +248,7 @@ This project is not certified health IT; the categories are used as a structure 
 | 2. Purpose of the intervention | 3, 4 (intended use) |
 | 3. Cautioned out-of-scope use | 4 (cautioned out-of-scope settings), 5 |
 | 4. Intervention development details and input features | 6 (model type, input data, development data) |
-| 5. Process used to ensure fairness in development | 6 (bias mitigation), 7 (fairness and equity) |
+| 5. Process used to ensure fairness in development | 6 (bias mitigation), 7 (fairness and equity: site, skin type, age, alert rates) |
 | 6. External validation process | 7 (external validation at Buenos Aires and PAD-UFES-20) |
 | 7. Quantitative measures of performance | 7 |
 | 8. Ongoing maintenance of implementation and use | 6 (ongoing maintenance): a stated gap until Phase 3 |
@@ -200,8 +259,8 @@ This project is not certified health IT; the categories are used as a structure 
 | Validity | Internal test with one look per model; external sites; section 7 |
 | Reliability | Mean and range over 3 seeds; bootstrap intervals by lesion |
 | Robustness | Drift detection and the sensitivity drop at new sites; hardware dependence of scores |
-| Fairness | Per-site and bordered results; skin type not assessed (gap) |
-| Intelligibility | Not addressed (no explanations); a stated gap |
+| Fairness | Per-site, skin-type (I to III, within site), age and alert-rate results; types IV to VI not assessable (gap) |
+| Intelligibility | Grad-CAM worksheet with a randomization sanity check (section 6); not reviewed by a clinician (gap) |
 | Safety | Not for clinical use; triage framing only; risks in section 5 |
 | Security | Not served; a stated gap until Phase 3 |
 | Privacy | Public de-identified data only; no patient data collected |

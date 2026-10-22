@@ -3,7 +3,8 @@
 Builds the cdm wheel from a clean HEAD, copies each named file as git stores it at HEAD into
 ``/Volumes/workspace/cdm/raw/deploy/<commit>/repo/``, uploads the notebook to the workspace,
 and prints the wheel's SHA-256 and the ``files_sha256`` map for the job definition. The job's
-notebook checks both before it reads anything.
+notebook checks both before it reads anything. The notebook's own source is staged and hashed
+too, so the run records which committed notebook it was imported from.
 
 Usage: python scripts/stage_research_job.py <notebook name> <repo file> [<repo file> ...]
 """
@@ -29,11 +30,15 @@ def run(*args: str, capture: bool = True) -> str:
     return out.stdout.strip() if capture else ""
 
 
-def main() -> None:
-    if len(sys.argv) < 3:
+def main(argv: list[str] | None = None) -> None:
+    args = sys.argv[1:] if argv is None else argv
+    if len(args) < 2:
         sys.exit(__doc__)
-    notebook, files = sys.argv[1], sys.argv[2:]
-    if run("git", "status", "--porcelain", "--", "src", "scripts", "config", "databricks", *files):
+    notebook = args[0]
+    files = [*args[1:], f"databricks/notebooks/{notebook}.py"]
+    # The wheel is built from the working tree, so all of it that goes in must be committed.
+    tracked = ["src", "scripts", "config", "databricks", "pyproject.toml", *files]
+    if run("git", "status", "--porcelain", "--untracked-files=all", "--", *tracked):
         sys.exit("uncommitted changes: commit first, so the staged files are the commit's")
     sha = run("git", "rev-parse", "--short", "HEAD")
     remote = f"{DEPLOY}/{sha}"

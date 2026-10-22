@@ -48,3 +48,4 @@ def test_confusion_counts_rows_by_true_class_and_hides_small_groups() -> None:
 
 def test_randomization_flag() -> None:
     assert flagged(0.5) and not flagged(0.49)
+    assert flagged(float("nan"))  # a constant map cannot pass as interpretable

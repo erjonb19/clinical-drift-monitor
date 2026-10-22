@@ -139,6 +139,129 @@ def provenance_line() -> str:
                       ("pad_ufes", "PAD-UFES-20"), ("ham10000", "HAM10000")))  # fmt: skip
 
 
+RR = Path("results/research")
+
+
+def load_research(path: str) -> Any:
+    return json.loads((RR / path).read_text(encoding="utf-8"))
+
+
+LOOK = load("analysis_look/results.json")
+VLM = load_research("b_vlm/results.json")
+SUB = load_research("c_subgroups/results_v2.json")
+REVIEW = load_research("d_review/results.json")
+SITE_LABELS = {"buenos_aires": "Buenos Aires", "pad_ufes": "PAD-UFES-20"}
+
+
+def external_table() -> str:
+    rows = [
+        "| Site | Images | Melanomas | Balanced accuracy | Melanoma sensitivity | Macro AUROC |",
+        "| --- | ---: | ---: | --- | --- | --- |",
+    ]
+    for site, name in SITE_LABELS.items():
+        e = LOOK["external_seven_class"][site][ENS_KEY]
+        b = e["bootstrap_95"]
+        rows.append(
+            f"| {name} | {e['images']:,} | {e['melanoma_images']} "
+            f"| {pct(e['balanced_accuracy'])} {ci(b, 'balanced_accuracy')} "
+            f"| {pct(e['melanoma_sensitivity'])} {ci(b, 'melanoma_sensitivity')} "
+            f"| {pct(e['macro_auroc'])} {ci(b, 'macro_auroc')} |"
+        )
+    rows.append(
+        "\n  PAD-UFES-20's melanoma sensitivity rests on few melanomas, so its interval is "
+        "wide. (The research subgroup analyses report melanoma sensitivity only from 100 "
+        "melanomas.)"
+    )
+    return "\n".join(rows)
+
+
+def baseline_table() -> str:
+    row = VLM["classification"]["client_test"]
+    m, seeds = row["models"], row["probe_over_seeds"]
+    paired = row[f"paired_vs_{ENS_KEY}"]
+    diffs = [paired[f"probe_seed{s}"]["balanced_accuracy"]["difference"] for s in range(3)]
+    zs, ens = m["zero_shot"], m[ENS_KEY]
+    lines = [
+        "| Model | Balanced accuracy | Melanoma sensitivity |",
+        "| --- | --- | --- |",
+        f"| BiomedCLIP zero-shot | {pct(zs['balanced_accuracy'])} {ci(zs['bootstrap_95'], 'balanced_accuracy')} "
+        f"| {pct(zs['melanoma_sensitivity'])} |",
+        f"| BiomedCLIP linear probe, 3 seeds | {rng(seeds['balanced_accuracy'])} "
+        f"| {rng(seeds['melanoma_sensitivity'])} |",
+        f"| Shipped ensemble | {pct(ens['balanced_accuracy'])} {ci(ens['bootstrap_95'], 'balanced_accuracy')} "
+        f"| {pct(ens['melanoma_sensitivity'])} |",
+    ]
+    lines.append(
+        f"\n  Paired on the same resamples, each probe seed is {-100 * max(diffs):.1f} to "
+        f"{-100 * min(diffs):.1f} points below the ensemble in balanced accuracy, every interval "
+        "excluding zero (`results/research/b_vlm/results.json`). These intervals resample by "
+        "patient where ISIC records one, so the ensemble's differs slightly from the by-lesion "
+        "interval above."
+    )
+    return "\n".join(lines)
+
+
+def group_rows(pop: str, attr: str, names: dict[str, str] | None = None) -> list[str]:
+    out = []
+    for r in SUB["performance"][pop][attr]["models"][ENS_KEY]:
+        g = str(r["group"])
+        label = (names or {}).get(g, g)
+        if "balanced_accuracy" in r:
+            out.append(
+                f"| {label} | {int(r['images']):,} | {pct(r['balanced_accuracy'])} "
+                f"{ci(r['bootstrap_95'], 'balanced_accuracy')} |"
+            )
+        else:
+            out.append(f"| {label} | {int(r['images']):,} | counts only (under 100 images) |")
+    return out
+
+
+def skin_type_table() -> str:
+    rows = [
+        "| Site, Fitzpatrick type | Images | Balanced accuracy (ensemble) |",
+        "| --- | ---: | --- |",
+    ]
+    for site, name in SITE_LABELS.items():
+        for line in group_rows(site, "skin_type"):
+            label = f"| {name}, " + ("" if "| not recorded |" in line else "type ")
+            rows.append(line.replace("| ", label, 1))
+    return "\n".join(rows)
+
+
+def age_table() -> str:
+    rows = ["| Age band | Images | Balanced accuracy (ensemble) |", "| --- | ---: | --- |"]
+    return "\n".join(rows + group_rows("client_test", "age_band"))
+
+
+def alert_text() -> str:
+    eff = SUB["alert_rate_client_test"]["efficientnet_mean_over_seeds"]["client"]
+    vlm = SUB["alert_rate_client_test"]["biomedclip"]["client"]
+    e = ", ".join(f"{CLIENT_NAMES[c]} {pct(eff[c]['alert_rate']['mean'])}" for c in CLIENTS)
+    v = ", ".join(f"{CLIENT_NAMES[c]} {pct(vlm[c]['alert_rate'])}" for c in CLIENTS)
+    return (
+        "With the alert threshold at the 95th percentile of the client test split's scores (5% "
+        f"overall), the shipped detector (mean of 3 seeds) fires on {e}; on BiomedCLIP "
+        f"features, {v} "
+        "(`results/research/c_subgroups/results_v2.json`). An uneven alert rate is a fairness "
+        "question for the Phase 3 monitor; it is reported, not corrected."
+    )
+
+
+def gradcam_text() -> str:
+    r = REVIEW
+    return (
+        f"Grad-CAM maps for {r['images']} client-test images (the worst misses per class and the "
+        "most out-of-distribution), from the shipped seed-0 checkpoint, are on a review worksheet "
+        "(MLflow artifact and `workspace.cdm.gold_review_worksheet`). Weight-randomization check: "
+        f"mean rank correlation {r['randomization_spearman']['mean']:.3f} (range "
+        f"{r['randomization_spearman']['min']:.2f} to {r['randomization_spearman']['max']:.2f}) "
+        f"with a re-initialized network; {r['flagged_not_interpreted']} maps are flagged as not "
+        "interpretable. Mean "
+        f"agreement across seeds {r['seed_agreement_spearman']['mean']:.2f}. The maps are coarse "
+        "(7x7) and **not reviewed** by a clinician (`results/research/d_review/results.json`)."
+    )
+
+
 def model_card() -> str:
     cal = ENS["calibration"]
     ship = DRIFT["ship_rule"]
@@ -213,8 +336,8 @@ out-of-distribution detection, drift monitoring, federated learning, research pr
   a real federated deployment could not see.
 
 **Known biases or ethical considerations:** the four training sources are European, Australian
-and US dermatology collections; fairness across skin types is not assessed (a stated gap, PLAN.md
-Phase 2). Barcelona is {pct(share["barcelona"])} of training images and therefore also of FedAvg's
+and US dermatology collections. Skin type is recorded only at the two held-out sites; within
+them, types I to III are assessed (section 7) and types IV to VI are too rare to judge. Barcelona is {pct(share["barcelona"])} of training images and therefore also of FedAvg's
 aggregation weight.
 
 **Clinical risk level:** not assessed. The model is not for clinical use.
@@ -234,12 +357,14 @@ aggregation weight.
   {DATA["images"]["test"]:,} test images, split by lesion; training shares {", ".join(f"{CLIENT_NAMES[c]} {pct(share[c])}" for c in CLIENTS)}
   (`results/phase2/v2/training/data_summary.json`).
 - **Bias mitigation approaches:** lesion-level splits (no lesion in two splits, gated); class-
-  weighted loss; per-site and bordered/non-bordered reporting. No skin-type mitigation.
+  weighted loss; per-site, bordered/non-bordered, skin-type, age, sex and body-site reporting
+  (research Phase C). No mitigation beyond reporting.
 - **Ongoing maintenance:** planned in Phase 3 (monthly drift job, retraining with a champion/
   challenger test); not built. A stated gap.
 - **Security:** not served yet; no endpoint exists. A stated gap until Phase 3.
 - **Transparency:** code, configuration, evidence files and the silent-failure log are public in
   the repository.
+- **Explanations:** {gradcam_text()}
 
 ### Transparency information
 - **Funding source:** none (zero-cost project). **Third-party information:** dataset providers as
@@ -267,8 +392,25 @@ aggregation weight.
 
 {per_client()}
 
-- **Interpretation:** Barcelona, the largest client, is the weakest. Skin type is not assessed.
+- **Interpretation:** Barcelona, the largest client, is the weakest.
 - **Test type / data:** internal test split, per client.
+- **By Fitzpatrick skin type, within each held-out site** (95% bootstrap by patient, else lesion,
+  else image; images with no skin type recorded are listed too;
+  `results/research/c_subgroups/results_v2.json`):
+
+{skin_type_table()}
+
+  Within each site the intervals overlap, so no skin-type effect is claimed for types I to III;
+  types IV to VI cannot be judged.
+- **By age band, client test split:**
+
+{age_table()}
+
+  Under 30 has the lowest point estimate, though its interval overlaps the 30-44 band's: it
+  is mostly nevi, with the rarer classes missed. Balanced accuracy
+  averages only the classes present, so groups with different class mixes are not directly
+  comparable.
+- **Drift alerts by group.** {alert_text()}
 
 ### Safety and reliability
 - **Goal:** know when the model is outside its data, and how its errors move at new sites.
@@ -289,11 +431,20 @@ aggregation weight.
   Calibration: the ensemble's expected calibration error on test is {pct(cal["ece_before"], 2)}; temperature
   scaling fitted on validation made it worse ({pct(cal["ece_after"], 2)}), so the ensemble is used uncalibrated.
 - **External validation:** Buenos Aires and PAD-UFES-20 never contributed to training or model
-  choice. Seven-class accuracy at these sites is not computed yet (a stated gap); the external
-  results are the triage and drift results above.
+  choice. Seven-class results, labelled images only, with the analysis look's class mapping
+  (`results/phase2/analysis_look/results.json`, 95% bootstrap by lesion):
+
+{external_table()}
+
+### Comparison with an alternative model (research Phase B)
+A frozen medical vision-language model, BiomedCLIP, scored on the same client test split under its
+own committed specification and one test look (research use only, never served):
+
+{baseline_table()}
 
 ## 8. Resources
-- **Evaluation references:** `results/phase2/` (all files named above); `docs/phase2-note.md`.
+- **Evaluation references:** `results/phase2/` and `results/research/` (all files named above);
+  `docs/phase2-note.md`.
 - **Clinical trial:** none. **Peer-reviewed publications:** none. **Reimbursement status:** none.
 - **Patient consent or disclosure:** public, de-identified datasets used under their licences;
   no new patient data were collected.
@@ -318,7 +469,7 @@ This project is not certified health IT; the categories are used as a structure 
 | 2. Purpose of the intervention | 3, 4 (intended use) |
 | 3. Cautioned out-of-scope use | 4 (cautioned out-of-scope settings), 5 |
 | 4. Intervention development details and input features | 6 (model type, input data, development data) |
-| 5. Process used to ensure fairness in development | 6 (bias mitigation), 7 (fairness and equity) |
+| 5. Process used to ensure fairness in development | 6 (bias mitigation), 7 (fairness and equity: site, skin type, age, alert rates) |
 | 6. External validation process | 7 (external validation at Buenos Aires and PAD-UFES-20) |
 | 7. Quantitative measures of performance | 7 |
 | 8. Ongoing maintenance of implementation and use | 6 (ongoing maintenance): a stated gap until Phase 3 |
@@ -329,8 +480,8 @@ This project is not certified health IT; the categories are used as a structure 
 | Validity | Internal test with one look per model; external sites; section 7 |
 | Reliability | Mean and range over 3 seeds; bootstrap intervals by lesion |
 | Robustness | Drift detection and the sensitivity drop at new sites; hardware dependence of scores |
-| Fairness | Per-site and bordered results; skin type not assessed (gap) |
-| Intelligibility | Not addressed (no explanations); a stated gap |
+| Fairness | Per-site, skin-type (I to III, within site), age and alert-rate results; types IV to VI not assessable (gap) |
+| Intelligibility | Grad-CAM worksheet with a randomization sanity check (section 6); not reviewed by a clinician (gap) |
 | Safety | Not for clinical use; triage framing only; risks in section 5 |
 | Security | Not served; a stated gap until Phase 3 |
 | Privacy | Public de-identified data only; no patient data collected |
