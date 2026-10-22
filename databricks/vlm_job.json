@@ -1,0 +1,45 @@
+{
+  "name": "cdm-research-b-vlm-embed",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "gpu",
+      "spec": {
+        "base_environment": "databricks_ai_v6"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "embed",
+      "environment_key": "gpu",
+      "compute": {
+        "hardware_accelerator": "GPU_1xA10"
+      },
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 4500,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/vlm_embed",
+        "base_parameters": {
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/7e267e1/cdm-0.1.0-py3-none-any.whl",
+          "code_version": "7e267e1",
+          "model_zip": "/Volumes/workspace/cdm/raw/deploy/biomedclip/hf-cache-9f341de.zip",
+          "model_zip_sha256": "aea6ac07e25003b7100619c7a7142f995eb4a0faad48855aea9e33dd52086ac7",
+          "benchmarks": "/Volumes/workspace/cdm/raw/benchmarks/benchmarks.zip",
+          "benchmarks_sha256": "a9be34908815d4f48ef22fbadaaaa3fec7ad0127f9fdc4fe1c0d6de53d605ab8",
+          "deadline_minutes": "60",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}

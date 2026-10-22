@@ -1,0 +1,1329 @@
+{
+  "dry_run": true,
+  "seconds": 571.1,
+  "peak_memory_mb": 2231,
+  "classification": {
+    "client_val": {
+      "images": 3210,
+      "units": 1848,
+      "models": {
+        "zero_shot": {
+          "balanced_accuracy": 0.30660663092315205,
+          "macro_auroc": 0.7075956815217094,
+          "melanoma_sensitivity": 0.4376130198915009,
+          "accuracy": 0.23052959501557632,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21479713603818615,
+            "bkl": 0.026865671641791045,
+            "df": 0.7105263157894737,
+            "mel": 0.4376130198915009,
+            "nv": 0.20612980769230768,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 419,
+            "bkl": 335,
+            "df": 38,
+            "mel": 553,
+            "nv": 1664,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2644905740771752,
+              "high": 0.3417108863122987
+            },
+            "macro_auroc": {
+              "low": 0.684168982893363,
+              "high": 0.7271081105563678
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3705946629859673,
+              "high": 0.5018496503496503
+            }
+          }
+        },
+        "probe_seed0": {
+          "balanced_accuracy": 0.5353376734347306,
+          "macro_auroc": 0.8508502806898518,
+          "melanoma_sensitivity": 0.4394213381555154,
+          "accuracy": 0.5563862928348909,
+          "recall": {
+            "akiec": 0.49056603773584906,
+            "bcc": 0.5393794749403341,
+            "bkl": 0.3492537313432836,
+            "df": 0.5,
+            "mel": 0.4394213381555154,
+            "nv": 0.6430288461538461,
+            "vasc": 0.7857142857142857
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 419,
+            "bkl": 335,
+            "df": 38,
+            "mel": 553,
+            "nv": 1664,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.49046490191596465,
+              "high": 0.5782884099335246
+            },
+            "macro_auroc": {
+              "low": 0.8248125134101859,
+              "high": 0.8738306682288925
+            },
+            "melanoma_sensitivity": {
+              "low": 0.36139903329752954,
+              "high": 0.5179856748524653
+            }
+          }
+        },
+        "probe_seed1": {
+          "balanced_accuracy": 0.5335999124765447,
+          "macro_auroc": 0.8514369706120242,
+          "melanoma_sensitivity": 0.48282097649186256,
+          "accuracy": 0.5445482866043614,
+          "recall": {
+            "akiec": 0.41509433962264153,
+            "bcc": 0.4701670644391408,
+            "bkl": 0.4059701492537313,
+            "df": 0.6052631578947368,
+            "mel": 0.48282097649186256,
+            "nv": 0.6177884615384616,
+            "vasc": 0.7380952380952381
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 419,
+            "bkl": 335,
+            "df": 38,
+            "mel": 553,
+            "nv": 1664,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.48051983965633926,
+              "high": 0.5801897158231969
+            },
+            "macro_auroc": {
+              "low": 0.8256170421475096,
+              "high": 0.8738477986410701
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3995976453878008,
+              "high": 0.5602892459315085
+            }
+          }
+        },
+        "probe_seed2": {
+          "balanced_accuracy": 0.5403242638318192,
+          "macro_auroc": 0.8505730398960604,
+          "melanoma_sensitivity": 0.4719710669077758,
+          "accuracy": 0.5557632398753894,
+          "recall": {
+            "akiec": 0.4528301886792453,
+            "bcc": 0.5560859188544153,
+            "bkl": 0.3880597014925373,
+            "df": 0.5526315789473685,
+            "mel": 0.4719710669077758,
+            "nv": 0.6225961538461539,
+            "vasc": 0.7380952380952381
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 419,
+            "bkl": 335,
+            "df": 38,
+            "mel": 553,
+            "nv": 1664,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.4908820628999946,
+              "high": 0.5840323752881205
+            },
+            "macro_auroc": {
+              "low": 0.8239415122294141,
+              "high": 0.8731431829542101
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3873532000733541,
+              "high": 0.5507534079100189
+            }
+          }
+        },
+        "stand_in_v2-ensemble-final-seeds0-1-2": {
+          "balanced_accuracy": 0.30660663092315205,
+          "macro_auroc": 0.7075956815217094,
+          "melanoma_sensitivity": 0.4376130198915009,
+          "accuracy": 0.23052959501557632,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21479713603818615,
+            "bkl": 0.026865671641791045,
+            "df": 0.7105263157894737,
+            "mel": 0.4376130198915009,
+            "nv": 0.20612980769230768,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 419,
+            "bkl": 335,
+            "df": 38,
+            "mel": 553,
+            "nv": 1664,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2644905740771752,
+              "high": 0.3417108863122987
+            },
+            "macro_auroc": {
+              "low": 0.684168982893363,
+              "high": 0.7271081105563678
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3705946629859673,
+              "high": 0.5018496503496503
+            }
+          }
+        },
+        "stand_in_v2-final-seed0": {
+          "balanced_accuracy": 0.30660663092315205,
+          "macro_auroc": 0.7075956815217094,
+          "melanoma_sensitivity": 0.4376130198915009,
+          "accuracy": 0.23052959501557632,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21479713603818615,
+            "bkl": 0.026865671641791045,
+            "df": 0.7105263157894737,
+            "mel": 0.4376130198915009,
+            "nv": 0.20612980769230768,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 419,
+            "bkl": 335,
+            "df": 38,
+            "mel": 553,
+            "nv": 1664,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2644905740771752,
+              "high": 0.3417108863122987
+            },
+            "macro_auroc": {
+              "low": 0.684168982893363,
+              "high": 0.7271081105563678
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3705946629859673,
+              "high": 0.5018496503496503
+            }
+          }
+        },
+        "stand_in_v2-final-seed1": {
+          "balanced_accuracy": 0.30660663092315205,
+          "macro_auroc": 0.7075956815217094,
+          "melanoma_sensitivity": 0.4376130198915009,
+          "accuracy": 0.23052959501557632,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21479713603818615,
+            "bkl": 0.026865671641791045,
+            "df": 0.7105263157894737,
+            "mel": 0.4376130198915009,
+            "nv": 0.20612980769230768,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 419,
+            "bkl": 335,
+            "df": 38,
+            "mel": 553,
+            "nv": 1664,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2644905740771752,
+              "high": 0.3417108863122987
+            },
+            "macro_auroc": {
+              "low": 0.684168982893363,
+              "high": 0.7271081105563678
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3705946629859673,
+              "high": 0.5018496503496503
+            }
+          }
+        },
+        "stand_in_v2-final-seed2": {
+          "balanced_accuracy": 0.30660663092315205,
+          "macro_auroc": 0.7075956815217094,
+          "melanoma_sensitivity": 0.4376130198915009,
+          "accuracy": 0.23052959501557632,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21479713603818615,
+            "bkl": 0.026865671641791045,
+            "df": 0.7105263157894737,
+            "mel": 0.4376130198915009,
+            "nv": 0.20612980769230768,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 419,
+            "bkl": 335,
+            "df": 38,
+            "mel": 553,
+            "nv": 1664,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2644905740771752,
+              "high": 0.3417108863122987
+            },
+            "macro_auroc": {
+              "low": 0.684168982893363,
+              "high": 0.7271081105563678
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3705946629859673,
+              "high": 0.5018496503496503
+            }
+          }
+        }
+      },
+      "probe_over_seeds": {
+        "balanced_accuracy": {
+          "mean": 0.5364206165810316,
+          "min": 0.5335999124765447,
+          "max": 0.5403242638318192
+        },
+        "melanoma_sensitivity": {
+          "mean": 0.46473779385171793,
+          "min": 0.4394213381555154,
+          "max": 0.48282097649186256
+        }
+      },
+      "paired_vs_stand_in_v2-ensemble-final-seeds0-1-2": {
+        "zero_shot": {
+          "balanced_accuracy": {
+            "difference": 0.0,
+            "low": 0.0,
+            "high": 0.0
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.0,
+            "low": 0.0,
+            "high": 0.0
+          }
+        },
+        "probe_seed0": {
+          "balanced_accuracy": {
+            "difference": 0.22873104251157855,
+            "low": 0.18202792305560617,
+            "high": 0.2846187475180803
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.0018083182640144524,
+            "low": -0.08773370798659894,
+            "high": 0.09668655865785777
+          }
+        },
+        "probe_seed1": {
+          "balanced_accuracy": {
+            "difference": 0.22699328155339266,
+            "low": 0.17391269554746314,
+            "high": 0.2863028484037841
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.04520795660036164,
+            "low": -0.04470154512053954,
+            "high": 0.1433531179645169
+          }
+        },
+        "probe_seed2": {
+          "balanced_accuracy": {
+            "difference": 0.23371763290866715,
+            "low": 0.18262922152415148,
+            "high": 0.29634409591904803
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.03435804701627487,
+            "low": -0.05123301706714572,
+            "high": 0.12832943651727657
+          }
+        }
+      }
+    },
+    "client_val_without_overlap_patients": {
+      "images": 3152,
+      "units": 1823,
+      "models": {
+        "zero_shot": {
+          "balanced_accuracy": 0.30526313252655435,
+          "macro_auroc": 0.7079076044537623,
+          "melanoma_sensitivity": 0.43047619047619046,
+          "accuracy": 0.22779187817258884,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21204819277108433,
+            "bkl": 0.027522935779816515,
+            "df": 0.7105263157894737,
+            "mel": 0.43047619047619046,
+            "nv": 0.20595382746051033,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 415,
+            "bkl": 327,
+            "df": 38,
+            "mel": 525,
+            "nv": 1646,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2646567744709565,
+              "high": 0.34076512724587604
+            },
+            "macro_auroc": {
+              "low": 0.6841776564291029,
+              "high": 0.7279379189643895
+            },
+            "melanoma_sensitivity": {
+              "low": 0.368197572531966,
+              "high": 0.49113897152571184
+            }
+          }
+        },
+        "probe_seed0": {
+          "balanced_accuracy": 0.5374717176514193,
+          "macro_auroc": 0.8515533907938171,
+          "melanoma_sensitivity": 0.44761904761904764,
+          "accuracy": 0.5605964467005076,
+          "recall": {
+            "akiec": 0.49056603773584906,
+            "bcc": 0.5445783132530121,
+            "bkl": 0.3486238532110092,
+            "df": 0.5,
+            "mel": 0.44761904761904764,
+            "nv": 0.6452004860267315,
+            "vasc": 0.7857142857142857
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 415,
+            "bkl": 327,
+            "df": 38,
+            "mel": 525,
+            "nv": 1646,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.4908959492360479,
+              "high": 0.583740290660141
+            },
+            "macro_auroc": {
+              "low": 0.8240105111432173,
+              "high": 0.8745225918676979
+            },
+            "melanoma_sensitivity": {
+              "low": 0.35903940132558476,
+              "high": 0.5251335637963545
+            }
+          }
+        },
+        "probe_seed1": {
+          "balanced_accuracy": 0.5345969134640062,
+          "macro_auroc": 0.852187870216568,
+          "melanoma_sensitivity": 0.4838095238095238,
+          "accuracy": 0.5472715736040609,
+          "recall": {
+            "akiec": 0.41509433962264153,
+            "bcc": 0.472289156626506,
+            "bkl": 0.40672782874617736,
+            "df": 0.6052631578947368,
+            "mel": 0.4838095238095238,
+            "nv": 0.6208991494532199,
+            "vasc": 0.7380952380952381
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 415,
+            "bkl": 327,
+            "df": 38,
+            "mel": 525,
+            "nv": 1646,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.48334092043413196,
+              "high": 0.5866107881511453
+            },
+            "macro_auroc": {
+              "low": 0.8250068018747556,
+              "high": 0.8754814941690681
+            },
+            "melanoma_sensitivity": {
+              "low": 0.3926836228978728,
+              "high": 0.5619584289905479
+            }
+          }
+        },
+        "probe_seed2": {
+          "balanced_accuracy": 0.541918160685855,
+          "macro_auroc": 0.8514456554415573,
+          "melanoma_sensitivity": 0.4742857142857143,
+          "accuracy": 0.5593274111675127,
+          "recall": {
+            "akiec": 0.4528301886792453,
+            "bcc": 0.5614457831325301,
+            "bkl": 0.38837920489296635,
+            "df": 0.5526315789473685,
+            "mel": 0.4742857142857143,
+            "nv": 0.6257594167679222,
+            "vasc": 0.7380952380952381
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 415,
+            "bkl": 327,
+            "df": 38,
+            "mel": 525,
+            "nv": 1646,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.49492821049792846,
+              "high": 0.5897488079816965
+            },
+            "macro_auroc": {
+              "low": 0.824513438924835,
+              "high": 0.8745002937797913
+            },
+            "melanoma_sensitivity": {
+              "low": 0.386835899743359,
+              "high": 0.5482476673101674
+            }
+          }
+        },
+        "stand_in_v2-ensemble-final-seeds0-1-2": {
+          "balanced_accuracy": 0.30526313252655435,
+          "macro_auroc": 0.7079076044537623,
+          "melanoma_sensitivity": 0.43047619047619046,
+          "accuracy": 0.22779187817258884,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21204819277108433,
+            "bkl": 0.027522935779816515,
+            "df": 0.7105263157894737,
+            "mel": 0.43047619047619046,
+            "nv": 0.20595382746051033,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 415,
+            "bkl": 327,
+            "df": 38,
+            "mel": 525,
+            "nv": 1646,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2646567744709565,
+              "high": 0.34076512724587604
+            },
+            "macro_auroc": {
+              "low": 0.6841776564291029,
+              "high": 0.7279379189643895
+            },
+            "melanoma_sensitivity": {
+              "low": 0.368197572531966,
+              "high": 0.49113897152571184
+            }
+          }
+        },
+        "stand_in_v2-final-seed0": {
+          "balanced_accuracy": 0.30526313252655435,
+          "macro_auroc": 0.7079076044537623,
+          "melanoma_sensitivity": 0.43047619047619046,
+          "accuracy": 0.22779187817258884,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21204819277108433,
+            "bkl": 0.027522935779816515,
+            "df": 0.7105263157894737,
+            "mel": 0.43047619047619046,
+            "nv": 0.20595382746051033,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 415,
+            "bkl": 327,
+            "df": 38,
+            "mel": 525,
+            "nv": 1646,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2646567744709565,
+              "high": 0.34076512724587604
+            },
+            "macro_auroc": {
+              "low": 0.6841776564291029,
+              "high": 0.7279379189643895
+            },
+            "melanoma_sensitivity": {
+              "low": 0.368197572531966,
+              "high": 0.49113897152571184
+            }
+          }
+        },
+        "stand_in_v2-final-seed1": {
+          "balanced_accuracy": 0.30526313252655435,
+          "macro_auroc": 0.7079076044537623,
+          "melanoma_sensitivity": 0.43047619047619046,
+          "accuracy": 0.22779187817258884,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21204819277108433,
+            "bkl": 0.027522935779816515,
+            "df": 0.7105263157894737,
+            "mel": 0.43047619047619046,
+            "nv": 0.20595382746051033,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 415,
+            "bkl": 327,
+            "df": 38,
+            "mel": 525,
+            "nv": 1646,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2646567744709565,
+              "high": 0.34076512724587604
+            },
+            "macro_auroc": {
+              "low": 0.6841776564291029,
+              "high": 0.7279379189643895
+            },
+            "melanoma_sensitivity": {
+              "low": 0.368197572531966,
+              "high": 0.49113897152571184
+            }
+          }
+        },
+        "stand_in_v2-final-seed2": {
+          "balanced_accuracy": 0.30526313252655435,
+          "macro_auroc": 0.7079076044537623,
+          "melanoma_sensitivity": 0.43047619047619046,
+          "accuracy": 0.22779187817258884,
+          "recall": {
+            "akiec": 0.050314465408805034,
+            "bcc": 0.21204819277108433,
+            "bkl": 0.027522935779816515,
+            "df": 0.7105263157894737,
+            "mel": 0.43047619047619046,
+            "nv": 0.20595382746051033,
+            "vasc": 0.5
+          },
+          "support": {
+            "akiec": 159,
+            "bcc": 415,
+            "bkl": 327,
+            "df": 38,
+            "mel": 525,
+            "nv": 1646,
+            "vasc": 42
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2646567744709565,
+              "high": 0.34076512724587604
+            },
+            "macro_auroc": {
+              "low": 0.6841776564291029,
+              "high": 0.7279379189643895
+            },
+            "melanoma_sensitivity": {
+              "low": 0.368197572531966,
+              "high": 0.49113897152571184
+            }
+          }
+        }
+      },
+      "probe_over_seeds": {
+        "balanced_accuracy": {
+          "mean": 0.5379955972670935,
+          "min": 0.5345969134640062,
+          "max": 0.541918160685855
+        },
+        "melanoma_sensitivity": {
+          "mean": 0.4685714285714286,
+          "min": 0.44761904761904764,
+          "max": 0.4838095238095238
+        }
+      },
+      "paired_vs_stand_in_v2-ensemble-final-seeds0-1-2": {
+        "zero_shot": {
+          "balanced_accuracy": {
+            "difference": 0.0,
+            "low": 0.0,
+            "high": 0.0
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.0,
+            "low": 0.0,
+            "high": 0.0
+          }
+        },
+        "probe_seed0": {
+          "balanced_accuracy": {
+            "difference": 0.23220858512486497,
+            "low": 0.18438970921458994,
+            "high": 0.28754583007828133
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.017142857142857182,
+            "low": -0.08001104100946374,
+            "high": 0.1049629365396997
+          }
+        },
+        "probe_seed1": {
+          "balanced_accuracy": {
+            "difference": 0.22933378093745183,
+            "low": 0.17481640996758258,
+            "high": 0.28760439837527485
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.053333333333333344,
+            "low": -0.05180052897653086,
+            "high": 0.14608907495208306
+          }
+        },
+        "probe_seed2": {
+          "balanced_accuracy": {
+            "difference": 0.23665502815930062,
+            "low": 0.18526144185956403,
+            "high": 0.2950581011796472
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.043809523809523854,
+            "low": -0.04977573811174772,
+            "high": 0.13322373863341938
+          }
+        }
+      }
+    },
+    "ham10000_val": {
+      "images": 1443,
+      "units": 1120,
+      "models": {
+        "zero_shot": {
+          "balanced_accuracy": 0.35562758409606054,
+          "macro_auroc": 0.7311005129575966,
+          "melanoma_sensitivity": 0.44871794871794873,
+          "accuracy": 0.17325017325017325,
+          "recall": {
+            "akiec": 0.0975609756097561,
+            "bcc": 0.4027777777777778,
+            "bkl": 0.02564102564102564,
+            "df": 0.7857142857142857,
+            "mel": 0.44871794871794873,
+            "nv": 0.12028542303771661,
+            "vasc": 0.6086956521739131
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2957746791834313,
+              "high": 0.4124474944530615
+            },
+            "macro_auroc": {
+              "low": 0.6987741552250603,
+              "high": 0.7592595166927408
+            },
+            "melanoma_sensitivity": {
+              "low": 0.35440295358649787,
+              "high": 0.5465393133997785
+            }
+          }
+        },
+        "probe_seed0": {
+          "balanced_accuracy": 0.5937304752022496,
+          "macro_auroc": 0.9036079032182939,
+          "melanoma_sensitivity": 0.28846153846153844,
+          "accuracy": 0.6722106722106722,
+          "recall": {
+            "akiec": 0.3902439024390244,
+            "bcc": 0.5416666666666666,
+            "bkl": 0.4551282051282051,
+            "df": 0.7857142857142857,
+            "mel": 0.28846153846153844,
+            "nv": 0.781855249745158,
+            "vasc": 0.9130434782608695
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5432621282798081,
+              "high": 0.6449335162035326
+            },
+            "macro_auroc": {
+              "low": 0.8880616154214444,
+              "high": 0.9188722490134273
+            },
+            "melanoma_sensitivity": {
+              "low": 0.2086813065548444,
+              "high": 0.37242548217416716
+            }
+          }
+        },
+        "probe_seed1": {
+          "balanced_accuracy": 0.6035461464834133,
+          "macro_auroc": 0.9024174087324176,
+          "melanoma_sensitivity": 0.3076923076923077,
+          "accuracy": 0.659043659043659,
+          "recall": {
+            "akiec": 0.36585365853658536,
+            "bcc": 0.5277777777777778,
+            "bkl": 0.5,
+            "df": 0.8571428571428571,
+            "mel": 0.3076923076923077,
+            "nv": 0.7533129459734964,
+            "vasc": 0.9130434782608695
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5596553181606828,
+              "high": 0.6539240129470485
+            },
+            "macro_auroc": {
+              "low": 0.8861137805663825,
+              "high": 0.9185867803977331
+            },
+            "melanoma_sensitivity": {
+              "low": 0.22041935483870967,
+              "high": 0.3985531727379553
+            }
+          }
+        },
+        "probe_seed2": {
+          "balanced_accuracy": 0.5970985766068245,
+          "macro_auroc": 0.9021905231724343,
+          "melanoma_sensitivity": 0.3525641025641026,
+          "accuracy": 0.6611226611226612,
+          "recall": {
+            "akiec": 0.4146341463414634,
+            "bcc": 0.4722222222222222,
+            "bkl": 0.48717948717948717,
+            "df": 0.7857142857142857,
+            "mel": 0.3525641025641026,
+            "nv": 0.7543323139653415,
+            "vasc": 0.9130434782608695
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.5478515773616315,
+              "high": 0.6494368857672955
+            },
+            "macro_auroc": {
+              "low": 0.8860539411041476,
+              "high": 0.917897308265071
+            },
+            "melanoma_sensitivity": {
+              "low": 0.2594748605824555,
+              "high": 0.44505995828988526
+            }
+          }
+        },
+        "stand_in_v2-ensemble-final-seeds0-1-2": {
+          "balanced_accuracy": 0.35562758409606054,
+          "macro_auroc": 0.7311005129575966,
+          "melanoma_sensitivity": 0.44871794871794873,
+          "accuracy": 0.17325017325017325,
+          "recall": {
+            "akiec": 0.0975609756097561,
+            "bcc": 0.4027777777777778,
+            "bkl": 0.02564102564102564,
+            "df": 0.7857142857142857,
+            "mel": 0.44871794871794873,
+            "nv": 0.12028542303771661,
+            "vasc": 0.6086956521739131
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2957746791834313,
+              "high": 0.4124474944530615
+            },
+            "macro_auroc": {
+              "low": 0.6987741552250603,
+              "high": 0.7592595166927408
+            },
+            "melanoma_sensitivity": {
+              "low": 0.35440295358649787,
+              "high": 0.5465393133997785
+            }
+          }
+        },
+        "stand_in_v2-final-seed0": {
+          "balanced_accuracy": 0.35562758409606054,
+          "macro_auroc": 0.7311005129575966,
+          "melanoma_sensitivity": 0.44871794871794873,
+          "accuracy": 0.17325017325017325,
+          "recall": {
+            "akiec": 0.0975609756097561,
+            "bcc": 0.4027777777777778,
+            "bkl": 0.02564102564102564,
+            "df": 0.7857142857142857,
+            "mel": 0.44871794871794873,
+            "nv": 0.12028542303771661,
+            "vasc": 0.6086956521739131
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2957746791834313,
+              "high": 0.4124474944530615
+            },
+            "macro_auroc": {
+              "low": 0.6987741552250603,
+              "high": 0.7592595166927408
+            },
+            "melanoma_sensitivity": {
+              "low": 0.35440295358649787,
+              "high": 0.5465393133997785
+            }
+          }
+        },
+        "stand_in_v2-final-seed1": {
+          "balanced_accuracy": 0.35562758409606054,
+          "macro_auroc": 0.7311005129575966,
+          "melanoma_sensitivity": 0.44871794871794873,
+          "accuracy": 0.17325017325017325,
+          "recall": {
+            "akiec": 0.0975609756097561,
+            "bcc": 0.4027777777777778,
+            "bkl": 0.02564102564102564,
+            "df": 0.7857142857142857,
+            "mel": 0.44871794871794873,
+            "nv": 0.12028542303771661,
+            "vasc": 0.6086956521739131
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2957746791834313,
+              "high": 0.4124474944530615
+            },
+            "macro_auroc": {
+              "low": 0.6987741552250603,
+              "high": 0.7592595166927408
+            },
+            "melanoma_sensitivity": {
+              "low": 0.35440295358649787,
+              "high": 0.5465393133997785
+            }
+          }
+        },
+        "stand_in_v2-final-seed2": {
+          "balanced_accuracy": 0.35562758409606054,
+          "macro_auroc": 0.7311005129575966,
+          "melanoma_sensitivity": 0.44871794871794873,
+          "accuracy": 0.17325017325017325,
+          "recall": {
+            "akiec": 0.0975609756097561,
+            "bcc": 0.4027777777777778,
+            "bkl": 0.02564102564102564,
+            "df": 0.7857142857142857,
+            "mel": 0.44871794871794873,
+            "nv": 0.12028542303771661,
+            "vasc": 0.6086956521739131
+          },
+          "support": {
+            "akiec": 41,
+            "bcc": 72,
+            "bkl": 156,
+            "df": 14,
+            "mel": 156,
+            "nv": 981,
+            "vasc": 23
+          },
+          "bootstrap_95": {
+            "resamples": 1000,
+            "seed": 0,
+            "balanced_accuracy": {
+              "low": 0.2957746791834313,
+              "high": 0.4124474944530615
+            },
+            "macro_auroc": {
+              "low": 0.6987741552250603,
+              "high": 0.7592595166927408
+            },
+            "melanoma_sensitivity": {
+              "low": 0.35440295358649787,
+              "high": 0.5465393133997785
+            }
+          }
+        }
+      },
+      "probe_over_seeds": {
+        "balanced_accuracy": {
+          "mean": 0.5981250660974958,
+          "min": 0.5937304752022496,
+          "max": 0.6035461464834133
+        },
+        "melanoma_sensitivity": {
+          "mean": 0.3162393162393162,
+          "min": 0.28846153846153844,
+          "max": 0.3525641025641026
+        }
+      },
+      "paired_vs_stand_in_v2-ensemble-final-seeds0-1-2": {
+        "zero_shot": {
+          "balanced_accuracy": {
+            "difference": 0.0,
+            "low": 0.0,
+            "high": 0.0
+          },
+          "melanoma_sensitivity": {
+            "difference": 0.0,
+            "low": 0.0,
+            "high": 0.0
+          }
+        },
+        "probe_seed0": {
+          "balanced_accuracy": {
+            "difference": 0.2381028911061891,
+            "low": 0.16546566480125424,
+            "high": 0.3217595980315127
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.1602564102564103,
+            "low": -0.27104068214505855,
+            "high": -0.04760306807286674
+          }
+        },
+        "probe_seed1": {
+          "balanced_accuracy": {
+            "difference": 0.24791856238735277,
+            "low": 0.17563009958259246,
+            "high": 0.3296200137638621
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.14102564102564102,
+            "low": -0.25301586091200245,
+            "high": -0.03288936188510492
+          }
+        },
+        "probe_seed2": {
+          "balanced_accuracy": {
+            "difference": 0.24147099251076398,
+            "low": 0.1649281952844225,
+            "high": 0.3246413350068446
+          },
+          "melanoma_sensitivity": {
+            "difference": -0.09615384615384615,
+            "low": -0.21569612769731003,
+            "high": 0.022414295708955208
+          }
+        }
+      }
+    }
+  },
+  "drift": {
+    "in_distribution": "val",
+    "pca_components_method_d": 70,
+    "mahalanobis": {
+      "pathmnist_select": {
+        "auroc": 0.9999791277258566,
+        "fpr95": 0.0
+      },
+      "cifar10_select": {
+        "auroc": 0.9999869158878505,
+        "fpr95": 0.0
+      }
+    },
+    "zero_shot": {
+      "max_softmax": {
+        "pathmnist_select": {
+          "auroc": 0.2902507788161994,
+          "fpr95": 0.987
+        },
+        "cifar10_select": {
+          "auroc": 0.22494890965732084,
+          "fpr95": 0.993
+        }
+      },
+      "energy": {
+        "pathmnist_select": {
+          "auroc": 0.9999485981308411,
+          "fpr95": 0.0
+        },
+        "cifar10_select": {
+          "auroc": 0.9994713395638629,
+          "fpr95": 0.001
+        }
+      }
+    },
+    "probe_by_seed": {
+      "probe_seed0": {
+        "max_softmax": {
+          "pathmnist_select": {
+            "auroc": 0.2682367601246106,
+            "fpr95": 0.997
+          },
+          "cifar10_select": {
+            "auroc": 0.15055576323987538,
+            "fpr95": 1.0
+          }
+        },
+        "energy": {
+          "pathmnist_select": {
+            "auroc": 0.322513707165109,
+            "fpr95": 0.916
+          },
+          "cifar10_select": {
+            "auroc": 0.21971682242990653,
+            "fpr95": 0.961
+          }
+        }
+      },
+      "probe_seed1": {
+        "max_softmax": {
+          "pathmnist_select": {
+            "auroc": 0.2699919003115265,
+            "fpr95": 0.998
+          },
+          "cifar10_select": {
+            "auroc": 0.16477289719626168,
+            "fpr95": 0.999
+          }
+        },
+        "energy": {
+          "pathmnist_select": {
+            "auroc": 0.3079510903426791,
+            "fpr95": 0.924
+          },
+          "cifar10_select": {
+            "auroc": 0.24862959501557635,
+            "fpr95": 0.932
+          }
+        }
+      },
+      "probe_seed2": {
+        "max_softmax": {
+          "pathmnist_select": {
+            "auroc": 0.2876778816199377,
+            "fpr95": 0.998
+          },
+          "cifar10_select": {
+            "auroc": 0.18307881619937696,
+            "fpr95": 0.999
+          }
+        },
+        "energy": {
+          "pathmnist_select": {
+            "auroc": 0.27864672897196263,
+            "fpr95": 0.958
+          },
+          "cifar10_select": {
+            "auroc": 0.23625981308411215,
+            "fpr95": 0.95
+          }
+        }
+      }
+    },
+    "probe_over_seeds": {
+      "max_softmax": {
+        "pathmnist_select": {
+          "auroc": {
+            "mean": 0.2753021806853582,
+            "min": 0.2682367601246106,
+            "max": 0.2876778816199377
+          },
+          "fpr95": {
+            "mean": 0.9976666666666668,
+            "min": 0.997,
+            "max": 0.998
+          }
+        },
+        "cifar10_select": {
+          "auroc": {
+            "mean": 0.16613582554517134,
+            "min": 0.15055576323987538,
+            "max": 0.18307881619937696
+          },
+          "fpr95": {
+            "mean": 0.9993333333333334,
+            "min": 0.999,
+            "max": 1.0
+          }
+        }
+      },
+      "energy": {
+        "pathmnist_select": {
+          "auroc": {
+            "mean": 0.30303717549325027,
+            "min": 0.27864672897196263,
+            "max": 0.322513707165109
+          },
+          "fpr95": {
+            "mean": 0.9326666666666666,
+            "min": 0.916,
+            "max": 0.958
+          }
+        },
+        "cifar10_select": {
+          "auroc": {
+            "mean": 0.234868743509865,
+            "min": 0.21971682242990653,
+            "max": 0.24862959501557635
+          },
+          "fpr95": {
+            "mean": 0.9476666666666667,
+            "min": 0.932,
+            "max": 0.961
+          }
+        }
+      }
+    }
+  }
+}

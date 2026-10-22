@@ -116,6 +116,26 @@ Known limits:
 - Not built: the `observation` table listed in PLAN.md. Every mapped field has a home in
   another table, so it would be empty.
 
+### Research Phase B: BiomedCLIP baseline (built 2026-10-22)
+
+- `cdm.vlm` (pinned BiomedCLIP, zero-shot, drift metrics, paired bootstrap) and `cdm.probe`
+  (3-seed linear probe), tested in CI with a fake model, including that drift scores point
+  the right way.
+- One Databricks serverless GPU job embedded every image (`databricks/vlm_job.json`, run
+  1040483728228282, 186 seconds of embedding); embeddings in `workspace.cdm.gold_vlm_embeddings`.
+- `scripts/vlm_baseline.py`: `select` on train and validation wrote the committed spec; one
+  test look ran as a serverless CPU job (`databricks/vlm_look_job.json`, run
+  930314930675108) after a dry run on validation. The lock is written only after the
+  results are saved. Results and spec are logged to MLflow; numbers in the README.
+- The look's trail: a first attempt on the laptop was stopped by Claude Code for low system
+  memory before it wrote its started lock (that code wrote the lock before scoring any test
+  image, and no lock file was left), so no metric was computed or seen. Then dry runs on
+  validation on the laptop and on Databricks (`results/research/b_vlm/dry_run/`), the
+  preflight (`vlm_baseline.py preflight --code-version f4cf563`) passed, and the job ran once
+  with `mode=look`. Its wheel (`deploy/f4cf563/cdm-0.1.0-py3-none-any.whl`) had sha256
+  `47e1bc6fe2f3ebdc2c5c7b782f16b75f306cd6bdfa459a114c0aee43ba1e4afa` when uploaded; the job
+  did not check it (later jobs do).
+
 ### Research Phase G: research informatics services (2026-10-21 and 22)
 
 - G1: `docs/EVAL_PLAN.md`, `docs/governance.md`, the request issue form and the project board.
@@ -167,7 +187,7 @@ Known limits:
 
 ## Not started
 
-- Research extension Phases B (BiomedCLIP) and E (fusion): no code yet. Detailed plans are in
+- Research extension Phase E (fusion): no code yet. Detailed plans are in
   PLAN.md ("Detailed plans for B to F").
 - Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.
