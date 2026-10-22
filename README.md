@@ -130,6 +130,32 @@ Column-by-column definitions, null rates and caveats are in
 Full Phase 2 record: [docs/phase2-note.md](docs/phase2-note.md). Data engineering:
 [docs/phase1-note.md](docs/phase1-note.md).
 
+## Research informatics services (Phase G)
+
+A small research data service on top of the OMOP tables. It is a portfolio build on public
+data and **synthetic** requests, not a clinical service.
+
+- **Requests** come in through an issue form and are tracked on the
+  [Research data requests](https://github.com/users/erjonb19/projects/2) board. Seven
+  synthetic requests (#8 to #14, labelled `synthetic`) went through the whole path.
+- **Governed cohort service** (`src/cdm/cohort.py`, `phenotypes/`): versioned YAML phenotypes
+  in an allowlisted language; a definition runs only after a reviewer approves its exact hash;
+  every refusal, decision and run goes to a hash-chained audit log. Counts under 11 are
+  suppressed, as are counts that subtraction would reveal, both within a result and against
+  earlier results for nested definitions (`docs/silent-failures.md` 10). It runs on DuckDB and
+  on Databricks SQL.
+- **Service metrics:** [docs/service_metrics.md](docs/service_metrics.md), generated from the
+  issue tracker, the audit log and committed results.
+- **FAIR packaging:** `metadata/dataset.jsonld`, `CITATION.cff`, and an investigator
+  quickstart notebook (`notebooks/quickstart.ipynb`) that runs on public PAD-UFES-20 metadata.
+- **Protocol and governance:** [docs/EVAL_PLAN.md](docs/EVAL_PLAN.md) and
+  [docs/governance.md](docs/governance.md).
+- **Clinical text extraction** (`src/cdm/extract.py`, `scripts/extraction.py`): Claude Haiku
+  reads a note and returns diagnosis, body site and histopathology confirmation as Phase A
+  concept IDs, against a keyword baseline. It is built and tested on made-up notes only. It has
+  not been scored: that needs MTSamples notes and a labelled set, so there are no extraction
+  results yet. Note text never enters the repository.
+
 ## Phase 0 results (HAM10000 only, CPU, history)
 
 Kept as the record of fixing the course notebook's science. These numbers are HAM10000-only
