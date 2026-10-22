@@ -79,3 +79,37 @@ def summarize(values: Sequence[float]) -> dict[str, float]:
     """Mean and range over seeds."""
     arr = np.asarray(values, dtype=np.float64)
     return {"mean": float(arr.mean()), "min": float(arr.min()), "max": float(arr.max())}
+
+
+MIN_GROUP = 100  # the repo's minimum for a reported metric (research Phase C)
+
+
+def subgroup_table(
+    labels: NDArray[np.int64],
+    logits: Array,
+    groups: Sequence[str],
+    min_n: int = MIN_GROUP,
+) -> list[dict[str, object]]:
+    """Balanced accuracy and melanoma sensitivity per group (age band, sex, body site, skin
+    type). A group with fewer than ``min_n`` images gets its count and a warning, no metric;
+    melanoma sensitivity also needs ``min_n`` melanoma images. Intervals come from the caller,
+    resampled by patient or lesion as in :func:`cdm.final.bootstrap_by_lesion`."""
+    keys = np.asarray(groups, dtype=object)
+    mel = CLASSES.index("mel")
+    rows: list[dict[str, object]] = []
+    for group in sorted(set(keys.tolist()), key=str):
+        mask = keys == group
+        n, n_mel = int(mask.sum()), int((labels[mask] == mel).sum())
+        row: dict[str, object] = {"group": group, "images": n, "melanoma_images": n_mel}
+        if n < min_n:
+            row["warning"] = f"fewer than {min_n} images: count only"
+            rows.append(row)
+            continue
+        metrics = classification_metrics(labels[mask], logits[mask])
+        row["balanced_accuracy"] = metrics["balanced_accuracy"]
+        if n_mel >= min_n:
+            row["melanoma_sensitivity"] = metrics["melanoma_sensitivity"]
+        else:
+            row["warning"] = f"fewer than {min_n} melanoma images: no melanoma sensitivity"
+        rows.append(row)
+    return rows
