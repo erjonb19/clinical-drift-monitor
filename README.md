@@ -104,6 +104,8 @@ The lakehouse also publishes **OMOP CDM v5.4-style tables** from silver:
 
 Seven quality gates fail the pipeline update on any violation: keys, foreign keys, every
 source value mapped, concepts resolve, row counts, one label per lesion, required columns.
+A failed update stops the job before gold, but the `omop_*` views do not wait for the gate:
+they can refresh in the same update. So this is fail-loud, not write-audit-publish.
 Every source value maps to an OMOP concept ID looked up in an Athena download, never from
 memory, or to concept 0 with a stated reason. SNOMED codes and names stay inside the
 workspace; the repository holds concept IDs only.
@@ -118,7 +120,9 @@ workspace; the repository holds concept IDs only.
 Build `0239a19`, pipeline update `5992b755`, all seven gates passed:
 `results/research/a_omop/build.json`. Concepts: `results/research/a_omop/concept_check.json`.
 Column-by-column definitions, null rates and caveats are in
-[docs/data_dictionary.md](docs/data_dictionary.md).
+[docs/data_dictionary.md](docs/data_dictionary.md). Unity Catalog lineage runs from the bronze
+tables through `silver_metadata` and `silver_decoded` into every OMOP table:
+`results/research/a_omop/lineage.json`, read from `system.access.table_lineage`.
 
 **Caveats**
 - Dates are placeholders, because the sources record none.
