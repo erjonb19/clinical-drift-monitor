@@ -74,3 +74,12 @@ def test_subgroups_below_the_minimum_get_counts_and_a_warning_only() -> None:
     assert "melanoma_sensitivity" in rows["60-69"]
     # Groups partition the data.
     assert sum(int(r["images"]) for r in rows.values()) == 280  # type: ignore[call-overload]
+
+
+def test_missing_group_values_become_unknown_and_nothing_is_dropped() -> None:
+    from cdm.eval import subgroup_table
+
+    labels = np.array([5] * 4, dtype=np.int64)
+    groups: list[object] = ["a", None, float("nan"), "a"]
+    rows = subgroup_table(labels, np.zeros((4, 7)), groups, min_n=1)  # type: ignore[arg-type]
+    assert {r["group"]: r["images"] for r in rows} == {"a": 2, "unknown": 2}

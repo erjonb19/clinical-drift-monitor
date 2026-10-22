@@ -46,8 +46,9 @@ The agent gets two new tools behind its policy engine (`medicare_policy.yaml`-st
 
 - **Plain English to a definition.** The agent maps a question to a library phenotype if one
   fits, or drafts a definition for `cohort_propose`.
-- **Concept IDs.** Concept IDs come only from `config/omop_concepts.csv`. An ID outside the map
-  is refused (the same rule as G5's extractor).
+- **Concept IDs.** Concept IDs come only from `config/omop_concepts.csv`. The tool would
+  refuse an ID outside the map. That is a new check: today `cohort.parse` only requires
+  positive integers.
 - **Output.** The output is the service's result: attrition and breakdown, already suppressed.
   The agent may not ask for row-level data; neither tool returns it.
 
@@ -68,7 +69,9 @@ service's chained log records the run.
 - **Diagnosis:** the three melanoma concepts (NOS 4162276, invasive 141232, in situ 40391314).
   In situ must be listed: it is not under the NOS concept.
 - **Body site:** back. The map has posterior trunk (4280364) and trunk (4313445); the agent asks
-  whether "back" includes "trunk, side unspecified" instead of choosing silently.
+  whether "back" includes "trunk, side unspecified" instead of choosing silently. Criteria are
+  person-level: this means "has any image of the back", not "the melanoma lesion was on the
+  back". The answer says so.
 - **Age:** `age_approx` is in 5-year bins, so "over 60" means 60 and above or 65 and above.
   The agent shows the choice.
 - **"Patients":** at HAM10000 and some ISIC collections a person is a lesion, and the answer
@@ -81,6 +84,8 @@ service's chained log records the run.
 - Anything about dates, time to event, or follow-up: the dates are placeholders.
 - True patient counts where ISIC records no patient ID.
 - Images or row-level data.
+- "This lesion" questions, such as "melanomas located on the back". Criteria are person-level,
+  so a person with a melanoma on the arm and a nevus on the back meets "melanoma" and "back".
 - Overlap between definitions that are not nested in a way the definitions show. The service
   checks nested ones only; a reviewer must catch the others.
 

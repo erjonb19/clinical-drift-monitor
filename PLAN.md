@@ -136,7 +136,7 @@ Rules on top of CLAUDE.md: each phase is its own branch and PR with CI green; ev
 - [ ] **C: Subgroups.** Performance and drift by age band, sex and body site for both models, with intervals; groups under 100 images get counts and a warning only. HAM10000 has no skin type; the existing within-site skin-type results are restated, and Fitzpatrick17k is a follow-up only. **Done when** the subgroup table is logged and committed.
 - [ ] **D: Grad-CAM and human review.** Grad-CAM for the shipped EfficientNet with a weight-randomization sanity test; a review worksheet of the worst misclassifications and most out-of-distribution images (image, heatmap, labels, scores, attribution, blank reviewer notes); confusion matrices by site and skin type (closes Phase 2's error analysis). Images stay in the volume and MLflow, not git. **Done when** the worksheet exists and the sanity test passes in CI.
 - [ ] **E: Multimodal fusion.** Image embeddings plus age, sex and body site, against image-only with the same head on the same embeddings and a metadata-only baseline, 3 seeds, same splits; reported as measured even if fusion does not help. **Done when** all three are logged with intervals and committed.
-- [ ] **F: Cohort contract (plan only).** `docs/cohort_contract.md`: how the OMOP tables would be exposed to governed-clinical-agent through fixed query templates, with the table contract, small-cell suppression, audit and groundedness. **Done when** you have reviewed it.
+- [ ] **F: Cohort contract (plan only).** `docs/cohort_contract.md`: how the OMOP tables would be exposed to governed-clinical-agent through the G2 cohort service (proposed change, 2026-10-22, waiting for your approval: the first plan said fixed query templates), with the table contract, small-cell suppression, audit and groundedness. **Done when** you have reviewed it.
 
 ### Detailed plans for B to F (updated 2026-10-22)
 
@@ -175,7 +175,7 @@ The full first plan is in [docs/research_extension_plan.md](docs/research_extens
   3. `workspace.cdm.gold_review_worksheet` gets a blank `reviewer_notes` column.
   4. The repo holds a CSV of IDs and values only.
   5. Maps whose randomization correlation is high are flagged, not interpreted.
-- *Done when:* the worksheet exists, the sanity test passes in CI (it does now, on the test model), and the Phase 2 error-analysis item is ticked. "Reviewed" waits for a real reviewer.
+- *Done when:* the worksheet exists, the sanity test passes in CI (it does now on a toy model; it has not yet been shown meaningful on the shipped B0), and the Phase 2 error-analysis item is ticked. "Reviewed" waits for a real reviewer.
 
 **E: Fusion.**
 - *Needs:* B's embeddings and the EfficientNet penultimate embeddings already in `gold_embeddings`. CPU heads; no GPU.
