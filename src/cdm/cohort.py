@@ -262,6 +262,142 @@ def suppress_attrition(persons: pd.Series) -> list[str]:
     return out
 
 
+# ---- across requests ------------------------------------------------------------------------
+# Each result is suppressed on its own, but two released results whose cohorts are nested can
+# still give a person away: their difference may be a group of 1 to 10, or one may pin down a
+# cell the other hid. So before a result is released, every number in it is compared with the
+# numbers already released for nested definitions, and the groups that would disclose are
+# hidden too. Only nesting that the definitions show is detected (same index conditions, age
+# range within, criteria a superset); overlap of any other kind is still the reviewer's check.
+
+AGE_CEILING = 200
+
+
+@dataclass(frozen=True)
+class Scope:
+    """The people one count covers: index conditions, an age range, and criteria."""
+
+    conditions: frozenset[int]
+    age_min: int
+    age_max: int
+    include: frozenset[str]
+    exclude: frozenset[str]
+
+    def within(self, other: Scope) -> bool:
+        """Whether every person in this scope is in ``other`` too, as the definitions show."""
+        if self.conditions != other.conditions:
+            # Age is measured at the earliest index condition, so with an age limit a smaller
+            # condition set can give a different age; nesting is only clear without limits.
+            no_limits = {self.age_min, other.age_min} == {0} and {
+                self.age_max, other.age_max} == {AGE_CEILING}  # fmt: skip
+            if not (no_limits and self.conditions <= other.conditions):
+                return False
+        return (
+            other.age_min <= self.age_min
+            and self.age_max <= other.age_max
+            and other.include <= self.include
+            and other.exclude <= self.exclude
+        )
+
+
+def scopes(pheno: Phenotype) -> list[Scope]:
+    """The scope of each attrition step: the index, then one more criterion per step."""
+    d = pheno.definition
+    steps = [("include", c) for c in d["include"]] + [("exclude", c) for c in d["exclude"]]
+    out = []
+    for i in range(len(steps) + 1):
+        out.append(
+            Scope(
+                frozenset(d["index"]["condition_concept_ids"]),
+                int(d["index"].get("age_min", 0)),
+                int(d["index"].get("age_max", AGE_CEILING)),
+                frozenset(canonical(c) for kind, c in steps[:i] if kind == "include"),
+                frozenset(canonical(c) for kind, c in steps[:i] if kind == "exclude"),
+            )
+        )
+    return out
+
+
+Cell = tuple[int | None, ...]
+
+
+@dataclass
+class Release:
+    """One released table (an attrition step, or a breakdown): true counts and what was
+    shown, by cell. An attrition step is a table with no keys and one cell."""
+
+    scope: Scope
+    keys: tuple[str, ...]
+    true: dict[Cell, int]
+    shown: dict[Cell, str]
+    label: str = ""
+    criterion: str = ""
+
+
+def _groups(release: Release, keys: tuple[str, ...]) -> dict[Cell, tuple[int, bool]]:
+    """Per group of ``keys``: the true count, and whether the shown cells give it exactly."""
+    where = [release.keys.index(k) for k in keys]
+    out: dict[Cell, tuple[int, bool]] = {}
+    for cell, value in release.true.items():
+        group = tuple(cell[i] for i in where)
+        total, exact = out.get(group, (0, True))
+        out[group] = (total + value, exact and release.shown[cell].isdigit())
+    return out
+
+
+def disclosing_cells(new: Release, old: Release) -> set[Cell]:
+    """Cells of ``new`` to hide because ``old`` was released: a group where the two differ by
+    1 to 10 people, or where they are equal and one shows exactly what the other hid."""
+    if not (new.scope.within(old.scope) or old.scope.within(new.scope)):
+        return set()
+    if set(new.keys) <= set(old.keys):
+        keys = new.keys
+    elif set(old.keys) <= set(new.keys):
+        keys = old.keys
+    else:
+        return set()
+    mine, theirs = _groups(new, keys), _groups(old, keys)
+    hide = set()
+    for group in mine.keys() | theirs.keys():
+        a, a_exact = mine.get(group, (0, True))
+        b, b_exact = theirs.get(group, (0, True))
+        if 0 < abs(a - b) < MIN_CELL or (a == b and a_exact != b_exact):
+            hide.add(group)
+    where = [new.keys.index(k) for k in keys]
+    return {cell for cell in new.true if tuple(cell[i] for i in where) in hide}
+
+
+def guard_releases(new: list[Release], old: list[Release]) -> list[str]:
+    """Hide cells of ``new`` (in place) that earlier releases would disclose, then keep the
+    new result consistent: a hidden total hides the breakdown, and a breakdown with one
+    hidden cell under a shown total hides one more. Returns the earlier releases that
+    caused a cell to be hidden."""
+    causes: set[str] = set()
+    changed = True
+    while changed:
+        changed = False
+        for release in new:
+            for earlier in old:
+                for cell in disclosing_cells(release, earlier):
+                    if release.shown[cell].isdigit():
+                        release.shown[cell] = COMPLEMENT
+                        causes.add(earlier.label)
+                        changed = True
+        final = [r for r in new if not r.keys][-1]
+        for table in (r for r in new if r.keys):
+            visible = [c for c, s in table.shown.items() if s.isdigit()]
+            hidden = len(table.shown) - len(visible)
+            if not final.shown[()].isdigit() and visible:
+                for cell in visible:
+                    table.shown[cell] = COMPLEMENT
+                changed = True
+            elif hidden == 1 and [c for c in visible if table.true[c] > 0]:
+                cell = min((c for c in visible if table.true[c] > 0), key=table.true.__getitem__)
+                table.shown[cell] = COMPLEMENT
+                changed = True
+    return sorted(causes)
+
+
 # ---- approvals and audit --------------------------------------------------------------------
 
 
@@ -361,8 +497,9 @@ class CohortResult:
     attrition: list[dict[str, Any]]
     breakdown: list[dict[str, Any]]
     note: str = (
-        "Counts from 1 to 10 show as <11; a cell marked suppressed is 11 or more, hidden so "
-        "that a <11 cell cannot be worked out by subtraction."
+        "Counts from 1 to 10 show as <11; a cell marked suppressed is hidden so that a small "
+        "count cannot be worked out by subtraction, within this result or against an earlier "
+        "result for a nested definition."
     )
 
 
@@ -391,26 +528,69 @@ class CohortService:
         if status != APPROVE:
             self.audit.append("refused", **who, reason=f"definition not approved ({status})")
             raise Refused(f"{pheno.name} v{pheno.version} is not approved ({status})")
-        sql = compile_sql(pheno, self.tables)
-        attrition = self.engine(sql["attrition"])
-        shown = suppress_attrition(attrition["persons"])
+        steps, table = self._releases(pheno)
+        causes = guard_releases(steps + ([table] if table else []), self._released(pheno))
         rows = [
-            {"step": int(s), "criterion": str(c), "persons": p}
-            for s, c, p in zip(attrition["step"], attrition["criterion"], shown, strict=True)
+            {"step": i, "criterion": r.criterion, "persons": r.shown[()]}
+            for i, r in enumerate(steps)
         ]
         breakdown: list[dict[str, Any]] = []
-        if "breakdown" in sql:
-            frame = self.engine(sql["breakdown"])
-            final = int(attrition["persons"].iloc[-1])
-            cells = suppress(frame["persons"], total=final)
-            keys = [c for c in frame.columns if c != "persons"]
+        if table:
             breakdown = [
-                {**{k: (None if pd.isna(r[k]) else int(r[k])) for k in keys}, "persons": cell}
-                for (_, r), cell in zip(frame.iterrows(), cells, strict=True)
+                {**dict(zip(table.keys, cell, strict=True)), "persons": shown}
+                for cell, shown in table.shown.items()
             ]
         self.audit.append("ran", **who, source=self.source, steps=len(rows),
-                          final=rows[-1]["persons"])  # fmt: skip
+                          final=rows[-1]["persons"], definition=pheno.definition,
+                          released={"attrition": rows, "breakdown": breakdown},
+                          hidden_because_of=causes)  # fmt: skip
         return CohortResult(pheno.name, pheno.version, pheno.sha256, rows, breakdown)
+
+    def _releases(self, pheno: Phenotype) -> tuple[list[Release], Release | None]:
+        """True counts of a phenotype, suppressed on their own: one release per attrition
+        step, and the breakdown if it has one."""
+        sql = compile_sql(pheno, self.tables)
+        attrition = self.engine(sql["attrition"])
+        label = f"{pheno.name} v{pheno.version}"
+        steps = [
+            Release(scope, (), {(): int(v)}, {(): shown}, label, str(criterion))
+            for scope, v, shown, criterion in zip(
+                scopes(pheno), attrition["persons"], suppress_attrition(attrition["persons"]),
+                attrition["criterion"], strict=True,
+            )
+        ]  # fmt: skip
+        if "breakdown" not in sql:
+            return steps, None
+        frame = self.engine(sql["breakdown"])
+        keys = tuple(pheno.definition["breakdown"])
+        cells = [tuple(None if pd.isna(r[k]) else int(r[k]) for k in keys)
+                 for _, r in frame.iterrows()]  # fmt: skip
+        shown = suppress(frame["persons"], total=int(attrition["persons"].iloc[-1]))
+        true = {c: int(v) for c, v in zip(cells, frame["persons"], strict=True)}
+        return steps, Release(steps[-1].scope, keys, true, dict(zip(cells, shown, strict=True)),
+                              label)  # fmt: skip
+
+    def _released(self, pheno: Phenotype) -> list[Release]:
+        """Everything already released for other definitions, as shown then, with true counts
+        recomputed from the data."""
+        out: list[Release] = []
+        cache: dict[str, tuple[list[Release], Release | None]] = {}
+        for entry in self.audit.entries():
+            if entry["event"] != "ran" or "released" not in entry:
+                continue
+            if entry["sha256"] == pheno.sha256:
+                continue
+            if entry["sha256"] not in cache:
+                cache[entry["sha256"]] = self._releases(parse(entry["definition"]))
+            steps, table = cache[entry["sha256"]]
+            shown = entry["released"]
+            for step, row in zip(steps, shown["attrition"], strict=True):
+                out.append(Release(step.scope, (), step.true, {(): row["persons"]}, step.label))
+            if table:
+                then = {tuple(r[k] for k in table.keys): r["persons"] for r in shown["breakdown"]}
+                seen = {c: then.get(c, "0") for c in table.true}
+                out.append(Release(table.scope, table.keys, table.true, seen, table.label))
+        return out
 
     def decide(
         self, path: Path, decision: str, reviewer: str, reason: str, request: str = ""

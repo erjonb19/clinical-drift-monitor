@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -214,3 +216,91 @@ def test_audit_chain_detects_an_edited_or_deleted_line(tmp_path: Path) -> None:
     assert any("changed" in p for p in verify_chain(entries))
     assert any("does not follow" in p for p in verify_chain([json.loads(lines[0]),
                                                              json.loads(lines[2])]))  # fmt: skip
+
+
+# ---- across requests -------------------------------------------------------------------------
+
+
+def people(groups: list[tuple[int, str, int, bool]]) -> pd.DataFrame:
+    """Melanoma people from (how many, sex, age, has histology) groups."""
+    frame = silver(sum(n for n, *_ in groups))
+    i = 0
+    for n, sex, age, histo in groups:
+        frame.loc[i : i + n - 1, ["sex", "age_approx", "label", "diagnosis_3", "ham_dx_type"]] = [
+            sex, float(age), "mel", "Melanoma, NOS", "histo" if histo else "follow_up"]  # fmt: skip
+        i += n
+    return frame
+
+
+def service_on(tmp_path: Path, frame: pd.DataFrame) -> CohortService:
+    engine, tables = duckdb_engine(omop(frame))
+    return CohortService(engine, tables, Approvals(tmp_path / "approvals.jsonl"),
+                         AuditLog(tmp_path / "audit.jsonl"))  # fmt: skip
+
+
+def approved(svc: CohortService, tmp_path: Path, definition: dict[str, object]) -> Path:
+    path = write(tmp_path, definition)
+    svc.decide(path, "approve", "PI", "ok")
+    return path
+
+
+def test_a_nested_result_cannot_pin_a_cell_an_earlier_result_hid(tmp_path: Path) -> None:
+    """The leak found in review: melanoma by sex and age band showed men aged 20-29 as <11 and
+    women as 16; a later subset (adults with histology, by age band only) showed 26 for the
+    band, so men were exactly 10."""
+    svc = service_on(tmp_path, people([(10, "male", 25, True), (16, "female", 25, True),
+                                       (3, "female", 65, True)]))  # fmt: skip
+    broad = BASE | {"name": "broad", "breakdown": ["gender_concept_id", "age_band"]}
+    first = svc.run(approved(svc, tmp_path, broad), "fellow")
+    assert {(r["gender_concept_id"], r["age_band"]): r["persons"] for r in first.breakdown} == {
+        (8507, 20): SUPPRESSED, (8532, 20): "16", (8532, 60): SUPPRESSED}  # fmt: skip
+    narrow = BASE | {
+        "name": "narrow",
+        "index": BASE["index"] | {"age_min": 18},
+        "include": [{"procedure_concept_ids": [HISTO]}],
+        "breakdown": ["age_band"],
+    }
+    second = svc.run(approved(svc, tmp_path, narrow), "coordinator")
+    shown = {r["age_band"]: r["persons"] for r in second.breakdown}
+    assert shown[20] != "26" and shown[20] in (SUPPRESSED, COMPLEMENT)
+    assert svc.audit.entries()[-1]["hidden_because_of"] == ["broad v1"]
+
+
+def test_a_nested_total_that_differs_by_a_few_people_is_hidden(tmp_path: Path) -> None:
+    svc = service_on(tmp_path, people([(30, "female", 45, True), (4, "female", 45, False)]))
+    total = svc.run(approved(svc, tmp_path, BASE | {"name": "all"}), "fellow")
+    assert total.attrition[-1]["persons"] == "34"
+    histo = BASE | {"name": "histo", "include": [{"procedure_concept_ids": [HISTO]}],
+                    "breakdown": ["gender_concept_id"]}  # fmt: skip
+    result = svc.run(approved(svc, tmp_path, histo), "fellow")
+    # 34 - 30 would be the 4 people without histology: the 30 and its breakdown are hidden.
+    assert [r["persons"] for r in result.attrition] == ["34", COMPLEMENT]
+    assert all(r["persons"] == COMPLEMENT for r in result.breakdown)
+
+
+def test_unrelated_and_repeated_requests_are_not_suppressed_further(tmp_path: Path) -> None:
+    svc = service_on(tmp_path, people([(30, "female", 45, True), (20, "male", 45, False)]))
+    path = approved(svc, tmp_path, BASE | {"name": "all", "breakdown": ["gender_concept_id"]})
+    first = svc.run(path, "fellow")
+    assert svc.run(path, "student") == first  # the same definition again
+    women = BASE | {"name": "women", "include": [{"gender_concept_ids": [8532]}]}
+    # 50 people, 30 of them women: a difference of 20 discloses nothing.
+    assert svc.run(approved(svc, tmp_path, women), "fellow").attrition[-1]["persons"] == "30"
+
+
+def cli(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run([sys.executable, str(REPO / "scripts" / "cohort.py"), *args],
+                          capture_output=True, text=True, cwd=REPO)  # fmt: skip
+
+
+def test_stand_in_approvals_stay_apart_and_serve_only_synthetic_requests(tmp_path: Path) -> None:
+    library = REPO / "phenotypes" / "approvals.jsonl"
+    before = library.read_bytes() if library.exists() else None
+    files = ["--audit", str(tmp_path / "audit.jsonl"), "--approvals", str(tmp_path / "a.jsonl")]
+    pheno = str(REPO / "phenotypes" / "melanoma_any" / "v1.yaml")
+    decided = cli(*files, "decide", pheno, "approve", "--reviewer", "stand-in", "--reason", "x")
+    assert decided.returncode == 0, decided.stderr
+    assert (tmp_path / "a.jsonl").read_text().count("approve") == 1
+    assert (library.read_bytes() if library.exists() else None) == before
+    real = cli(*files, "run", pheno, "--requester", "fellow", "--data", str(tmp_path))
+    assert real.returncode == 2 and "only serves synthetic" in real.stderr

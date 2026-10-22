@@ -72,8 +72,11 @@ on one lesion and a procedure on another meets both.
 
 ## Limits
 
-- Differencing across two separate requests (two cohorts that differ by a few people) is not
-  detected. A reviewer checks for it when approving similar definitions.
+- Differencing across requests is checked only where the definitions show nesting: the same
+  index conditions, an age range within the other's, and a superset of its criteria. Then a
+  group that differs from an earlier release by 1 to 10 people, or that would pin a cell the
+  other hid, is hidden (`docs/silent-failures.md` 10). Other overlap, such as two different
+  site lists, is not detected; a reviewer checks for it when approving similar definitions.
 - In this data, a person is a real patient only where ISIC records a patient ID. Elsewhere one
   person is one lesion (`docs/data_dictionary.md`).
 - People with no recorded sex have `gender_concept_id` 0, a group of their own in a
