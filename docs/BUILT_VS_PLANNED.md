@@ -145,6 +145,15 @@ Known limits:
 - One run (570257730256860) under the committed spec; results and spec logged to MLflow.
   Skin type is restated from Phase 2, not recomputed.
 
+### Research Phase D: Grad-CAM review worksheet (built 2026-10-22)
+
+- `cdm.explain` (Grad-CAM, the weight-randomization check) and `cdm.review` (selection,
+  confusion tables), tested in CI; `databricks/notebooks/review_worksheet.py` and its job,
+  one run (624234357242388) under the committed spec, with a reproduction gate on the shipped
+  checkpoint. Results logged to MLflow.
+- The worksheet exists (MLflow artifact, `gold_review_worksheet`, overlays in the volume).
+  **Not reviewed:** `reviewer_notes` is blank until a person fills it in.
+
 ### Research Phase G: research informatics services (2026-10-21 and 22)
 
 - G1: `docs/EVAL_PLAN.md`, `docs/governance.md`, the request issue form and the project board.
@@ -164,10 +173,8 @@ Known limits:
 
 ## Scaffolded
 
-### Research Phases D and F: CPU-only prep (2026-10-22)
+### Research Phase F: prep (2026-10-22)
 
-- D: `cdm.explain`, Grad-CAM and the weight-randomization sanity check, tested on a model whose
-  evidence is known. Not run on the shipped model; no worksheet yet.
 - F: `docs/cohort_contract.md`, a draft waiting for the owner's review.
 
 ### Research Phase G5: clinical text extraction
