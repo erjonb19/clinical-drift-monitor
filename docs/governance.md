@@ -99,7 +99,7 @@ requests: `phenotypes/approvals.jsonl` holds only the project owner's own decisi
 | OMOP vocabularies, Athena | OHDSI terms of use | Download kept outside the repo |
 | BiomedCLIP | MIT; model card says research use only | Never served (Phase B) |
 | MTSamples | mtsamples.com allows printing, sharing or linking the sample reports for educational purposes, with credit; no open license for redistribution. (Kaggle's CC0 label comes from the person who scraped the site, not the publisher.) | Note text stays out of the repo: the labelling sheet, LLM cache and error sheet live in a folder outside it; only aggregates are committed |
-| MIMIC-IV-Note (future) | PhysioNet credentialed DUA | Tier 2 only; code and aggregates only in the repo |
+| MIMIC-IV-Note (future) | PhysioNet credentialed DUA | Tier 2 only; code and aggregates only in the repo; never sent to an outside LLM API (the extractor refuses it) |
 
 ## 6. Evidence index
 
