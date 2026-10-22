@@ -845,6 +845,15 @@
     "metrics": 1132,
     "run_id": "c7cd239f88ac494b922c829feb06b940"
   },
+  "results/phase3/costs/job_costs.json": {
+    "databricks_job_run": null,
+    "experiment_id": "3252981153928765",
+    "file_commit": "358c493",
+    "file_sha256": "32c9942ed560ef7af108a8bc4a92f791378de7ef5aba9ee02d32634ef7e87dc9",
+    "logged_after_the_fact": false,
+    "metrics": 210,
+    "run_id": "dee37f5189d2433ca87efe43f051dcd5"
+  },
   "results/phase3/onnx/noise.json": {
     "databricks_job_run": "540132085766008",
     "experiment_id": "3252981153928765",
