@@ -1,12 +1,31 @@
 {
   "title": "Clinical Drift Monitor: skin lesion classification with drift detection, and OMOP research tables from public dermoscopy archives",
   "upload_type": "software",
-  "description": "Code for a portfolio project on public research images: a skin lesion classifier served with an out-of-distribution score, a Databricks lakehouse that builds OMOP CDM v5.4-style tables from HAM10000 and ISIC Archive metadata, a governed cohort service with small-cell suppression, and the evaluation protocol. No data is included: the sources keep their own licenses (CC-0, CC-BY, CC-BY-NC) and are cited in docs/DATA_CARD.md. Not a clinical tool.",
-  "creators": [{"name": "Brucaj, Erjon"}],
+  "description": "Code for a portfolio project on public research images: a skin lesion classifier served with an out-of-distribution score, a Databricks lakehouse that builds OMOP CDM v5.4-style tables from HAM10000 and ISIC Archive metadata, a governed cohort service with small-cell suppression, and the evaluation protocol. No images or dataset downloads are included. The ID lists, concept map and per-image predictions that are included keep their sources' licenses (CC-0, CC-BY, CC-BY-NC), cited in docs/DATA_CARD.md. Not a clinical tool.",
+  "creators": [
+    {
+      "name": "Brucaj, Erjon"
+    }
+  ],
   "license": "MIT",
-  "keywords": ["OMOP CDM", "dermoscopy", "out-of-distribution detection", "research data engineering", "Databricks", "cohort discovery"],
+  "keywords": [
+    "OMOP CDM",
+    "dermoscopy",
+    "out-of-distribution detection",
+    "research data engineering",
+    "Databricks",
+    "cohort discovery"
+  ],
   "related_identifiers": [
-    {"identifier": "10.1038/sdata.2018.161", "relation": "references", "scheme": "doi"},
-    {"identifier": "https://www.isic-archive.com", "relation": "references", "scheme": "url"}
+    {
+      "identifier": "10.1038/sdata.2018.161",
+      "relation": "references",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://www.isic-archive.com",
+      "relation": "references",
+      "scheme": "url"
+    }
   ]
 }

@@ -39,7 +39,7 @@ def test_citation_and_zenodo_say_mit_for_code_and_nothing_about_data() -> None:
         assert author.get("family-names") or author.get("name")
     zenodo = json.loads((REPO / ".zenodo.json").read_text(encoding="utf-8"))
     assert zenodo["license"] == "MIT" and zenodo["upload_type"] == "software"
-    assert "No data is included" in zenodo["description"]
+    assert "No images or dataset downloads are included" in zenodo["description"]
 
 
 def test_every_source_collection_carries_its_license() -> None:
