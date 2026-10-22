@@ -1,0 +1,46 @@
+{
+  "name": "cdm-research-d-review",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/5863bf6/cdm-0.1.0-py3-none-any.whl",
+          "torch==2.14.0",
+          "torchvision==0.29.0",
+          "mlflow-skinny==3.17.1"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "review_worksheet",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 10800,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/review_worksheet",
+        "base_parameters": {
+          "code_version": "5863bf6",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/5863bf6/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "a4f07fc6330378317ac629ff27fd744e7473c3addbab46cf37834ac43161b8c6",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/5863bf6/repo",
+          "files_sha256": "{\"results/research/d_review/spec.json\": \"8b4a934b4a04cbe56412aef324441654bc463c264b4b09ea32c21380b931a4ed\", \"results/phase2/analysis_look/predictions.csv.gz\": \"65f784b7749c7b6885d41d8edde0724a49ca7e111769b30cdc4638abe556082c\"}",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "plan": "PLAN.md, research Phase D, and the Phase 2 error-analysis item moved to it",
+  "model": {
+    "maps_from": "v2-final-seed0 (shipped EfficientNet-B0 v2, checkpoint checked by weights hash 538b9a8188528706 from results/phase2/overnight/v2/final_models.json in the volume)",
+    "agreement_with": "v2-final-seed1 and v2-final-seed2",
+    "layer": "features[-1], the last block: 7x7 at 224 px, so maps are coarse",
+    "preprocessing": "the evaluation transform: resize 224, center crop 224, ImageNet normalization"
+  },
+  "selection": {
+    "worst_misses": "client test split; for each true class, images the shipped ensemble misclassifies, lowest ensemble probability of the true class first, up to 20 per class",
+    "most_ood": "client test split; the 20 images with the highest Mahalanobis score (mean over the 3 seeds' saved scores from the Phase 2 v2 drift run, PCA by method D)",
+    "overlap": "an image in both lists appears once, with both reasons"
+  },
+  "maps": "Grad-CAM for the ensemble's predicted class and for the true class, from seed 0",
+  "reproduction_gate": "seed 0's softmax on every selected image must match its probabilities in results/phase2/analysis_look/predictions.csv.gz within 0.001, or the run stops before any map",
+  "checks": {
+    "randomization": "per image, Spearman correlation between seed 0's predicted-class map and that of a fully re-initialized copy (Adebayo et al. 2018); 0.5 or more is flagged and not interpreted",
+    "seed_agreement": "per image, mean Spearman correlation between seed 0's predicted-class map and seeds 1 and 2's maps for the same class; reported, not used to filter"
+  },
+  "error_analysis": {
+    "confusion_by_client": "the ensemble's confusion matrix on each client's test images, from the committed predictions",
+    "confusion_by_skin_type": "at Buenos Aires and PAD-UFES-20, per Fitzpatrick type with at least 100 labelled images; smaller types get counts only (98 images of types IV to VI in total)"
+  },
+  "outputs": {
+    "volume": "/Volumes/workspace/cdm/raw/review/<job run>/: image and heatmap overlays",
+    "mlflow": "an HTML worksheet artifact, with license and attribution per image",
+    "table": "workspace.cdm.gold_review_worksheet, one row per selected image, with a blank reviewer_notes column",
+    "repo": "results/research/d_review/worksheet.csv (IDs and values only, no images) and results.json"
+  },
+  "status": "maps are for a human reviewer; nothing here is called reviewed until a reviewer fills reviewer_notes"
+}
