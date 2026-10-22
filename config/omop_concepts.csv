@@ -3,26 +3,26 @@ diagnosis_3,all,Nevus,4271013,Condition,exact,
 diagnosis_3,all,"Melanoma, NOS",4162276,Condition,broader,"NOS may include melanoma in situ, which this concept's descendants do not; a melanoma cohort must add the in situ concept"
 diagnosis_3,all,Melanoma Invasive,141232,Condition,exact,skin-specific concept
 diagnosis_3,all,Melanoma in situ,40391314,Condition,exact,
-diagnosis_3,all,Melanoma metastasis,0,Condition,none,"no standard Condition concept found for cutaneous melanoma metastasis (searched: metastatic melanoma, secondary malignant melanoma)"
+diagnosis_3,all,Melanoma metastasis,0,Condition,none,no standard Condition concept found for cutaneous melanoma metastasis
 diagnosis_3,all,Basal cell carcinoma,4112752,Condition,exact,skin-specific concept
 diagnosis_3,all,Seborrheic keratosis,40568467,Condition,exact,
 diagnosis_3,all,Solar lentigo,4217502,Condition,exact,
-diagnosis_3,all,Lichen planus like keratosis,4110709,Condition,broader,"only a morphology concept exists for this lesion; mapped to the bkl class parent"
+diagnosis_3,all,Lichen planus like keratosis,4110709,Condition,broader,only a morphology concept exists for this lesion; mapped to the bkl class parent
 diagnosis_3,all,Solar or actinic keratosis,138825,Condition,exact,
 diagnosis_3,sites,"Squamous cell carcinoma, NOS",4300118,Condition,broader,"NOS may be in situ, which this concept's descendants do not include; unlabelled at sites by the site label rule"
-diagnosis_3,ham10000,"Squamous cell carcinoma, NOS",4112745,Condition,source_specific,"HAM10000 akiec images: ISIC labels HAM10000's intraepithelial carcinomas (Bowen's disease) as SCC NOS; HAM10000 defines akiec as in situ"
+diagnosis_3,ham10000,"Squamous cell carcinoma, NOS",4112745,Condition,source_specific,HAM10000 akiec images: ISIC labels HAM10000's intraepithelial carcinomas (Bowen's disease) as SCC NOS; HAM10000 defines akiec as in situ
 diagnosis_3,all,Squamous cell carcinoma in situ,4112745,Condition,exact,skin-specific concept
 diagnosis_3,all,Dermatofibroma,4144608,Condition,exact,
 diagnosis_3,all,Pigmented benign keratosis,4110709,Condition,class_lca,"ISIC's term for HAM10000 bkl; no finer diagnosis is recorded, so the bkl class concept is used"
 diagnosis_3,all,Hemangioma,4246665,Condition,exact,skin-specific concept
 diagnosis_3,all,Angiokeratoma,4116061,Condition,exact,skin-specific concept
 diagnosis_3,all,Pyogenic granuloma,4308074,Condition,exact,
-diagnosis_3,all,Hemorrhage,4078628,Condition,approximate,"no concept for haemorrhage in a skin lesion; hematoma of skin is the closest"
+diagnosis_3,all,Hemorrhage,4078628,Condition,approximate,no concept for haemorrhage in a skin lesion; the closest is a skin haematoma concept
 diagnosis_3,all,Scar,4169984,Condition,exact,
-diagnosis_3,all,Verruca,1245180,Condition,synonym,viral wart
-diagnosis_3,all,Atypical intraepithelial melanocytic proliferation,1244922,Condition,approximate,atypical melanocytic hyperplasia of skin
+diagnosis_3,all,Verruca,1245180,Condition,synonym,the same lesion under the concept's own preferred term (see Athena)
+diagnosis_3,all,Atypical intraepithelial melanocytic proliferation,1244922,Condition,approximate,the closest concept describes hyperplasia rather than a proliferation
 diagnosis_3,all,Atypical melanocytic neoplasm,0,Condition,none,no standard Condition concept found
-diagnosis_3,all,Atypical Spitz tumor,36716929,Condition,approximate,spitzoid neoplasm of uncertain malignant potential
+diagnosis_3,all,Atypical Spitz tumor,36716929,Condition,approximate,the closest concept is a broader group of spitzoid lesions of uncertain behaviour
 diagnosis_3,all,Lentigo simplex,4136464,Condition,exact,
 diagnosis_3,all,Lentigo NOS,0,Condition,none,only a morphology concept exists
 diagnosis_3,all,Ink-spot lentigo,4217502,Condition,broader,a variant of solar lentigo
@@ -33,15 +33,15 @@ diagnosis_3,all,Sebaceous adenoma,4141247,Condition,exact,skin-specific concept
 diagnosis_3,all,Tattoo,0,Condition,none,"the only concept for a skin tattoo is in the Observation domain, so it cannot be a condition"
 diagnosis_3,all,Foreign body granuloma,4141299,Condition,exact,skin-specific concept
 diagnosis_3,all,Angiofibroma,4116203,Condition,exact,
-diagnosis_3,all,Fibroepithelial polyp,4066849,Condition,synonym,skin tag (acrochordon)
+diagnosis_3,all,Fibroepithelial polyp,4066849,Condition,synonym,the same lesion under its other common name (see Athena)
 diagnosis_3,all,Neurofibroma,4300676,Condition,exact,
-label,all,akiec,4110707,Condition,class_lca,"lowest common ancestor of actinic keratosis and SCC in situ of skin; broad (it also contains other epithelial skin neoplasms)"
+label,all,akiec,4110707,Condition,class_lca,lowest common ancestor of the actinic keratosis and SCC in situ concepts; broad (it also contains other epithelial skin neoplasms)
 label,all,bcc,4112752,Condition,exact,
-label,all,bkl,4110709,Condition,class_lca,"lowest common ancestor of seborrheic keratosis and solar lentigo; broad (it also contains actinic keratosis); lichen planus-like keratosis has no Condition concept"
+label,all,bkl,4110709,Condition,class_lca,lowest common ancestor of seborrheic keratosis and solar lentigo; broad (it also contains actinic keratosis); lichen planus-like keratosis has no Condition concept
 label,all,df,4144608,Condition,exact,
-label,all,mel,4162276,Condition,broader,"melanoma in situ is not a descendant; the only common ancestor with it is melanocytic tumour of skin, which includes nevi"
+label,all,mel,4162276,Condition,broader,melanoma in situ is not a descendant; the only common ancestor with it is a melanocytic tumour concept that also includes nevi
 label,all,nv,4271013,Condition,exact,
-label,all,vasc,441818,Condition,class_lca,"lowest common ancestor of hemangioma of skin, angiokeratoma of skin and pyogenic granuloma; haemorrhage (also in HAM10000 vasc) is not under it"
+label,all,vasc,441818,Condition,class_lca,"lowest common ancestor of the hemangioma, angiokeratoma and pyogenic granuloma concepts; haemorrhage (also in HAM10000 vasc) is not under it"
 ham_localization,ham10000,back,4280364,Spec Anatomic Site,exact,
 ham_localization,ham10000,lower extremity,4159862,Spec Anatomic Site,exact,
 ham_localization,ham10000,trunk,4313445,Spec Anatomic Site,exact,
@@ -54,7 +54,7 @@ ham_localization,ham10000,neck,4182739,Spec Anatomic Site,exact,
 ham_localization,ham10000,scalp,4182240,Spec Anatomic Site,exact,
 ham_localization,ham10000,hand,4144227,Spec Anatomic Site,exact,
 ham_localization,ham10000,ear,4078238,Spec Anatomic Site,exact,
-ham_localization,ham10000,genital,4246735,Spec Anatomic Site,approximate,external genitalia
+ham_localization,ham10000,genital,4246735,Spec Anatomic Site,approximate,a broader concept for the external genital region
 ham_localization,ham10000,acral,0,Spec Anatomic Site,none,palms or soles; no single concept
 ham_localization,ham10000,unknown,0,Spec Anatomic Site,none,not recorded
 anatom_site_1,sites,Trunk,4313445,Spec Anatomic Site,exact,
@@ -63,8 +63,8 @@ anatom_site_1,sites,Upper extremity,4159864,Spec Anatomic Site,exact,
 anatom_site_1,sites,Head and neck,4237609,Spec Anatomic Site,exact,
 anatom_site_1,sites,Anogenital region,4090139,Spec Anatomic Site,exact,
 anatom_site_2,sites,Anterior trunk,4055938,Spec Anatomic Site,exact,
-anatom_site_2,sites,Posterior trunk,4280364,Spec Anatomic Site,synonym,back
-anatom_site_2,sites,Lateral trunk,4145302,Spec Anatomic Site,approximate,flank
+anatom_site_2,sites,Posterior trunk,4280364,Spec Anatomic Site,synonym,the same region under the concept's everyday term
+anatom_site_2,sites,Lateral trunk,4145302,Spec Anatomic Site,approximate,the concept is for the side of the trunk
 anatom_site_2,sites,Head,4321847,Spec Anatomic Site,exact,
 anatom_site_2,sites,Neck,4182739,Spec Anatomic Site,exact,
 anatom_site_2,sites,Forearm,4238998,Spec Anatomic Site,exact,
@@ -73,36 +73,36 @@ anatom_site_2,sites,Thigh,4160209,Spec Anatomic Site,exact,
 anatom_site_2,sites,Shoulder,4297782,Spec Anatomic Site,exact,
 anatom_site_2,sites,Hand,4144227,Spec Anatomic Site,exact,
 anatom_site_2,sites,Lower leg,4327352,Spec Anatomic Site,exact,
-anatom_site_2,sites,Genital region,4246735,Spec Anatomic Site,approximate,external genitalia
+anatom_site_2,sites,Genital region,4246735,Spec Anatomic Site,approximate,a broader concept for the external genital region
 anatom_site_2,sites,Buttock,4318817,Spec Anatomic Site,exact,
 anatom_site_2,sites,Knee,4272029,Spec Anatomic Site,exact,
 anatom_site_2,sites,Ankle,4282616,Spec Anatomic Site,exact,
 anatom_site_2,sites,Elbow,4254263,Spec Anatomic Site,exact,
 anatom_site_2,sites,Wrist,4092246,Spec Anatomic Site,exact,
 anatom_site_2,sites,Upper arm,4160210,Spec Anatomic Site,exact,
-ham_dx_type,ham10000,histo,43531286,Procedure,approximate,microscopic examination of a skin specimen
+ham_dx_type,ham10000,histo,43531286,Procedure,approximate,a procedure concept for microscopy of a skin specimen
 ham_dx_type,ham10000,follow_up,0,Procedure,none,serial dermoscopic follow-up; no procedure concept found
 ham_dx_type,ham10000,consensus,0,Procedure,none,expert consensus; not a procedure
 ham_dx_type,ham10000,confocal,0,Procedure,none,reflectance confocal microscopy; no procedure concept found
-diagnosis_confirm_type,sites,histopathology,43531286,Procedure,approximate,microscopic examination of a skin specimen
+diagnosis_confirm_type,sites,histopathology,43531286,Procedure,approximate,a procedure concept for microscopy of a skin specimen
 diagnosis_confirm_type,sites,serial imaging showing no change,0,Procedure,none,no procedure concept found
 diagnosis_confirm_type,sites,single image expert consensus,0,Procedure,none,expert consensus; not a procedure
 diagnosis_confirm_type,sites,confocal microscopy with consensus dermoscopy,0,Procedure,none,no procedure concept found
-image_type,all,dermoscopic,37153789,Procedure,exact,digital dermatoscopy of skin
-image_type,all,clinical: close-up,4060639,Procedure,broader,medical photography
-image_type,all,clinical: overview,4060639,Procedure,broader,medical photography
+image_type,all,dermoscopic,37153789,Procedure,exact,the dermoscopy imaging procedure concept
+image_type,all,clinical: close-up,4060639,Procedure,broader,a general clinical photography concept
+image_type,all,clinical: overview,4060639,Procedure,broader,a general clinical photography concept
 condition_type,all,isic_archive,32879,Type Concept,approximate,"registry: a curated research image archive, not an EHR"
 sex,all,male,8507,Gender,exact,
 sex,all,female,8532,Gender,exact,
-modality,all,dermoscopic,0,Modality,none,"no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory"
-modality,all,clinical: close-up,0,Modality,none,"no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory"
-modality,all,clinical: overview,0,Modality,none,"no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory"
-condition_status,ham10000,histo,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
-condition_status,ham10000,follow_up,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
-condition_status,ham10000,consensus,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
-condition_status,ham10000,confocal,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
-condition_status,sites,histopathology,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
-condition_status,sites,serial imaging showing no change,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
-condition_status,sites,single image expert consensus,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
-condition_status,sites,confocal microscopy with consensus dermoscopy,32893,Condition Status,approximate,"confirmed diagnosis; the method is kept in condition_status_source_value"
+modality,all,dermoscopic,0,Modality,none,no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory
+modality,all,clinical: close-up,0,Modality,none,no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory
+modality,all,clinical: overview,0,Modality,none,no DICOM vocabulary in either Athena download (checked 2026-10-21); not entered from memory
+condition_status,ham10000,histo,32893,Condition Status,approximate,confirmed diagnosis; the method is kept in condition_status_source_value
+condition_status,ham10000,follow_up,32893,Condition Status,approximate,confirmed diagnosis; the method is kept in condition_status_source_value
+condition_status,ham10000,consensus,32893,Condition Status,approximate,confirmed diagnosis; the method is kept in condition_status_source_value
+condition_status,ham10000,confocal,32893,Condition Status,approximate,confirmed diagnosis; the method is kept in condition_status_source_value
+condition_status,sites,histopathology,32893,Condition Status,approximate,confirmed diagnosis; the method is kept in condition_status_source_value
+condition_status,sites,serial imaging showing no change,32893,Condition Status,approximate,confirmed diagnosis; the method is kept in condition_status_source_value
+condition_status,sites,single image expert consensus,32893,Condition Status,approximate,confirmed diagnosis; the method is kept in condition_status_source_value
+condition_status,sites,confocal microscopy with consensus dermoscopy,32893,Condition Status,approximate,confirmed diagnosis; the method is kept in condition_status_source_value
 cdm_version,all,5.4,756265,Metadata,exact,

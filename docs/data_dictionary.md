@@ -183,7 +183,7 @@ These map to concept 0 on purpose. Each gives its reason. Modality is among them
 
 | Field | Scope | Source value | Reason |
 | --- | --- | --- | --- |
-| diagnosis_3 | all | Melanoma metastasis | no standard Condition concept found for cutaneous melanoma metastasis (searched: metastatic melanoma, secondary malignant melanoma) |
+| diagnosis_3 | all | Melanoma metastasis | no standard Condition concept found for cutaneous melanoma metastasis |
 | diagnosis_3 | all | Atypical melanocytic neoplasm | no standard Condition concept found |
 | diagnosis_3 | all | Lentigo NOS | only a morphology concept exists |
 | diagnosis_3 | all | Tattoo | the only concept for a skin tattoo is in the Observation domain, so it cannot be a condition |
