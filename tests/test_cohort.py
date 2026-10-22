@@ -98,6 +98,39 @@ def test_small_cells_and_the_cell_that_would_reveal_one_are_hidden() -> None:
     assert suppress(pd.Series([5, 50])) == [SUPPRESSED, "50"]  # no total published
     # 100 -> 95 drops 5 people: 95 is hidden too; 95 -> 40 drops 55, so 40 is shown.
     assert suppress_attrition(pd.Series([100, 95, 40, 3])) == ["100", COMPLEMENT, "40", SUPPRESSED]
+    # Two small cells under a shown total sum to 2, so each would be 1: hide a third.
+    assert suppress(pd.Series([1, 1, 50, 60]), total=112) == [
+        SUPPRESSED, SUPPRESSED, COMPLEMENT, "60"]  # fmt: skip
+    # A step after a hidden one: its drop counts from the last shown step (100 -> 95 is 5).
+    assert suppress_attrition(pd.Series([100, 95, 95, 40])) == ["100", COMPLEMENT, COMPLEMENT,
+                                                                "40"]  # fmt: skip
+
+
+def test_a_hidden_final_count_hides_the_breakdown(tmp_path: Path) -> None:
+    frame = silver(40)
+    nevi = frame.index[frame["label"] == "nv"]  # 30 people
+    frame.loc[nevi, "ham_dx_type"] = "follow_up"
+    frame.loc[nevi[:5], "ham_dx_type"] = "histo"
+    engine, tables = duckdb_engine(omop(frame))
+    svc = CohortService(engine, tables, Approvals(tmp_path / "approvals.jsonl"),
+                        AuditLog(tmp_path / "audit.jsonl"))  # fmt: skip
+    definition = {"name": "nv", "version": 1, "title": "t",
+                  "index": {"condition_concept_ids": [NEVUS]},
+                  "exclude": [{"procedure_concept_ids": [HISTO]}],
+                  "breakdown": ["gender_concept_id"]}  # fmt: skip
+    path = write(tmp_path, definition)
+    svc.decide(path, "approve", "PI", "ok")
+    result = svc.run(path, "fellow")
+    # 30 -> 25 drops 5 people, so 25 is hidden, and so is the one cell that would equal it.
+    assert [r["persons"] for r in result.attrition] == ["30", COMPLEMENT]
+    assert [r["persons"] for r in result.breakdown] == [COMPLEMENT]
+
+
+def test_bad_versions_and_age_ranges_are_refused() -> None:
+    with pytest.raises(PhenotypeError, match="positive integer"):
+        parse(BASE | {"version": True})
+    with pytest.raises(PhenotypeError, match="age_min is above age_max"):
+        parse(BASE | {"index": {"condition_concept_ids": [MEL], "age_min": 50, "age_max": 20}})
 
 
 # ---- approval, audit and counts on real OMOP tables (built from synthetic silver) ----------

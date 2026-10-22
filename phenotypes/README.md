@@ -74,3 +74,7 @@ on one lesion and a procedure on another meets both.
   person is one lesion (`docs/data_dictionary.md`).
 - People with no recorded sex have `gender_concept_id` 0, a group of their own in a
   breakdown.
+- The audit log's hash chain catches an edited, reordered or deleted line, but not the last
+  lines being cut off: nothing outside the log records its head. Git history is the backstop.
+- `approvals.jsonl` is not hash-chained. Each decision is also written to the audit log, and
+  git history shows who changed the file.

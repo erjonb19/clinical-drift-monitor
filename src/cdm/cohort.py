@@ -110,7 +110,8 @@ def parse(definition: Mapping[str, Any], path: str = "<memory>") -> Phenotype:
     for key in ("name", "version", "title", "index"):
         if key not in definition:
             raise PhenotypeError(f"missing {key!r}")
-    if not isinstance(definition["version"], int) or definition["version"] < 1:
+    version = definition["version"]
+    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
         raise PhenotypeError("version must be a positive integer")
     index = definition["index"]
     if not isinstance(index, dict) or set(index) - INDEX_KEYS:
@@ -123,6 +124,8 @@ def parse(definition: Mapping[str, Any], path: str = "<memory>") -> Phenotype:
             if not isinstance(index[bound], int) or not 0 <= index[bound] <= 120:
                 raise PhenotypeError(f"index.{bound}: an integer age from 0 to 120")
             clean_index[bound] = index[bound]
+    if clean_index.get("age_min", 0) > clean_index.get("age_max", 120):
+        raise PhenotypeError("index: age_min is above age_max")
     clean: dict[str, Any] = {
         "name": str(definition["name"]),
         "version": definition["version"],
@@ -229,16 +232,18 @@ def compile_sql(pheno: Phenotype, tables: Mapping[str, str]) -> dict[str, str]:
 
 
 def suppress(counts: pd.Series, total: int | None = None) -> list[str]:
-    """Counts as strings with cells from 1 to 10 shown as "<11". If exactly one cell is
-    hidden and the total is published, the next smallest cell is hidden too ("suppressed"),
-    so the first cannot be recovered by subtraction. Zero is shown: it reveals no person."""
+    """Counts as strings with cells from 1 to 10 shown as "<11". If the total is published,
+    the hidden cells add up to the total minus the shown ones, so the smallest shown cells are
+    hidden too ("suppressed") until the hidden cells hold at least 11 people together: then
+    no hidden cell can be worked out. Zero is shown: it reveals no person."""
     values = [int(v) for v in counts]
     small = {i for i, v in enumerate(values) if 0 < v < MIN_CELL}
     extra: set[int] = set()
-    if total is not None and len(small) == 1:
-        rest = [i for i, v in enumerate(values) if i not in small and v > 0]
-        if rest:
-            extra.add(min(rest, key=lambda i: values[i]))
+    if total is not None and small:
+        rest = sorted((i for i, v in enumerate(values) if i not in small and v > 0),
+                      key=lambda i: values[i])  # fmt: skip
+        while rest and sum(values[i] for i in small | extra) < MIN_CELL:
+            extra.add(rest.pop(0))
     return [
         SUPPRESSED if i in small else COMPLEMENT if i in extra else str(v)
         for i, v in enumerate(values)
@@ -246,19 +251,21 @@ def suppress(counts: pd.Series, total: int | None = None) -> list[str]:
 
 
 def suppress_attrition(persons: pd.Series) -> list[str]:
-    """Attrition counts: a step from 1 to 10 shows "<11". A step's drop from the step before
-    is also a count of people, so a step whose drop is from 1 to 10 is hidden too
-    ("suppressed")."""
+    """Attrition counts: a step from 1 to 10 shows "<11". The drop between two shown steps is
+    also a count of people, so a step is hidden too ("suppressed") while its drop from the last
+    *shown* step is from 1 to 10; hiding one step does not make the next one safe."""
     values = [int(v) for v in persons]
     out = []
-    for i, v in enumerate(values):
-        drop = values[i - 1] - v if i else 0
+    shown: int | None = None
+    for v in values:
+        drop = shown - v if shown is not None else 0
         if 0 < v < MIN_CELL:
             out.append(SUPPRESSED)
         elif 0 < drop < MIN_CELL:
             out.append(COMPLEMENT)
         else:
             out.append(str(v))
+            shown = v
     return out
 
 
@@ -313,7 +320,8 @@ class Approvals:
 
 class AuditLog:
     """Append-only JSON lines; each entry carries the hash of the one before, so an edited
-    or deleted line breaks :func:`verify_chain`."""
+    or deleted line breaks :func:`verify_chain`. Dropping the last lines does not: nothing
+    outside the log anchors its head (a limit, listed in phenotypes/README.md)."""
 
     def __init__(self, path: Path) -> None:
         self.path = path
@@ -403,6 +411,9 @@ class CohortService:
             frame = self.engine(sql["breakdown"])
             final = int(attrition["persons"].iloc[-1])
             cells = suppress(frame["persons"], total=final)
+            if not rows[-1]["persons"].isdigit():
+                # The cells would add up to the hidden total, so none of them is shown.
+                cells = [c if c == SUPPRESSED or c == "0" else COMPLEMENT for c in cells]
             keys = [c for c in frame.columns if c != "persons"]
             breakdown = [
                 {**{k: (None if pd.isna(r[k]) else int(r[k])) for k in keys}, "persons": cell}
