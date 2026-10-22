@@ -24,7 +24,7 @@ from torch import nn
 Array = NDArray[np.float64]
 
 SEEDS = (0, 1, 2)
-GRID = {"lr": (1e-3, 3e-3, 1e-2), "weight_decay": (0.0, 1e-4, 1e-2)}
+GRID = {"lr": (1e-4, 3e-4, 1e-3, 3e-3, 1e-2), "weight_decay": (0.0, 1e-4, 1e-2)}
 
 
 @dataclass(frozen=True)
