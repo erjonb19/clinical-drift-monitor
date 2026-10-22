@@ -107,8 +107,11 @@ Known limits:
   with Gender concepts (update `5992b755`, code `0239a19`), which also passed every gate.
 - `docs/data_dictionary.md` is generated from the column definitions and the build, and a
   test keeps it current.
-- Not done: the Unity Catalog lineage edges into the OMOP tables had not reached
-  `system.access.table_lineage` when the build was recorded (the table lags).
+- Unity Catalog lineage from bronze through silver into every OMOP table, read from
+  `system.access.table_lineage` the next day (the table lags):
+  `results/research/a_omop/lineage.json`. A test checks every OMOP table has a silver edge.
+- Not built: the `observation` table listed in PLAN.md. Every mapped field has a home in
+  another table, so it would be empty.
 
 ### Tooling
 
