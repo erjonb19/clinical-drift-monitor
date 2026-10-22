@@ -108,6 +108,22 @@ def check_against_vocabulary(cmap: pd.DataFrame, concepts: pd.DataFrame) -> list
     return out
 
 
+def notes_quoting_concepts(cmap: pd.DataFrame, concepts: pd.DataFrame) -> list[str]:
+    """Map rows whose note contains the name of a mapped concept. The repository holds concept
+    IDs but no SNOMED text, and a note is where a name slips in. Other vocabularies' names
+    (Type Concept, Condition Status) are OMOP's own and may be quoted. Names that are also an ISIC
+    source value are ISIC's own terms and are allowed."""
+    isic = {str(v).lower() for v in cmap["source_value"]}
+    snomed = concepts[concepts["vocabulary_id"] == "SNOMED"]
+    names = {str(n).lower() for n in snomed["concept_name"]} - isic
+    return [
+        f"{field} {value!r}: the note quotes a concept name"
+        for field, value, note in zip(cmap["source_field"], cmap["source_value"], cmap["note"],
+                                      strict=True)
+        if any(name in str(note).lower() for name in names if len(name) > 3)
+    ]  # fmt: skip
+
+
 def lookup(cmap: pd.DataFrame, field: str) -> dict[tuple[str, str], int]:
     """(scope, source value) -> concept_id for one source field."""
     rows = cmap[cmap["source_field"] == field]
@@ -209,7 +225,7 @@ TABLES: dict[str, tuple[Column, ...]] = {
         _zero("ethnicity_source_concept_id"),
     ),
     "observation_period": (
-        Column("observation_period_id", "BIGINT", True, "hash of person_source_value"),
+        Column("observation_period_id", "BIGINT", True, 'hash of "op" + person_source_value'),
         Column("person_id", "BIGINT", True, _BY_PERSON),
         Column("observation_period_start_date", "DATE", True, "constant", _PLACEHOLDER),
         Column("observation_period_end_date", "DATE", True, "constant", _PLACEHOLDER),
@@ -457,6 +473,10 @@ def prepare(silver: pd.DataFrame) -> pd.DataFrame:
             patient.notna(), "lesion:" + f["lesion_id"].astype(str)
         )
     )
+    # A lesion has one person even if only some of its images carry a patient ID, so its
+    # condition and images agree: the patient key wins over the lesion key ("patient:" sorts
+    # after "lesion:"), and of two patient keys the later one.
+    person = person.groupby(lesion).transform("max")
     site2, site1, ham_site = (
         _col(f, c) for c in ("anatom_site_2", "anatom_site_1", "ham_localization")
     )

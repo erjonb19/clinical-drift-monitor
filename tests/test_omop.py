@@ -20,6 +20,7 @@ from cdm.omop import (
     load_concept_map,
     lookup,
     map_values,
+    notes_quoting_concepts,
     profile,
     unmapped,
 )
@@ -258,3 +259,41 @@ def test_committed_data_dictionary_is_current() -> None:
     for table, cols in TABLES.items():
         assert f"## omop_{table}" in committed
         assert all(f"| `{c.name}` |" in committed for c in cols)
+
+
+def test_committed_lineage_reaches_every_omop_table_from_bronze() -> None:
+    path = Path(__file__).resolve().parents[1] / "results/research/a_omop/lineage.json"
+    edges = {(e["source"], e["target"]) for e in json.loads(path.read_text("utf-8"))["edges"]}
+    for table in TABLES:
+        for silver_table in ("silver_metadata", "silver_decoded"):
+            assert (f"workspace.cdm.{silver_table}", f"workspace.cdm.omop_{table}") in edges
+    assert ("workspace.cdm.bronze_metadata", "workspace.cdm.silver_metadata") in edges
+
+
+def test_a_lesion_has_one_person_even_if_only_some_images_carry_a_patient_id() -> None:
+    fields = {"anatom_site_1": "Trunk", "diagnosis_confirm_type": "histopathology"}
+    frame = pd.DataFrame([
+        image("M1", "msk", "IL_1", patient_id="IP_1", **fields),
+        image("M2", "msk", "IL_1", patient_id=None, **fields),
+    ])  # fmt: skip
+    tables = built(frame)
+    assert len(tables["person"]) == 1
+    assert tables["person"]["person_source_value"].iloc[0] == "msk:patient:IP_1"
+    people = set(tables["image_occurrence"]["person_id"])
+    assert people == set(tables["condition_occurrence"]["person_id"])
+
+
+def test_a_note_quoting_a_concept_name_is_caught() -> None:
+    cmap = pd.DataFrame({
+        "source_field": ["diagnosis_3", "diagnosis_3"],
+        "source_value": ["Verruca", "Melanoma in situ"],
+        "note": ["common wart of the skin", "differs from melanoma in situ"],
+    })  # fmt: skip
+    concepts = pd.DataFrame({
+        "concept_name": ["Common wart of the skin", "Melanoma in situ", "Registry"],
+        "vocabulary_id": ["SNOMED", "SNOMED", "Type Concept"],
+    })  # fmt: skip
+    # The second name is ISIC's own label, so quoting it is fine.
+    assert notes_quoting_concepts(cmap, concepts) == [
+        "diagnosis_3 'Verruca': the note quotes a concept name"
+    ]
