@@ -17,7 +17,7 @@ the workspace's concept table, because SNOMED text is not published here.
 | `keratinocyte_cancer_head_neck` | Basal or squamous cell carcinoma with an image of the head or neck |
 | `nevus_without_histopathology` | Nevi with no biopsy: the cohort whose labels are weaker |
 | `melanoma_under_18` | Pediatric melanoma feasibility. Small by design: it shows suppression |
-| `melanoma_dermoscopy` | Proposed for a commercial image export; the decision is in `approvals.jsonl` |
+| `melanoma_dermoscopy` | Proposed for a commercial image export (synthetic issue #14); rejected by the stand-in reviewer |
 
 ## The language
 
@@ -60,6 +60,8 @@ on one lesion and a procedure on another meets both.
    `python scripts/cohort.py decide <file> approve --reviewer "<name>" --reason "<why>" --request <issue URL>`.
    - Decisions go to `phenotypes/approvals.jsonl`.
    - `escalate` hands the item to someone else and does not approve it.
+   - The synthetic request exercise keeps its stand-in decisions apart, with
+     `--approvals results/research/g2_cohort/synthetic_approvals.jsonl`.
 4. **Run.** `python scripts/cohort.py run <file> --requester "<role>" --request <issue URL> --engine databricks`.
    - The output is an attrition table (people left after each step) and the breakdown.
    - Counts from 1 to 10 show as `<11`.

@@ -77,6 +77,11 @@ In this portfolio, every role (data engineer, approver, data owner) is the proje
 and the privacy office is named only as the step a real deployment would add. The roles are
 kept separate in the audit log so the workflow is visible.
 
+The synthetic requests (issues labelled `synthetic`) are the one exception: Claude Code
+recorded their decisions as a stand-in reviewer, in
+`results/research/g2_cohort/synthetic_approvals.jsonl`. Those decisions do not count for real
+requests: `phenotypes/approvals.jsonl` holds only the project owner's own decisions.
+
 ## 5. License and agreement register
 
 | Source | Terms | Constraint here |
