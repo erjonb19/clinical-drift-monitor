@@ -4,8 +4,17 @@ What data this project uses, where it comes from, and the terms it is used under
 The full card (what the model saw, per-skin-type results, where it fails) is a Phase 5
 item; this file starts with the sources so the licensing record exists from the first run.
 
-No image, metadata file or derived array is committed to this repository. Every file is
-downloaded by `src/cdm/data.py` and checked against the checksum listed here before use.
+No dataset download, image file or model weight is committed to this repository. Every
+file is downloaded by `src/cdm/data.py` and checked against the checksum listed here before
+use. Derived files that are committed, each keeping its source's terms (non-commercial where
+the source is CC BY-NC):
+- `config/splits_v1.csv` and `config/patient_overlap_v1.csv`: ISIC lesion and patient IDs
+  with their split;
+- `config/omop_concepts.csv`: source values mapped to OMOP concept IDs;
+- `results/phase2/analysis_look/predictions.csv.gz`: per-image ISIC IDs, labels and model
+  probabilities for the test images;
+- a few HAM10000 sample images in one cell output of the ECE 570 notebook in `reference/`
+  (read-only history; CC BY-NC 4.0, Tschandl et al. 2018).
 
 ## Sources
 
@@ -71,9 +80,9 @@ collection changes, ingestion stops rather than silently choosing different imag
 
 **Fields used by the OMOP tables (research Phase A, added 2026-10-21).** Ingest also keeps
 HAM10000's `localization` and `dx_type`, and ISIC's `anatom_site_2` and
-`diagnosis_confirm_type`. A read-only comparison against the live ISIC API before the
-metadata refresh found the same 27,656 images, with no change to any label, diagnosis, image
-type, sex, age, body site or license. The OMOP tables, their concepts and caveats are in
+`diagnosis_confirm_type`. Before the metadata refresh, a read-only comparison against the live
+ISIC API was run to check that the image set and labels had not changed; its output was not
+committed, so it is a check, not evidence. The OMOP tables, their concepts and caveats are in
 [data_dictionary.md](data_dictionary.md).
 
 **HAM10000 differs from Phase 0's files.** ISIC serves HAM10000 re-encoded with stronger
