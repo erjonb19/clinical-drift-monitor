@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 from pathlib import Path
 from types import ModuleType
 
@@ -93,5 +94,9 @@ def test_committed_page_matches_its_model_rows() -> None:
     spec = json.loads((REPO / "config" / "service_metrics.json").read_text(encoding="utf-8"))
     page = (REPO / "docs" / "service_metrics.md").read_text(encoding="utf-8")
     fresh = m.render(None, None, None, {"rows_by_match": {"exact": 1}}, m.model_rows(spec))
-    table = fresh[fresh.index("| Model |") :]
-    assert table in page
+
+    # Dates are left out: CI's shallow checkout cannot see when a file was first committed.
+    def rows(text: str) -> str:
+        return re.sub(r" \(\d{4}-\d{2}-\d{2}\) \|", " |", text[text.index("| Model |") :])
+
+    assert rows(fresh) == rows(page)
