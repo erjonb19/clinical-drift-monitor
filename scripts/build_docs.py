@@ -155,17 +155,23 @@ SITE_LABELS = {"buenos_aires": "Buenos Aires", "pad_ufes": "PAD-UFES-20"}
 
 def external_table() -> str:
     rows = [
-        "| Site | Images | Balanced accuracy | Melanoma sensitivity | Macro AUROC |",
-        "| --- | ---: | --- | --- | --- |",
+        "| Site | Images | Melanomas | Balanced accuracy | Melanoma sensitivity | Macro AUROC |",
+        "| --- | ---: | ---: | --- | --- | --- |",
     ]
     for site, name in SITE_LABELS.items():
         e = LOOK["external_seven_class"][site][ENS_KEY]
         b = e["bootstrap_95"]
         rows.append(
-            f"| {name} | {e['images']:,} | {pct(e['balanced_accuracy'])} {ci(b, 'balanced_accuracy')} "
+            f"| {name} | {e['images']:,} | {e['melanoma_images']} "
+            f"| {pct(e['balanced_accuracy'])} {ci(b, 'balanced_accuracy')} "
             f"| {pct(e['melanoma_sensitivity'])} {ci(b, 'melanoma_sensitivity')} "
             f"| {pct(e['macro_auroc'])} {ci(b, 'macro_auroc')} |"
         )
+    rows.append(
+        "\n  PAD-UFES-20's melanoma sensitivity rests on few melanomas, so its interval is "
+        "wide. (The research subgroup analyses report melanoma sensitivity only from 100 "
+        "melanomas.)"
+    )
     return "\n".join(rows)
 
 
@@ -217,8 +223,8 @@ def skin_type_table() -> str:
     ]
     for site, name in SITE_LABELS.items():
         for line in group_rows(site, "skin_type"):
-            if "| not recorded |" not in line:
-                rows.append(line.replace("| ", f"| {name}, type ", 1))
+            label = f"| {name}, " + ("" if "| not recorded |" in line else "type ")
+            rows.append(line.replace("| ", label, 1))
     return "\n".join(rows)
 
 
@@ -234,7 +240,8 @@ def alert_text() -> str:
     v = ", ".join(f"{CLIENT_NAMES[c]} {pct(vlm[c]['alert_rate'])}" for c in CLIENTS)
     return (
         "With the alert threshold at the 95th percentile of the client test split's scores (5% "
-        f"overall), the shipped detector fires on {e}; on BiomedCLIP features, {v} "
+        f"overall), the shipped detector (mean of 3 seeds) fires on {e}; on BiomedCLIP "
+        f"features, {v} "
         "(`results/research/c_subgroups/results_v2.json`). An uneven alert rate is a fairness "
         "question for the Phase 3 monitor; it is reported, not corrected."
     )
@@ -246,8 +253,10 @@ def gradcam_text() -> str:
         f"Grad-CAM maps for {r['images']} client-test images (the worst misses per class and the "
         "most out-of-distribution), from the shipped seed-0 checkpoint, are on a review worksheet "
         "(MLflow artifact and `workspace.cdm.gold_review_worksheet`). Weight-randomization check: "
-        f"mean rank correlation {r['randomization_spearman']['mean']:.3f} with a re-initialized "
-        f"network; {r['flagged_not_interpreted']} maps are flagged as not interpretable. Mean "
+        f"mean rank correlation {r['randomization_spearman']['mean']:.3f} (range "
+        f"{r['randomization_spearman']['min']:.2f} to {r['randomization_spearman']['max']:.2f}) "
+        f"with a re-initialized network; {r['flagged_not_interpreted']} maps are flagged as not "
+        "interpretable. Mean "
         f"agreement across seeds {r['seed_agreement_spearman']['mean']:.2f}. The maps are coarse "
         "(7x7) and **not reviewed** by a clinician (`results/research/d_review/results.json`)."
     )
@@ -385,7 +394,8 @@ aggregation weight.
 
 - **Interpretation:** Barcelona, the largest client, is the weakest.
 - **Test type / data:** internal test split, per client.
-- **By Fitzpatrick skin type, within each held-out site** (95% bootstrap by patient, else lesion;
+- **By Fitzpatrick skin type, within each held-out site** (95% bootstrap by patient, else lesion,
+  else image; images with no skin type recorded are listed too;
   `results/research/c_subgroups/results_v2.json`):
 
 {skin_type_table()}
@@ -396,7 +406,8 @@ aggregation weight.
 
 {age_table()}
 
-  Under 30 is the weakest group: mostly nevi, with the rarer classes missed. Balanced accuracy
+  Under 30 has the lowest point estimate, though its interval overlaps the 30-44 band's: it
+  is mostly nevi, with the rarer classes missed. Balanced accuracy
   averages only the classes present, so groups with different class mixes are not directly
   comparable.
 - **Drift alerts by group.** {alert_text()}

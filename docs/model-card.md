@@ -93,7 +93,7 @@ aggregation weight.
 - **Security:** not served yet; no endpoint exists. A stated gap until Phase 3.
 - **Transparency:** code, configuration, evidence files and the silent-failure log are public in
   the repository.
-- **Explanations:** Grad-CAM maps for 150 client-test images (the worst misses per class and the most out-of-distribution), from the shipped seed-0 checkpoint, are on a review worksheet (MLflow artifact and `workspace.cdm.gold_review_worksheet`). Weight-randomization check: mean rank correlation 0.045 with a re-initialized network; 11 maps are flagged as not interpretable. Mean agreement across seeds 0.81. The maps are coarse (7x7) and **not reviewed** by a clinician (`results/research/d_review/results.json`).
+- **Explanations:** Grad-CAM maps for 150 client-test images (the worst misses per class and the most out-of-distribution), from the shipped seed-0 checkpoint, are on a review worksheet (MLflow artifact and `workspace.cdm.gold_review_worksheet`). Weight-randomization check: mean rank correlation 0.045 (range -0.63 to 0.64) with a re-initialized network; 11 maps are flagged as not interpretable. Mean agreement across seeds 0.81. The maps are coarse (7x7) and **not reviewed** by a clinician (`results/research/d_review/results.json`).
 
 ### Transparency information
 - **Funding source:** none (zero-cost project). **Third-party information:** dataset providers as
@@ -133,7 +133,8 @@ aggregation weight.
 
 - **Interpretation:** Barcelona, the largest client, is the weakest.
 - **Test type / data:** internal test split, per client.
-- **By Fitzpatrick skin type, within each held-out site** (95% bootstrap by patient, else lesion;
+- **By Fitzpatrick skin type, within each held-out site** (95% bootstrap by patient, else lesion,
+  else image; images with no skin type recorded are listed too;
   `results/research/c_subgroups/results_v2.json`):
 
 | Site, Fitzpatrick type | Images | Balanced accuracy (ensemble) |
@@ -142,12 +143,14 @@ aggregation weight.
 | Buenos Aires, type II | 945 | 52.8% [48.5%, 56.7%] |
 | Buenos Aires, type III | 269 | 61.3% [49.5%, 72.5%] |
 | Buenos Aires, type IV | 25 | counts only (under 100 images) |
+| Buenos Aires, not recorded | 113 | 71.9% [52.9%, 83.0%] |
 | PAD-UFES-20, type I | 137 | 39.4% [18.5%, 54.0%] |
 | PAD-UFES-20, type II | 750 | 43.7% [37.2%, 50.2%] |
 | PAD-UFES-20, type III | 347 | 43.9% [32.5%, 58.4%] |
 | PAD-UFES-20, type IV | 59 | counts only (under 100 images) |
 | PAD-UFES-20, type V | 8 | counts only (under 100 images) |
 | PAD-UFES-20, type VI | 1 | counts only (under 100 images) |
+| PAD-UFES-20, not recorded | 804 | 41.4% [37.6%, 45.5%] |
 
   Within each site the intervals overlap, so no skin-type effect is claimed for types I to III;
   types IV to VI cannot be judged.
@@ -162,10 +165,11 @@ aggregation weight.
 | 75+ | 561 | 69.5% [55.0%, 76.4%] |
 | unknown | 62 | counts only (under 100 images) |
 
-  Under 30 is the weakest group: mostly nevi, with the rarer classes missed. Balanced accuracy
+  Under 30 has the lowest point estimate, though its interval overlaps the 30-44 band's: it
+  is mostly nevi, with the rarer classes missed. Balanced accuracy
   averages only the classes present, so groups with different class mixes are not directly
   comparable.
-- **Drift alerts by group.** With the alert threshold at the 95th percentile of the client test split's scores (5% overall), the shipped detector fires on HAM10000 Vienna 4.0%, HAM10000 Queensland 4.0%, Barcelona 7.1%, MSK 2.6%; on BiomedCLIP features, HAM10000 Vienna 1.9%, HAM10000 Queensland 1.4%, Barcelona 6.0%, MSK 13.3% (`results/research/c_subgroups/results_v2.json`). An uneven alert rate is a fairness question for the Phase 3 monitor; it is reported, not corrected.
+- **Drift alerts by group.** With the alert threshold at the 95th percentile of the client test split's scores (5% overall), the shipped detector (mean of 3 seeds) fires on HAM10000 Vienna 4.0%, HAM10000 Queensland 4.0%, Barcelona 7.1%, MSK 2.6%; on BiomedCLIP features, HAM10000 Vienna 1.9%, HAM10000 Queensland 1.4%, Barcelona 6.0%, MSK 13.3% (`results/research/c_subgroups/results_v2.json`). An uneven alert rate is a fairness question for the Phase 3 monitor; it is reported, not corrected.
 
 ### Safety and reliability
 - **Goal:** know when the model is outside its data, and how its errors move at new sites.
@@ -198,10 +202,12 @@ aggregation weight.
   choice. Seven-class results, labelled images only, with the analysis look's class mapping
   (`results/phase2/analysis_look/results.json`, 95% bootstrap by lesion):
 
-| Site | Images | Balanced accuracy | Melanoma sensitivity | Macro AUROC |
-| --- | ---: | --- | --- | --- |
-| Buenos Aires | 1,458 | 55.9% [52.3%, 59.6%] | 46.6% [39.3%, 53.7%] | 87.5% [86.0%, 89.0%] |
-| PAD-UFES-20 | 2,106 | 39.4% [36.3%, 42.3%] | 25.0% [14.7%, 36.1%] | 77.5% [75.8%, 79.1%] |
+| Site | Images | Melanomas | Balanced accuracy | Melanoma sensitivity | Macro AUROC |
+| --- | ---: | ---: | --- | --- | --- |
+| Buenos Aires | 1,458 | 253 | 55.9% [52.3%, 59.6%] | 46.6% [39.3%, 53.7%] | 87.5% [86.0%, 89.0%] |
+| PAD-UFES-20 | 2,106 | 52 | 39.4% [36.3%, 42.3%] | 25.0% [14.7%, 36.1%] | 77.5% [75.8%, 79.1%] |
+
+  PAD-UFES-20's melanoma sensitivity rests on few melanomas, so its interval is wide. (The research subgroup analyses report melanoma sensitivity only from 100 melanomas.)
 
 ### Comparison with an alternative model (research Phase B)
 A frozen medical vision-language model, BiomedCLIP, scored on the same client test split under its
