@@ -83,6 +83,11 @@ In this portfolio, every role (data engineer, approver, data owner) is the proje
 and the privacy office is named only as the step a real deployment would add. The roles are
 kept separate in the audit log so the workflow is visible.
 
+The synthetic requests (issues labelled `synthetic`) are the one exception: Claude Code
+recorded their decisions as a stand-in reviewer, in
+`results/research/g2_cohort/synthetic_approvals.jsonl`. Those decisions do not count for real
+requests: `phenotypes/approvals.jsonl` holds only the project owner's own decisions.
+
 ## 5. License and agreement register
 
 | Source | Terms | Constraint here |
@@ -106,5 +111,5 @@ kept separate in the audit log so the workflow is visible.
 | Bugs that reported success | `docs/silent-failures.md` |
 | Test looks decided in advance | `spec.json` files with `committed_before_running`; look locks in the workspace volume (`databricks/notebooks/analysis_look.py`, `drift_table.py`) |
 | Concept mapping verified, not guessed | `results/research/a_omop/concept_check.json` |
-| Requests scoped and tracked | GitHub issues from the request form; project board |
+| Requests scoped and tracked | GitHub issues from the request form, which adds each one to the [project board](https://github.com/users/erjonb19/projects/2) |
 | Cohort access governed | Phase G2: allowlist, approval by hash, audit log, suppression tests |

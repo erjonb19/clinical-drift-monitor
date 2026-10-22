@@ -2,6 +2,7 @@ name: Data or cohort request
 description: Ask for a cohort count, feasibility estimate, dataset or analysis from the OMOP tables.
 title: "[Request] "
 labels: ["data-request", "status: triage"]
+projects: ["erjonb19/2"]
 body:
   - type: markdown
     attributes:
@@ -46,7 +47,8 @@ body:
   - type: dropdown
     id: approval
     attributes:
-      label: Approval status
+      label: Ethics or data use approval status
+      description: Separate from the review of your cohort definition, which every request gets.
       options:
         - Public data, no approval needed
         - IRB exempt determination

@@ -10,7 +10,8 @@ Four parts, each read from a source, never typed in:
 - **Output quality:** OMOP gate results of the latest committed build, and the concept map's
   match quality.
 - **Model performance:** the rows in config/service_metrics.json, each read from a committed
-  results file, with the commit date of that file.
+  results file, with the commit date of that file. Notes on the audit log's history are
+  in the same file (``cohort_notes``).
 
     python scripts/service_metrics.py            (refreshes the issue snapshot; needs gh)
     python scripts/service_metrics.py --offline  (renders from the committed snapshot)
@@ -125,6 +126,7 @@ def render(
     concepts: dict[str, Any],
     models: list[dict[str, Any]],
     snapshot_utc: str | None = None,
+    cohort_notes: list[str] | tuple[str, ...] = (),
 ) -> str:
     lines = [
         "# Service metrics",
@@ -150,6 +152,12 @@ def render(
             med = "n/a" if m["median_days_to_close"] is None else m["median_days_to_close"]
             top = "n/a" if m["max_days_to_close"] is None else m["max_days_to_close"]
             lines.append(f"| {label} | {m['opened']} | {m['closed']} | {med} | {top} |")
+        if requests["synthetic"]["opened"]:
+            lines += [
+                "",
+                "Synthetic requests are made up and may be worked by a script, so their "
+                "turnaround says nothing about a real service.",
+            ]
     lines += ["", "## Cohort service (reuse and refusals)", ""]
     if not cohort or not cohort["events"]:
         lines.append("No audit log committed yet (`results/research/g2_cohort/audit.jsonl`).")
@@ -160,6 +168,7 @@ def render(
         lines += [f"| {k} | {v} |" for k, v in cohort["runs_by_phenotype"].items()]
         lines += ["", "| Refusal reason | Count |", "| --- | ---: |"]
         lines += [f"| {k} | {v} |" for k, v in cohort["refusals_by_reason"].items()]
+    lines += [line for note in cohort_notes for line in ("", note)]
     lines += ["", "## Output quality", ""]
     if build is None:
         lines.append("OMOP build: not yet recorded (`results/research/a_omop/build.json`).")
@@ -235,7 +244,8 @@ def main() -> None:
     concepts = json.loads(CONCEPT_CHECK.read_text(encoding="utf-8"))
     spec = json.loads(SPEC.read_text(encoding="utf-8"))
     page = render(requests, cohort_metrics(entries), build, concepts, model_rows(spec),
-                  taken["queried_utc"] if taken else None)  # fmt: skip
+                  taken["queried_utc"] if taken else None,
+                  spec.get("cohort_notes", []))  # fmt: skip
     PAGE.write_bytes(page.encode())
     print(f"wrote {PAGE}")
 
