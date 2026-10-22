@@ -32,6 +32,7 @@ from typing import Any
 import pandas as pd
 
 from cdm.extract import (
+    DEV_SHARE,
     FIELDS,
     MODEL,
     MTSamples,
@@ -45,6 +46,7 @@ from cdm.extract import (
     outside_repo,
     prompt_hash,
     score,
+    selection_summary,
     write_sheet,
 )
 from cdm.omop import load_concept_map
@@ -173,6 +175,55 @@ def score_all() -> None:
     print(f"wrote {OUT} (reportable: {result['reportable']}) and {WORK / 'errors.csv'}")
 
 
+SELECTION_SPEC = REPO / "results" / "research" / "g5_extraction" / "selection_spec.json"
+
+
+def write_selection_spec(csv_path: Path) -> None:
+    """The selection rules and their counts (aggregates only) into the repository."""
+    counts = selection_summary(MTSamples(csv_path).notes())
+    spec: dict[str, Any] = {
+        "decided": "2026-10-22",
+        "decided_by": "the owner widened the selection before any labelling; rules written by "
+        "Claude Code",
+        "source": "MTSamples CSV (4,999 rows) at the owner's local path, outside the repository; "
+        "note text never enters git. It has 29 Dermatology notes and 1 skin-pathology note, "
+        "too few for the 50-note scoring minimum.",
+        "inclusion": {
+            "dermatology": "medical_specialty is Dermatology",
+            "skin_pathology": "a pathology specialty and the text matches cdm.extract.SKIN",
+            "specific_mention": "any other specialty and the text matches cdm.extract.SPECIFIC: a "
+            "skin-lesion diagnosis (melanoma, basal cell carcinoma, cutaneous squamous cell "
+            "carcinoma, keratoacanthoma, nevus, seborrheic or actinic keratosis, dermatofibroma, "
+            "cherry angioma, pyogenic granuloma, lentigo, skin cancer, pigmented lesion) or a skin "
+            "biopsy, singular or plural",
+            "generic_mention_only": "any other specialty whose only match is cdm.extract.GENERIC "
+            "('skin lesion(s)', 'cutaneous lesion(s)'); many are review-of-systems lines such as "
+            "'no skin lesions', expected to have empty labels, which tests false positives. This "
+            "is a pattern rule; the labels decide",
+            "also_included": "history-only and family-history mentions, and a few possibly "
+            "non-skin uses (an oral or ocular nevus, a non-cutaneous melanoma): they are labelled "
+            "as the note reads, usually 'not stated'",
+            "excluded": "incidental skin words, which the earlier SKIN pattern matched, and empty "
+            "transcriptions; a text listed under several specialties counts once, under "
+            "Dermatology where it is there",
+        },
+        "split": {
+            "rule": "notes ordered by note ID; within each selection group the first 10% (at "
+            "least one) are development, the rest scoring; fixed before any prompt runs",
+            "dev_share": DEV_SHARE,
+            "why_stratified": "an unstratified 10% put mostly generic mentions in development",
+        },
+        "counts": counts,
+        "produced_by": "python scripts/extraction.py selection-spec",
+        "minimum_scoring_notes": MIN_SCORING_NOTES,
+        "superseded": "two earlier sheets, never labelled, kept outside the repository: 30 notes "
+        "(Dermatology and skin pathology, 20% development) and 73 notes (unstratified split)",
+    }
+    SELECTION_SPEC.parent.mkdir(parents=True, exist_ok=True)
+    SELECTION_SPEC.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8", newline="\n")
+    print(f"wrote {SELECTION_SPEC}: {counts['by_split']}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
@@ -181,6 +232,8 @@ def main() -> None:
     sheet = sub.add_parser("sheet")
     sheet.add_argument("--csv", type=Path, default=Path.home() / "data/mtsamples/mtsamples.csv")
     sheet.add_argument("--n", type=int, default=100)
+    spec = sub.add_parser("selection-spec")
+    spec.add_argument("--csv", type=Path, default=Path.home() / "data/mtsamples/mtsamples.csv")
     go = sub.add_parser("run")
     go.add_argument("--split", choices=["dev", "scoring"], required=True)
     go.add_argument("--method", choices=["llm", "keyword"], required=True)
@@ -194,6 +247,8 @@ def main() -> None:
         allowed = choices(load_concept_map(REPO / "config" / "omop_concepts.csv"))
         path = write_sheet(MTSamples(args.csv).notes(), WORK, allowed, args.n)
         print(f"wrote {path} and {WORK / 'labelling_choices.csv'}")
+    elif args.command == "selection-spec":
+        write_selection_spec(args.csv)
     elif args.command == "run":
         run(args.split, args.method, args.limit)
     elif args.command == "score":

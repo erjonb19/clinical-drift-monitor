@@ -77,14 +77,38 @@ SKIN = re.compile(
     r"lentigo|epiderm\w*|mole)\b",
     re.I,
 )
+# Owner's decision, 2026-10-22, before any labelling (results/research/g5_extraction/
+# selection_spec.json). SPECIFIC names a skin-lesion diagnosis or a skin biopsy; GENERIC only
+# says "skin lesion" (often "no skin lesions" in a review of systems). Unlike SKIN, neither
+# matches incidental words ("the skin was closed").
+SPECIFIC = re.compile(
+    r"\b(melanomas?|basal cell (carcinomas?|cancers?)|bcca|"
+    r"squamous cell (carcinomas?|cancers?) of the skin|cutaneous squamous cell|keratoacanthomas?|"
+    r"nev(us|i)|seborrheic keratos[ie]s|actinic keratos[ie]s|dermatofibromas?|cherry angiomas?|"
+    r"pyogenic granulomas?|lentigo|lentigines|skin cancers?|pigmented lesions?|"
+    r"skin biops(y|ies)|biops(y|ies) of the skin)\b",
+    re.I,
+)
+GENERIC = re.compile(r"\b(skin|cutaneous) lesions?\b", re.I)
+DEV_SHARE = 0.1
+STRATA = ("dermatology", "specific_mention", "generic_mention_only")
+
+
+def stratum(note: Note) -> str:
+    """Which selection group a note is in; the development split takes from each."""
+    if note.specialty == "Dermatology":
+        return "dermatology"
+    return "specific_mention" if SPECIFIC.search(note.text) else "generic_mention_only"
 
 
 @dataclass
 class MTSamples:
     """MTSamples transcriptions (mtsamples.com; the common CSV has ``medical_specialty``,
-    ``sample_name`` and ``transcription``). Dermatology notes, plus pathology notes that
-    are about skin. The site allows sharing for education with credit, not redistribution
-    under an open license, so the text stays outside the repository."""
+    ``sample_name`` and ``transcription``). Dermatology notes, pathology notes that are
+    about skin, and notes from any other specialty that name a skin-lesion diagnosis, a skin
+    biopsy (``SPECIFIC``) or a skin lesion (``GENERIC``). Duplicate texts count once, under
+    the Dermatology row where one exists. The site allows sharing for education with credit,
+    not redistribution under an open license, so the text stays outside the repository."""
 
     path: Path
     name: str = "mtsamples"
@@ -97,7 +121,7 @@ class MTSamples:
                 continue
             derm = specialty == "Dermatology"
             skin_pathology = "pathology" in specialty.lower() and SKIN.search(text)
-            if derm or skin_pathology:
+            if derm or skin_pathology or SPECIFIC.search(text) or GENERIC.search(text):
                 yield Note(note_id(text), self.name, specialty, row["sample_name"].strip(), text)
 
 
@@ -404,14 +428,39 @@ SHEET_COLUMNS = ["note_id", "split", "source", "specialty", "title", "text",
 
 
 def split_notes(
-    notes: Iterable[Note], n: int = 100, dev_share: float = 0.2
+    notes: Iterable[Note], n: int = 100, dev_share: float = DEV_SHARE
 ) -> list[tuple[Note, str]]:
-    """Up to ``n`` notes in a fixed order (by note ID), the first ``dev_share`` of them for
-    prompt design and the rest for scoring. Decided before any prompt runs, as the protocol
-    requires (docs/EVAL_PLAN.md, section 3)."""
-    chosen = sorted({x.note_id: x for x in notes}.values(), key=lambda x: x.note_id)[:n]
-    n_dev = round(len(chosen) * dev_share)
-    return [(x, "dev" if i < n_dev else "scoring") for i, x in enumerate(chosen)]
+    """Up to ``n`` notes in a fixed order (by note ID). Within each selection group
+    (:func:`stratum`), the first ``dev_share`` of the group (at least one) are for prompt design
+    and the rest for scoring, so the development notes are not all of one kind. Decided before
+    any prompt runs, as the protocol requires (docs/EVAL_PLAN.md, section 3)."""
+    unique: dict[str, Note] = {}
+    for x in notes:
+        # A text listed under several specialties counts once, under Dermatology if it is there.
+        if x.note_id not in unique or x.specialty == "Dermatology":
+            unique[x.note_id] = x
+    chosen = sorted(unique.values(), key=lambda x: x.note_id)[:n]
+    dev: set[str] = set()
+    for group in STRATA:
+        members = [x for x in chosen if stratum(x) == group]
+        dev |= {x.note_id for x in members[: max(1, int(len(members) * dev_share + 0.5))]}
+    return [(x, "dev" if x.note_id in dev else "scoring") for x in chosen]
+
+
+def selection_summary(notes: Iterable[Note], n: int = 100) -> dict[str, Any]:
+    """Aggregates of the selection, for the committed spec: counts only, never note text. The
+    hash is of the sorted note IDs joined by newlines."""
+    split = split_notes(notes, n)
+    by = {g: {"dev": 0, "scoring": 0} for g in STRATA}
+    for note, s in split:
+        by[stratum(note)][s] += 1
+    ids = "\n".join(sorted(note.note_id for note, _ in split))
+    return {
+        "notes": len(split),
+        "by_split": {s: sum(1 for _, x in split if x == s) for s in ("dev", "scoring")},
+        "by_group_and_split": by,
+        "note_ids_sha256": hashlib.sha256(ids.encode()).hexdigest(),
+    }
 
 
 def write_sheet(notes: Iterable[Note], folder: Path, allowed: Choices, n: int = 100) -> Path:

@@ -256,7 +256,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - Every number comes from committed sources; request numbers from a committed snapshot of the issue tracker. Synthetic requests are labelled synthetic.
   - **Done when** the page regenerates from one command and a test checks its numbers against fixtures.
 - [ ] **G5: Clinical text extraction.**
-  - Haiku extracts diagnosis, body site and confirmation method from MTSamples dermatology and pathology notes into OMOP fields, using Phase A's concept map.
+  - Haiku extracts diagnosis, body site and confirmation method from MTSamples notes about skin lesions (dermatology, skin pathology, and other specialties that name a skin-lesion diagnosis, biopsy or lesion; widened 2026-10-22, see the decisions log) into OMOP fields, using Phase A's concept map.
   - It is scored against a 50 to 100 note labelling sheet that you label: per-field accuracy on the concept, precision and recall of "stated" (docs/EVAL_PLAN.md section 5), and an error analysis.
   - A loader interface lets MIMIC-IV-Note swap in later, with code and aggregates only in the repo.
   - The MTSamples license is checked first. If it does not allow redistribution, the note text stays out of git.
@@ -344,13 +344,18 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
-- **2026-10-22 (proposed by Claude Code, waiting for the owner)**
-  - **Phase E feature set:** PLAN says the EfficientNet penultimate embeddings are "already in
+- **2026-10-22 (evening)**
+  - **Phase E feature set:** PLAN said the EfficientNet penultimate embeddings were "already in
     `gold_embeddings`"; that table holds ImageNet-pretrained B0 features, not the shipped
-    model's. Phase E ran on them (disclosed in its README section) before this was raised.
-    Options: accept them as a frozen-backbone comparison, or add the shipped model's own
-    features (a GPU extraction within the Phase B-E cap) as a new variant under a new spec
-    and a separate look.
+    model's, and Phase E ran on them (disclosed in its README section) before this was raised.
+    Owner's decision, option (b): PR #28 merged as is, with the disclosure; a follow-up extracts
+    the shipped model's own features on Databricks GPU (within the 2-hour cap) and scores them
+    as a new variant pair under its own spec and a separate single test look.
+  - **G5 note selection widened before any labelling:** MTSamples has 29 Dermatology notes and 1
+    skin-pathology note, too few for the 50-note scoring minimum. Notes from any specialty that
+    name a skin-lesion diagnosis, a skin biopsy or a skin lesion are now included, aiming for 60
+    to 80 scoring notes, and the development share is 10% of each selection group. Rules and
+    counts: `results/research/g5_extraction/selection_spec.json`.
 - **2026-10-22 (later)**
   - **Phase B embeddings table:** approved: BiomedCLIP embeddings stay in their own table, `workspace.cdm.gold_vlm_embeddings`, not appended to `gold_embeddings` (which the Phase 1 gold task overwrites on every run).
   - **Phase B test look:** not rerun on the laptop as it was (the first attempt was stopped for low system memory before it wrote its started lock, which that code wrote before scoring any test image; no metric was computed or seen). It was first made crash-safe (results saved before the lock is written) and checked by a dry run on validation, and it runs as a Databricks serverless CPU job. Nothing the committed spec chose changed.
