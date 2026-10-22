@@ -19,6 +19,13 @@ the workspace's concept table, because SNOMED text is not published here.
 | `melanoma_under_18` | Pediatric melanoma feasibility. Small by design: it shows suppression |
 | `melanoma_dermoscopy` | Proposed for a commercial image export (synthetic issue #14); rejected by the stand-in reviewer |
 
+**Authorship (corrected 2026-10-22).** Claude Code drafted all six definitions. The first four
+were written for the library and later used for synthetic requests #8 to #11; the last two were
+written for requests #13 and #14. Their v1 files named the owner as author in error; v2 files
+say who drafted them and are otherwise identical. Approved files are never
+edited, so v1 stays as it was. The stand-in decisions were recorded again for the v2 hashes in
+the synthetic log. The owner's own decisions go to `phenotypes/approvals.jsonl`.
+
 ## The language
 
 Only these keys are accepted. Anything else is refused before a query is built.
