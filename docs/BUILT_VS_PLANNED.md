@@ -85,8 +85,9 @@ tagged so). Record: [phase2-note.md](phase2-note.md).
 - Label provenance, the Buenos Aires local recalibration, and the analysis look (seven-class
   external accuracy, results by skin type, worst misses; `results/phase2/analysis_look/`).
 - Patient-level split check, run on silver (`results/phase2/patient_overlap/`, silent-failures #9).
-  The `patients_in_one_split` gate first ran in a pipeline update with research Phase A
-  (update `61686b98`) and passed.
+  The `patients_in_one_split` gate is part of `gate_results`, which fails a pipeline update on
+  any violation. It first ran in research Phase A's updates (`61686b98`, `5992b755`), and both
+  completed. Its row from those updates is not committed.
 
 Known limits:
 - Splits are by lesion. 47 MSK patients span splits, and HAM10000 and Barcelona cannot be
