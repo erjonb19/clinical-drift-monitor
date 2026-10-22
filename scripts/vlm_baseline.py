@@ -277,8 +277,8 @@ def preflight(emb: Embeddings, code_version: str | None = None) -> dict[str, Any
     spec must also be unchanged between that commit and HEAD."""
     if git("ls-files", "--", str(SPEC)) == "":
         sys.exit(f"{SPEC} must be committed before the test look")
-    if git("status", "--porcelain", "--", "src", "scripts", "config", str(SPEC)):
-        sys.exit("uncommitted changes in src/, scripts/, config/ or the spec: commit first")
+    if git("status", "--porcelain", "--", *LOOK_CODE):
+        sys.exit("uncommitted changes in the look's code or the spec: commit first")
     if code_version and git("diff", "--name-only", code_version, "HEAD", "--", *LOOK_CODE):
         sys.exit(f"src/, scripts/, config/ or the spec changed since {code_version}")
     for path in (LOCK, RESULTS):

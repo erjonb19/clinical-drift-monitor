@@ -346,7 +346,7 @@ Owner decisions that change scope, cost or process, newest first.
 
 - **2026-10-22 (later)**
   - **Phase B embeddings table:** approved: BiomedCLIP embeddings stay in their own table, `workspace.cdm.gold_vlm_embeddings`, not appended to `gold_embeddings` (which the Phase 1 gold task overwrites on every run).
-  - **Phase B test look:** not rerun on the laptop as it was (the first attempt was stopped for low system memory before any test image was scored). It was first made crash-safe (results saved before the lock is written) and checked by a dry run on validation, and it runs as a Databricks serverless CPU job. Nothing the committed spec chose changed.
+  - **Phase B test look:** not rerun on the laptop as it was (the first attempt was stopped for low system memory before it wrote its started lock, which that code wrote before scoring any test image; no metric was computed or seen). It was first made crash-safe (results saved before the lock is written) and checked by a dry run on validation, and it runs as a Databricks serverless CPU job. Nothing the committed spec chose changed.
 - **2026-10-22**
   - **Phase F:** approved. governed-clinical-agent reaches the OMOP tables only through the G2 cohort service (library phenotypes run autonomously; new definitions wait for a human approval by hash), replacing the first plan's fixed SQL templates. See [docs/cohort_contract.md](docs/cohort_contract.md).
   - **Haiku:** allowed for G5 and evals, capped at $5 in total across the project. No other paid keys. CLAUDE.md updated to match.

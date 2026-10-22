@@ -1,0 +1,52 @@
+{
+  "model_version": "biomedclip-9f341de",
+  "code_version": "7e267e1",
+  "job_run_id": "1040483728228282",
+  "finished_utc": "2026-10-22T16:42:40+00:00",
+  "device": "NVIDIA A10G",
+  "torch": "2.11.0+cu130",
+  "images": {
+    "train": 15277,
+    "val": 3210,
+    "test": 3262,
+    "buenos_aires": 1616,
+    "pad_ufes": 2298,
+    "pathmnist_eval": 2000,
+    "cifar10_eval": 2000,
+    "pathmnist_select": 1000,
+    "cifar10_select": 1000
+  },
+  "embedding_dim": 512,
+  "text_shape": [
+    5,
+    7,
+    512
+  ],
+  "logit_scale": 85.2322769165039,
+  "classes": [
+    "akiec",
+    "bcc",
+    "bkl",
+    "df",
+    "mel",
+    "nv",
+    "vasc"
+  ],
+  "seconds_per_set": {
+    "train": 47.7,
+    "val": 9.6,
+    "test": 12.5,
+    "buenos_aires": 5.6,
+    "pad_ufes": 9.4,
+    "pathmnist_eval": 8.9,
+    "cifar10_eval": 6.3,
+    "pathmnist_select": 3.7,
+    "cifar10_select": 4.8
+  },
+  "seconds_total": 186,
+  "sha256": {
+    "embeddings.npz": "c1dcede7f87e40e7a3cc4048029abfe8371c0fec6f5fade29f793736c9a9c01d",
+    "text.npz": "6b1d2be742c49ab02d57a43c55aa361faeccb61f4d23fc4c58f4b5ccfa621566",
+    "meta.csv": "c4912cc1114967a5e0a65caf205dd325502df3edc173de5a74eeabebbc236fc0"
+  }
+}

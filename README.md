@@ -137,32 +137,43 @@ Full Phase 2 record: [docs/phase2-note.md](docs/phase2-note.md). Data engineerin
 
 ## Research Phase B: BiomedCLIP baseline
 
-Does a medical vision-language model, frozen, match the shipped EfficientNet ensemble? It does
-not, on any row. BiomedCLIP (pinned revision `9f341de`) embedded every image once on a
-Databricks serverless GPU (job run 1040483728228282, 4.3 minutes). Its prompt template, the
+Does a medical vision-language model, frozen, match the shipped EfficientNet ensemble? Not in
+balanced accuracy, on any row (one melanoma-sensitivity exception below). BiomedCLIP (pinned
+revision `9f341de`) embedded every image once on a Databricks serverless GPU (job run
+1040483728228282, 186 seconds of embedding:
+[`embeddings_summary.json`](results/research/b_vlm/embeddings_summary.json)). Its prompt template, the
 linear probe's settings and the Mahalanobis PCA size were then chosen on train and validation
 only, and committed in [`spec.json`](results/research/b_vlm/spec.json) before one test look.
 That look ran as a Databricks serverless CPU job (run 930314930675108) and wrote
 [`results.json`](results/research/b_vlm/results.json), then its lock
 [`test_look.json`](results/research/b_vlm/test_look.json). EfficientNet's numbers come from
 its committed analysis-look predictions: no new look. Intervals are 95% bootstrap intervals
-(1,000 resamples by patient where ISIC records one, else by lesion).
+(1,000 resamples by patient where ISIC records one, else by lesion, else by image). Resampling by
+patient makes the ensemble's interval differ slightly from the by-lesion one in the Phase 2 table.
 
 **Clients' test split** (3,262 images):
 
 | Model | Balanced accuracy | Melanoma sensitivity | Macro AUROC |
 |---|---|---|---|
-| BiomedCLIP zero-shot | 30.09% (24.95 to 34.70) | 42.74% | 0.694 |
-| BiomedCLIP linear probe, mean of 3 seeds (range) | 50.84% (50.33 to 51.24) | 54.48% (52.09 to 55.76) | 0.835 to 0.843 |
-| EfficientNet-B0 v2 ensemble (shipped) | 66.46% (60.80 to 72.79) | 71.62% | 0.909 |
+| BiomedCLIP zero-shot | 30.09% (24.95 to 34.70) | 42.74% (36.96 to 48.69) | 0.694 |
+| BiomedCLIP linear probe, seed 0 | 50.96% (45.79 to 57.33) | 52.09% (43.71 to 59.80) | 0.838 |
+| BiomedCLIP linear probe, mean of 3 seeds | 50.84% (seeds 50.33 to 51.24) | 54.48% (seeds 52.09 to 55.76) | 0.835 to 0.843 |
+| EfficientNet-B0 v2 ensemble (shipped) | 66.46% (60.80 to 72.79) | 71.62% (63.52 to 79.01) | 0.909 |
+
+Parentheses are 95% bootstrap intervals, except the seed ranges in the mean row.
 
 - **Paired on the same resamples**, each probe seed is 15.2 to 16.1 points below the ensemble
   in balanced accuracy, and every interval excludes zero (seed 0: -15.50, -20.37 to -11.12).
   Zero-shot is 36.38 points below (-45.99 to -28.05).
-- **Without the 47 MSK overlap patients** (3,198 images): probe 51.00% mean, ensemble 66.07%.
+- **Without the 47 MSK overlap patients** (3,198 images; all 64 of their test images, not only
+  the 55 that share a patient with train as in the Phase 2 limitation): probe 51.00% mean,
+  ensemble 66.07%.
 - **New hospitals.** Buenos Aires: zero-shot 35.70%, probe 46.58% mean, ensemble 55.91%.
   PAD-UFES-20 (smartphone photos): zero-shot 27.22%, probe 23.40% mean, ensemble 39.40%. Here
   the probe falls below zero-shot.
+- **The one exception:** on PAD-UFES-20, zero-shot melanoma sensitivity is higher than the
+  ensemble's (71.15% against 25.00%; paired +46.15 points, 31.25 to 60.66), at 27.22% balanced
+  accuracy.
 
 **Drift on BiomedCLIP features** (AUROC, the clients' test split against each set; higher
 means the detector separates them):
@@ -177,11 +188,11 @@ means the detector separates them):
 
 - **Max softmax points the wrong way**, and this was checked rather than assumed. Its score
   is the negative top probability, and a CI test checks its direction. The out-of-distribution
-  images get a *higher* top softmax probability than the test images, while matching every
-  class text less closely. Softmax normalizes that difference away; energy (zero-shot) keeps
-  it. The probe's logits fail both ways, which fits a linear head that grows more confident
-  far from its training data. On BiomedCLIP, only Mahalanobis and zero-shot energy are usable
-  drift scores.
+  images get a *higher* top softmax probability than the test images. That zero-shot energy
+  separates them is consistent with their matching every class text less closely, a
+  difference softmax normalizes away. The probe's logits fail both ways, which fits a linear
+  head that grows more confident far from its training data. On BiomedCLIP, only Mahalanobis,
+  and zero-shot energy on the far-OOD sets, separate the sets well.
 - Gram does not apply: it needs convolutional feature maps, and BiomedCLIP is a ViT.
 
 **Caveats.**
@@ -190,7 +201,8 @@ means the detector separates them):
 - The probe is linear on frozen features; fine-tuning was out of scope.
 - Research use only, per the BiomedCLIP model card; never served.
 - The spec was chosen on the owner's Windows computer and the look ran on Linux. A dry run of
-  the whole look on validation gave identical numbers on both.
+  the whole look on validation gave identical classification numbers on both, and drift AUROCs
+  within 0.000001 ([`dry_run/`](results/research/b_vlm/dry_run/)).
 
 ## Research informatics services (Phase G)
 

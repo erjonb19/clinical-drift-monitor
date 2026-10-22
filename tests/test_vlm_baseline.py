@@ -190,6 +190,13 @@ def test_the_dry_run_never_writes_into_the_results_folder(
         module.dry_run(FakeEmb(), tmp_path / "out" / "dry")
 
 
+def test_the_dry_run_scores_none_of_the_look_sets() -> None:
+    module = script()
+    dry, look = module.DRY_RUN, module.LOOK
+    assert not {dry.client, *dry.sites, *dry.shifts} & {look.client, *look.sites, *look.shifts}
+    assert not dry.effnet
+
+
 def test_peak_memory_is_measured() -> None:
     assert script().peak_memory_mb() > 1
 
