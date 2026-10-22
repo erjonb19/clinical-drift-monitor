@@ -84,7 +84,9 @@ tagged so). Record: [phase2-note.md](phase2-note.md).
 - Triage operating point, committed before test (`results/phase2/triage/`).
 - Label provenance, the Buenos Aires local recalibration, and the analysis look (seven-class
   external accuracy, results by skin type, worst misses; `results/phase2/analysis_look/`).
-- Patient-level split check and gate (`results/phase2/patient_overlap/`, silent-failures #9).
+- Patient-level split check, run on silver (`results/phase2/patient_overlap/`, silent-failures #9).
+  The `patients_in_one_split` gate is written and unit-tested; it first runs in a pipeline
+  update with research Phase A.
 
 Known limits:
 - Splits are by lesion. 47 MSK patients span splits, and HAM10000 and Barcelona cannot be
