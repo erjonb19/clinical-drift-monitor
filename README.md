@@ -412,7 +412,9 @@ Buenos Aires. No variant comes near the fine-tuned ensemble.
 **Follow-up: the shipped model's own features** (owner's decision, option b). One GPU job
 (run 498023462798649, 154 seconds of extraction) took the penultimate features of each shipped
 seed. A gate checked the test rows against the committed predictions; the mean gap in top
-probability was 0.0058 to 0.0065.
+probability was 0.0058 to 0.0065. That rules out misaligned rows, but these features are
+close to the served model's (computed on CPU), not identical; GPU arithmetic is the likely
+cause, not confirmed. The "154 seconds" is the notebook's total, including reading the images.
 
 Two new variants were fit, image only and image plus metadata. Probe seed s trains on
 checkpoint s's features. Settings were chosen on validation
@@ -424,15 +426,18 @@ single test look (run 124072636853443,
 |---|---|---|---|
 | Image only | 62.5% (62.0 to 63.1) | 49.7% (48.1 to 51.2) | 37.6% (35.5 to 39.3) |
 | Image + metadata | 63.0% (62.6 to 63.5) | 50.7% (48.5 to 52.2) | 38.2% (37.6 to 38.9) |
+| Shipped ensemble (reference) | 66.46% | 55.91% | 39.40% |
 
-- **With the model's own features, metadata adds almost nothing.** The paired gain is +0.2 to
-  +0.8 points on the client test split, and all three intervals include zero.
-- At the new hospitals, 2 of the 3 intervals at each site include zero.
-- The gains on the frozen generic embeddings above shrink to this once the image
-  representation is strong.
-- **Caveat:** these features come from networks trained on the train split, so the head is
-  fit on images the network already fits. Both variants also chose the grid's lowest learning
-  rate.
+- **On the client test split, metadata adds almost nothing to the model's own features:**
+  +0.2 to +0.8 points, all three intervals including zero.
+- **At the new hospitals the gains are small:** Buenos Aires +0.4 to +1.6, PAD-UFES-20 -0.3 to
+  +2.1. One interval at each site excludes zero.
+- These gains are smaller than on the frozen generic embeddings above. That is an
+  observation, not a cause: the caveats below are other possible explanations.
+- Both variants stay below the shipped ensemble.
+- **Caveats:** these features come from networks trained on the train split, so the head is
+  fit on images the network already fits. Both variants chose the grid's lowest learning rate,
+  and validation accuracy was still rising towards it.
 
 **Known limits:**
 - Both ImageNet-feature variants chose the grid's lowest learning rate, and the grid was not
