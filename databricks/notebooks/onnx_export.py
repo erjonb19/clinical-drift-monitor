@@ -43,6 +43,7 @@ from pyspark.sql import functions as F
 
 from cdm.data import eval_transform
 from cdm.serve_onnx import (
+    ENSEMBLE_KEYS,
     export,
     gaps,
     latency_ms,
@@ -180,7 +181,7 @@ if MODE == "parity":
     srt = np.sort(ens_ref, axis=1)
     failures["ensemble"] = passes_against_noise(
         checks["ensemble"], SPEC["noise"]["ensemble"], srt[:, -1] - srt[:, -2],
-        factor=SPEC["rule"]["factor"], close=SPEC["rule"]["top2_close"],
+        factor=SPEC["rule"]["factor"], close=SPEC["rule"]["top2_close"], keys=ENSEMBLE_KEYS,
     )  # fmt: skip
 
     one, one_np = images[:1], images[:1].numpy()

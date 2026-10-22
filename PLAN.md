@@ -346,11 +346,11 @@ Owner decisions that change scope, cost or process, newest first.
 
 - **2026-10-22 (night)**
   - **Phase 3 ONNX parity, first run failed (job run 436369232677286).** It ran out of memory
-    (all 512 parity images in one batch) and wrote no results file. Before that, its log showed
-    seed 0 outside `results/phase3/onnx/spec.json`'s absolute tolerances: largest logit gap 0.18,
-    top-1 agreement 99.4%. Investigation: the export is deterministic, and PyTorch itself differs
-    by 0.038 in logits on the same image between batch sizes 1 and 8, so 1e-3 was below
-    PyTorch's own noise. Owner's decision, option (a): measure PyTorch's batch-size noise on the
+    (all 512 parity images in one batch) and wrote no results file. Before that, its job log
+    (not a committed file) showed seed 0 outside `results/phase3/onnx/spec.json`'s absolute
+    tolerances. An uncommitted local check then found PyTorch differing from itself between
+    batch sizes, so 1e-3 was below PyTorch's own noise; the committed measurement of that noise
+    is `results/phase3/onnx/noise.json`. Owner's decision, option (a): measure PyTorch's batch-size noise on the
     same 512 validation images first, commit an amended spec quoting it (`spec_v2.json`): an
     ONNX gap of at most 2x that noise, and a top-class disagreement only where PyTorch also
     disagrees with itself or the top two classes are within 0.01; then run the parity check once.
@@ -358,7 +358,11 @@ Owner decisions that change scope, cost or process, newest first.
     ONNX Runtime's gaps were about 3 to 7 times PyTorch's own noise (largest logit gap 0.18 to
     0.26 against 2x noise of 0.12 to 0.14), and the top class moved on 1 to 4 images per
     seed, and 3 for the ensemble, where PyTorch is stable. ONNX Runtime was faster (median 43
-    to 57 ms per seed against 92 to 93 ms, one image, 4 CPUs). Not rerun. The ONNX item stays
+    to 57 ms per seed against 92 to 93 ms, one image, 4 CPUs). Not rerun. **The root cause is
+    unknown:** both PyTorch's own noise (about 1% on features) and the ONNX gap (2 to 5%) are far
+    above usual float32 differences, so this is not shown to be a property of ONNX. Not
+    recorded: the CPU model, PyTorch's float32 matmul precision setting, ONNX Runtime's thread
+    count; the noise and parity jobs may have run on different hardware. The ONNX item stays
     open; how to serve is the owner's call.
 - **2026-10-22 (evening)**
   - **Phase E feature set:** PLAN said the EfficientNet penultimate embeddings were "already in
