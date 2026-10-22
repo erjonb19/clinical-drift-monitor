@@ -237,8 +237,8 @@ def cli(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):  # type: ignore[no-unt
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    module.SPEND = tmp_path / "spend.jsonl"
-    module.OUT = tmp_path / "score.json"
+    setattr(module, "SPEND", tmp_path / "spend.jsonl")  # noqa: B010
+    setattr(module, "OUT", tmp_path / "score.json")  # noqa: B010
     return module
 
 
