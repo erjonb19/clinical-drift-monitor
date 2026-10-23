@@ -1,0 +1,10 @@
+{
+  "uri": "models:/workspace.cdm.skin_lesion_classifier@champion",
+  "version": 1,
+  "images": 3,
+  "labels_match": true,
+  "max_probability_gap": 0.0,
+  "loaded_in": "a fresh serverless CPU environment (pip requirements from the model)",
+  "job_run": "8856224820882",
+  "checked_utc": "2026-10-23T02:46:15+00:00"
+}
