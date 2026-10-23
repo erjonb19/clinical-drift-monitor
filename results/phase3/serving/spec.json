@@ -1,0 +1,32 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-22",
+  "plan": "PLAN.md Phase 3 (serving: label, probabilities, OOD score and an abstain flag with a threshold chosen on validation) and the risk-coverage item moved to Phase 3 from Phase 2",
+  "serving_hardware": "CPU (owner's decision: PyTorch on CPU). Every score here is computed on Databricks serverless CPU; Phase 2 showed GPU and CPU detector scores differ, so nothing GPU-computed is reused",
+  "model": "the shipped EfficientNet-B0 v2 ensemble: seeds 0 to 2, each checkpoint checked by weight hash; class probabilities are the mean of the three softmax outputs",
+  "ood_score": {
+    "detector": "Mahalanobis per seed (cdm.ood.MahalanobisDetector), PCA sized by Phase 2's method D (95% of training-feature variance), fit on that seed's CPU features of the clients' training split only",
+    "ensemble_score": "the mean of the three seeds' Mahalanobis scores; higher is more out-of-distribution"
+  },
+  "abstain_threshold": {
+    "rule": "the 95th percentile of the ensemble OOD score on the clients' validation split, so 5% of in-distribution images are sent to review by construction",
+    "chosen_on": "validation only"
+  },
+  "refer_flag": "the Phase 2 triage threshold, melanoma probability >= 0.0638 (results/phase2/triage/threshold.json), returned as a separate flag; it is not re-chosen here",
+  "risk_coverage": {
+    "orders": {
+      "confidence": "abstain on the images with the lowest top class probability first",
+      "ood": "abstain on the images with the highest ensemble OOD score first"
+    },
+    "coverage_grid": [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.6, 0.5],
+    "metrics": "accuracy and balanced accuracy (over the classes present) on the kept images, for each order and coverage",
+    "workload": "the share of images whose OOD score is above the abstain threshold (sent to review), per set",
+    "sets": "validation first (it sets the threshold); then one look at the clients' test split, per client, and the labelled images of Buenos Aires and PAD-UFES-20"
+  },
+  "test_look": "the test and external-site part runs once: an attempt log is written before any test image is scored, results are saved before the lock, and the job refuses if a results file or lock exists",
+  "bundle": {
+    "what": "per seed: the checkpoint's hash and the detector's arrays (PCA mean and components, class means, precision matrix); the abstain threshold; the refer threshold; the class list; a manifest with SHA-256 of every file",
+    "where": "/Volumes/workspace/cdm/raw/deploy/serving/<code_version>/; never in git"
+  },
+  "check": "the serving code's NumPy scorer (cdm.serving) must reproduce MahalanobisDetector.score on the validation features to within 1e-6 relative, or the bundle is not written"
+}

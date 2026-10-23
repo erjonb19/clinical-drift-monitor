@@ -60,7 +60,7 @@ Databricks Free Edition is the center, lined up with the Data Engineer Associate
 | Training | PyTorch on Databricks serverless GPU (1x A10G, confirmed 2026-09-30), Colab Pro as backup |
 | Tracking and registry | MLflow, model registered in Unity Catalog |
 | Federated learning | Flower |
-| Serving | ONNX Runtime behind FastAPI in Docker, public on Render |
+| Serving | PyTorch on CPU behind FastAPI in Docker, public on a free tier (Render, or Hugging Face Spaces if Render's memory cannot fit PyTorch); ONNX was attempted and failed parity |
 | LLM reports | Gemini free tier, groundedness check from the governed agent |
 | UI | Streamlit Community Cloud, calling the API |
 | Tests and CI | pytest and GitHub Actions |
@@ -271,7 +271,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 
 The model becomes a service with a threshold, a schedule and a CI gate, which is what production ML and forward deployed roles look for.
 
-- [ ] (Tried 2026-10-22: exported, but parity failed under the amended rule; see the decisions log and `results/phase3/onnx/`.) Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
+- [ ] (Closed 2026-10-22 as attempted, not done: parity failed under the amended rule; the owner chose PyTorch on CPU for serving. See the decisions log and `results/phase3/onnx/`.) Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
 - [ ] FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
 - [ ] Docker image, deployed free on Render.
 - [ ] Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
@@ -344,6 +344,17 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-22 (late night)**
+  - **Serving runtime:** PyTorch on CPU. ONNX was attempted and failed parity under the amended
+    rule (gaps 3 to 7x PyTorch's own batch-size noise; root cause unknown, see below). No more
+    ONNX work; the ONNX item is closed as attempted, not done.
+  - **Public API deploy:** approved on a free tier only: Render's free tier, or Hugging Face
+    Spaces (free CPU) if Render's memory cannot fit PyTorch. Conditions: uploaded images are never
+    stored or logged (only counts and timing); a visible "research demo, not for medical use"
+    notice; the non-commercial license terms and attribution; rate limiting. Built and tested
+    locally in Docker first; any login step goes to the owner.
+  - **Order after that:** monthly drift job, audit table and end-to-end lineage, per-skin-type
+    alerts, retraining loop with the CI accuracy gate.
 - **2026-10-22 (night)**
   - **Phase 3 ONNX parity, first run failed (job run 436369232677286).** It ran out of memory
     (all 512 parity images in one batch) and wrote no results file. Before that, its job log
