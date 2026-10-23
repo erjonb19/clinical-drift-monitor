@@ -1,5 +1,7 @@
 # Clinical Imaging Drift Monitor
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23600425.svg)](https://doi.org/10.5281/zenodo.23600425)
+
 **Reviewing for a role?** [docs/FOR_REVIEWERS.md](docs/FOR_REVIEWERS.md) maps the duties of clinical
 research informatics and AI engineering roles to the file, PR and result that show each one, with a 2-minute tour.
 

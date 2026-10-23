@@ -246,7 +246,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 - [ ] **G3: FAIR packaging.**
   - Dataset metadata: DCAT/schema.org JSON-LD, plus a `CITATION.cff`.
   - `notebooks/quickstart.ipynb`, which runs on the public demo extract.
-  - A Zenodo-ready release: `.zenodo.json` and a release checklist. You connect Zenodo to GitHub; it needs your login.
+  - A Zenodo-ready release: `.zenodo.json` and a release checklist. You connect Zenodo to GitHub; it needs your login. (Released 2026-10-23 by the owner's approval: v1.0.0, DOI 10.5281/zenodo.23600426; concept DOI 10.5281/zenodo.23600425.)
   - **Done when** the metadata validates in CI and the notebook runs in CI.
 - [ ] **G4: Service metrics page** (`scripts/service_metrics.py` to `docs/service_metrics.md`).
   - Request turnaround from the issue tracker.
@@ -420,7 +420,7 @@ Owner decisions that change scope, cost or process, newest first.
   - **History rewrite:** approved once. Old concept-map notes that quoted SNOMED wording and the email address in `databricks/*_job.json` were removed from all history with `git filter-repo`; commit author emails moved to the GitHub noreply address; `main` was force-pushed once and the merged feature branches deleted. The pre-rewrite history is kept only in a local backup (a tag and a bundle on the owner's machine, never pushed). Job files now hold `{{DATABRICKS_USER}}`, filled by `scripts/deploy_databricks.py --job`.
   - **Project board:** made public.
   - **Streamlit demo (G6):** public deployment approved: counts only, source labels and concept IDs only, no SNOMED names, attribution shown.
-  - **Release and Zenodo DOI:** not yet. The owner will create them after recording the phenotype approvals; Claude Code records no approvals in the owner's name. (The owner recorded the v2 decisions on 2026-10-23; the release is still the owner's step.)
+  - **Release and Zenodo DOI:** made 2026-10-23 on the owner's approval (v1.0.0 on `main` at cf2ebcd; DOI 10.5281/zenodo.23600426). It followed the owner's own phenotype decisions, recorded the same day; Claude Code records no approvals in the owner's name.
 
 ## Open questions
 

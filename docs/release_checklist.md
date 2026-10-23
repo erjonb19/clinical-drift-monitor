@@ -14,4 +14,7 @@ Owner steps (they need the owner's GitHub and Zenodo logins):
    reading `.zenodo.json` for the title, description, creators and license.
 6. Add the DOI to `CITATION.cff` (`doi:`) and a badge to the README, in a normal PR.
 
-Not done yet: steps 2 to 6. No release or DOI exists.
+Done for v1.0.0 on 2026-10-23: the owner switched on the Zenodo integration and approved the
+release; `v1.0.0` was created on `main` at cf2ebcd, and Zenodo minted DOI
+10.5281/zenodo.23600426 (concept DOI 10.5281/zenodo.23600425). Step 4 was done after the
+release, in the same PR as step 6, so the archived `CITATION.cff` has no version or DOI.

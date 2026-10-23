@@ -181,7 +181,8 @@ Known limits:
   the project owner's own decisions, recorded by the owner on 2026-10-23: five v2 phenotypes
   approved and `melanoma_dermoscopy` v2 rejected (its request is commercial, which the CC-BY-NC images do not allow). The v1 files stay undecided.
 - G3: dataset metadata, `CITATION.cff` and the quickstart notebook, run in CI offline. The
-  Zenodo release is not made yet: the phenotype approvals are now recorded, and the release is still the owner's step.
+  Zenodo release v1.0.0 was made on 2026-10-23 with the owner's approval (DOI
+  10.5281/zenodo.23600426; concept DOI 10.5281/zenodo.23600425 for all versions).
 - G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests; request numbers
   come from a committed snapshot of the issue tracker.
 
