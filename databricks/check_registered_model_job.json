@@ -1,0 +1,48 @@
+{
+  "name": "cdm-phase3-check-registered-model",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/4305b7c/cdm-0.1.0-py3-none-any.whl",
+          "torch==2.14.0",
+          "torchvision==0.29.0",
+          "mlflow==3.17.1"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "check_registered_model",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 10800,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/check_registered_model",
+        "base_parameters": {
+          "code_version": "4305b7c",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/4305b7c/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "d20e863c73b88a947beb884852eaf52133acd3ad7a756f9441fb6bf70cc38b85",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/4305b7c/repo",
+          "files_sha256": "{\"results/phase3/serving/results.json\": \"81a5906e4d081312f4c17a70af2940af2691cb0ada1aaa86ff7e51eafd41609e\", \"databricks/notebooks/check_registered_model.py\": \"4f023c5335d053ea6a6e0d773bf3c2142a212c77b2de83f50d6026d02dfe2dff\"}",
+          "bundle": "/Volumes/workspace/cdm/raw/deploy/serving/d7191f4",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/lineage",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}
