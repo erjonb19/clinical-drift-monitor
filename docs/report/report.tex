@@ -176,6 +176,14 @@ the shipped model's own features the client-test gain is 0.2 to 0.8 points, all 
 including zero. Metadata alone reaches 36.4\% against 14.3\% for chance, and at PAD-UFES-20 it
 beats every image variant (31.7\%), so part of what metadata adds is a shortcut to the source.
 
+\paragraph{Clinical text extraction.} Claude Haiku maps MTSamples transcriptions to the OMOP
+labels for diagnosis, body site and histopathology confirmation. On 67 held-out notes, with the
+prompt frozen before scoring, it agrees with the labels on 77.6\% (95\% interval 67.2--86.6),
+76.1\% (65.7--85.1) and 92.5\% (86.5--98.5) of notes, against 50.7\%, 17.9\% and 62.7\% for a
+keyword baseline. Its commonest error is naming a value the label calls not stated. The labels
+were pre-annotated by Claude and reviewed by one person (2 of 225 changed), so the extractor's
+agreement may be inflated by shared judgements.
+
 \section{Operating the model}
 \paragraph{Serving and abstention.} The ensemble is served with PyTorch on CPU; an ONNX export
 failed a parity check (its gaps were 3 to 7 times PyTorch's own batch-size noise) and was

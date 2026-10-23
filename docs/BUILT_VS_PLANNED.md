@@ -286,9 +286,13 @@ Known limits:
 - `cdm.extract` and `scripts/extraction.py`: note sources (MTSamples; MIMIC-IV-Note behind a
   tier 2 switch, never sent to an outside API), label choices from the concept map, the Haiku
   extractor with a spend log and budget cap, a keyword baseline, the labelling sheet, scoring
-  and error categories. Tested with made-up notes and a recorded transport. One live call on a
-  made-up note checked the connection. Not run on any real note: no MTSamples file and no
-  labels yet, so nothing is scored or logged to MLflow.
+  and error categories. Tested with made-up notes and a recorded transport.
+- Scored 2026-10-23 on 67 MTSamples scoring notes (8 dev notes used first, prompt unchanged):
+  Haiku 77.6% diagnosis, 76.1% body site, 92.5% confirmation, against the keyword baseline's
+  50.7%, 17.9% and 62.7% (`results/research/g5_extraction/score.json`, logged to MLflow). The
+  labels were pre-annotated by Claude and human-reviewed (`label_provenance.json`), so the LLM's
+  agreement may be inflated by shared judgements. $0.0265 of Haiku spend in total.
+- Not done: the per-error label review in `errors.csv`, and a second human labeller.
 
 ### Research Phase G6: public cohort demo
 
