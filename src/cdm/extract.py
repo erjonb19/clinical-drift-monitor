@@ -547,3 +547,57 @@ def score(
                 k for t, p in rows if (k := error_kind(field, t, p, allowed))).items())),
         }  # fmt: skip
     return out
+
+
+def write_workbook(folder: Path) -> Path:
+    """The labelling sheet as an Excel workbook beside the CSV (outside the repository): one
+    dropdown per label column from ``labelling_choices.csv``, wrapped note text, and a protected
+    sheet in which only the label and notes columns can be edited. The CSV stays the file the
+    scorer reads; copy the labels back into it after labelling."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Protection
+    from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    sheet = outside_repo(folder) / "labelling_sheet.csv"
+    rows = list(csv.DictReader(sheet.open(encoding="utf-8", newline="")))
+    choices: dict[str, list[str]] = {}
+    for row in csv.DictReader(
+        (folder / "labelling_choices.csv").open(encoding="utf-8", newline="")
+    ):
+        choices.setdefault(row["column"], []).append(row["allowed label"])
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "labels"
+    lists = wb.create_sheet("choices")
+    lists.sheet_state = "hidden"
+    ws.append(SHEET_COLUMNS)
+    for row in rows:
+        ws.append([row[c] for c in SHEET_COLUMNS])
+    editable = [c for c in SHEET_COLUMNS if c.startswith("label_") or c == "labeller_notes"]
+    widths = {"text": 90, "title": 28, "labeller_notes": 30}
+    for j, name in enumerate(SHEET_COLUMNS, start=1):
+        letter = get_column_letter(j)
+        ws.column_dimensions[letter].width = widths.get(name, 22 if name in editable else 14)
+        for i in range(2, len(rows) + 2):
+            cell = ws.cell(row=i, column=j)
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.protection = Protection(locked=name not in editable)
+        if name in choices:
+            col = get_column_letter(list(choices).index(name) + 1)
+            for r, value in enumerate(choices[name], start=1):
+                lists[f"{col}{r}"] = value
+            span = f"=choices!${col}$1:${col}${len(choices[name])}"
+            check = DataValidation(
+                type="list", formula1=span, allow_blank=True, showErrorMessage=True
+            )
+            check.error = "Pick a value from the list (see labelling_choices.csv)."
+            ws.add_data_validation(check)
+            check.add(f"{letter}2:{letter}{len(rows) + 1}")
+    ws.freeze_panes = "A2"
+    ws.protection.sheet = True  # the note text and IDs stay as written
+    out = folder / "labelling_sheet.xlsx"
+    if out.exists():
+        raise FileExistsError(f"{out} exists; it may hold labels")
+    wb.save(out)
+    return out

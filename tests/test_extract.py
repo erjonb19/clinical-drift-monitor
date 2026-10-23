@@ -317,3 +317,19 @@ def test_widened_selection_and_a_development_split_from_every_group(tmp_path: Pa
     summary = selection_summary(notes)
     assert summary["by_group_and_split"]["dermatology"] == {"dev": 1, "scoring": 0}
     assert "text" not in json.dumps(summary)
+
+
+def test_workbook_has_dropdowns_and_locks_the_note_text(tmp_path: Path) -> None:
+    from openpyxl import load_workbook
+
+    from cdm.extract import write_workbook
+
+    write_sheet([BIOPSY, NO_DX, PSORIASIS], tmp_path, ALLOWED, n=3)
+    ws = load_workbook(write_workbook(tmp_path))["labels"]
+    header = [c.value for c in ws[1]]
+    text, label = header.index("text") + 1, header.index("label_diagnosis") + 1
+    assert ws.protection.sheet and ws.cell(2, text).protection.locked
+    assert not ws.cell(2, label).protection.locked and ws.cell(2, text).alignment.wrap_text
+    assert len(ws.data_validations.dataValidation) == 3
+    with pytest.raises(FileExistsError):
+        write_workbook(tmp_path)

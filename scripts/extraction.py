@@ -1,6 +1,7 @@
 """Clinical text extraction (research Phase G5) from the command line.
 
     python scripts/extraction.py sheet [--csv PATH] [--n 100]   labelling sheet for you to fill
+    python scripts/extraction.py sheet-xlsx                     the same sheet as Excel
     python scripts/extraction.py run --split dev|scoring --method llm|keyword [--limit N]
     python scripts/extraction.py score                          scoring split, both methods
     python scripts/extraction.py smoke                          one Haiku call on a made-up note
@@ -48,6 +49,7 @@ from cdm.extract import (
     score,
     selection_summary,
     write_sheet,
+    write_workbook,
 )
 from cdm.omop import load_concept_map
 
@@ -232,6 +234,7 @@ def main() -> None:
     sheet = sub.add_parser("sheet")
     sheet.add_argument("--csv", type=Path, default=Path.home() / "data/mtsamples/mtsamples.csv")
     sheet.add_argument("--n", type=int, default=100)
+    sub.add_parser("sheet-xlsx")
     spec = sub.add_parser("selection-spec")
     spec.add_argument("--csv", type=Path, default=Path.home() / "data/mtsamples/mtsamples.csv")
     go = sub.add_parser("run")
@@ -247,6 +250,8 @@ def main() -> None:
         allowed = choices(load_concept_map(REPO / "config" / "omop_concepts.csv"))
         path = write_sheet(MTSamples(args.csv).notes(), WORK, allowed, args.n)
         print(f"wrote {path} and {WORK / 'labelling_choices.csv'}")
+    elif args.command == "sheet-xlsx":
+        print(f"wrote {write_workbook(WORK)}")
     elif args.command == "selection-spec":
         write_selection_spec(args.csv)
     elif args.command == "run":
