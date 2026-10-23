@@ -1,0 +1,44 @@
+{
+  "name": "cdm-phase3-retrain",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "gpu",
+      "spec": {
+        "base_environment": "databricks_ai_v6"
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "retrain",
+      "environment_key": "gpu",
+      "compute": {
+        "hardware_accelerator": "GPU_1xA10"
+      },
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/retrain",
+        "base_parameters": {
+          "code_version": "817eb62",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/817eb62/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "98c614d1a0667561edbd829714e25043a066ae466fcf0bc9bbe73fd44425db92",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/817eb62/repo",
+          "files_sha256": "{\"results/phase3/retrain/spec.json\": \"1d3d355f8f19f0c9417b3fd599eebb1232dc25fb8965d0cda841fb044787c49b\", \"databricks/notebooks/retrain.py\": \"272f61ed80078df456580284698f7c9e7eddacdcb8f6184a72caef577c4ff981\"}",
+          "deadline_minutes": "45",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}
