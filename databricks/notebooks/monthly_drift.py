@@ -8,6 +8,8 @@
 # MAGIC have arrived, logs the ISIC Archive's public image count, and appends to
 # MAGIC `gold_drift_monthly` and `gold_prediction_audit`. A month already in the table is refused.
 # MAGIC Months 1 to 12 replay real shifts in a fixed order; later months log the live check only.
+# MAGIC Every table write is a Spark query over the tables its rows come from, so Unity Catalog lineage
+# MAGIC reaches the three tables (`results/phase3/lineage/spark_writes_spec.json`).
 
 # COMMAND ----------
 
@@ -95,6 +97,16 @@ def table_exists(name: str) -> bool:
     return bool(spark.catalog.tableExists(name))
 
 
+def append_through_silver(rows: pd.DataFrame, table: str) -> None:
+    """Append rows keyed by isic_id, joined to silver_images so lineage records the source."""
+    joined = spark.createDataFrame(rows).join(
+        spark.read.table("workspace.cdm.silver_images").select("isic_id"), "isic_id", "inner"
+    )
+    if joined.count() != len(rows):
+        raise RuntimeError(f"{table}: an ISIC ID is missing from or repeated in silver_images")
+    joined.select(*rows.columns).write.mode("append").saveAsTable(table)
+
+
 # COMMAND ----------
 
 START = (
@@ -119,11 +131,12 @@ if REPLAYING and (
         .toPandas()
     )
     _, val_ood, _ = score(list(val["image"]))
-    spark.createDataFrame(
+    append_through_silver(
         pd.DataFrame(
             {"bundle_version": service.version, "isic_id": val["isic_id"], "ood_score": val_ood}
-        )
-    ).write.mode("append").saveAsTable(BASELINE)
+        ),
+        BASELINE,
+    )
 baseline = (
     spark.table(BASELINE)
     .where(F.col("bundle_version") == VERSION)
@@ -243,7 +256,7 @@ def run_month(month: int) -> dict:
             "ood_score": ood, "abstain": ood > service.abstain_threshold,
             "refer_melanoma": probs[:, CLASSES.index("mel")] >= service.refer_threshold, "scored_utc": now,
         })  # fmt: skip
-        spark.createDataFrame(audit).write.mode("append").saveAsTable(AUDIT)
+        append_through_silver(audit, AUDIT)
     # The table's alert column: the overall alert OR any skin-type alert (the README says so).
     alert = bool(row.get("drift", {}).get("alert")) or any(
         v.get("alert") for v in row.get("by_skin_type", {}).values()
@@ -255,7 +268,27 @@ def run_month(month: int) -> dict:
         "live_count": live["count"],
         "summary": json.dumps(row),
     }
-    spark.createDataFrame(pd.DataFrame([record])).write.mode("append").saveAsTable(MONTHLY)
+    # The row's two counts come from the tables it summarises, so lineage reaches it from both.
+    audit_rows = (
+        spark.table(AUDIT).where(F.col("month") == month).agg(F.count(F.lit(1)).alias("audit_rows"))
+        if table_exists(AUDIT)
+        else spark.range(1).select(F.lit(0).cast("bigint").alias("audit_rows"))
+    )
+    baseline_rows = (
+        spark.table(BASELINE)
+        .where(F.col("bundle_version") == VERSION)
+        .agg(F.count(F.lit(1)).alias("baseline_rows"))
+    )
+    out = (
+        spark.createDataFrame(pd.DataFrame([record])).crossJoin(audit_rows).crossJoin(baseline_rows)
+    )
+    got = out.select("audit_rows", "baseline_rows").first()
+    # After the replay no baseline is loaded (SIZES says 0), so only the audit count is checked.
+    if got["audit_rows"] != sum(row.get("by_source", {}).values()) or (
+        REPLAYING and got["baseline_rows"] != SIZES["baseline_images"]
+    ):
+        raise RuntimeError(f"month {month}: table counts {got} do not match the run's counts")
+    out.write.mode("append").saveAsTable(MONTHLY)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / f"month_{month:02d}.json").write_text(json.dumps(row, indent=2) + "\n")
     return row
