@@ -449,6 +449,54 @@ single test look (run 124072636853443,
 - The committed job definition says `mode: select`; the look ran with the run-time
   override `mode=look`, which Databricks records for run 75228269324996.
 
+## Phase 3: serving (in progress)
+
+The shipped ensemble is served with **PyTorch on CPU** (owner's decision). An ONNX export was
+attempted and failed parity with PyTorch under an amended rule: its gaps were 3 to 7 times
+PyTorch's own batch-size noise, root cause unknown (`results/phase3/onnx/`).
+
+**Serving bundle and abstain threshold.** Under [`spec.json`](results/phase3/serving/spec.json),
+one Databricks serverless CPU run (682399318227929) scored every set on CPU, the serving hardware.
+- Each seed's Mahalanobis detector was fit on its training features. The API's NumPy scorer
+  matched the detector to within 1e-15.
+- The OOD score is the mean of the three seeds' scores. The abstain threshold
+  (848.0) is the 95th percentile on validation, so 5% of in-distribution
+  images go to review by construction.
+- The CPU ensemble reproduces the committed balanced accuracy (66.46% on the client test split).
+- Test and the new hospitals were scored once, with an attempt log, results saved before the
+  lock ([`results.json`](results/phase3/serving/results.json)).
+
+**Risk-coverage and review workload** (balanced accuracy over the classes present):
+
+| Set | Sent to review (OOD above threshold) | Balanced accuracy, all | At 90% coverage: drop least confident | At 90% coverage: drop most out-of-distribution |
+|---|---|---|---|---|
+| Validation (sets the threshold) | 5.0% | 68.3% | 71.9% | 64.3% |
+| Clients' test split | 6.6% | 66.5% | 69.4% | 63.3% |
+| Buenos Aires | 17.9% | 55.9% | 58.6% | 55.4% |
+| PAD-UFES-20 | 30.4% | 39.4% | 40.2% | 40.9% |
+
+- **The abstain flag fires more where the data is new:** 17.9% at Buenos Aires and 30.4% at
+  PAD-UFES-20, against 5.0% on validation and 6.6% on test. By client on the test split: Barcelona
+  10.0%, HAM10000 Queensland 5.3%, HAM10000 Vienna 4.8%, MSK 3.0%.
+- **Dropping the least confident images raises the kept images' balanced accuracy.** Dropping
+  the most out-of-distribution ones does not, in distribution (at PAD-UFES-20 it helps
+  slightly: 40.9% against 40.2%). The OOD score flags new data; it
+  is not a confidence score.
+- **Limitation found while testing the API:** a plain green image scored 552.7, below the
+  threshold, so it was not flagged. A detector fit on dermoscopy features can miss inputs
+  that are obviously not skin.
+
+**Public API** (`app/api/`, `Dockerfile`): FastAPI on CPU returning the label, class
+probabilities, the OOD score, the abstain flag and a melanoma referral flag (the Phase 2 triage
+threshold).
+- An upload is held in memory for one request and never stored or logged. There is no access
+  log; `/health` keeps counts and timing only.
+- Rate limits apply per client and in total.
+- The research-demo notice, the non-commercial licence terms and attribution are on the page
+  and in every response.
+- Tested locally in Docker: peak memory 646 MiB, over Render's 512 MiB free tier, so the
+  target is Hugging Face Spaces (free CPU). Not deployed yet.
+
 ## Research informatics services (Phase G)
 
 A small research data service on top of the OMOP tables. It is a portfolio build on public

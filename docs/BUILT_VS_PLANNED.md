@@ -201,6 +201,15 @@ Known limits:
   billing records' cutoff; the OMOP build's compute was billed to its pipeline update. Free
   Edition charges nothing. Not yet scheduled (the monthly job, Phase 3).
 
+### Phase 3: serving bundle, risk-coverage and the API (built 2026-10-23; not deployed)
+
+- `cdm.serving` (NumPy Mahalanobis scorer, risk-coverage, the prediction service) and
+  `databricks/notebooks/serving_bundle.py`: one CPU run (682399318227929) under the committed
+  spec built the bundle in the volume, chose the abstain threshold on validation and made one
+  look at test and the new hospitals.
+- `app/api/` (FastAPI) and `Dockerfile`: tested in CI and run locally in Docker. Not deployed:
+  the Hugging Face Spaces deploy needs the owner's login.
+
 ## Scaffolded
 
 ### Phase 3: ONNX export (tried 2026-10-22; parity failed)
