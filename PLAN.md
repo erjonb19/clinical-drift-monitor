@@ -273,7 +273,7 @@ The model becomes a service with a threshold, a schedule and a CI gate, which is
 
 - [ ] (Closed 2026-10-22 as attempted, not done: parity failed under the amended rule; the owner chose PyTorch on CPU for serving. See the decisions log and `results/phase3/onnx/`.) Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
 - [x] (Done 2026-10-23: `app/api`, tested in CI and in Docker; `results/phase3/serving/`.) FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
-- [ ] Docker image, deployed free on Render.
+- [ ] Docker image, deployed free on Render. (Image built and smoke-tested in CI; the public deploy is on hold, see the decisions log, 2026-10-23 morning.)
 - [ ] (Built 2026-10-23: `databricks/monthly_drift_job.json`, 12-month replay in `results/phase3/monthly/`; ticked after the first scheduled run. New ISIC images are counted each month, not downloaded or scored.) Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
 - [ ] Gram as a backup detector (decided 2026-10-04): the monthly job scores Gram alongside the shipped Mahalanobis detector and logs both, because Phase 2's ship rule picked Mahalanobis by 0.18 AUROC points, within the seed spread, and Gram had the lower false-alarm rate on the real sites. Gram is not usable as a CPU backup unless it is refit and checked on the serving hardware: in Phase 2 a CPU refit missed the GPU fit's normalizer by up to 11.8% (tolerance 0.1%).
 - [ ] Test the actual serving setup (decided 2026-10-05): the detector fitted on GPU (its saved PCA, class means and precision matrix) applied to features computed on CPU, with the same score-match check as Phase 2's batch-drift reference (Spearman >= 0.999 and 99% of images within 1% relative difference). Phase 2 checked only a CPU refit against the GPU scores.
@@ -317,6 +317,8 @@ This phase makes the project easy for someone else to pick up and run, which is 
 
 This phase is part of the project, not optional: the project is done only when Phase 6's "Done when" is met.
 
+**Deferred (owner decision, 2026-10-23):** no monthly history of the CMS data exists yet; see the decisions log. Nothing here is built.
+
 The drift monitor is built to work with any model, and a second model on real monthly CMS data ties the project to your healthcare data background.
 
 - [ ] Train a small readmission model on the CMS hospital quality data your governed agent already refreshes monthly, using its Type 2 history table.
@@ -344,7 +346,15 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
-- **2026-10-23 (overnight): proposed, not decided (waiting for the owner)**
+- **2026-10-23 (morning): decided by the owner**
+  - **Phase 6 (CMS readmission drift) is deferred.** Reason: the only CMS table in the workspace
+    is `workspace.gold.gold_hospital_profile`, a single 748-row snapshot with no history, so there
+    is no monthly series to train a readmission model on or to monitor for drift. Neither option in
+    the overnight entry below is chosen yet. Phase 6 stays in the plan, and the project is not done until it is met.
+  - **Public API deploy is on hold** pending the owner's decision on public weights.
+  - **The employer name is removed** from `docs/FOR_REVIEWERS.md`; it now names clinical research
+    informatics and AI engineering roles in general.
+- **2026-10-23 (overnight): proposed (decided in the morning entry above: Phase 6 deferred)**
   - **Phase 6 data source.** Phase 6 assumes the governed agent's Type 2 history table of CMS
     hospital data. A read-only check of the workspace found only
     `workspace.gold.gold_hospital_profile` (748 rows, one snapshot, no history), so there is no

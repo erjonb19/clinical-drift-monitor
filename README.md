@@ -1,7 +1,7 @@
 # Clinical Imaging Drift Monitor
 
-**Reviewing for a role?** [docs/FOR_REVIEWERS.md](docs/FOR_REVIEWERS.md) maps each duty of an AI
-computational engineer role to the file, PR and result that shows it, with a 2-minute tour.
+**Reviewing for a role?** [docs/FOR_REVIEWERS.md](docs/FOR_REVIEWERS.md) maps the duties of clinical
+research informatics and AI engineering roles to the file, PR and result that show each one, with a 2-minute tour.
 
 A skin lesion classifier trained across hospitals, with an out-of-distribution (drift) score
 tested on real new hospitals. Built on Databricks Free Edition at zero cost. A personal
