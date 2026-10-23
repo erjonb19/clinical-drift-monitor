@@ -1,0 +1,21 @@
+{
+  "recorded": "2026-10-23, before any prompt ran on a scoring note",
+  "how_labelled": "pre-annotated by Claude, human-reviewed: Claude pre-annotated every note under a written protocol, flagging its confidence per note; the project owner then reviewed all labels in labelling_sheet.xlsx",
+  "notes": 75,
+  "labels": 225,
+  "fields": ["diagnosis", "body_site", "confirmation"],
+  "by_split": {"dev": 8, "scoring": 67},
+  "flagged_low_confidence": {"total": 33, "dev": 5, "scoring": 28},
+  "flagged_high_confidence": {"total": 42, "dev": 3, "scoring": 39},
+  "changed_in_human_review": {
+    "labels": 2,
+    "notes": 1,
+    "source": "the owner's report; the pre-annotated sheet was not kept, so the count cannot be checked from files"
+  },
+  "validated": "after merging into labelling_sheet.csv: all 225 labels filled and every one is in labelling_choices.csv; the non-label columns are unchanged from before the merge",
+  "counts_from": "the confidence tag at the start of each note's labeller_notes, read from labelling_sheet.csv (outside the repository: it holds note text)",
+  "gaps": [
+    "The written pre-annotation protocol is not in this repository.",
+    "The labels are not independent of the extractor's model family (Claude): agreement between Claude Haiku and these labels may be inflated by shared judgements, so the LLM's accuracy here is an upper-leaning estimate. The keyword baseline does not share this bias."
+  ]
+}
