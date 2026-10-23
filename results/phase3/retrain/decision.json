@@ -1,0 +1,97 @@
+{
+  "spec": "results/phase3/retrain/spec.json",
+  "code_version": "817eb62",
+  "wheel_sha256": "98c614d1a0667561edbd829714e25043a066ae466fcf0bc9bbe73fd44425db92",
+  "ran_on": "Databricks serverless GPU (A10), job run 624636213399909",
+  "trigger_months": [
+    7,
+    8,
+    9
+  ],
+  "sizes": {
+    "client_train": 15277,
+    "ba_train": 653,
+    "ba_held_out": 301,
+    "client_val": 3210
+  },
+  "champion": {
+    "held_out_balanced_accuracy": 0.5668855270134588,
+    "client_val_balanced_accuracy": 0.68445666477536
+  },
+  "challenger": {
+    "held_out_balanced_accuracy": 0.6291746106955773,
+    "client_val_balanced_accuracy": 0.668563182373527
+  },
+  "held_out_gain_points": 6.228908368211849,
+  "client_val_change_points": -1.5893482401833081,
+  "paired_bootstrap_held_out": {
+    "balanced_accuracy": {
+      "difference": 0.062289083682118496,
+      "low": 0.02044278001612463,
+      "high": 0.10720312396091225
+    },
+    "melanoma_sensitivity": {
+      "difference": 0.02985074626865669,
+      "low": -0.04168133802816898,
+      "high": 0.1017166449369839
+    }
+  },
+  "rule": "gain >= 2.0 points, paired lower bound > 0, client validation change >= -1.0 point",
+  "promoted": false,
+  "next_step": "champion kept; no registry change",
+  "training_history": {
+    "seed0": [
+      {
+        "epoch": 1,
+        "train_loss": 0.552798438697092,
+        "val_bacc": 0.658309332730764
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.4518590492586936,
+        "val_bacc": 0.6456546307523938
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.4144539843884207,
+        "val_bacc": 0.6536113282588933
+      }
+    ],
+    "seed1": [
+      {
+        "epoch": 1,
+        "train_loss": 0.5428982703916488,
+        "val_bacc": 0.647876531843085
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.4352323006117536,
+        "val_bacc": 0.6577835509959213
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.39380728267133236,
+        "val_bacc": 0.6550850961662992
+      }
+    ],
+    "seed2": [
+      {
+        "epoch": 1,
+        "train_loss": 0.47134991464835985,
+        "val_bacc": 0.6323516821624615
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.38536092374593983,
+        "val_bacc": 0.6373393051999523
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.34495836216956377,
+        "val_bacc": 0.6410112494170942
+      }
+    ]
+  },
+  "seconds": 366,
+  "completed_utc": "2026-10-23T03:41:04+00:00"
+}

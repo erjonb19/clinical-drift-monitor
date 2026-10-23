@@ -294,3 +294,25 @@ it as "not detected; the reviewer checks". Here the reviewer was a script, and n
 - The #9 result was removed from the issue and posted again with the guard.
 - Overlap that the definitions do not show as nesting is still a reviewer's check, and the README
   says so.
+
+---
+
+## 12. A champion validation score that differs from its committed value (open)
+
+**Symptom.** The retraining run (job run 624636213399909) scored the champion ensemble at
+68.45% balanced accuracy on the clients' 3,210 validation images. The same three checkpoints
+scored 68.26% in Phase 2 on GPU (`results/phase2/v2/test/final_test.json`, `val_pooled`) and in
+the serving run on CPU (`results/phase3/serving/results.json`). The run passed every check it
+had: the wheel and file hashes, and each checkpoint's weight hash against the models file it
+read from the volume. The promotion decision is not affected (against 68.26% the challenger's
+change is -1.40 points, still past the -1.0 limit).
+
+**Cause.** Not found. Candidates: a different image decode or transform path from the Phase 2
+evaluation, or GPU arithmetic differences on near-tied predictions (0.19 points is a handful of
+images per class). The run did not record the weight hashes it checked or the hash of the
+models file, so `decision.json` alone cannot show which weights it scored.
+
+**Caught by.** A fresh review comparing the decision with committed numbers. Not yet caught by
+code: a retraining run should record the champion weight hashes and the models file's SHA-256 in
+its decision, and refuse when the champion's validation score differs from the committed one by
+more than a set tolerance. Until that is built, this entry stays open.

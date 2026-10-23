@@ -1,10 +1,13 @@
 # Clinical Imaging Drift Monitor
 
+**Reviewing for a role?** [docs/FOR_REVIEWERS.md](docs/FOR_REVIEWERS.md) maps each duty of an AI
+computational engineer role to the file, PR and result that shows it, with a 2-minute tour.
+
 A skin lesion classifier trained across hospitals, with an out-of-distribution (drift) score
 tested on real new hospitals. Built on Databricks Free Edition at zero cost. A personal
 portfolio project and research prototype: **not for clinical use**.
 
-**Status (2026-10-22):**
+**Status (2026-10-23):**
 - Phases 0 to 2 are done: fix the science, data engineering, and ML. The one Phase 2 item left,
   error analysis, moved to research Phase D.
 - The research extension (Phases A to F: OMOP data, a vision-language baseline, subgroups,
@@ -13,9 +16,12 @@ portfolio project and research prototype: **not for clinical use**.
   Phase B (the BiomedCLIP baseline), C (subgroups and bias), D (Grad-CAM review
   worksheet) and E (image plus metadata) are built; Phase G
   (research data services) is in progress.
-- Phases 3 to 6 have not started.
+- Phase 3 (serving and MLOps) is mostly built: the API with an abstain flag (Docker image built
+  and smoke-tested in CI with a test bundle, not deployed), the monthly drift job with per-skin-type alerts and an
+  audit table, the Unity Catalog model registry, per-run cost tracking, a retraining loop and a
+  CI accuracy gate. Phases 4 to 6 have not started.
 
-A 4-page technical report (LaTeX source with standard packages, written to build on Overleaf;
+A short technical report, written for 4 to 6 pages (LaTeX source with standard packages, written to build on Overleaf;
 not yet compiled, since no TeX is installed on the build machine):
 [docs/report/report.tex](docs/report/report.tex).
 
@@ -449,7 +455,7 @@ single test look (run 124072636853443,
 - The committed job definition says `mode: select`; the look ran with the run-time
   override `mode=look`, which Databricks records for run 75228269324996.
 
-## Phase 3: serving (in progress)
+## Phase 3: serving
 
 The shipped ensemble is served with **PyTorch on CPU** (owner's decision). An ONNX export was
 attempted and failed parity with PyTorch under an amended rule: its gaps were 3 to 7 times
@@ -567,6 +573,66 @@ by us, so the progression is a scenario, not drift observed over time.
 - **Not yet shown:** a scheduled run. The first one is due on the 1st of next month; it will
   report month 12's delayed accuracy and the live check. After the replay, runs load no model:
   they log the live count (new images are counted, not scored).
+
+## Phase 3: registry, retraining, CI gate and costs
+
+**Model registry.** The evaluated serving bundle is registered in Unity Catalog as
+`workspace.cdm.skin_lesion_classifier` v1 with the alias `champion` and the bundle hash as a tag
+(run 505700557738191). A second job loaded it through `models:/...@champion` and matched the
+bundle's answers exactly on 3 made-up images ([`registered_model_check.json`](results/phase3/lineage/registered_model_check.json);
+that job had the cdm wheel installed, so the model's own packaged environment was not tested
+alone). Unity Catalog lineage has 31 table edges, bronze to silver to OMOP
+([`lineage.json`](results/phase3/lineage/lineage.json)). **Gap:** the audit and drift tables are
+written from pandas, so no lineage edge reaches them.
+
+**Retraining loop**, under [`spec.json`](results/phase3/retrain/spec.json), committed before
+the run. It is triggered by an alert month containing Buenos Aires images (months 7 to 9: the drift table's
+alert flag includes the type II alerts of months 7 and 8). A challenger was fine-tuned from
+each champion seed for 3 epochs on the clients' training split plus the 653 labelled Buenos
+Aires images scored in months 5 to 9. One GPU run (624636213399909, A10, 366 s;
+[`decision.json`](results/phase3/retrain/decision.json)):
+
+| Ensemble | Held-out Buenos Aires (301 images, patients the challenger never saw) | Client validation (3,210) |
+|---|---|---|
+| Champion | 56.7% | 68.4% |
+| Challenger | 62.9% | 66.9% |
+| Change | **+6.2 points** (paired 95% interval +2.0 to +10.7) | **-1.6 points** |
+
+- **Not promoted.** The rule needed a gain of at least 2.0 points with the interval above zero
+  (met) and a fall of no more than 1.0 point on client validation (missed: -1.6). The champion
+  stays; nothing in the registry changed. The fall is one run with no interval, measured on the
+  split that also chose the epoch, so it is a reason not to promote, not a measured trade-off.
+- Melanoma sensitivity on the held-out set: +3.0 points, with an interval from -4.2 to +10.2.
+- These held-out images were scored in earlier phases' external evaluations, so this is an
+  operational decision, not a new benchmark. Client validation also chose the challenger's
+  epoch, so the validation check is lenient, and it still failed.
+- **Unexplained gap:** the champion's client validation balanced accuracy here is 68.45%,
+  while the same checkpoints scored 68.26% in Phase 2 (GPU, `final_test.json`) and in the
+  serving run (CPU). Against 68.26% the change would be -1.40, still past the limit, so the
+  decision stands. The cause is not found; the run did not record the champion weight hashes
+  it checked or the hash of the models file it read, so they cannot be confirmed from
+  `decision.json` alone (a gap in the record, `docs/silent-failures.md` #12).
+- Rounded rows differ by 1.5 on validation; the change (-1.59) is computed from unrounded values.
+- The first attempt (run 348183905966601) never started: the GPU environment timed out twice
+  at start-up, and no code ran ([`attempts.json`](results/phase3/retrain/attempts.json)).
+- Robustness gaps in the notebook, found in review after the run: it does not assert that held-out and training
+  patients are disjoint (the selection excludes them, but nothing checks it), and its 45-minute
+  deadline is checked only between seeds.
+
+**CI accuracy gate** ([`tests/test_eval_gate.py`](tests/test_eval_gate.py),
+[`config/eval_gate.json`](config/eval_gate.json)). It fails the build if the shipped model's
+committed metrics fall below floors: client test macro AUROC 0.88 and balanced accuracy 0.62,
+Buenos Aires 0.50, PAD-UFES-20 0.35, and test review workload at most 0.08. It also fails if a
+promotion record shows a challenger below the Buenos Aires floor; the other floors apply when a
+promoted challenger's bundle is rebuilt and evaluated. It reads committed results, not a model,
+so it guards what the repository claims, not a live model.
+
+**Cost tracking.** `scripts/cost_table.py` builds `workspace.cdm.gold_job_costs` from the system
+billing and jobs tables. With billing up to 2026-10-22 23:00 UTC, the table holds 34.3 GPU and 26.7
+CPU DBUs ($31.62 at list price) across all job runs and pipeline updates billed so far. 13 of the
+31 results files that name a job run trace to its cost: 12 job runs, 5.4 DBUs, $2.08 at list
+price. The other 18 ran after the billing cutoff. Free Edition charges nothing
+([`results/phase3/costs/`](results/phase3/costs/)).
 
 ## Research informatics services (Phase G)
 

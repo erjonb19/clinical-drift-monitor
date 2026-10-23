@@ -1,0 +1,12 @@
+{
+  "what": "Floors the shipped model's committed metrics must stay above; tests/test_eval_gate.py fails CI otherwise. Set on 2026-10-23 a few points under the evaluated values, so noise passes and a real regression fails. The gate reads committed results files, not a model: a regression fails CI once worse numbers are committed. Macro AUROC was added after review, as PLAN asks; the review workload floor reads the test split, because validation's share is 5% by construction.",
+  "serving_results": "results/phase3/serving/results.json",
+  "test_results": "results/phase2/v2/test/final_test.json",
+  "floors": {
+    "client_test_balanced_accuracy": 0.62,
+    "client_test_macro_auroc": 0.88,
+    "buenos_aires_balanced_accuracy": 0.50,
+    "pad_ufes_balanced_accuracy": 0.35,
+    "test_review_workload_max": 0.08
+  }
+}

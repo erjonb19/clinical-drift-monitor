@@ -197,9 +197,10 @@ Known limits:
   pipeline update. Checks fail the build if the price join drops or duplicates usage rows,
   a row has no price, or a SKU is unknown.
 - `results/phase3/costs/result_costs.json` traces each committed results file that names a
-  job run to that run's cost: 8 of 16 so far. The 7 newest runs were billed after the
-  billing records' cutoff; the OMOP build's compute was billed to its pipeline update. Free
-  Edition charges nothing. Not yet scheduled (the monthly job, Phase 3).
+  job run to that run's cost. Refreshed 2026-10-23 (billing to 2026-10-22 23:00 UTC): 13 of 31
+  traced (12 job runs, 5.4 DBUs, $2.08 at list price); the other 18 ran after the billing
+  cutoff. The whole table (all job runs and pipeline updates billed so far): 34.3 GPU and 26.7
+  CPU DBUs, $31.62 at list price. Free Edition charges nothing. Not scheduled; refreshed by hand.
 
 ### Phase 3: serving bundle, risk-coverage and the API (built 2026-10-23; not deployed)
 
@@ -235,6 +236,20 @@ Known limits:
 - Gap: no lineage edge reaches `gold_prediction_audit`, `gold_drift_monthly` or `gold_drift_baseline`
   (written from pandas);
   the monthly job does not yet load the model through its registry URI.
+
+### Phase 3: retraining loop and CI accuracy gate (built 2026-10-23)
+
+- `databricks/notebooks/retrain.py` and `databricks/retrain_job.json` (one A10 task, 45-minute
+  deadline, no retries): it refuses to run without an alert month containing Buenos Aires images,
+  fine-tunes a challenger per champion seed, compares it on patient-disjoint Buenos Aires images
+  and client validation, and applies the rule in `results/phase3/retrain/spec.json`. One run
+  (624636213399909): not promoted (+6.2 points at Buenos Aires, -1.6 on client validation
+  against a -1.0 limit); the decision is also appended to `workspace.cdm.gold_model_decisions`.
+  The first attempt (348183905966601) never started (GPU start-up timed out; no code ran).
+- If promoted, the notebook saves the challenger checkpoints to the volume (written, never
+  run). The bundle rebuild and the registry move are not built.
+- `tests/test_eval_gate.py` with `config/eval_gate.json`: floors on the committed serving
+  metrics and on any promoted challenger, with a self-test that a regression fails.
 
 ## Scaffolded
 
@@ -272,10 +287,12 @@ Known limits:
 
 ### Tooling
 
-- CI: ruff, ruff format, mypy (strict) and pytest on every push. No eval gate yet
-  (Phase 3).
+- CI: ruff, ruff format, mypy (strict) and pytest on every push, an accuracy gate on the
+  committed metrics (`tests/test_eval_gate.py`), and a Docker build and smoke test with an
+  untrained test bundle.
 
 ## Not started
 
-- Phases 3 to 6 as listed in `PLAN.md`. The course notebook in `reference/` is history,
+- Phase 3's remaining items (Gram backup, the serving-setup check, CPU batch drift, the
+  diagnosis_confirm_type ingest, staged shifts) and Phases 4 to 6. The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.

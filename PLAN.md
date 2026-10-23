@@ -272,7 +272,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 The model becomes a service with a threshold, a schedule and a CI gate, which is what production ML and forward deployed roles look for.
 
 - [ ] (Closed 2026-10-22 as attempted, not done: parity failed under the amended rule; the owner chose PyTorch on CPU for serving. See the decisions log and `results/phase3/onnx/`.) Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
-- [ ] FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
+- [x] (Done 2026-10-23: `app/api`, tested in CI and in Docker; `results/phase3/serving/`.) FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
 - [ ] Docker image, deployed free on Render.
 - [ ] (Built 2026-10-23: `databricks/monthly_drift_job.json`, 12-month replay in `results/phase3/monthly/`; ticked after the first scheduled run. New ISIC images are counted each month, not downloaded or scored.) Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
 - [ ] Gram as a backup detector (decided 2026-10-04): the monthly job scores Gram alongside the shipped Mahalanobis detector and logs both, because Phase 2's ship rule picked Mahalanobis by 0.18 AUROC points, within the seed spread, and Gram had the lower false-alarm rate on the real sites. Gram is not usable as a CPU backup unless it is refit and checked on the serving hardware: in Phase 2 a CPU refit missed the GPU fit's normalizer by up to 11.8% (tolerance 0.1%).
@@ -281,11 +281,11 @@ The model becomes a service with a threshold, a schedule and a CI gate, which is
 - [x] (Done 2026-10-23 in the monthly job: `cdm.monitor.by_skin_type`.) Per-skin-type drift alerts: the monthly job also computes PSI and KS per Fitzpatrick type wherever that month has at least 100 images of the type (the Phase 2 rule); smaller groups are logged with counts only and never alert.
 - [x] (Done 2026-10-23 for the monthly job: `workspace.cdm.gold_prediction_audit`; the API keeps counts only, the owner's condition.) Prediction audit table: every prediction from the monthly job and the API is written to a gold audit table (request ID, model version and registry URI, input SHA-256, label, class probabilities, OOD score, abstain flag, timestamp). The API appends to a volume file that Auto Loader ingests, so the free Render tier needs no database connection.
 - [ ] (Partly done 2026-10-23: the model is registered as `workspace.cdm.skin_lesion_classifier` v1, alias champion, with its training input logged; `results/phase3/lineage/lineage.json` has 31 table-lineage edges, bronze -> silver -> OMOP and the cost table. Gap: the audit and drift tables are written from pandas, so Unity Catalog records no edge into them; no screenshot.) Unity Catalog lineage shown end to end: bronze → silver → gold → registered model → audit table, with a screenshot and the lineage query in the runbook.
-- [ ] (Partly done 2026-10-22: `scripts/cost_table.py` builds `workspace.cdm.gold_job_costs`; `results/phase3/costs/result_costs.json` traces 8 of the 16 results files that name a job run. The 7 newest wait for billing to arrive; the OMOP build's compute was billed to its pipeline update, which no job run links to. Ticked when a refresh covers the billed ones.) Per-run cost tracking: GPU DBU and run time for every job run, read from the system billing and jobs tables and written to a gold cost table, so each result can be traced to what it cost.
+- [ ] (Partly done; refreshed 2026-10-23 with billing to 2026-10-22 23:00 UTC: `scripts/cost_table.py` builds `workspace.cdm.gold_job_costs` (34.3 GPU and 26.7 CPU DBUs billed so far across all job runs and pipeline updates, $31.62 at list price; Free Edition charges nothing); `results/phase3/costs/result_costs.json` traces 13 of the 31 results files that name a job run (12 runs, 5.4 DBUs, $2.08). The other 18 ran after the billing cutoff. Ticked when a refresh covers them.) Per-run cost tracking: GPU DBU and run time for every job run, read from the system billing and jobs tables and written to a gold cost table, so each result can be traced to what it cost.
 - [ ] Ingest stores ISIC's diagnosis_confirm_type in bronze and silver (schema change, with a bronze metadata refresh), so label provenance is tracked monthly.
 - [ ] Staged shifts scored for time to detect and false alarm rate.
-- [ ] Retraining loop: a confirmed drift trains a challenger, which replaces the current model in the Unity Catalog registry only if it wins on held-out data.
-- [ ] CI: pytest on every push plus a small eval gate that fails the build if AUROC drops, copied from the governed agent's setup.
+- [x] (Done 2026-10-23: one run under `results/phase3/retrain/spec.json`; the challenger gained 6.2 points at Buenos Aires but lost 1.6 on client validation, past the 1.0 limit, so it was not promoted and the registry did not change. `results/phase3/retrain/decision.json`.) Retraining loop: a confirmed drift trains a challenger, which replaces the current model in the Unity Catalog registry only if it wins on held-out data.
+- [x] (Done 2026-10-23: `tests/test_eval_gate.py` with floors in `config/eval_gate.json`: client test macro AUROC and balanced accuracy, balanced accuracy at both new hospitals, and test review workload. It reads committed results, so a regression fails once worse numbers are committed.) CI: pytest on every push plus a small eval gate that fails the build if AUROC drops, copied from the governed agent's setup.
 
 **Done when** the API has a live URL, the drift job has one green scheduled run, and CI blocks a regression.
 
@@ -343,6 +343,15 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 ## Decisions log
 
 Owner decisions that change scope, cost or process, newest first.
+
+- **2026-10-23 (overnight): proposed, not decided (waiting for the owner)**
+  - **Phase 6 data source.** Phase 6 assumes the governed agent's Type 2 history table of CMS
+    hospital data. A read-only check of the workspace found only
+    `workspace.gold.gold_hospital_profile` (748 rows, one snapshot, no history), so there is no
+    monthly series to train on or monitor. Options: (a) build the history from CMS's public
+    archived quarterly releases of the hospital quality data (free downloads; a few quarters
+    give a short series), or (b) connect the governed agent's history table once it exists.
+    Nothing is built until the owner chooses.
 
 - **2026-10-22 (late night)**
   - **Serving runtime:** PyTorch on CPU. ONNX was attempted and failed parity under the amended

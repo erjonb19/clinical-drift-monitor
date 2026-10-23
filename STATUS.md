@@ -9,7 +9,8 @@ Updated 2026-10-20.
   - MLflow evidence logging;
   - PLAN.md amendment and docs refresh.
 - **Next:** research Phase A (OMOP and SNOMED CT gold tables), once the prep PR is merged.
-- **Phases 3 to 6** have not started.
+- **Superseded:** this file was last updated on 2026-10-20. See the README status and
+  `docs/BUILT_VS_PLANNED.md`; Phase 3 is mostly built and Phases 4 to 6 have not started.
 
 ## Deployed in your workspace
 

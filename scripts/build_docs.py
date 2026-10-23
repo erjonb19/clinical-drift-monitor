@@ -63,6 +63,18 @@ SHIFT_NAMES = {"buenos_aires": "Buenos Aires", "pad_ufes": "PAD-UFES-20",
 CLIENTS = ("ham_vienna", "ham_queensland", "barcelona", "msk")
 CLIENT_NAMES = {"ham_vienna": "HAM10000 Vienna", "ham_queensland": "HAM10000 Queensland",
                 "barcelona": "Barcelona", "msk": "MSK"}  # fmt: skip
+P3 = Path("results/phase3")
+
+
+def load3(path: str) -> Any:
+    return json.loads((P3 / path).read_text(encoding="utf-8"))
+
+
+SERVE = load3("serving/results.json")
+MONTHS = [load3(f"monthly/month_{i:02d}.json") for i in range(1, 13)]
+REGISTRY = load3("lineage/registered_model_check.json")
+GATE = json.loads(Path("config/eval_gate.json").read_text(encoding="utf-8"))
+RETRAIN = P3 / "retrain" / "decision.json"
 
 
 def internal_table() -> str:
@@ -262,6 +274,72 @@ def gradcam_text() -> str:
     )
 
 
+def serving_text() -> str:
+    look = SERVE["test_look"]
+    work = ", ".join(
+        f"{name} {pct(look[k]['workload_share_above_threshold'])}"
+        for k, name in (("client_test", "clients' test split"), ("buenos_aires", "Buenos Aires"),
+                        ("pad_ufes", "PAD-UFES-20"))
+    )  # fmt: skip
+    ba = {r["coverage"]: r for r in look["buenos_aires"]["risk_coverage"]["confidence"]}
+    return (
+        f"a FastAPI service on CPU (`app/api`) returns the seven probabilities, the drift score and "
+        f"an abstain flag when the score is above {SERVE['abstain_threshold']:.2f}, the 95th "
+        f"percentile of validation scores. Share of images flagged for review: validation "
+        f"{pct(SERVE['validation']['workload_share_above_threshold'])}; {work}. Keeping only the "
+        f"most confident 80% of Buenos Aires images raises balanced accuracy from "
+        f"{pct(ba[1.0]['balanced_accuracy'])} to {pct(ba[0.8]['balanced_accuracy'])} "
+        f"(`results/phase3/serving/results.json`, risk-coverage curves for confidence and drift "
+        f"score). The Docker image is built and smoke-tested in CI with an untrained test bundle; "
+        f"the real bundle was checked once in Docker locally; it is not deployed"
+    )
+
+
+def monthly_text() -> str:
+    alerts = [i + 1 for i, m in enumerate(MONTHS) if m["drift"]["alert"]]
+    warns = [i + 1 for i, m in enumerate(MONTHS) if m["drift"]["warning"]]
+    psi = [MONTHS[i - 1]["drift"]["psi"] for i in alerts]
+    skin = [
+        i + 1
+        for i, m in enumerate(MONTHS)
+        if any(v.get("alert") for v in m["by_skin_type"].values())
+    ]
+    return (
+        f"a monthly Lakeflow job replays 12 months of real images (months 1 to 4 from the clients' "
+        f"test split, then Buenos Aires mixed in, then PAD-UFES-20; "
+        f"`results/phase3/monthly/spec.json`). Alerts (KS p < 0.01 and PSI at least 0.2) in "
+        f"months {', '.join(map(str, alerts))} (PSI {min(psi):.2f} to {max(psi):.2f}); warnings in "
+        f"months {', '.join(map(str, warns))}; no alert in months 1 to 4. Per-skin-type alerts "
+        f"(type II, the only type with 100 images in a month) in months "
+        f"{', '.join(map(str, skin))}: skin type is recorded only at the new sites, so these "
+        f"alerts measure the site shift as much as skin type (in months 7 and 8 the "
+        f"type II group, all Buenos Aires images, alerted while the whole month only warned). Every scored image is written to "
+        f"the `gold_prediction_audit` table with the bundle's manifest hash and the input's hash"
+    )
+
+
+def retrain_text() -> str:
+    if not RETRAIN.exists():
+        return (
+            "the retraining loop is specified (`results/phase3/retrain/spec.json`) but has not run"
+        )
+    d = json.loads(RETRAIN.read_text(encoding="utf-8"))
+    ch, cl = d["champion"], d["challenger"]
+    low = d["paired_bootstrap_held_out"]["balanced_accuracy"]["low"]
+    verdict = "promoted" if d["promoted"] else "not promoted; the champion was kept"
+    return (
+        f"one retraining run under `results/phase3/retrain/spec.json`, triggered by months "
+        f"{d['trigger_months'][0]} to {d['trigger_months'][-1]} (the drift table's alert flag also "
+        f"counts the type II alerts of months 7 and 8). Fine-tuned on the clients' training split "
+        f"plus {d['sizes']['ba_train']} labelled Buenos Aires images; on "
+        f"{d['sizes']['ba_held_out']} images of Buenos Aires patients the challenger never saw, balanced accuracy "
+        f"{pct(ch['held_out_balanced_accuracy'])} (champion) and {pct(cl['held_out_balanced_accuracy'])} "
+        f"(challenger), a gain of {d['held_out_gain_points']:+.1f} points with a paired lower bound "
+        f"of {100 * low:+.1f}; client validation change {d['client_val_change_points']:+.1f} points (limit -1.0). "
+        f"Decision: {verdict} (`results/phase3/retrain/decision.json`)"
+    )
+
+
 def model_card() -> str:
     cal = ENS["calibration"]
     ship = DRIFT["ship_rule"]
@@ -285,8 +363,8 @@ risk areas is at the end.
 - **Developer contact:** issues on the project's GitHub repository (erjonb19/clinical-drift-monitor).
 
 ## 2. Release info
-- **Release stage:** research prototype; not released, not deployed. Serving (Phase 3) is not
-  built yet.
+- **Release stage:** research prototype; not released. The API and its Docker image are built
+  and tested; a free-tier public demo is prepared but not deployed (it needs the owner's login).
 - **Release date / version:** not released; evaluated models are the v2 checkpoints recorded in
   `results/phase2/v2/training/final_models.json`.
 - **Global availability:** none. **EHR compatibility:** none. **Regulatory approval:** none.
@@ -302,8 +380,8 @@ out-of-distribution detection, drift monitoring, federated learning, research pr
 - **Intended use and workflow:** a research and engineering demonstration of monitoring a
   medical-imaging classifier for site and acquisition drift. No clinical workflow.
 - **Primary intended users:** ML and MLOps engineers, and reviewers of this portfolio project.
-- **How to use:** offline evaluation from the repository's notebooks and scripts; a serving API
-  is planned (Phase 3) and is a stated gap.
+- **How to use:** offline evaluation from the repository's notebooks and scripts, or the API in
+  `app/api` (Docker), which returns probabilities, the drift score and an abstain flag.
 - **Targeted patient population:** none clinically. The data are dermoscopic images from the
   four client sources (HAM10000 Vienna and Queensland, Barcelona, MSK).
 - **Cautioned out-of-scope settings:** any diagnosis, screening, triage or referral of real
@@ -359,9 +437,15 @@ aggregation weight.
 - **Bias mitigation approaches:** lesion-level splits (no lesion in two splits, gated); class-
   weighted loss; per-site, bordered/non-bordered, skin-type, age, sex and body-site reporting
   (research Phase C). No mitigation beyond reporting.
-- **Ongoing maintenance:** planned in Phase 3 (monthly drift job, retraining with a champion/
-  challenger test); not built. A stated gap.
-- **Security:** not served yet; no endpoint exists. A stated gap until Phase 3.
+- **Serving and abstention:** {serving_text()}.
+- **Ongoing maintenance:** {monthly_text()}. Retraining: {retrain_text()}. The registered model
+  `workspace.cdm.skin_lesion_classifier` v{REGISTRY["version"]} (alias champion) reloads through
+  the registry and matches the bundle's answers on 3 made-up images (`results/phase3/lineage/registered_model_check.json`).
+  A CI test holds the shipped model's committed metrics above floors (`config/eval_gate.json`).
+- **Security and privacy of the API:** uploads are read as a capped stream (10 MB) and never
+  stored or logged; the access log is off and only counts and timing are logged; requests are
+  rate-limited; the container runs as a non-root user. The Docker CI job checks that no image
+  reaches the disk or the log.
 - **Transparency:** code, configuration, evidence files and the silent-failure log are public in
   the repository.
 - **Explanations:** {gradcam_text()}
@@ -472,8 +556,8 @@ This project is not certified health IT; the categories are used as a structure 
 | 5. Process used to ensure fairness in development | 6 (bias mitigation), 7 (fairness and equity: site, skin type, age, alert rates) |
 | 6. External validation process | 7 (external validation at Buenos Aires and PAD-UFES-20) |
 | 7. Quantitative measures of performance | 7 |
-| 8. Ongoing maintenance of implementation and use | 6 (ongoing maintenance): a stated gap until Phase 3 |
-| 9. Update and continued validation or fairness assessment schedule | `docs/change-control-plan.md`; schedule is a stated gap until Phase 3 |
+| 8. Ongoing maintenance of implementation and use | 6 (ongoing maintenance: monthly drift job, audit table, registry) |
+| 9. Update and continued validation or fairness assessment schedule | `docs/change-control-plan.md` (monthly drift and per-skin-type checks, retraining rule, CI gate) |
 
 | HTI-1 risk area | Evidence or stated gap |
 | --- | --- |
@@ -483,7 +567,7 @@ This project is not certified health IT; the categories are used as a structure 
 | Fairness | Per-site, skin-type (I to III, within site), age and alert-rate results; types IV to VI not assessable (gap) |
 | Intelligibility | Grad-CAM worksheet with a randomization sanity check (section 6); not reviewed by a clinician (gap) |
 | Safety | Not for clinical use; triage framing only; risks in section 5 |
-| Security | Not served; a stated gap until Phase 3 |
+| Security | API privacy and rate-limit conditions checked in CI (section 6); not deployed, so not tested under real traffic (gap) |
 | Privacy | Public de-identified data only; no patient data collected |
 """
 
@@ -512,8 +596,12 @@ Modifications this plan allows, each only through the protocol in section 2:
 
 Not allowed without a new plan: a different architecture or image size, new classes, a new
 imaging modality (clinical photographs), or a change to the decision rules in section 2.
-Triggers: a confirmed drift alarm from the monthly job, or newly released labels (Phase 3; the
-monitoring job is not built yet, a stated gap).
+Triggers: an alert from the monthly drift job (KS p < 0.01 and PSI at least 0.2 against the
+validation baseline, overall or for a skin type with at least 100 images in the month), or newly
+released labels. In the 12-month replay the overall test alerted in months
+{", ".join(str(i + 1) for i, m in enumerate(MONTHS) if m["drift"]["alert"])} and the skin-type test in
+months {", ".join(str(i + 1) for i, m in enumerate(MONTHS) if any(v.get("alert") for v in m["by_skin_type"].values()))};
+neither alerted in the in-distribution months 1 to 4 (`results/phase3/monthly/`).
 
 ## 2. Modification protocol
 - **Data management.** Splits are by lesion. Earlier lesions keep their split when data are added
@@ -530,8 +618,23 @@ monitoring job is not built yet, a stated gap).
   reported on the current model's exact test images, with the full new test set as a second row.
 - **Drift detector.** Refit on the new training data; the detector choice is not reopened by a
   retraining. Baselines and monitored batches must be scored on the same hardware and settings.
-- **Update and rollback.** Champion/challenger in the Unity Catalog model registry with the
-  previous version kept for rollback (Phase 3; a stated gap).
+- **Retraining after a drift alert** (`results/phase3/retrain/spec.json`, committed before the
+  run): a challenger fine-tuned from each champion seed on the clients' training split plus the
+  labelled images from the drifted months, compared with the champion on patients from the
+  drifted site that it never saw. Promotion needs a gain of at least 2.0 points, a paired
+  bootstrap lower bound above zero, and no more than a 1.0-point fall on client validation.
+  Result: {retrain_text()}.
+- **CI accuracy gate.** `tests/test_eval_gate.py` fails the build if the shipped model's committed
+  metrics fall below `config/eval_gate.json` (client test macro AUROC
+  {GATE["floors"]["client_test_macro_auroc"]} and balanced accuracy {GATE["floors"]["client_test_balanced_accuracy"]}, Buenos Aires {GATE["floors"]["buenos_aires_balanced_accuracy"]},
+  PAD-UFES-20 {GATE["floors"]["pad_ufes_balanced_accuracy"]}, test review workload at most
+  {GATE["floors"]["test_review_workload_max"]}), or if a promoted challenger falls below the Buenos Aires floor.
+  It reads committed results, not a model.
+- **Update and rollback.** The served model is registered in Unity Catalog as
+  `workspace.cdm.skin_lesion_classifier` v{REGISTRY["version"]} with the alias `champion`. A
+  promoted challenger is first rebuilt into a serving bundle and re-evaluated, then registered as
+  a new version; rollback moves the alias back to the previous version. Every scored image in the
+  audit table carries the bundle's manifest hash, so a prediction can be traced to its version.
 
 ## 3. Impact assessment
 The one modification made so far, v2 (Barcelona 5,000 to 10,000 images), on v1's exact test images
@@ -587,8 +690,9 @@ def standards() -> str:
         ("Users are provided clear, essential information", "`docs/model-card.md`."),
         (
             "Deployed models are monitored for performance and re-training risks are managed",
-            "Partial: drift detection measured in Phase 2; `docs/change-control-plan.md`; the "
-            "monitoring job is Phase 3 (gap).",
+            "Partial: a monthly drift job with per-skin-type alerts and an audit table, shown "
+            "on a 12-month replay (no scheduled run yet); a retraining rule and a CI gate "
+            "(`docs/change-control-plan.md`).",
         ),
     ]
     tripod = [

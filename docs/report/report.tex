@@ -28,7 +28,9 @@ The shipped ensemble reaches 66.46\% balanced accuracy on the training hospitals
 and falls to 55.91\% and 39.40\% at the two new hospitals, where the shipped Mahalanobis
 detector separates the new images with AUROC 67.8\% and 82.3\%. A frozen BiomedCLIP baseline
 trails the ensemble by 15 to 16 points, and subgroup analysis shows uneven drift-alert rates by
-site.
+site. The model is served on CPU with an abstain flag that sends 5.0\% of validation images to
+review and 17.9\% and 30.4\% at the new hospitals, and a monthly drift job replaying real images
+alerted on every fully shifted month and on none of the in-distribution ones.
 We report the limits we measured: splits are by lesion rather than patient (and patients do
 span splits at the one site that records them), detector
 scores do not reproduce between GPU and CPU, darker skin types are too rare to judge, and site
@@ -167,9 +169,46 @@ depend on the learned weights; 11 maps correlate 0.5 or more and are flagged as 
 across seeds at 0.81 on average. The commonest error is a nevus called melanoma (199 of 3{,}262
 test images). No map has yet been reviewed by a clinician.
 
+\paragraph{Image plus metadata.} Adding age, sex and body site to a frozen embedding helps a
+little: on BiomedCLIP features balanced accuracy rises from 50.8\% to 53.8\% on the client test
+split and from 46.6\% to 52.2\% at Buenos Aires (every paired interval clear of zero there). On
+the shipped model's own features the client-test gain is 0.2 to 0.8 points, all intervals
+including zero. Metadata alone reaches 36.4\% against 14.3\% for chance, and at PAD-UFES-20 it
+beats every image variant (31.7\%), so part of what metadata adds is a shortcut to the source.
+
+\section{Operating the model}
+\paragraph{Serving and abstention.} The ensemble is served with PyTorch on CPU; an ONNX export
+failed a parity check (its gaps were 3 to 7 times PyTorch's own batch-size noise) and was
+dropped. The abstain threshold is the 95th percentile of validation drift scores, so 5.0\% of
+validation images go to review by construction; on one test look the share is 6.6\% on the
+client test split, 17.9\% at Buenos Aires and 30.4\% at PAD-UFES-20. Risk-coverage curves show
+that dropping the least confident images raises the kept images' balanced accuracy (at 90\%
+coverage, 66.5\% to 69.4\% on client test), while dropping the most out-of-distribution ones
+does not: the drift score flags new data, not wrong answers. It can also miss inputs that are
+plainly not skin: a uniform green picture and a random-noise picture both scored below the
+threshold. The API reads uploads as a capped stream, never stores or logs them, rate-limits
+requests and runs as a non-root user; a Docker image is built and smoke-tested in CI with an untrained test bundle.
+
+\paragraph{Monthly drift job.} A Lakeflow job, scheduled monthly but so far run only as one replay, compares each month's drift scores with
+the validation baseline (alert: KS $p<0.01$ and PSI $\ge 0.2$; warning: PSI $\ge 0.1$), repeats
+the test for every Fitzpatrick type with at least 100 images, reports each month's accuracy a
+month later, and writes every prediction to an audit table with the model bundle's hash. A
+12-month replay of real images, in an order we chose, gave no alert in the four in-distribution
+months, warnings at a 50\% Buenos Aires mix, and alerts on every month of only Buenos Aires or
+PAD-UFES-20 images (PSI 0.62 to 4.01), while the delayed balanced accuracy fell from 59--70\%
+to 35--45\%. Skin type is recorded only at the new hospitals, so the per-type alerts detect the
+site as much as skin type.
+
+\paragraph{Registry, retraining and the CI gate.} The served bundle is registered in the Unity
+Catalog model registry with a \emph{champion} alias and reloads through it with identical
+answers. One retraining run after the replay's alerts fine-tuned a challenger on the clients' training images plus 653 labelled Buenos Aires images from the drifted months. On 301 images of Buenos Aires patients it never saw, it gained 6.2 points of balanced accuracy over the champion (paired 95\% interval 2.0 to 10.7), but fell 1.6 points on client validation, past the 1.0-point limit fixed before the run, so the rule kept the champion (the validation fall is a single run without an interval). A CI test fails the build if the shipped model's committed metrics fall below fixed
+floors. Job runs are traced to their DBUs from the system billing tables (13 of 31 results so far; Free Edition
+charges nothing).
+
 \section{Governance and engineering}
 The repository keeps a list of \emph{silent failures}: eleven bugs that reported success while
-being wrong, each with the check that now catches it. Among them: the course notebook reported a
+being wrong, each with the check that now catches it, and one open entry (a retraining run's
+champion validation score 0.19 points off its committed value, cause not yet found). Among them: the course notebook reported a
 Mahalanobis AUROC of 4.1\% against CIFAR-10 because it scored in-distribution images its PCA had
 been fit on and used each image's true class for in-distribution but the nearest class for
 out-of-distribution; it also projected PathMNIST with a PCA refit on itself; a lesion-level split passed every gate while
@@ -179,8 +218,8 @@ hash-checked inside the job, and a test look writes its lock only after its resu
 so a crash cannot use up the look. The OMOP tables feed a governed cohort service whose
 definitions run only after a reviewer approves their exact hash, with small counts suppressed
 and every decision in a hash-chained audit log. Its requests are synthetic: a portfolio exercise,
-not a clinical service. Serving, the monthly monitoring job and the retraining loop (Phase 3 of the
-project plan) are not built yet.
+not a clinical service. The public API is built but not deployed, and Unity Catalog lineage
+does not yet reach the audit and drift tables, which are written from pandas.
 
 \section{Limitations}
 \begin{enumerate}
@@ -194,6 +233,8 @@ on the serving hardware.
 sites, with 98 images of Fitzpatrick types IV to VI in total.
 \item \textbf{Site and imaging type are confounded.} PAD-UFES-20 is all smartphone photographs,
 so part of its drop may come from imaging type rather than the hospital.
+\item \textbf{The monitoring evidence is a replay.} The months are real images in an order we
+chose; no scheduled run on new data has been reported yet.
 \item \textbf{Public research images, not patient records.} The OMOP tables describe image
 collections; their persons, dates and visits are approximations stated column by column.
 \end{enumerate}

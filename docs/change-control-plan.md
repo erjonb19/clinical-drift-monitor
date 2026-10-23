@@ -16,8 +16,12 @@ Modifications this plan allows, each only through the protocol in section 2:
 
 Not allowed without a new plan: a different architecture or image size, new classes, a new
 imaging modality (clinical photographs), or a change to the decision rules in section 2.
-Triggers: a confirmed drift alarm from the monthly job, or newly released labels (Phase 3; the
-monitoring job is not built yet, a stated gap).
+Triggers: an alert from the monthly drift job (KS p < 0.01 and PSI at least 0.2 against the
+validation baseline, overall or for a skin type with at least 100 images in the month), or newly
+released labels. In the 12-month replay the overall test alerted in months
+9, 10, 11, 12 and the skin-type test in
+months 7, 8, 9, 10, 11, 12;
+neither alerted in the in-distribution months 1 to 4 (`results/phase3/monthly/`).
 
 ## 2. Modification protocol
 - **Data management.** Splits are by lesion. Earlier lesions keep their split when data are added
@@ -34,8 +38,23 @@ monitoring job is not built yet, a stated gap).
   reported on the current model's exact test images, with the full new test set as a second row.
 - **Drift detector.** Refit on the new training data; the detector choice is not reopened by a
   retraining. Baselines and monitored batches must be scored on the same hardware and settings.
-- **Update and rollback.** Champion/challenger in the Unity Catalog model registry with the
-  previous version kept for rollback (Phase 3; a stated gap).
+- **Retraining after a drift alert** (`results/phase3/retrain/spec.json`, committed before the
+  run): a challenger fine-tuned from each champion seed on the clients' training split plus the
+  labelled images from the drifted months, compared with the champion on patients from the
+  drifted site that it never saw. Promotion needs a gain of at least 2.0 points, a paired
+  bootstrap lower bound above zero, and no more than a 1.0-point fall on client validation.
+  Result: one retraining run under `results/phase3/retrain/spec.json`, triggered by months 7 to 9 (the drift table's alert flag also counts the type II alerts of months 7 and 8). Fine-tuned on the clients' training split plus 653 labelled Buenos Aires images; on 301 images of Buenos Aires patients the challenger never saw, balanced accuracy 56.7% (champion) and 62.9% (challenger), a gain of +6.2 points with a paired lower bound of +2.0; client validation change -1.6 points (limit -1.0). Decision: not promoted; the champion was kept (`results/phase3/retrain/decision.json`).
+- **CI accuracy gate.** `tests/test_eval_gate.py` fails the build if the shipped model's committed
+  metrics fall below `config/eval_gate.json` (client test macro AUROC
+  0.88 and balanced accuracy 0.62, Buenos Aires 0.5,
+  PAD-UFES-20 0.35, test review workload at most
+  0.08), or if a promoted challenger falls below the Buenos Aires floor.
+  It reads committed results, not a model.
+- **Update and rollback.** The served model is registered in Unity Catalog as
+  `workspace.cdm.skin_lesion_classifier` v1 with the alias `champion`. A
+  promoted challenger is first rebuilt into a serving bundle and re-evaluated, then registered as
+  a new version; rollback moves the alias back to the previous version. Every scored image in the
+  audit table carries the bundle's manifest hash, so a prediction can be traced to its version.
 
 ## 3. Impact assessment
 The one modification made so far, v2 (Barcelona 5,000 to 10,000 images), on v1's exact test images

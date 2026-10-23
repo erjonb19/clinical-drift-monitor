@@ -16,7 +16,7 @@ Each item is mapped to evidence in this repository or to a stated gap.
 | 7 | Focus is placed on the performance of the human-AI team | Gap: no reader or human-in-the-loop study. |
 | 8 | Testing demonstrates device performance during clinically relevant conditions | Partial: external sites and a triage operating point; no prospective or clinical testing (gap). |
 | 9 | Users are provided clear, essential information | `docs/model-card.md`. |
-| 10 | Deployed models are monitored for performance and re-training risks are managed | Partial: drift detection measured in Phase 2; `docs/change-control-plan.md`; the monitoring job is Phase 3 (gap). |
+| 10 | Deployed models are monitored for performance and re-training risks are managed | Partial: a monthly drift job with per-skin-type alerts and an audit table, shown on a 12-month replay (no scheduled run yet); a retraining rule and a CI gate (`docs/change-control-plan.md`). |
 
 ## TRIPOD+AI: 27 items (Collins et al., BMJ, 2024)
 | # | Item | Evidence or gap |
