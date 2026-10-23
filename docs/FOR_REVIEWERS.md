@@ -1,7 +1,7 @@
 # For reviewers: evidence map
 
-This maps the duties of Montefiore Health Research Informatics' **AI Computational Engineer**
-role to the exact evidence in this repository. It is a personal portfolio project on public data
+This maps the duties of clinical research informatics and AI engineering roles to the exact
+evidence in this repository. It is a personal portfolio project on public data
 (ISIC Archive images, MTSamples notes) and synthetic investigator requests, **not for clinical
 use**. Every number named here comes from a committed results file, and each file is also logged
 as an MLflow run (`results/mlflow_runs.json`).
@@ -56,6 +56,7 @@ as an MLflow run (`results/mlflow_runs.json`).
 See [docs/BUILT_VS_PLANNED.md](BUILT_VS_PLANNED.md). In short:
 - the public API is built but not deployed (it needs the owner's login);
 - clinical text extraction is built but not scored (it waits for hand labels);
-- the CMS readmission model is not started (its data source needs the owner's decision);
+- the CMS readmission model (Phase 6) is deferred: there is no monthly history of the CMS data
+  to train on or monitor (see the PLAN decisions log, 2026-10-23);
 - ONNX serving failed parity and was closed;
 - lineage does not yet reach the audit table.

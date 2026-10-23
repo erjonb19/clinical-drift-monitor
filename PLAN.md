@@ -317,6 +317,8 @@ This phase makes the project easy for someone else to pick up and run, which is 
 
 This phase is part of the project, not optional: the project is done only when Phase 6's "Done when" is met.
 
+**Deferred (owner decision, 2026-10-23):** no monthly history of the CMS data exists yet; see the decisions log. Nothing here is built.
+
 The drift monitor is built to work with any model, and a second model on real monthly CMS data ties the project to your healthcare data background.
 
 - [ ] Train a small readmission model on the CMS hospital quality data your governed agent already refreshes monthly, using its Type 2 history table.
@@ -344,6 +346,14 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-23 (morning): decided by the owner**
+  - **Phase 6 (CMS readmission drift) is deferred.** Reason: the only CMS table in the workspace
+    is `workspace.gold.gold_hospital_profile`, a single 748-row snapshot with no history, so there
+    is no monthly series to train a readmission model on or to monitor for drift. Neither option
+    below is chosen yet. Phase 6 stays in the plan, and the project is not done until it is met.
+  - **Public API deploy is on hold** pending the owner's decision on public weights.
+  - **The employer name is removed** from `docs/FOR_REVIEWERS.md`; it now names clinical research
+    informatics and AI engineering roles in general.
 - **2026-10-23 (overnight): proposed, not decided (waiting for the owner)**
   - **Phase 6 data source.** Phase 6 assumes the governed agent's Type 2 history table of CMS
     hospital data. A read-only check of the workspace found only
