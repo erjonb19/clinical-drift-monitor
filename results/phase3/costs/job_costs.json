@@ -1,568 +1,1030 @@
 {
   "table": "workspace.cdm.gold_job_costs",
-  "built_utc": "2026-10-22T23:57:05+00:00",
+  "built_utc": "2026-10-23T00:03:42+00:00",
   "billing_records_up_to": "2026-10-22T21:00:00.000Z",
-  "note": "Databricks Free Edition charges nothing; list_price_usd is the list price of the same DBUs. Billing arrives with a delay, so the newest runs may be missing. A run that used GPU and CPU appears under both, with its full run time each time.",
-  "by_job": [
+  "note": "Databricks Free Edition charges nothing; list_price_usd is the list price of the recorded SKU's DBUs, discounts excluded. Billing arrives with a delay. Wall minutes are from the job timeline, queue and start-up included, counted once per run. Pipeline compute is billed to the pipeline update, not the job run.",
+  "by_name": [
     {
-      "job_name": "unnamed (one-off run or deleted job)",
+      "name": "cdm-phase2-drift-table",
       "compute": "gpu",
-      "runs": 13.0,
-      "dbus": 12.495,
-      "list_price_usd": 8.1217,
-      "run_minutes": 203.8
-    },
-    {
-      "job_name": "cdm-phase2-drift-table",
-      "compute": "gpu",
-      "runs": 2.0,
+      "runs": 2,
       "dbus": 9.4862,
       "list_price_usd": 6.166,
-      "run_minutes": 146.7
+      "wall_minutes": 146.7
     },
     {
-      "job_name": "cdm-phase2-overnight",
+      "name": "cdm-phase2-overnight",
       "compute": "gpu",
-      "runs": 3.0,
+      "runs": 3,
       "dbus": 6.4892,
       "list_price_usd": 4.218,
-      "run_minutes": 139.3
+      "wall_minutes": 139.3
     },
     {
-      "job_name": "cdm-phase2-v2",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "compute": "cpu",
+      "runs": 12,
+      "dbus": 5.5509,
+      "list_price_usd": 1.9428,
+      "wall_minutes": 0.0
+    },
+    {
+      "name": "cdm-phase2-v2",
       "compute": "gpu",
-      "runs": 1.0,
+      "runs": 1,
       "dbus": 5.2366,
       "list_price_usd": 3.4038,
-      "run_minutes": 80.8
+      "wall_minutes": 80.8
     },
     {
-      "job_name": "cdm-phase1",
+      "name": "cdm-phase1",
       "compute": "cpu",
-      "runs": 5.0,
+      "runs": 5,
       "dbus": 5.0107,
       "list_price_usd": 1.7538,
-      "run_minutes": 246.7
+      "wall_minutes": 246.7
     },
     {
-      "job_name": "cdm-phase2-batch-drift-reference",
+      "name": "cdm-phase2-batch-drift-reference",
       "compute": "cpu",
-      "runs": 2.0,
+      "runs": 2,
       "dbus": 3.3102,
       "list_price_usd": 1.1586,
-      "run_minutes": 169.2
+      "wall_minutes": 169.2
     },
     {
-      "job_name": "cdm-phase2-overnight",
+      "name": "cdm-ladder-rung3-b3-300",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 2.0811,
+      "list_price_usd": 1.3527,
+      "wall_minutes": 31.1
+    },
+    {
+      "name": "cdm-final-seeds",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 2.0784,
+      "list_price_usd": 1.351,
+      "wall_minutes": 30.5
+    },
+    {
+      "name": "cdm-ladder-batch1",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 1.6361,
+      "list_price_usd": 1.0635,
+      "wall_minutes": 24.9
+    },
+    {
+      "name": "cdm-ladder-rung1a-mix",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 1.596,
+      "list_price_usd": 1.0374,
+      "wall_minutes": 35.5
+    },
+    {
+      "name": "cdm-phase2-overnight",
       "compute": "cpu",
-      "runs": 3.0,
+      "runs": 3,
       "dbus": 1.5422,
       "list_price_usd": 0.5398,
-      "run_minutes": 139.3
+      "wall_minutes": 139.3
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
+      "name": "pipeline 14bea5de-6619-41ca-9a0e-5b99528e6005",
       "compute": "cpu",
-      "runs": 3.0,
+      "runs": 7,
+      "dbus": 1.3925,
+      "list_price_usd": 0.4874,
+      "wall_minutes": 0.0
+    },
+    {
+      "name": "cdm-ladder-posthoc",
+      "compute": "cpu",
+      "runs": 3,
       "dbus": 1.3417,
       "list_price_usd": 0.4696,
-      "run_minutes": 18.1
+      "wall_minutes": 18.1
     },
     {
-      "job_name": "cdm-phase2-triage",
+      "name": "cdm-ladder-batch2",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 1.3006,
+      "list_price_usd": 0.8454,
+      "wall_minutes": 19.0
+    },
+    {
+      "name": "cdm-phase2-evaluate-centralized-seed0",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 1.2838,
+      "list_price_usd": 0.8345,
+      "wall_minutes": 18.7
+    },
+    {
+      "name": "cdm-phase2-triage",
       "compute": "cpu",
-      "runs": 2.0,
+      "runs": 2,
       "dbus": 1.0724,
       "list_price_usd": 0.3753,
-      "run_minutes": 24.6
+      "wall_minutes": 24.5
     },
     {
-      "job_name": "cdm-phase2-v2-test",
+      "name": "cdm-phase2-v2-test",
       "compute": "cpu",
-      "runs": 1.0,
+      "runs": 1,
       "dbus": 0.9962,
       "list_price_usd": 0.3487,
-      "run_minutes": 38.8
+      "wall_minutes": 38.8
     },
     {
-      "job_name": "cdm-research-c-subgroups",
+      "name": "cdm-phase2-centralized-seed0",
+      "compute": "gpu",
+      "runs": 3,
+      "dbus": 0.8997,
+      "list_price_usd": 0.5848,
+      "wall_minutes": 10.0
+    },
+    {
+      "name": "cdm-research-c-subgroups",
       "compute": "cpu",
-      "runs": 2.0,
+      "runs": 2,
       "dbus": 0.6752,
       "list_price_usd": 0.2363,
-      "run_minutes": 28.0
+      "wall_minutes": 28.0
     },
     {
-      "job_name": "cdm-phase2-analysis-look",
+      "name": "cdm-phase2-analysis-look",
       "compute": "cpu",
-      "runs": 1.0,
+      "runs": 1,
       "dbus": 0.6705,
       "list_price_usd": 0.2347,
-      "run_minutes": 18.8
+      "wall_minutes": 18.8
     },
     {
-      "job_name": "cdm-research-d-review",
+      "name": "cdm-ladder-rung1a-stored384",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 0.5506,
+      "list_price_usd": 0.3579,
+      "wall_minutes": 7.8
+    },
+    {
+      "name": "cdm-research-d-review",
       "compute": "cpu",
-      "runs": 1.0,
+      "runs": 1,
       "dbus": 0.5388,
       "list_price_usd": 0.1886,
-      "run_minutes": 5.8
+      "wall_minutes": 5.8
     },
     {
-      "job_name": "cdm-phase2-ba-recalibration",
+      "name": "cdm-ladder-control-center384",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 0.5218,
+      "list_price_usd": 0.3392,
+      "wall_minutes": 19.0
+    },
+    {
+      "name": "cdm-phase2-ba-recalibration",
       "compute": "cpu",
-      "runs": 1.0,
+      "runs": 1,
       "dbus": 0.5113,
       "list_price_usd": 0.1789,
-      "run_minutes": 6.4
+      "wall_minutes": 6.4
     },
     {
-      "job_name": "cdm-research-b-vlm-look",
+      "name": "cdm-research-b-vlm-look",
       "compute": "cpu",
-      "runs": 2.0,
+      "runs": 2,
       "dbus": 0.3159,
       "list_price_usd": 0.1106,
-      "run_minutes": 30.0
+      "wall_minutes": 30.0
     },
     {
-      "job_name": "cdm-research-b-vlm-embed",
+      "name": "cdm-research-b-vlm-embed",
       "compute": "gpu",
-      "runs": 1.0,
+      "runs": 1,
       "dbus": 0.3153,
       "list_price_usd": 0.2049,
-      "run_minutes": 4.3
+      "wall_minutes": 4.3
     },
     {
-      "job_name": "cdm-phase1-broken-demo",
+      "name": "cdm-ladder-rung0-baseline",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 0.2824,
+      "list_price_usd": 0.1835,
+      "wall_minutes": 3.8
+    },
+    {
+      "name": "cdm-gpu-check",
+      "compute": "gpu",
+      "runs": 1,
+      "dbus": 0.2644,
+      "list_price_usd": 0.1719,
+      "wall_minutes": 3.6
+    },
+    {
+      "name": "cdm-phase1-broken-demo",
       "compute": "cpu",
-      "runs": 2.0,
+      "runs": 2,
       "dbus": 0.0911,
       "list_price_usd": 0.0319,
-      "run_minutes": 28.9
+      "wall_minutes": 28.9
     },
     {
-      "job_name": "cdm-research-e-fusion",
+      "name": "cdm-research-e-fusion",
       "compute": "cpu",
-      "runs": 1.0,
+      "runs": 1,
       "dbus": 0.0592,
       "list_price_usd": 0.0207,
-      "run_minutes": 20.3
+      "wall_minutes": 20.2
     }
   ],
   "runs": [
     {
-      "job_name": "cdm-phase1",
-      "job_run_id": "330838862474565",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "330838862474565",
+      "name": "cdm-phase1",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.683414,
       "list_price_usd": 0.239195,
-      "run_minutes": 78.48,
-      "result_state": "ERROR"
+      "wall_minutes": 78.48,
+      "result_state": "ERROR",
+      "first_usage": "2026-09-29T19:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase1",
-      "job_run_id": "606896740511548",
-      "compute": "cpu",
+      "kind": "pipeline_update",
+      "run_key": "bb9c4cb6-8a98-40e1-bdec-2228a9d734d9",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.070971,
+      "list_price_usd": 0.02484,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-29T20:50:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "d952961b-46d5-4efc-b48b-8f353e9ea609",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.115226,
+      "list_price_usd": 0.040329,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-29T20:50:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "105ec629-0799-4337-a067-c5642fd9e5fc",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.067926,
+      "list_price_usd": 0.023774,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-29T21:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "2354377e-a3d3-4dd4-8c41-d57fae208438",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.083957,
+      "list_price_usd": 0.029385,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-29T21:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "606896740511548",
+      "name": "cdm-phase1",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 1.260631,
       "list_price_usd": 0.441221,
-      "run_minutes": 34.82,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 34.82,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-09-29T21:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase1-broken-demo",
-      "job_run_id": "561727450716511",
-      "compute": "cpu",
+      "kind": "pipeline_update",
+      "run_key": "5b2cdbeb-5ac9-47b6-80c6-d70ab518fc3a",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.067631,
+      "list_price_usd": 0.023671,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-29T21:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "ae7ac13b-d853-4f07-bd42-99fac0fd5c90",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.067583,
+      "list_price_usd": 0.023654,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-29T21:10:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "9a0b5d18-502e-4d78-92bb-a2dd46777f6a",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.996026,
+      "list_price_usd": 0.348609,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-29T21:30:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "561727450716511",
+      "name": "cdm-phase1-broken-demo",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.043795,
       "list_price_usd": 0.015328,
-      "run_minutes": 22.23,
-      "result_state": "ERROR"
+      "wall_minutes": 22.23,
+      "result_state": "ERROR",
+      "first_usage": "2026-09-30T00:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase1-broken-demo",
-      "job_run_id": "161990905473833",
-      "compute": "cpu",
+      "kind": "pipeline_update",
+      "run_key": "30e6d7a5-ab94-43ad-bc71-c817b0a187d4",
+      "name": "pipeline 14bea5de-6619-41ca-9a0e-5b99528e6005",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.1589,
+      "list_price_usd": 0.055615,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-30T00:50:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "11ef761b-9c0d-40e7-846a-1c3e199facb0",
+      "name": "pipeline 14bea5de-6619-41ca-9a0e-5b99528e6005",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.217714,
+      "list_price_usd": 0.0762,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-30T00:50:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "4a01a85c-7feb-4ddd-b321-eaa714d26581",
+      "name": "pipeline 14bea5de-6619-41ca-9a0e-5b99528e6005",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.163573,
+      "list_price_usd": 0.05725,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-30T00:50:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "3752bba5-af10-4776-8856-5619f54415b4",
+      "name": "pipeline 14bea5de-6619-41ca-9a0e-5b99528e6005",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.25921,
+      "list_price_usd": 0.090724,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-30T00:50:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "541e7dc6-5375-492b-9146-a1269fbbb218",
+      "name": "pipeline 14bea5de-6619-41ca-9a0e-5b99528e6005",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.161733,
+      "list_price_usd": 0.056607,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-30T01:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "91fe1423-dffb-4378-8325-f86c91823cfd",
+      "name": "pipeline 14bea5de-6619-41ca-9a0e-5b99528e6005",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.159259,
+      "list_price_usd": 0.055741,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-30T01:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "161990905473833",
+      "name": "cdm-phase1-broken-demo",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.047277,
       "list_price_usd": 0.016547,
-      "run_minutes": 6.68,
-      "result_state": "ERROR"
+      "wall_minutes": 6.68,
+      "result_state": "ERROR",
+      "first_usage": "2026-09-30T01:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "643274334576252",
-      "compute": "gpu",
-      "dbus": 0.264399,
-      "list_price_usd": 0.171859,
-      "run_minutes": 3.57,
-      "result_state": "SUCCEEDED"
+      "kind": "pipeline_update",
+      "run_key": "a34475c2-20bf-4ed4-8aba-7a15993e7dcb",
+      "name": "pipeline 14bea5de-6619-41ca-9a0e-5b99528e6005",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.272073,
+      "list_price_usd": 0.095226,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-30T01:20:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase1",
-      "job_run_id": "338505418387571",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "338505418387571",
+      "name": "cdm-phase1",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 1.3042,
       "list_price_usd": 0.45647,
-      "run_minutes": 38.78,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 38.78,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-09-30T02:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "304922773145083",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "643274334576252",
+      "name": "cdm-gpu-check",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
+      "dbus": 0.264399,
+      "list_price_usd": 0.171859,
+      "wall_minutes": 3.57,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-09-30T02:15:00.000Z",
+      "compute": "gpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "aa0e68c2-c9e8-4fda-a83a-a33d9d3b787c",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 1.054805,
+      "list_price_usd": 0.369182,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-09-30T03:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "304922773145083",
+      "name": "cdm-phase2-centralized-seed0",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 0.134411,
       "list_price_usd": 0.087367,
-      "run_minutes": 0.4,
-      "result_state": "CANCELLED"
+      "wall_minutes": 0.4,
+      "result_state": "CANCELLED",
+      "first_usage": "2026-09-30T03:25:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "911992146364689",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "911992146364689",
+      "name": "cdm-phase2-centralized-seed0",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 0.159467,
       "list_price_usd": 0.103653,
-      "run_minutes": 1.78,
-      "result_state": "ERROR"
+      "wall_minutes": 1.78,
+      "result_state": "ERROR",
+      "first_usage": "2026-09-30T03:30:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "55487360702205",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "55487360702205",
+      "name": "cdm-phase2-centralized-seed0",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 0.605807,
       "list_price_usd": 0.393775,
-      "run_minutes": 7.85,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 7.85,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-09-30T03:30:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "10233542795545",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "10233542795545",
+      "name": "cdm-phase2-evaluate-centralized-seed0",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 1.283813,
       "list_price_usd": 0.834478,
-      "run_minutes": 18.7,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 18.7,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-01T14:05:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "107756994896751",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "107756994896751",
+      "name": "cdm-ladder-rung0-baseline",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 0.282385,
       "list_price_usd": 0.18355,
-      "run_minutes": 3.77,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 3.77,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-01T15:05:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "588772241530190",
-      "compute": "gpu",
+      "kind": "pipeline_update",
+      "run_key": "18869618-dfb3-4d69-bddf-f1795dc5719b",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.63382,
+      "list_price_usd": 0.221837,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-10-01T15:20:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "588772241530190",
+      "name": "cdm-ladder-rung1a-stored384",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 0.550619,
       "list_price_usd": 0.357902,
-      "run_minutes": 7.77,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 7.77,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-01T15:30:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "101062349232897",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "101062349232897",
+      "name": "cdm-ladder-control-center384",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 0.521842,
       "list_price_usd": 0.339198,
-      "run_minutes": 18.98,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 18.98,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-01T16:15:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "625925163526132",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "625925163526132",
+      "name": "cdm-ladder-rung1a-mix",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 1.596017,
       "list_price_usd": 1.037411,
-      "run_minutes": 35.52,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 35.52,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-01T16:25:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "139476762631068",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "139476762631068",
+      "name": "cdm-ladder-batch1",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 1.636145,
       "list_price_usd": 1.063494,
-      "run_minutes": 24.87,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 24.87,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-01T17:15:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "549712763036938",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "549712763036938",
+      "name": "cdm-ladder-batch2",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 1.300564,
       "list_price_usd": 0.845367,
-      "run_minutes": 19.0,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 19.0,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-01T17:40:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "989552658476454",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "989552658476454",
+      "name": "cdm-ladder-rung3-b3-300",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 2.081077,
       "list_price_usd": 1.3527,
-      "run_minutes": 31.13,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 31.13,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-02T17:20:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "698378152036307",
-      "compute": "cpu",
-      "dbus": 0.151362,
-      "list_price_usd": 0.052977,
-      "run_minutes": 1.18,
-      "result_state": "ERROR"
-    },
-    {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "1054615825269973",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "1054615825269973",
+      "name": "cdm-ladder-posthoc",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.835602,
       "list_price_usd": 0.292461,
-      "run_minutes": 6.55,
-      "result_state": "ERROR"
+      "wall_minutes": 6.55,
+      "result_state": "ERROR",
+      "first_usage": "2026-10-02T18:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "173508606177520",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "698378152036307",
+      "name": "cdm-ladder-posthoc",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.151362,
+      "list_price_usd": 0.052977,
+      "wall_minutes": 1.18,
+      "result_state": "ERROR",
+      "first_usage": "2026-10-02T18:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "173508606177520",
+      "name": "cdm-ladder-posthoc",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.354757,
       "list_price_usd": 0.124165,
-      "run_minutes": 10.37,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 10.37,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-02T18:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "unnamed (one-off run or deleted job)",
-      "job_run_id": "18485047960623",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "18485047960623",
+      "name": "cdm-final-seeds",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 2.078446,
       "list_price_usd": 1.35099,
-      "run_minutes": 30.47,
-      "result_state": "ERROR"
+      "wall_minutes": 30.47,
+      "result_state": "ERROR",
+      "first_usage": "2026-10-02T19:30:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "cdm-phase2-overnight",
-      "job_run_id": "964859172188676",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "964859172188676",
+      "name": "cdm-phase2-overnight",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 2.017963,
       "list_price_usd": 1.311676,
-      "run_minutes": 36.3,
-      "result_state": "ERROR"
+      "wall_minutes": 36.3,
+      "result_state": "ERROR",
+      "first_usage": "2026-10-04T01:50:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "cdm-phase2-overnight",
-      "job_run_id": "964859172188676",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "964859172188676",
+      "name": "cdm-phase2-overnight",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.207684,
       "list_price_usd": 0.072689,
-      "run_minutes": 36.3,
-      "result_state": "ERROR"
+      "wall_minutes": 36.3,
+      "result_state": "ERROR",
+      "first_usage": "2026-10-04T02:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-overnight",
-      "job_run_id": "643634709565235",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "643634709565235",
+      "name": "cdm-phase2-overnight",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 3.556726,
       "list_price_usd": 2.311872,
-      "run_minutes": 82.38,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 82.38,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T02:55:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "cdm-phase2-overnight",
-      "job_run_id": "643634709565235",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "643634709565235",
+      "name": "cdm-phase2-overnight",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.769303,
       "list_price_usd": 0.269256,
-      "run_minutes": 82.38,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 82.38,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T03:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-overnight",
-      "job_run_id": "796409623903112",
-      "compute": "gpu",
-      "dbus": 0.914476,
-      "list_price_usd": 0.59441,
-      "run_minutes": 20.58,
-      "result_state": "SUCCEEDED"
-    },
-    {
-      "job_name": "cdm-phase2-overnight",
-      "job_run_id": "796409623903112",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "796409623903112",
+      "name": "cdm-phase2-overnight",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.565224,
       "list_price_usd": 0.197828,
-      "run_minutes": 20.58,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 20.58,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T04:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase1",
-      "job_run_id": "708528812450324",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "796409623903112",
+      "name": "cdm-phase2-overnight",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
+      "dbus": 0.914476,
+      "list_price_usd": 0.59441,
+      "wall_minutes": 20.58,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T04:45:00.000Z",
+      "compute": "gpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "708528812450324",
+      "name": "cdm-phase1",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 1.460589,
       "list_price_usd": 0.511206,
-      "run_minutes": 60.17,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 60.17,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T14:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-v2",
-      "job_run_id": "962121238567298",
-      "compute": "gpu",
+      "kind": "pipeline_update",
+      "run_key": "948a9c7c-cd0a-41df-9fb0-f1d1afb2bbff",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.820326,
+      "list_price_usd": 0.287114,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-10-04T14:50:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "962121238567298",
+      "name": "cdm-phase2-v2",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 5.236596,
       "list_price_usd": 3.403787,
-      "run_minutes": 80.82,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 80.82,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T16:50:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "cdm-phase2-v2-test",
-      "job_run_id": "549220296100982",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "549220296100982",
+      "name": "cdm-phase2-v2-test",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.99623,
       "list_price_usd": 0.34868,
-      "run_minutes": 38.78,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 38.78,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T18:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-drift-table",
-      "job_run_id": "802132583124668",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "802132583124668",
+      "name": "cdm-phase2-drift-table",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 4.727397,
       "list_price_usd": 3.072808,
-      "run_minutes": 73.08,
-      "result_state": "CANCELLED"
+      "wall_minutes": 73.08,
+      "result_state": "CANCELLED",
+      "first_usage": "2026-10-04T19:05:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "cdm-phase2-drift-table",
-      "job_run_id": "457781950298490",
-      "compute": "gpu",
+      "kind": "job_run",
+      "run_key": "457781950298490",
+      "name": "cdm-phase2-drift-table",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 4.758803,
       "list_price_usd": 3.093222,
-      "run_minutes": 73.58,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 73.58,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T20:45:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "cdm-phase2-triage",
-      "job_run_id": "1113551007380686",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "1113551007380686",
+      "name": "cdm-phase2-triage",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.616415,
       "list_price_usd": 0.215745,
-      "run_minutes": 10.37,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 10.37,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T22:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-triage",
-      "job_run_id": "485789270453849",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "485789270453849",
+      "name": "cdm-phase2-triage",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.455994,
       "list_price_usd": 0.159598,
-      "run_minutes": 14.18,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 14.18,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-04T22:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-batch-drift-reference",
-      "job_run_id": "828284284699299",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "828284284699299",
+      "name": "cdm-phase2-batch-drift-reference",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 2.551749,
       "list_price_usd": 0.893112,
-      "run_minutes": 157.17,
-      "result_state": "ERROR"
+      "wall_minutes": 157.17,
+      "result_state": "ERROR",
+      "first_usage": "2026-10-04T23:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-batch-drift-reference",
-      "job_run_id": "186825054715071",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "186825054715071",
+      "name": "cdm-phase2-batch-drift-reference",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.758449,
       "list_price_usd": 0.265457,
-      "run_minutes": 12.05,
-      "result_state": "ERROR"
+      "wall_minutes": 12.05,
+      "result_state": "ERROR",
+      "first_usage": "2026-10-05T03:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-ba-recalibration",
-      "job_run_id": "485412553188780",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "485412553188780",
+      "name": "cdm-phase2-ba-recalibration",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.511271,
       "list_price_usd": 0.178945,
-      "run_minutes": 6.37,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 6.37,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-05T23:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase2-analysis-look",
-      "job_run_id": "138750679720121",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "138750679720121",
+      "name": "cdm-phase2-analysis-look",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.670537,
       "list_price_usd": 0.234688,
-      "run_minutes": 18.8,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 18.8,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-06T03:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-phase1",
-      "job_run_id": "528357594475479",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "528357594475479",
+      "name": "cdm-phase1",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.301906,
       "list_price_usd": 0.105667,
-      "run_minutes": 34.4,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 34.4,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-21T14:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-research-b-vlm-embed",
-      "job_run_id": "1040483728228282",
-      "compute": "gpu",
+      "kind": "pipeline_update",
+      "run_key": "61686b98-00d9-41fa-bbf0-8887be63c0a5",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.809192,
+      "list_price_usd": 0.283217,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-10-21T14:50:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "pipeline_update",
+      "run_key": "5992b755-b67a-4a97-8fb2-a37405c286c0",
+      "name": "pipeline f3c5c0a0-62d8-4db7-994e-d5adbd4ce95c",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.763416,
+      "list_price_usd": 0.267196,
+      "wall_minutes": null,
+      "result_state": null,
+      "first_usage": "2026-10-21T16:40:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "1040483728228282",
+      "name": "cdm-research-b-vlm-embed",
+      "sku_name": "PREMIUM_MODEL_TRAINING_US_EAST_OHIO",
       "dbus": 0.315256,
       "list_price_usd": 0.204916,
-      "run_minutes": 4.28,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 4.28,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-22T16:35:00.000Z",
+      "compute": "gpu"
     },
     {
-      "job_name": "cdm-research-b-vlm-look",
-      "job_run_id": "138325650497812",
-      "compute": "cpu",
-      "dbus": 0.131282,
-      "list_price_usd": 0.045949,
-      "run_minutes": 12.48,
-      "result_state": "SUCCEEDED"
-    },
-    {
-      "job_name": "cdm-research-b-vlm-look",
-      "job_run_id": "930314930675108",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "930314930675108",
+      "name": "cdm-research-b-vlm-look",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.184655,
       "list_price_usd": 0.064629,
-      "run_minutes": 17.52,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 17.52,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-22T19:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-research-c-subgroups",
-      "job_run_id": "570257730256860",
-      "compute": "cpu",
-      "dbus": 0.631002,
-      "list_price_usd": 0.220851,
-      "run_minutes": 23.83,
-      "result_state": "SUCCEEDED"
+      "kind": "job_run",
+      "run_key": "138325650497812",
+      "name": "cdm-research-b-vlm-look",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.131282,
+      "list_price_usd": 0.045949,
+      "wall_minutes": 12.48,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-22T19:00:00.000Z",
+      "compute": "cpu"
     },
     {
-      "job_name": "cdm-research-d-review",
-      "job_run_id": "624234357242388",
-      "compute": "cpu",
-      "dbus": 0.538771,
-      "list_price_usd": 0.18857,
-      "run_minutes": 5.82,
-      "result_state": "SUCCEEDED"
-    },
-    {
-      "job_name": "cdm-research-c-subgroups",
-      "job_run_id": "17489964569802",
-      "compute": "cpu",
-      "dbus": 0.044153,
-      "list_price_usd": 0.015453,
-      "run_minutes": 4.17,
-      "result_state": "ERROR"
-    },
-    {
-      "job_name": "cdm-research-e-fusion",
-      "job_run_id": "230673257459446",
-      "compute": "cpu",
+      "kind": "job_run",
+      "run_key": "230673257459446",
+      "name": "cdm-research-e-fusion",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
       "dbus": 0.059171,
       "list_price_usd": 0.02071,
-      "run_minutes": 20.25,
-      "result_state": "SUCCEEDED"
+      "wall_minutes": 20.25,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-22T20:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "624234357242388",
+      "name": "cdm-research-d-review",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.538771,
+      "list_price_usd": 0.18857,
+      "wall_minutes": 5.82,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-22T20:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "570257730256860",
+      "name": "cdm-research-c-subgroups",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.631002,
+      "list_price_usd": 0.220851,
+      "wall_minutes": 23.83,
+      "result_state": "SUCCEEDED",
+      "first_usage": "2026-10-22T20:00:00.000Z",
+      "compute": "cpu"
+    },
+    {
+      "kind": "job_run",
+      "run_key": "17489964569802",
+      "name": "cdm-research-c-subgroups",
+      "sku_name": "PREMIUM_JOBS_SERVERLESS_COMPUTE_US_EAST_OHIO",
+      "dbus": 0.044153,
+      "list_price_usd": 0.015453,
+      "wall_minutes": 4.17,
+      "result_state": "ERROR",
+      "first_usage": "2026-10-22T20:00:00.000Z",
+      "compute": "cpu"
     }
   ]
 }

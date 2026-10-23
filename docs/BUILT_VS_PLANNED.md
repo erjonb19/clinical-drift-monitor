@@ -189,14 +189,17 @@ Known limits:
 - `scripts/log_evidence.py`: committed results file to MLflow run, refusing uncommitted files.
   CI checks every indexed file still matches its logged hash.
 
-### Phase 3: per-run cost tracking (built 2026-10-22)
+### Phase 3: per-run cost tracking (partly built 2026-10-22)
 
 - `scripts/cost_table.py` builds `workspace.cdm.gold_job_costs` from `system.billing.usage`,
-  `system.billing.list_prices` and `system.lakeflow` (DBUs, GPU or CPU, list-price equivalent,
-  run time and result per job run) through the SQL warehouse, and commits a summary,
-  `results/phase3/costs/job_costs.json`, so each result's job run can be traced to what it
-  used. Free Edition charges nothing; billing arrives with a delay, so the newest runs appear
-  on the next refresh. Not yet scheduled (the monthly job, Phase 3).
+  `system.billing.list_prices` (USD) and `system.lakeflow`: DBUs, GPU or CPU from an
+  explicit SKU list, list-price equivalent, wall time and result, per job run and per
+  pipeline update. Checks fail the build if the price join drops or duplicates usage rows,
+  a row has no price, or a SKU is unknown.
+- `results/phase3/costs/result_costs.json` traces each committed results file that names a
+  job run to that run's cost: 8 of 16 so far. The 7 newest runs were billed after the
+  billing records' cutoff; the OMOP build's compute was billed to its pipeline update. Free
+  Edition charges nothing. Not yet scheduled (the monthly job, Phase 3).
 
 ## Scaffolded
 
