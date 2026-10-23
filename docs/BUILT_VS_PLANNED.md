@@ -227,7 +227,8 @@ Known limits:
   bundle as `workspace.cdm.skin_lesion_classifier` v1 (alias `champion`, bundle hash as a tag), with
   the clients' training split of `silver_images` logged as its input, and read 31 lineage edges from
   `system.access.table_lineage` (`results/phase3/lineage/lineage.json`).
-- Gap: no lineage edge reaches `gold_prediction_audit` or `gold_drift_monthly` (written from pandas);
+- Gap: no lineage edge reaches `gold_prediction_audit`, `gold_drift_monthly` or `gold_drift_baseline`
+  (written from pandas);
   the monthly job does not yet load the model through its registry URI.
 
 ## Scaffolded

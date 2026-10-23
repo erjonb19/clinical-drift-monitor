@@ -4,8 +4,8 @@
 # MAGIC Registers the evaluated serving bundle (manifest SHA-256 checked against
 # MAGIC `results/phase3/serving/results.json`) as an MLflow pyfunc model in the Unity Catalog
 # MAGIC registry, `workspace.cdm.skin_lesion_classifier`, alias `champion`. The run logs the
-# MAGIC clients' training split of `workspace.cdm.silver_images` as its training input, so the model's
-# MAGIC lineage reaches the lakehouse. Then it reads `system.access.table_lineage` for the chain
+# MAGIC clients' training split of `workspace.cdm.silver_images` as its training input (an MLflow
+# MAGIC dataset record; Unity Catalog lineage into the model itself is not shown here). Then it reads `system.access.table_lineage` for the chain
 # MAGIC bronze -> silver -> gold, OMOP and the audit table, and writes it with the model version.
 
 # COMMAND ----------
