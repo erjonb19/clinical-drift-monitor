@@ -44,7 +44,9 @@ MODEL = "claude-haiku-5-5"
 # US dollars per million tokens, prompts up to 100k tokens (Anthropic pricing page, read
 # 2026-10-21). Used for the spend log and the budget guard.
 PRICE_PER_MTOK = {MODEL: (0.10, 0.50)}
-MAX_OUTPUT_TOKENS = 200
+# Room for the model's own thinking as well as the short JSON answer: at 200 tokens, 6 of the 8
+# dev notes were cut off and parsed as "invalid" (docs/silent-failures.md #14).
+MAX_OUTPUT_TOKENS = 2048
 
 
 # ---- notes ----------------------------------------------------------------------------------
@@ -228,6 +230,10 @@ class BudgetExceeded(RuntimeError):
     """The next call could take spend past the cap, so it was not made."""
 
 
+class ReplyCutOff(RuntimeError):
+    """The reply stopped at the output-token limit: it is billed but never parsed or cached."""
+
+
 @dataclass
 class SpendLog:
     """One JSON line per LLM call, with tokens and cost. Lives outside the repository (it
@@ -313,6 +319,7 @@ def anthropic_transport(model: str = MODEL) -> Transport:
             raise RuntimeError(f"Messages API {exc.code}: {exc.read().decode()[:300]}") from exc
         text = "".join(part.get("text", "") for part in reply["content"])
         usage = {k: int(reply["usage"][k]) for k in ("input_tokens", "output_tokens")}
+        usage["cut_off"] = int(reply.get("stop_reason") == "max_tokens")
         return text, usage
 
     return send
@@ -345,7 +352,8 @@ def llm_extract(
         # model API; MIMIC-IV-Note runs only with a model inside the approved environment.
         raise PermissionError("MIMIC-IV-Note text is never sent to an outside LLM API")
     sha = prompt_hash(allowed)
-    key = f"{model}:{sha}:{note.note_id}"
+    # The output limit is in the key, so replies cut off under a smaller limit are never reused.
+    key = f"{model}:{sha}:{MAX_OUTPUT_TOKENS}:{note.note_id}"
     outside_repo(cache)
     cached = _read_cache(cache)
     if key not in cached:
@@ -358,6 +366,10 @@ def llm_extract(
             spend.record_failure(model, note.note_id, sha, chars)
             raise
         spend.record(model, note.note_id, sha, usage)
+        if usage.get("cut_off"):
+            raise ReplyCutOff(
+                f"note {note.note_id}: the reply hit {MAX_OUTPUT_TOKENS} output tokens"
+            )
         cache.parent.mkdir(parents=True, exist_ok=True)
         with cache.open("ab") as f:
             f.write((json.dumps({"key": key, "reply": text}) + "\n").encode())

@@ -20,6 +20,7 @@ from cdm.extract import (
     MimicIVNotes,
     MTSamples,
     Note,
+    ReplyCutOff,
     SpendLog,
     choices,
     error_kind,
@@ -110,6 +111,19 @@ def test_the_budget_guard_stops_a_call_before_the_cap(tmp_path: Path) -> None:
     with pytest.raises(BudgetExceeded):
         llm_extract(BIOPSY, ALLOWED, send, spend, tmp_path / "cache.jsonl")
     assert calls == [] and spend.total() == 0
+
+
+def test_a_reply_cut_off_at_the_token_limit_fails_and_is_not_cached(tmp_path: Path) -> None:
+    def cut(system: str, user: str) -> tuple[str, dict[str, int]]:
+        return '{"diagnosis": "Nevus", "conf', {"input_tokens": 1000, "output_tokens": 2048,
+                                                 "cut_off": 1}  # fmt: skip
+
+    spend = SpendLog(tmp_path / "spend.jsonl")
+    cache = tmp_path / "cache.jsonl"
+    with pytest.raises(ReplyCutOff):
+        llm_extract(BIOPSY, ALLOWED, cut, spend, cache)
+    assert spend.total() > 0  # billed, so it counts toward the cap
+    assert not cache.exists()  # never replayed as an answer
 
 
 def test_unparseable_or_partial_replies_are_invalid() -> None:
