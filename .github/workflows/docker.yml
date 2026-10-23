@@ -1,0 +1,54 @@
+# Builds the API's Docker image and smoke-tests it, with a CI-only test bundle (untrained
+# weights; the real bundle is never in git). Nothing is pushed anywhere.
+name: Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Test bundle (untrained, CI only)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[train]"
+          python scripts/make_test_bundle.py --out dist/bundle
+      - name: Build the image
+        run: docker build -t cdm-api:ci .
+      - name: Smoke test
+        run: |
+          docker run -d --name api -p 7860:7860 cdm-api:ci
+          for i in $(seq 1 60); do curl -sf http://localhost:7860/health && break; sleep 2; done
+          python - <<'PY'
+          import io, json, urllib.request
+          from PIL import Image
+          buf = io.BytesIO(); Image.new("RGB", (300, 200), (180, 120, 100)).save(buf, format="JPEG")
+          req = urllib.request.Request("http://localhost:7860/predict", data=buf.getvalue(), headers={"Content-Type": "image/jpeg"})
+          out = json.load(urllib.request.urlopen(req, timeout=60))
+          assert "not for medical use" in out["notice"] and "non-commercial" in out["license"], out
+          bad = urllib.request.Request("http://localhost:7860/predict", data=b"not an image", headers={"Content-Type": "image/jpeg"})
+          try:
+              urllib.request.urlopen(bad, timeout=30)
+              raise SystemExit("a non-image was accepted")
+          except urllib.error.HTTPError as err:
+              assert err.code == 400, err.code
+          health = json.load(urllib.request.urlopen("http://localhost:7860/health"))
+          assert health["predictions"] == 1 and health["rejected"] == 1, health
+          print("smoke test passed", health)
+          PY
+          if docker logs api 2>&1 | grep -q "POST /predict"; then echo "access log found"; exit 1; fi
+      - name: Container logs
+        if: always()
+        run: docker logs api || true
