@@ -366,7 +366,8 @@ def llm_extract(
             spend.record_failure(model, note.note_id, sha, chars)
             raise
         spend.record(model, note.note_id, sha, usage)
-        if usage.get("cut_off"):
+        # stop_reason from the API, or, for a transport that does not report it, a full budget.
+        if usage.get("cut_off") or usage.get("output_tokens", 0) >= MAX_OUTPUT_TOKENS:
             raise ReplyCutOff(
                 f"note {note.note_id}: the reply hit {MAX_OUTPUT_TOKENS} output tokens"
             )

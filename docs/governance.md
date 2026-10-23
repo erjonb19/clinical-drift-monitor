@@ -62,7 +62,8 @@ before work starts. The answers are recorded in the issue.
 | **High** | Anything touching tier 2; LLM processing of clinical notes; outputs that could identify a person; anything used to make a decision about a patient | Approval by the data owner and, for real clinical data, IRB or privacy office; output review by a second person; escalation (section 4) if anything is unexpected |
 
 AI outputs carry their own controls (G5):
-- extraction results are scored against hand labels before use (`docs/EVAL_PLAN.md` Q7);
+- extraction results are scored against labelled notes before use (`docs/EVAL_PLAN.md` Q7; the G5
+  labels were pre-annotated by Claude and human-reviewed, see the 2026-10-23 amendment);
 - LLM calls are logged with model, prompt hash and cost;
 - CI never calls a live model;
 - a concept ID an LLM returns must already exist in the concept map, or it is rejected.

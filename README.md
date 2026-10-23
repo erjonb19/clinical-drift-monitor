@@ -694,7 +694,7 @@ data and **synthetic** requests, not a clinical service.
 
   - Haiku's interval is above the baseline's on every field. Its main error is naming a value
     the label calls not stated (7, 10 and 3 "hallucinated" by field). One reply held two
-    answers (Haiku corrected itself), which the fixed parser scores as invalid on all three
+    answers (Haiku corrected itself), which the parser, unchanged since before scoring, scores as invalid on all three
     fields.
   - **Limits:** the labels come from the same model family as the extractor, so Haiku's
     agreement may be inflated; the keyword baseline does not share that bias. One reviewer, 67

@@ -340,7 +340,9 @@ MLflow and kept as it ran. A true isolated reload check is not built.
 ## 14. LLM replies cut off at the token limit, scored as "invalid"
 
 **Symptom.** The first G5 dev run (8 notes, 2026-10-23) gave Claude Haiku 2 of 8 correct on
-diagnosis and 1 of 8 on body site, below the keyword baseline. Six of the eight replies were
+diagnosis and 1 of 8 on body site, below the keyword baseline (counts read from that run's
+output; the rerun overwrote its predictions file, and the 200-token spend entries remain in
+`~/.cdm/llm_spend.jsonl`). Six of the eight replies were
 empty or stopped mid-word (`"confirmation": "histop`). The run reported success, and the parser
 turned each cut reply into "invalid", which scores as a wrong answer.
 
