@@ -201,12 +201,12 @@ site as much as skin type.
 
 \paragraph{Registry, retraining and the CI gate.} The served bundle is registered in the Unity
 Catalog model registry with a \emph{champion} alias and reloads through it with identical
-answers. One retraining run after the replay's alerts fine-tuned a challenger on the clients' training images plus 653 labelled Buenos Aires images from the drifted months. On 301 images of Buenos Aires patients it never saw, it gained 6.2 points of balanced accuracy over the champion (paired 95\% interval 2.0 to 10.7), but fell 1.6 points on client validation, past the 1.0-point limit fixed before the run, so the rule kept the champion (the validation fall is a single run without an interval). A CI test fails the build if the shipped model's committed metrics fall below fixed
+answers on three made-up images. One retraining run after the replay's alerts fine-tuned a challenger on the clients' training images plus 653 labelled Buenos Aires images from the drifted months. On 301 images of Buenos Aires patients it never saw, it gained 6.2 points of balanced accuracy over the champion (paired 95\% interval 2.0 to 10.7), but fell 1.6 points on client validation, past the 1.0-point limit fixed before the run, so the rule kept the champion (the validation fall is a single run without an interval). A CI test fails the build if the shipped model's committed metrics fall below fixed
 floors. Job runs are traced to their DBUs from the system billing tables (13 of 31 results so far; Free Edition
 charges nothing).
 
 \section{Governance and engineering}
-The repository keeps a list of \emph{silent failures}: eleven bugs that reported success while
+The repository keeps a list of \emph{silent failures}: twelve bugs that reported success while
 being wrong, each with the check that now catches it, and one open entry (a retraining run's
 champion validation score 0.19 points off its committed value, cause not yet found). Among them: the course notebook reported a
 Mahalanobis AUROC of 4.1\% against CIFAR-10 because it scored in-distribution images its PCA had

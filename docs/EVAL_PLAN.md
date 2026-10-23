@@ -116,7 +116,7 @@ were looked at. Results live in `results/`, each logged in MLflow
 - **Reviewer instructions:** categorise each row as label doubt, image quality, artefact (ruler,
   ink, hair, vignette), rare presentation, or model error. The heatmap is shown after the
   first category is chosen, so it does not anchor the choice.
-- **Grad-CAM sanity (Phase D, built 2026-10-22):** a weight-randomization test will run in CI,
+- **Grad-CAM sanity (Phase D, built 2026-10-22):** a weight-randomization test runs in CI,
   and heatmaps that survive
   randomization are not interpreted.
 - **G5 errors:** every disagreement with the hand labels is categorised as missed, wrong
