@@ -294,5 +294,8 @@ Known limits:
 ## Not started
 
 - Phase 3's remaining items (Gram backup, the serving-setup check, CPU batch drift, the
-  diagnosis_confirm_type ingest, staged shifts) and Phases 4 to 6. The course notebook in `reference/` is history,
+  diagnosis_confirm_type ingest, staged shifts) and Phases 4 and 5.
+- Phase 6 (CMS readmission drift) is deferred (owner decision, 2026-10-23): the only CMS table
+  is a single 748-row snapshot with no monthly history. See the PLAN decisions log.
+- The course notebook in `reference/` is history,
   not a starting point; its numbers are superseded by Phase 0.

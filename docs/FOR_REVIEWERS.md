@@ -54,7 +54,7 @@ as an MLflow run (`results/mlflow_runs.json`).
 ## What is not done, stated plainly
 
 See [docs/BUILT_VS_PLANNED.md](BUILT_VS_PLANNED.md). In short:
-- the public API is built but not deployed (it needs the owner's login);
+- the public API is built but not deployed (on hold pending the owner's decision on public weights);
 - clinical text extraction is built but not scored (it waits for hand labels);
 - the CMS readmission model (Phase 6) is deferred: there is no monthly history of the CMS data
   to train on or monitor (see the PLAN decisions log, 2026-10-23);

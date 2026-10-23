@@ -15,7 +15,7 @@ risk areas is at the end.
 
 ## 2. Release info
 - **Release stage:** research prototype; not released. The API and its Docker image are built
-  and tested; a free-tier public demo is prepared but not deployed (it needs the owner's login).
+  and tested; a free-tier public demo is prepared but not deployed (on hold pending the owner's decision on public weights).
 - **Release date / version:** not released; evaluated models are the v2 checkpoints recorded in
   `results/phase2/v2/training/final_models.json`.
 - **Global availability:** none. **EHR compatibility:** none. **Regulatory approval:** none.
