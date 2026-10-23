@@ -17,4 +17,5 @@ RUN useradd --uid 1000 --create-home demo && chown -R demo /app
 USER demo
 EXPOSE 7860
 HEALTHCHECK CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')"
-CMD ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "1"]
+# No access log: it would record client addresses; /health keeps counts and timing only.
+CMD ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "7860", "--no-access-log"]

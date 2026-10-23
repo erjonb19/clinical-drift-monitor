@@ -69,3 +69,17 @@ def test_rate_limiter_window_slides() -> None:
     assert limiter.allow("a") and not limiter.allow("a") and limiter.allow("b")
     now[0] = 61
     assert limiter.allow("a")
+
+
+def test_the_rate_limit_uses_the_forwarded_client_behind_a_proxy() -> None:
+    c, _ = client(RateLimiter(per_client=1, total=100))
+    files = {"image": ("x.jpg", jpeg(), "image/jpeg")}
+    assert (
+        c.post("/predict", files=files, headers={"x-forwarded-for": "1.1.1.1"}).status_code == 200
+    )
+    assert (
+        c.post("/predict", files=files, headers={"x-forwarded-for": "2.2.2.2"}).status_code == 200
+    )
+    assert (
+        c.post("/predict", files=files, headers={"x-forwarded-for": "1.1.1.1"}).status_code == 429
+    )

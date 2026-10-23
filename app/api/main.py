@@ -130,7 +130,10 @@ def create_app(load: Callable[[], Service], limiter: RateLimiter | None = None) 
 
     @app.post("/predict")
     async def predict(request: Request, image: UploadFile = File(...)) -> dict[str, Any]:  # noqa: B008
-        client = request.client.host if request.client else "unknown"
+        # Behind a hosting proxy every request comes from the proxy, so the first forwarded
+        # address is the client. It is used for the rate limit in memory and never logged.
+        forwarded = request.headers.get("x-forwarded-for", "")
+        client = forwarded.split(",")[0].strip() or (request.client.host if request.client else "?")
         if not limits.allow(client):
             stats.add("rate_limited")
             raise HTTPException(429, "rate limit: try again in a minute")
