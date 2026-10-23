@@ -221,6 +221,21 @@ Known limits:
   12-month replay ran as one backfill (830837634650904); `gold_drift_monthly`,
   `gold_prediction_audit` and `gold_drift_baseline` exist. No scheduled run yet.
 
+### Phase 3: Unity Catalog model and lineage (partly built 2026-10-23)
+
+- `databricks/notebooks/register_model.py` (run 505700557738191) registered the evaluated serving
+  bundle as `workspace.cdm.skin_lesion_classifier` v1 (alias `champion`, bundle hash as a tag), with
+  the clients' training split of `silver_images` logged as its input, and read 31 lineage edges from
+  `system.access.table_lineage` (`results/phase3/lineage/lineage.json`).
+- A second job loaded `models:/workspace.cdm.skin_lesion_classifier@champion` through the registry and
+  matched the bundle's answers on made-up images (`results/phase3/lineage/registered_model_check.json`).
+  Correction: that file says "fresh environment (pip requirements from the model)"; the load ran in the
+  job's own environment, which has the cdm wheel installed, so the model's packaged code and pins were
+  not tested in isolation.
+- Gap: no lineage edge reaches `gold_prediction_audit`, `gold_drift_monthly` or `gold_drift_baseline`
+  (written from pandas);
+  the monthly job does not yet load the model through its registry URI.
+
 ## Scaffolded
 
 ### Phase 3: ONNX export (tried 2026-10-22; parity failed)

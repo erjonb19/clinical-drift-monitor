@@ -1,0 +1,141 @@
+{
+  "registered_model": {
+    "name": "workspace.cdm.skin_lesion_classifier",
+    "version": 1,
+    "alias": "champion",
+    "uri": "models:/workspace.cdm.skin_lesion_classifier@champion",
+    "mlflow_run": "58ec0088ed0645529c75ace9d2fbd879",
+    "training_input": "workspace.cdm.silver_images (clients' training split)",
+    "bundle_manifest_sha256": "5734add1790eadd6f2e36d767bd78d6fcf5a791484756ed616edf721e8eedee5"
+  },
+  "table_lineage_edges": [
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.gate_results"
+    },
+    {
+      "source": "system.billing.list_prices",
+      "target": "workspace.cdm.gold_job_costs"
+    },
+    {
+      "source": "system.billing.usage",
+      "target": "workspace.cdm.gold_job_costs"
+    },
+    {
+      "source": "system.lakeflow.job_run_timeline",
+      "target": "workspace.cdm.gold_job_costs"
+    },
+    {
+      "source": "system.lakeflow.jobs",
+      "target": "workspace.cdm.gold_job_costs"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_cdm_source"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_cdm_source"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_concept"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_concept"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_condition_occurrence"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_condition_occurrence"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_gate_results"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_gate_results"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_image_occurrence"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_image_occurrence"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_observation_period"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_observation_period"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_person"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_person"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_procedure_occurrence"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_procedure_occurrence"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.omop_profile"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.omop_profile"
+    },
+    {
+      "source": "workspace.cdm.bronze_images",
+      "target": "workspace.cdm.silver_decoded"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.silver_images"
+    },
+    {
+      "source": "workspace.cdm.silver_metadata",
+      "target": "workspace.cdm.silver_images"
+    },
+    {
+      "source": "workspace.cdm.silver_images",
+      "target": "workspace.cdm.silver_images_v1_snapshot"
+    },
+    {
+      "source": "workspace.cdm.bronze_images",
+      "target": "workspace.cdm.silver_metadata"
+    },
+    {
+      "source": "workspace.cdm.bronze_manifest",
+      "target": "workspace.cdm.silver_metadata"
+    },
+    {
+      "source": "workspace.cdm.bronze_metadata",
+      "target": "workspace.cdm.silver_metadata"
+    },
+    {
+      "source": "workspace.cdm.silver_decoded",
+      "target": "workspace.cdm.silver_quarantine"
+    }
+  ],
+  "read_from": "system.access.table_lineage",
+  "code_version": "b0a9e71",
+  "ran_on": "Databricks serverless CPU, job run 505700557738191",
+  "completed_utc": "2026-10-23T02:38:24+00:00"
+}
