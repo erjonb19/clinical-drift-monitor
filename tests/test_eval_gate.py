@@ -44,7 +44,8 @@ def test_the_shipped_model_stays_above_the_floors() -> None:
 def test_a_promoted_challenger_meets_the_floors_too() -> None:
     """A retraining decision records only held-out Buenos Aires and client validation, so this
     checks the Buenos Aires floor; the other floors apply when the challenger's serving bundle is
-    rebuilt and its results replace the serving results above."""
+    rebuilt and its results replace both files the gate reads (the serving results and, for macro
+    AUROC, the test results)."""
     decision = REPO / "results" / "phase3" / "retrain" / "decision.json"
     if not decision.exists():
         return  # no retraining decision committed yet

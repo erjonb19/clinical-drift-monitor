@@ -96,7 +96,7 @@ Known limits:
   recompute moved to Phase 3.
 - Error analysis is partly done: the confusion matrices by site and skin type and the review
   worksheet are research Phase D.
-- Nothing is registered in Unity Catalog yet (Phase 3).
+- Registering the model in Unity Catalog moved to Phase 3 (done there: v1, alias champion).
 
 ### Research Phase A: OMOP tables (built 2026-10-21)
 
