@@ -65,7 +65,8 @@ def check_bundle(bundle: Path) -> dict[str, Any]:
 
 
 def stage(target: Path, bundle: Path) -> None:
-    for rel in ("Dockerfile", ".dockerignore", "pyproject.toml"):
+    for rel in ("Dockerfile", ".dockerignore", "pyproject.toml", "docker/constraints.txt"):
+        (target / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO / rel, target / rel)
     (target / "README.md").write_text(SPACE_README, encoding="utf-8", newline="\n")
     shutil.copytree(
@@ -84,7 +85,15 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if git(
-        "status", "--porcelain", "--", "src", "app", "Dockerfile", ".dockerignore", "pyproject.toml"
+        "status",
+        "--porcelain",
+        "--",
+        "src",
+        "app",
+        "docker",
+        "Dockerfile",
+        ".dockerignore",
+        "pyproject.toml",
     ):
         sys.exit("uncommitted changes: deploy a commit")
     manifest = check_bundle(args.bundle)
