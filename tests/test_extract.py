@@ -317,3 +317,37 @@ def test_widened_selection_and_a_development_split_from_every_group(tmp_path: Pa
     summary = selection_summary(notes)
     assert summary["by_group_and_split"]["dermatology"] == {"dev": 1, "scoring": 0}
     assert "text" not in json.dumps(summary)
+
+
+def test_workbook_has_dropdowns_and_locks_the_note_text(tmp_path: Path) -> None:
+    from openpyxl import load_workbook
+
+    from cdm.extract import merge_workbook, write_workbook
+
+    tricky = note("=1+1 looks like a formula; a nevus on the arm.")
+    write_sheet([BIOPSY, NO_DX, tricky], tmp_path, ALLOWED, n=3)
+    path = write_workbook(tmp_path)
+    wb = load_workbook(path)
+    ws = wb["labels"]
+    header = [c.value for c in ws[1]]
+    text, notes = header.index("text") + 1, header.index("labeller_notes") + 1
+    assert ws.protection.sheet and ws.cell(2, text).protection.locked
+    assert not ws.cell(2, notes).protection.locked and ws.cell(2, text).alignment.wrap_text
+    assert wb["choices"].sheet_state == "hidden"
+    assert any(str(ws.cell(r, text).value).startswith("=1+1") for r in range(2, 5))
+    checks = {str(d.sqref): d.formula1 for d in ws.data_validations.dataValidation}
+    for k, column in enumerate(("label_diagnosis", "label_body_site", "label_confirmation")):
+        letter = "GHI"[k]
+        assert header.index(column) == 6 + k
+        span = checks[f"{letter}2:{letter}4"]
+        values = [c.value for c in wb["choices"]["ABC"[k]] if c.value is not None]
+        assert span.endswith(f"${len(values)}")
+        assert values == ALLOWED.labels(column.removeprefix("label_"))
+    with pytest.raises(FileExistsError):
+        write_workbook(tmp_path)
+    # Labels come back into the CSV by note ID; everything else stays as written.
+    ws.cell(2, header.index("label_diagnosis") + 1).value = "Nevus"
+    wb.save(path)
+    assert merge_workbook(tmp_path) == 1
+    rows = pd.read_csv(tmp_path / "labelling_sheet.csv", dtype=str, keep_default_na=False)
+    assert "Nevus" in set(rows["label_diagnosis"]) and set(rows["text"]) >= {tricky.text}
