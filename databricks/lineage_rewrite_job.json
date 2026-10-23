@@ -15,7 +15,7 @@
       "spec": {
         "environment_version": "4",
         "dependencies": [
-          "/Volumes/workspace/cdm/raw/deploy/cfc8792/cdm-0.1.0-py3-none-any.whl"
+          "/Volumes/workspace/cdm/raw/deploy/df7afc4/cdm-0.1.0-py3-none-any.whl"
         ]
       }
     }
@@ -30,11 +30,11 @@
       "notebook_task": {
         "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/lineage_rewrite",
         "base_parameters": {
-          "code_version": "cfc8792",
-          "wheel": "/Volumes/workspace/cdm/raw/deploy/cfc8792/cdm-0.1.0-py3-none-any.whl",
-          "wheel_sha256": "2039360d6cc49590eb7311bd0956a7e7868092019d222a7b5da29d25c8f2c964",
-          "repo": "/Volumes/workspace/cdm/raw/deploy/cfc8792/repo",
-          "files_sha256": "{\"results/phase3/lineage/spark_writes_spec.json\": \"f7cb31e34c6a733182718e0636b2497f690658f565659563c0c9c82c88c89398\", \"databricks/notebooks/lineage_rewrite.py\": \"993d032f3218e6d7cbfcd6b71f63afc20233b7b483dcebbf4e7f5c6fcca9060c\"}",
+          "code_version": "df7afc4",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/df7afc4/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "07d6a1a238ef7a9c31ddc6dec61990ea599a2554d394b28c7414c024e547fdbf",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/df7afc4/repo",
+          "files_sha256": "{\"results/phase3/lineage/spark_writes_spec.json\": \"57f1a8b64697c8aeb8803571444c3df178947d45dbe5c80d2a9dca974e21bc89\", \"databricks/notebooks/lineage_rewrite.py\": \"c8dee386486a199642adf8cd338d6ba2816da6aa8029776439b60b9ae5416aab\"}",
           "out": "/Volumes/workspace/cdm/raw/results/phase3/lineage",
           "job_run_id": "{{job.run_id}}"
         }
