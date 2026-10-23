@@ -179,9 +179,9 @@ Known limits:
   tables for seven synthetic requests (#8 to #14). Stand-in decisions are in
   `results/research/g2_cohort/synthetic_approvals.jsonl`; `phenotypes/approvals.jsonl` holds
   the project owner's own decisions, recorded by the owner on 2026-10-23: five v2 phenotypes
-  approved and `melanoma_dermoscopy` v2 rejected (CC-BY-NC terms). The v1 files stay undecided.
+  approved and `melanoma_dermoscopy` v2 rejected (its request is commercial, which the CC-BY-NC images do not allow). The v1 files stay undecided.
 - G3: dataset metadata, `CITATION.cff` and the quickstart notebook, run in CI offline. The
-  Zenodo release is not made yet: the owner deferred it until after the phenotype approvals.
+  Zenodo release is not made yet: the phenotype approvals are now recorded, and the release is still the owner's step.
 - G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests; request numbers
   come from a committed snapshot of the issue tracker.
 
