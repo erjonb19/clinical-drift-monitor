@@ -1,8 +1,8 @@
 {
-  "checked_utc": "2026-10-23T01:47:49+00:00",
+  "checked_utc": "2026-10-23T01:50:00+00:00",
   "image": "cdm-api:local",
-  "image_id": "sha256:ec1b858fe2cdee9619482be68bd192881c6655379cf39e6e7459df33ffe99009",
-  "commit": "8c7aacb",
+  "image_id": "sha256:90da68a68517a2566c516603457b85d2c75c798f8d046a643fccec78723c886b",
+  "commit": "74e823e",
   "made_up_images": {
     "plain_green_400x300": {
       "label": "vasc",
@@ -29,8 +29,8 @@
     "predictions": 5,
     "rejected": 0,
     "rate_limited": 0,
-    "latency_ms_p50": 157.1,
-    "latency_ms_p95": 253.6
+    "latency_ms_p50": 174.4,
+    "latency_ms_p95": 237.6
   },
   "access_log_lines": 0,
   "where": "the owner's laptop, Docker, no memory limit"
