@@ -54,3 +54,13 @@ def test_delayed_accuracy_uses_labelled_images_and_the_melanoma_minimum() -> Non
     out = delayed_accuracy(labels, probs)
     assert out["labelled"] == 3 and out["balanced_accuracy"] == 1.0
     assert "melanoma_sensitivity" not in out and out["melanoma_images"] == 1
+
+
+def test_warning_band_and_nan_skin_types() -> None:
+    rng = np.random.default_rng(3)
+    base = rng.normal(size=20000)
+    mild = drift_test(base, rng.normal(0.35, 1, size=20000))
+    assert not mild["alert"] or mild["psi"] >= 0.2
+    assert mild["warning"] == (not mild["alert"] and mild["psi"] >= 0.1)
+    out = by_skin_type(base, rng.normal(size=150), [None] * 50 + [""] * 50 + [float("nan")] * 50)
+    assert list(out) == ["not recorded"] and out["not recorded"]["images"] == 150

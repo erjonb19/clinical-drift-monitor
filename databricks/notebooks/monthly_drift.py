@@ -68,7 +68,8 @@ spec = json.loads((REPO / "results/phase3/monthly/spec.json").read_text(encoding
 evaluated = json.loads((REPO / "results/phase3/serving/results.json").read_text(encoding="utf-8"))
 manifest_sha = hashlib.sha256((BUNDLE / "manifest.json").read_bytes()).hexdigest()
 assert manifest_sha == evaluated["bundle"]["manifest_sha256"], "not the evaluated bundle"
-service = Service.load(BUNDLE)
+VERSION = json.loads((BUNDLE / "manifest.json").read_text(encoding="utf-8"))["version"]
+LAST_REPLAY = max(int(m) for m in spec["replay"]["schedule"])
 transform = eval_transform(224)
 
 
@@ -96,8 +97,17 @@ def table_exists(name: str) -> bool:
 
 # COMMAND ----------
 
-# The validation baseline, once per bundle.
-if (
+START = (
+    (max(spark.table(MONTHLY).select("month").toPandas()["month"]) + 1)
+    if table_exists(MONTHLY)
+    else 1
+)
+REPLAYING = START <= LAST_REPLAY
+# After the replay a run logs the live check and the last delayed accuracy only: no model.
+service = Service.load(BUNDLE) if REPLAYING else None
+
+# The validation baseline, once per bundle, checked for size.
+if REPLAYING and (
     not table_exists(BASELINE)
     or spark.table(BASELINE).where(F.col("bundle_version") == service.version).count() == 0
 ):
@@ -116,11 +126,12 @@ if (
     ).write.mode("append").saveAsTable(BASELINE)
 baseline = (
     spark.table(BASELINE)
-    .where(F.col("bundle_version") == service.version)
+    .where(F.col("bundle_version") == VERSION)
     .toPandas()["ood_score"]
     .to_numpy()
+    if REPLAYING
+    else np.array([])
 )
-print(f"baseline: {len(baseline)} validation scores", flush=True)
 
 # The replay schedule, fixed by the spec and the seed.
 meta = (
@@ -149,6 +160,9 @@ pools = {
     "buenos_aires": list(meta[meta["source"] == "buenos_aires"]["isic_id"]),
     "pad_ufes": list(meta[meta["source"] == "pad_ufes"]["isic_id"]),
 }
+if meta["isic_id"].duplicated().any():
+    raise RuntimeError("an ISIC ID appears twice in silver: labels and skin types would be wrong")
+SIZES = {"baseline_images": int(len(baseline)), **{f"pool_{k}": len(v) for k, v in pools.items()}}
 months = draw_schedule(pools, spec["replay"]["schedule"])
 meta = meta.set_index("isic_id")
 
@@ -178,10 +192,14 @@ def run_month(month: int) -> dict:
     if previous is not None and live["count"] is not None and previous["live_count"] is not None:
         live["new_since_last_run"] = live["count"] - int(previous["live_count"])
     row = {"month": month, "run_utc": datetime.now(UTC).isoformat(timespec="seconds"), "job_run": JOB_RUN,
-           "code_version": CODE, "bundle_version": service.version, "live": live}  # fmt: skip
+           "code_version": CODE, "bundle_version": VERSION, "live": live, "sizes": SIZES}  # fmt: skip
     # The previous month's accuracy: its labels have now "arrived".
-    if table_exists(AUDIT) and (month - 1) in done:
-        prev = spark.table(AUDIT).where(F.col("month") == month - 1).toPandas()
+    prev = (
+        spark.table(AUDIT).where(F.col("month") == month - 1).toPandas()
+        if table_exists(AUDIT) and (month - 1) in done
+        else pd.DataFrame()
+    )
+    if len(prev):  # only a month that scored images has accuracy to report
         labels = (
             prev["isic_id"]
             .map(
@@ -198,7 +216,7 @@ def run_month(month: int) -> dict:
             "month": month - 1,
             **delayed_accuracy(labels.astype(np.int64), probs),
         }
-    batch = months.get(month)
+    batch = months.get(month) if REPLAYING else None
     if batch is None:
         row["replay"] = "none: the replay ended at month 12; live check only"
     else:
@@ -226,6 +244,7 @@ def run_month(month: int) -> dict:
             "refer_melanoma": probs[:, CLASSES.index("mel")] >= service.refer_threshold, "scored_utc": now,
         })  # fmt: skip
         spark.createDataFrame(audit).write.mode("append").saveAsTable(AUDIT)
+    # The table's alert column: the overall alert OR any skin-type alert (the README says so).
     alert = bool(row.get("drift", {}).get("alert")) or any(
         v.get("alert") for v in row.get("by_skin_type", {}).values()
     )
@@ -244,11 +263,6 @@ def run_month(month: int) -> dict:
 
 # COMMAND ----------
 
-start = (
-    (max(spark.table(MONTHLY).select("month").toPandas()["month"]) + 1)
-    if table_exists(MONTHLY)
-    else 1
-)
-for m in range(start, start + COUNT):
+for m in range(START, START + COUNT):
     r = run_month(int(m))
     print(m, json.dumps({k: r.get(k) for k in ("by_source", "drift", "abstain_share")}), flush=True)

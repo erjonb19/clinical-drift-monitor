@@ -71,11 +71,14 @@ def drift_test(baseline: Array, current: Array) -> dict[str, Any]:
 
 
 def by_skin_type(
-    baseline: Array, scores: Array, types: Sequence[str | None], min_n: int = MIN_GROUP
+    baseline: Array, scores: Array, types: Sequence[object], min_n: int = MIN_GROUP
 ) -> dict[str, Any]:
     """The drift test per Fitzpatrick type with at least ``min_n`` images this month; smaller
     types and unrecorded skin type get counts only and never alert."""
-    keys = np.asarray([t if t else "not recorded" for t in types], dtype=object)
+    # NaN is truthy, so test for a non-empty string rather than truthiness.
+    keys = np.asarray(
+        [t if isinstance(t, str) and t else "not recorded" for t in types], dtype=object
+    )
     out: dict[str, Any] = {}
     for t in sorted(set(keys.tolist())):
         mask = keys == t

@@ -521,12 +521,20 @@ month) scores each month's images with the evaluated serving bundle on CPU.
 - **Label delay:** a month's accuracy is reported by the next month's run, as if diagnoses
   arrived a month late.
 - **Tables:** each run appends to `gold_drift_monthly` and `gold_prediction_audit` (every
-  prediction: request ID, model version, bundle hash, input SHA-256, label, probabilities, OOD
-  score, abstain and referral flags). The public API adds nothing: it keeps counts only.
+  prediction: request ID, model version, bundle hash, input SHA-256, predicted label (column
+  `label`), probabilities, OOD score, abstain and referral flags). The public API adds
+  nothing: it keeps counts only. `gold_drift_monthly` holds the month, its `alert` (the overall
+  alert **or** any skin-type alert), the live count and the whole month record as JSON, not
+  the separate columns the spec listed.
 - **Live check:** each run logs the ISIC Archive's public image count.
 
-**The 12-month replay** (real images in a fixed order, drawn without reuse; one backfill run,
-830837634650904):
+**The 12-month replay**: real images, but the order and the mixes in months 5 to 8 were chosen
+by us, so the progression is a scenario, not drift observed over time.
+- Months 1 to 4 come from the clients' test split; the baseline is validation.
+- Pools: 3,262 test, 1,616 Buenos Aires and 2,298 PAD-UFES-20 images; the baseline has 3,210
+  validation images. These are the set sizes in `results/research/b_vlm/embeddings_summary.json`.
+- Drawn without reuse, in one backfill run (830837634650904).
+- The Flag column is the overall test.
 
 | Month | Images (300) | KS p | PSI | Flag | Abstain share | Balanced accuracy (labels a month later) |
 |---|---|---|---|---|---|---|
@@ -543,10 +551,13 @@ month) scores each month's images with the evaluated serving bundle on CPU.
 | 11 | 300 PAD-UFES-20 | 4.6e-100 | 4.005 | **alert** | 28.7% | 38.2% |
 | 12 | 300 PAD-UFES-20 | 3.8e-92 | 3.112 | **alert** | 28.7% | reported next month |
 
-- **No false alarm** in months 1 to 4 (in-distribution only).
+- **No false alarm** in months 1 to 4 (in-distribution only). Four months are weak evidence;
+  Phase 2's batch-drift study is the stronger measure of false alarms.
 - **Warnings** at a 50% Buenos Aires mix, and **alerts** from month 9 (all Buenos Aires) and
   for PAD-UFES-20's smartphone photos.
-- The delayed accuracy shows the drop the alerts predicted.
+- The delayed accuracy falls at the new hospitals: 44.7% in month 9 and 35.1% to 38.2% at
+  PAD-UFES-20, against 59.1% to 70.2% in months 1 to 8. In-distribution months vary by about
+  11 points at 300 images, and PAD-UFES-20 lacks some classes, so this is a rough reading.
 - **Per skin type:** type II reaches 100 images from month 7 and alerts every time; in months
   7 and 8 that is before the overall test does. No other type reaches 100 in a month. **Read with
   care:** skin type is recorded only at the two new hospitals, so every typed group is made only
@@ -554,7 +565,8 @@ month) scores each month's images with the evaluated serving bundle on CPU.
 - **Live check:** 553,019 public ISIC images throughout. The backfill ran all months within
   minutes, so it saw no new data.
 - **Not yet shown:** a scheduled run. The first one is due on the 1st of next month; it will
-  report month 12's delayed accuracy and the live check.
+  report month 12's delayed accuracy and the live check. After the replay, runs load no model:
+  they log the live count (new images are counted, not scored).
 
 ## Research informatics services (Phase G)
 
