@@ -18,9 +18,10 @@ Not allowed without a new plan: a different architecture or image size, new clas
 imaging modality (clinical photographs), or a change to the decision rules in section 2.
 Triggers: an alert from the monthly drift job (KS p < 0.01 and PSI at least 0.2 against the
 validation baseline, overall or for a skin type with at least 100 images in the month), or newly
-released labels. In the 12-month replay the monthly job alerted in months
-9, 10, 11, 12 and in none of the
-in-distribution months 1 to 4 (`results/phase3/monthly/`).
+released labels. In the 12-month replay the overall test alerted in months
+9, 10, 11, 12 and the skin-type test in
+months 7, 8, 9, 10, 11, 12;
+neither alerted in the in-distribution months 1 to 4 (`results/phase3/monthly/`).
 
 ## 2. Modification protocol
 - **Data management.** Splits are by lesion. Earlier lesions keep their split when data are added
@@ -44,10 +45,11 @@ in-distribution months 1 to 4 (`results/phase3/monthly/`).
   bootstrap lower bound above zero, and no more than a 1.0-point fall on client validation.
   Result: one retraining run under `results/phase3/retrain/spec.json`, triggered by months 7 to 9 (the drift table's alert flag also counts the type II alerts of months 7 and 8). Fine-tuned on the clients' training split plus 653 labelled Buenos Aires images; on 301 images of Buenos Aires patients the challenger never saw, balanced accuracy 56.7% (champion) and 62.9% (challenger), a gain of +6.2 points with a paired lower bound of +2.0; client validation change -1.6 points (limit -1.0). Decision: not promoted; the champion was kept (`results/phase3/retrain/decision.json`).
 - **CI accuracy gate.** `tests/test_eval_gate.py` fails the build if the shipped model's committed
-  metrics fall below `config/eval_gate.json` (client test balanced accuracy
-  0.62, Buenos Aires 0.5,
-  PAD-UFES-20 0.35, validation review workload at most
-  0.06), or if a promoted challenger falls below the Buenos Aires floor.
+  metrics fall below `config/eval_gate.json` (client test macro AUROC
+  0.88 and balanced accuracy 0.62, Buenos Aires 0.5,
+  PAD-UFES-20 0.35, test review workload at most
+  0.08), or if a promoted challenger falls below the Buenos Aires floor.
+  It reads committed results, not a model.
 - **Update and rollback.** The served model is registered in Unity Catalog as
   `workspace.cdm.skin_lesion_classifier` v1 with the alias `champion`. A
   promoted challenger is first rebuilt into a serving bundle and re-evaluated, then registered as

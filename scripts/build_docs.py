@@ -290,7 +290,8 @@ def serving_text() -> str:
         f"most confident 80% of Buenos Aires images raises balanced accuracy from "
         f"{pct(ba[1.0]['balanced_accuracy'])} to {pct(ba[0.8]['balanced_accuracy'])} "
         f"(`results/phase3/serving/results.json`, risk-coverage curves for confidence and drift "
-        f"score). The Docker image is built and smoke-tested in CI; it is not deployed"
+        f"score). The Docker image is built and smoke-tested in CI with an untrained test bundle; "
+        f"the real bundle was checked once in Docker locally; it is not deployed"
     )
 
 
@@ -439,7 +440,7 @@ aggregation weight.
 - **Serving and abstention:** {serving_text()}.
 - **Ongoing maintenance:** {monthly_text()}. Retraining: {retrain_text()}. The registered model
   `workspace.cdm.skin_lesion_classifier` v{REGISTRY["version"]} (alias champion) reloads through
-  the registry and matches the bundle's answers (`results/phase3/lineage/registered_model_check.json`).
+  the registry and matches the bundle's answers on 3 made-up images (`results/phase3/lineage/registered_model_check.json`).
   A CI test holds the shipped model's committed metrics above floors (`config/eval_gate.json`).
 - **Security and privacy of the API:** uploads are read as a capped stream (10 MB) and never
   stored or logged; the access log is off and only counts and timing are logged; requests are
@@ -597,9 +598,10 @@ Not allowed without a new plan: a different architecture or image size, new clas
 imaging modality (clinical photographs), or a change to the decision rules in section 2.
 Triggers: an alert from the monthly drift job (KS p < 0.01 and PSI at least 0.2 against the
 validation baseline, overall or for a skin type with at least 100 images in the month), or newly
-released labels. In the 12-month replay the monthly job alerted in months
-{", ".join(str(i + 1) for i, m in enumerate(MONTHS) if m["drift"]["alert"])} and in none of the
-in-distribution months 1 to 4 (`results/phase3/monthly/`).
+released labels. In the 12-month replay the overall test alerted in months
+{", ".join(str(i + 1) for i, m in enumerate(MONTHS) if m["drift"]["alert"])} and the skin-type test in
+months {", ".join(str(i + 1) for i, m in enumerate(MONTHS) if any(v.get("alert") for v in m["by_skin_type"].values()))};
+neither alerted in the in-distribution months 1 to 4 (`results/phase3/monthly/`).
 
 ## 2. Modification protocol
 - **Data management.** Splits are by lesion. Earlier lesions keep their split when data are added
@@ -623,10 +625,11 @@ in-distribution months 1 to 4 (`results/phase3/monthly/`).
   bootstrap lower bound above zero, and no more than a 1.0-point fall on client validation.
   Result: {retrain_text()}.
 - **CI accuracy gate.** `tests/test_eval_gate.py` fails the build if the shipped model's committed
-  metrics fall below `config/eval_gate.json` (client test balanced accuracy
-  {GATE["floors"]["client_test_balanced_accuracy"]}, Buenos Aires {GATE["floors"]["buenos_aires_balanced_accuracy"]},
-  PAD-UFES-20 {GATE["floors"]["pad_ufes_balanced_accuracy"]}, validation review workload at most
-  {GATE["floors"]["validation_review_workload_max"]}), or if a promoted challenger falls below the Buenos Aires floor.
+  metrics fall below `config/eval_gate.json` (client test macro AUROC
+  {GATE["floors"]["client_test_macro_auroc"]} and balanced accuracy {GATE["floors"]["client_test_balanced_accuracy"]}, Buenos Aires {GATE["floors"]["buenos_aires_balanced_accuracy"]},
+  PAD-UFES-20 {GATE["floors"]["pad_ufes_balanced_accuracy"]}, test review workload at most
+  {GATE["floors"]["test_review_workload_max"]}), or if a promoted challenger falls below the Buenos Aires floor.
+  It reads committed results, not a model.
 - **Update and rollback.** The served model is registered in Unity Catalog as
   `workspace.cdm.skin_lesion_classifier` v{REGISTRY["version"]} with the alias `champion`. A
   promoted challenger is first rebuilt into a serving bundle and re-evaluated, then registered as
@@ -687,8 +690,9 @@ def standards() -> str:
         ("Users are provided clear, essential information", "`docs/model-card.md`."),
         (
             "Deployed models are monitored for performance and re-training risks are managed",
-            "Partial: drift detection measured in Phase 2; `docs/change-control-plan.md`; the "
-            "monitoring job is Phase 3 (gap).",
+            "Partial: a monthly drift job with per-skin-type alerts and an audit table, shown "
+            "on a 12-month replay (no scheduled run yet); a retraining rule and a CI gate "
+            "(`docs/change-control-plan.md`).",
         ),
     ]
     tripod = [

@@ -187,9 +187,9 @@ coverage, 66.5\% to 69.4\% on client test), while dropping the most out-of-distr
 does not: the drift score flags new data, not wrong answers. It can also miss inputs that are
 plainly not skin: a uniform green picture and a random-noise picture both scored below the
 threshold. The API reads uploads as a capped stream, never stores or logs them, rate-limits
-requests and runs as a non-root user; a Docker image is built and smoke-tested in CI.
+requests and runs as a non-root user; a Docker image is built and smoke-tested in CI with an untrained test bundle.
 
-\paragraph{Monthly drift job.} A scheduled Lakeflow job compares each month's drift scores with
+\paragraph{Monthly drift job.} A Lakeflow job, scheduled monthly but so far run only as one replay, compares each month's drift scores with
 the validation baseline (alert: KS $p<0.01$ and PSI $\ge 0.2$; warning: PSI $\ge 0.1$), repeats
 the test for every Fitzpatrick type with at least 100 images, reports each month's accuracy a
 month later, and writes every prediction to an audit table with the model bundle's hash. A
@@ -201,13 +201,14 @@ site as much as skin type.
 
 \paragraph{Registry, retraining and the CI gate.} The served bundle is registered in the Unity
 Catalog model registry with a \emph{champion} alias and reloads through it with identical
-answers. One retraining run after the replay's alerts fine-tuned a challenger on the clients' training images plus 653 labelled Buenos Aires images from the drifted months. On 301 images of Buenos Aires patients it never saw, it gained 6.2 points of balanced accuracy over the champion (paired 95\% interval 2.0 to 10.7), but fell 1.6 points on client validation, past the 1.0-point limit fixed before the run, so the rule kept the champion: the gain at the new site was paid for at the old ones. A CI test fails the build if the shipped model's committed metrics fall below fixed
-floors. Every job run is traced to its DBUs from the system billing tables (Free Edition
+answers. One retraining run after the replay's alerts fine-tuned a challenger on the clients' training images plus 653 labelled Buenos Aires images from the drifted months. On 301 images of Buenos Aires patients it never saw, it gained 6.2 points of balanced accuracy over the champion (paired 95\% interval 2.0 to 10.7), but fell 1.6 points on client validation, past the 1.0-point limit fixed before the run, so the rule kept the champion (the validation fall is a single run without an interval). A CI test fails the build if the shipped model's committed metrics fall below fixed
+floors. Job runs are traced to their DBUs from the system billing tables (13 of 31 results so far; Free Edition
 charges nothing).
 
 \section{Governance and engineering}
 The repository keeps a list of \emph{silent failures}: eleven bugs that reported success while
-being wrong, each with the check that now catches it. Among them: the course notebook reported a
+being wrong, each with the check that now catches it, and one open entry (a retraining run's
+champion validation score 0.19 points off its committed value, cause not yet found). Among them: the course notebook reported a
 Mahalanobis AUROC of 4.1\% against CIFAR-10 because it scored in-distribution images its PCA had
 been fit on and used each image's true class for in-distribution but the nearest class for
 out-of-distribution; it also projected PathMNIST with a PCA refit on itself; a lesion-level split passed every gate while
