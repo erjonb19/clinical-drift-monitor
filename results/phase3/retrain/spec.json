@@ -1,0 +1,19 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-23",
+  "plan": "PLAN.md Phase 3: a confirmed drift trains a challenger, which replaces the current model in the Unity Catalog registry only if it wins on held-out data; plus the CI accuracy gate",
+  "trigger": "a month in workspace.cdm.gold_drift_monthly with an alert that contains Buenos Aires images (the replay's months 7 to 9); the job refuses to run without one",
+  "champion": "the shipped EfficientNet-B0 v2 ensemble (seeds 0 to 2, checkpoints checked by weight hash), registered as workspace.cdm.skin_lesion_classifier@champion",
+  "challenger": {
+    "start": "each champion seed's weights",
+    "data": "the clients' training split plus the labelled Buenos Aires images the monthly job scored in months 5 to 9 (their labels have arrived)",
+    "training": "cdm.train.train with the v2 settings (B0, 224 px, centre view), 3 epochs, learning rate 1e-4, epoch chosen on the clients' validation split; seeds 0 to 2",
+    "compute": "one Databricks serverless GPU task (A10), a 45-minute deadline, inside the owner's 2-hour cap"
+  },
+  "held_out": "labelled Buenos Aires images of patients with no image in the challenger's training data (patient-disjoint; lesion ID where no patient is recorded); these images were scored in earlier phases' external evaluations, so this is an operational decision, not a new benchmark",
+  "comparison": "champion and challenger ensembles (mean of 3 seeds' softmax) on the held-out images and on the clients' validation split; balanced accuracy over the classes present; paired bootstrap of the difference (1,000 resamples by patient, else lesion, seed 0)",
+  "promotion_rule": "promote only if (a) on held-out Buenos Aires the challenger's balanced accuracy is at least 2.0 points higher and the paired 95% interval's lower bound is above 0, and (b) on client validation it is no more than 1.0 point lower. Client validation also chose the challenger's epoch, so (b) is lenient; this is stated",
+  "if_promoted": "the challenger checkpoints and the decision are written to the volume and workspace.cdm.gold_model_decisions; the registry alias moves only after a serving bundle is rebuilt for the challenger (detectors refit on CPU) and checked, which is a separate run",
+  "if_not_promoted": "the decision (kept) is recorded; nothing in the registry changes",
+  "ci_gate": "config/eval_gate.json holds floors for the champion's committed metrics; tests/test_eval_gate.py fails the build if the serving results fall below them or if a promotion record shows a challenger below them"
+}

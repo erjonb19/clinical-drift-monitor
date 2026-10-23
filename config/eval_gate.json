@@ -1,0 +1,10 @@
+{
+  "what": "Floors the shipped model's committed metrics must stay above; tests/test_eval_gate.py fails CI otherwise. Set on 2026-10-23 a few points under the evaluated values, so noise passes and a real regression fails.",
+  "serving_results": "results/phase3/serving/results.json",
+  "floors": {
+    "client_test_balanced_accuracy": 0.62,
+    "buenos_aires_balanced_accuracy": 0.50,
+    "pad_ufes_balanced_accuracy": 0.35,
+    "validation_review_workload_max": 0.06
+  }
+}
