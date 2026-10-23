@@ -866,6 +866,123 @@
     "metrics": 18,
     "run_id": "87335aff4a804763a976e91e3b24c8a9"
   },
+  "results/phase3/monthly/month_01.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "bc5f6d6797733a1b3cd94f2c3239c8e90332eebfd2d317de902c3d24ba3ec48e",
+    "logged_after_the_fact": false,
+    "metrics": 11,
+    "run_id": "1c0b3f6cdfbe4a82b1050230da940cd9"
+  },
+  "results/phase3/monthly/month_02.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "07b30f4ef3d155241a799f181c962aae3ad75bc5c9e33868f23de3881e7901f5",
+    "logged_after_the_fact": false,
+    "metrics": 16,
+    "run_id": "c0abf48e49b147beb1e7c15a0c9abebf"
+  },
+  "results/phase3/monthly/month_03.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "0cac69754374733741d2c254f17d16ffa20ad8176bb24cd85db8d46b4828ebe9",
+    "logged_after_the_fact": false,
+    "metrics": 16,
+    "run_id": "a1a503913eed491d8b74490adbe08730"
+  },
+  "results/phase3/monthly/month_04.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "125f8c09f3b7f6c153f38ce71fe3bb5075e6c3484773ce7f2934657163879390",
+    "logged_after_the_fact": false,
+    "metrics": 16,
+    "run_id": "cbf6aa96770b4ae6a6c807945cf3cb0f"
+  },
+  "results/phase3/monthly/month_05.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "75a23999c75d1cb02b636918aed909d8c3e601437bf9682875f8877cda1ae83c",
+    "logged_after_the_fact": false,
+    "metrics": 20,
+    "run_id": "e6f5e13d85cb47f3b72310f70d3b7dda"
+  },
+  "results/phase3/monthly/month_06.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "2f87da765ac6a6a6ea6ff55be6ee09980e923e97c8598c6e3b9794e47d237f39",
+    "logged_after_the_fact": false,
+    "metrics": 20,
+    "run_id": "24e790ed0a4f421a91c54ad4ae42e37e"
+  },
+  "results/phase3/monthly/month_07.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "666148829ec4e1fc739f708976964c0c0a05d7286cc177f15e260e5ad45ab30d",
+    "logged_after_the_fact": false,
+    "metrics": 23,
+    "run_id": "dc5ac3b4a8cd464c861665376a2af743"
+  },
+  "results/phase3/monthly/month_08.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "5a683f1d0a9dab991cfc128902b7b5db28dc45bcc24fce21366fc74b56d1aeda",
+    "logged_after_the_fact": false,
+    "metrics": 23,
+    "run_id": "49bef31b6f8b49f98004f50c2e94b250"
+  },
+  "results/phase3/monthly/month_09.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "c225886ed8568edbd1be611933596e43018891bb4182e10176a2b8c64fba19d1",
+    "logged_after_the_fact": false,
+    "metrics": 23,
+    "run_id": "c1e7eb4eeb3b4f4080fda48d3d43e4cb"
+  },
+  "results/phase3/monthly/month_10.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "cad8993e53f46d9166649b7bcae528c51007ae4e6f7669054c5765d2f2ad9763",
+    "logged_after_the_fact": false,
+    "metrics": 24,
+    "run_id": "ae86538638c04c27a56ac88e90afd34a"
+  },
+  "results/phase3/monthly/month_11.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "aa54a7180af644b59d5418035c44b30c73275ce688e4b7ed6919e92c935e9c6b",
+    "logged_after_the_fact": false,
+    "metrics": 24,
+    "run_id": "238da7628ac041b080e8a9da9733a12e"
+  },
+  "results/phase3/monthly/month_12.json": {
+    "databricks_job_run": "830837634650904",
+    "experiment_id": "3252981153928765",
+    "file_commit": "968aba6",
+    "file_sha256": "10e3d472e1d189a064fadedb3b6dcb50825eb35bea816ffd2b731ad9255d7a12",
+    "logged_after_the_fact": false,
+    "metrics": 23,
+    "run_id": "02b51877aa60411188cdba6c2cd664df"
+  },
+  "results/phase3/monthly/spec.json": {
+    "databricks_job_run": null,
+    "experiment_id": "3252981153928765",
+    "file_commit": "01f25eb",
+    "file_sha256": "8659ffa8f53934f946f248cb80cd8b93fec6e4dfcb7ef2edcf1c3039d1c00ae7",
+    "logged_after_the_fact": false,
+    "metrics": 16,
+    "run_id": "dbc43d0dcd25425d98ac250d574b3cf8"
+  },
   "results/phase3/onnx/noise.json": {
     "databricks_job_run": "540132085766008",
     "experiment_id": "3252981153928765",

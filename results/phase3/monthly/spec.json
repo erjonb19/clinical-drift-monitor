@@ -1,0 +1,34 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-23",
+  "plan": "PLAN.md Phase 3: the monthly Lakeflow drift job, per-skin-type drift alerts, the prediction audit table, label delay",
+  "model_and_scores": "the serving bundle evaluated in results/phase3/serving/results.json (manifest SHA-256 checked); ensemble probabilities and the ensemble Mahalanobis OOD score, on CPU as the API computes them",
+  "baseline": "the ensemble OOD scores of the clients' validation split (3,210 images), computed once by the job on CPU with the same bundle and stored in workspace.cdm.gold_drift_baseline",
+  "replay": {
+    "what": "real shifts replayed in a chosen order, 300 images a month, drawn without replacement with numpy default_rng(0) from each pool across the whole schedule; real and staged drift are never mixed: every image is a real image from its source",
+    "pools": {"client_test": "the clients' test split, 3,262 images", "buenos_aires": "all 1,616 images", "pad_ufes": "all 2,298 images"},
+    "schedule": {
+      "1": {"client_test": 300}, "2": {"client_test": 300}, "3": {"client_test": 300}, "4": {"client_test": 300},
+      "5": {"client_test": 240, "buenos_aires": 60}, "6": {"client_test": 240, "buenos_aires": 60},
+      "7": {"client_test": 150, "buenos_aires": 150}, "8": {"client_test": 150, "buenos_aires": 150},
+      "9": {"buenos_aires": 300},
+      "10": {"pad_ufes": 300}, "11": {"pad_ufes": 300}, "12": {"pad_ufes": 300}
+    },
+    "after_month_12": "no more replay; the run logs the live check only"
+  },
+  "drift_tests": {
+    "ks": "two-sample Kolmogorov-Smirnov on the month's ensemble OOD scores against the baseline (scipy.stats.ks_2samp, two-sided)",
+    "psi": "population stability index over 10 bins at the baseline's deciles, with 1e-6 added to empty bins",
+    "alert": "KS p < 0.01 and PSI >= 0.2",
+    "warning": "PSI >= 0.1 without an alert"
+  },
+  "per_skin_type": "the same tests per Fitzpatrick type wherever the month has at least 100 images of that type (the Phase 2 rule), against the whole baseline; smaller types are logged with counts only and never alert. Skin type is recorded only at Buenos Aires and PAD-UFES-20",
+  "label_delay": "a month's accuracy (balanced accuracy over the classes present and melanoma sensitivity where it has 100 melanomas, else counts) is reported by the following month's run, as if diagnoses arrive a month late; drift is judged without labels",
+  "live_check": "each run asks the ISIC Archive API for its public image count and logs the change since the last run; months with no change are logged as no new data. New images are not downloaded or scored by this job",
+  "tables": {
+    "workspace.cdm.gold_drift_monthly": "one row per month: counts by source, KS statistic and p, PSI, alert and warning flags, abstain share, per-skin-type results, the delayed accuracy of the previous month, the live count",
+    "workspace.cdm.gold_prediction_audit": "one row per scored image: request ID, model version and bundle manifest SHA-256, input SHA-256, ISIC ID, month, label, class probabilities, OOD score, abstain and referral flags, timestamp (the API adds nothing: the owner's condition)"
+  },
+  "reading_months_1_to_4": "months 1 to 4 are in-distribution (test against a validation baseline): an alert there is a false alarm, and is reported as one",
+  "outputs": "results/phase3/monthly/month_<n>.json per run, aggregates only"
+}

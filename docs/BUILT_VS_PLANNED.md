@@ -214,6 +214,13 @@ Known limits:
 - Known gap: the bundle job wrote its attempt log after computing test features (the spec
   said before); stated in the README.
 
+### Phase 3: the monthly drift job (built 2026-10-23)
+
+- `cdm.monitor` (replay schedule, PSI and KS alert rule, per-skin-type alerts, delayed
+  accuracy; tested) and `databricks/notebooks/monthly_drift.py`, scheduled monthly. The
+  12-month replay ran as one backfill (830837634650904); `gold_drift_monthly`,
+  `gold_prediction_audit` and `gold_drift_baseline` exist. No scheduled run yet.
+
 ## Scaffolded
 
 ### Phase 3: ONNX export (tried 2026-10-22; parity failed)
