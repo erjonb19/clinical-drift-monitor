@@ -111,4 +111,6 @@ disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The repository root, so tests can import the app/ package (app.api).
+pythonpath = ["."]
 addopts = "-q"
