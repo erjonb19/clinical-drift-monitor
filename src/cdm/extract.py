@@ -551,15 +551,20 @@ def score(
 
 def write_workbook(folder: Path) -> Path:
     """The labelling sheet as an Excel workbook beside the CSV (outside the repository): one
-    dropdown per label column from ``labelling_choices.csv``, wrapped note text, and a protected
-    sheet in which only the label and notes columns can be edited. The CSV stays the file the
-    scorer reads; copy the labels back into it after labelling."""
+    dropdown per label column from ``labelling_choices.csv``, wrapped note text, and sheet
+    protection with only the label and notes columns unlocked. The protection has no password: it
+    guards against accidental edits, not a determined user. The CSV stays the file the scorer
+    reads; bring the labels back with :func:`merge_workbook`, never by saving the CSV from Excel
+    (which can change its encoding and cut long notes)."""
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Protection
     from openpyxl.utils import get_column_letter
     from openpyxl.worksheet.datavalidation import DataValidation
 
     sheet = outside_repo(folder) / "labelling_sheet.csv"
+    out = folder / "labelling_sheet.xlsx"
+    if out.exists():
+        raise FileExistsError(f"{out} exists; it may hold labels")
     rows = list(csv.DictReader(sheet.open(encoding="utf-8", newline="")))
     choices: dict[str, list[str]] = {}
     for row in csv.DictReader(
@@ -583,6 +588,8 @@ def write_workbook(folder: Path) -> Path:
             cell = ws.cell(row=i, column=j)
             cell.alignment = Alignment(wrap_text=True, vertical="top")
             cell.protection = Protection(locked=name not in editable)
+            if name not in editable:
+                cell.data_type = "s"  # a note starting with "=" stays text, not a formula
         if name in choices:
             col = get_column_letter(list(choices).index(name) + 1)
             for r, value in enumerate(choices[name], start=1):
@@ -595,9 +602,42 @@ def write_workbook(folder: Path) -> Path:
             ws.add_data_validation(check)
             check.add(f"{letter}2:{letter}{len(rows) + 1}")
     ws.freeze_panes = "A2"
-    ws.protection.sheet = True  # the note text and IDs stay as written
-    out = folder / "labelling_sheet.xlsx"
-    if out.exists():
-        raise FileExistsError(f"{out} exists; it may hold labels")
+    ws.protection.sheet = True  # a guard against accidental edits (no password)
+    ws.protection.formatRows = False  # the labeller may resize the tall wrapped rows
+    ws.protection.formatColumns = False
     wb.save(out)
     return out
+
+
+def merge_workbook(folder: Path) -> int:
+    """Copy the labels from ``labelling_sheet.xlsx`` into ``labelling_sheet.csv`` by note ID,
+    leaving every other column of the CSV byte-for-byte as it was. Refuses a workbook whose note
+    IDs or note text differ from the CSV's. Returns the number of rows with a label."""
+    from openpyxl import load_workbook
+
+    sheet = outside_repo(folder) / "labelling_sheet.csv"
+    rows = list(csv.DictReader(sheet.open(encoding="utf-8", newline="")))
+    ws = load_workbook(folder / "labelling_sheet.xlsx")["labels"]
+    header = [c.value for c in ws[1]]
+    if header != SHEET_COLUMNS:
+        raise ValueError("the workbook's columns differ from the CSV's")
+    labels = {}
+    for values in ws.iter_rows(min_row=2, values_only=True):
+        record = {k: ("" if v is None else str(v)) for k, v in zip(header, values, strict=True)}
+        labels[record["note_id"]] = record
+    if set(labels) != {r["note_id"] for r in rows}:
+        raise ValueError("the workbook's note IDs differ from the CSV's")
+    editable = [c for c in SHEET_COLUMNS if c.startswith("label_") or c == "labeller_notes"]
+    filled = 0
+    for row in rows:
+        source = labels[row["note_id"]]
+        if source["text"] != row["text"]:
+            raise ValueError(f"note {row['note_id']}: the workbook's text differs from the CSV's")
+        for c in editable:
+            row[c] = source[c]
+        filled += any(row[c] for c in editable if c.startswith("label_"))
+    with sheet.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, SHEET_COLUMNS)
+        writer.writeheader()
+        writer.writerows(rows)
+    return filled

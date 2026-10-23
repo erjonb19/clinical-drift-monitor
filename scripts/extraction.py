@@ -2,6 +2,7 @@
 
     python scripts/extraction.py sheet [--csv PATH] [--n 100]   labelling sheet for you to fill
     python scripts/extraction.py sheet-xlsx                     the same sheet as Excel
+    python scripts/extraction.py sheet-merge                    labels from Excel into the CSV
     python scripts/extraction.py run --split dev|scoring --method llm|keyword [--limit N]
     python scripts/extraction.py score                          scoring split, both methods
     python scripts/extraction.py smoke                          one Haiku call on a made-up note
@@ -44,6 +45,7 @@ from cdm.extract import (
     error_kind,
     keyword_extract,
     llm_extract,
+    merge_workbook,
     outside_repo,
     prompt_hash,
     score,
@@ -235,6 +237,7 @@ def main() -> None:
     sheet.add_argument("--csv", type=Path, default=Path.home() / "data/mtsamples/mtsamples.csv")
     sheet.add_argument("--n", type=int, default=100)
     sub.add_parser("sheet-xlsx")
+    sub.add_parser("sheet-merge")
     spec = sub.add_parser("selection-spec")
     spec.add_argument("--csv", type=Path, default=Path.home() / "data/mtsamples/mtsamples.csv")
     go = sub.add_parser("run")
@@ -252,6 +255,8 @@ def main() -> None:
         print(f"wrote {path} and {WORK / 'labelling_choices.csv'}")
     elif args.command == "sheet-xlsx":
         print(f"wrote {write_workbook(WORK)}")
+    elif args.command == "sheet-merge":
+        print(f"{merge_workbook(WORK)} labelled notes copied into the CSV")
     elif args.command == "selection-spec":
         write_selection_spec(args.csv)
     elif args.command == "run":
