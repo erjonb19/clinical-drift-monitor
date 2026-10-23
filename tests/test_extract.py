@@ -4,15 +4,18 @@ and the rule that note text stays outside the repository. The notes here are mad
 
 from __future__ import annotations
 
+import io
 import json
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
+from cdm import extract
 from cdm.extract import (
     HISTOPATHOLOGY,
     INVALID,
+    MAX_OUTPUT_TOKENS,
     NOT_STATED,
     OTHER,
     REPO,
@@ -20,6 +23,7 @@ from cdm.extract import (
     MimicIVNotes,
     MTSamples,
     Note,
+    ReplyCutOff,
     SpendLog,
     choices,
     error_kind,
@@ -110,6 +114,64 @@ def test_the_budget_guard_stops_a_call_before_the_cap(tmp_path: Path) -> None:
     with pytest.raises(BudgetExceeded):
         llm_extract(BIOPSY, ALLOWED, send, spend, tmp_path / "cache.jsonl")
     assert calls == [] and spend.total() == 0
+
+
+def test_a_reply_cut_off_at_the_token_limit_fails_and_is_not_cached(tmp_path: Path) -> None:
+    def cut(system: str, user: str) -> tuple[str, dict[str, int]]:
+        return '{"diagnosis": "Nevus", "conf', {"input_tokens": 1000, "output_tokens": 2048,
+                                                 "cut_off": 1}  # fmt: skip
+
+    spend = SpendLog(tmp_path / "spend.jsonl")
+    cache = tmp_path / "cache.jsonl"
+    with pytest.raises(ReplyCutOff):
+        llm_extract(BIOPSY, ALLOWED, cut, spend, cache)
+    assert spend.total() > 0  # billed, so it counts toward the cap
+    assert not cache.exists()  # never replayed as an answer
+
+
+def test_a_transport_that_does_not_report_cut_off_is_caught_by_a_full_budget(
+    tmp_path: Path,
+) -> None:
+    def full(system: str, user: str) -> tuple[str, dict[str, int]]:
+        return "{", {"input_tokens": 1000, "output_tokens": MAX_OUTPUT_TOKENS}
+
+    with pytest.raises(ReplyCutOff):
+        llm_extract(BIOPSY, ALLOWED, full, SpendLog(tmp_path / "s.jsonl"), tmp_path / "c.jsonl")
+
+
+def test_the_api_transport_reports_stop_reason_as_cut_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    replies = iter([
+        {"content": [{"type": "text", "text": "{"}], "stop_reason": "max_tokens",
+         "usage": {"input_tokens": 10, "output_tokens": 5}},
+        {"content": [{"type": "text", "text": "{}"}], "stop_reason": "end_turn",
+         "usage": {"input_tokens": 10, "output_tokens": 2}},
+    ])  # fmt: skip
+
+    class Response(io.BytesIO):
+        def __enter__(self) -> Response:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+    monkeypatch.setattr(extract, "api_key", lambda: "test-key")
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda request, timeout: Response(json.dumps(next(replies)).encode()),
+    )
+    send = extract.anthropic_transport()
+    assert send("s", "u")[1]["cut_off"] == 1
+    assert send("s", "u")[1]["cut_off"] == 0
+
+
+def test_the_cache_key_holds_the_output_limit(tmp_path: Path) -> None:
+    send, _ = recorded({"Shave biopsy": "{}"})
+    cache = tmp_path / "cache.jsonl"
+    llm_extract(BIOPSY, ALLOWED, send, SpendLog(tmp_path / "s.jsonl"), cache)
+    key = json.loads(cache.read_text(encoding="utf-8"))["key"]
+    assert f":{MAX_OUTPUT_TOKENS}:" in key
 
 
 def test_unparseable_or_partial_replies_are_invalid() -> None:

@@ -38,7 +38,7 @@ as an MLflow run (`results/mlflow_runs.json`).
 | Duty | Evidence | Result (committed file) |
 |---|---|---|
 | AI methods benchmarked and validated | Phase 2 training on Databricks GPU (centralized and federated, Flower); research Phase B BiomedCLIP baseline (PR #22); Phase E fusion (PRs #28, #30) | Ensemble 66.46% vs single model 62.99% (seeds 62.21 to 64.28) vs FedAvg 57.14% (56.41 to 57.81) (`results/phase2/v2/test/final_test.json`); BiomedCLIP probe 50.84%, paired gap -15.2 to -16.1 points, every interval excluding zero (`results/research/b_vlm/results.json`) |
-| Evaluation plans: baselines | Zero-shot and linear-probe BiomedCLIP; metadata-only and image-only heads; keyword baseline for clinical text extraction (G5) | Metadata-only 36.4% vs chance 14.3% (`results/research/e_fusion/results.json`) |
+| Evaluation plans: baselines | Zero-shot and linear-probe BiomedCLIP; metadata-only and image-only heads; keyword baseline for clinical text extraction (G5) | Metadata-only 36.4% vs chance 14.3% (`results/research/e_fusion/results.json`); text extraction: Haiku 77.6% vs keyword 50.7% on diagnosis, 67 notes, labels pre-annotated by Claude and human-reviewed (`results/research/g5_extraction/score.json`) |
 | Evaluation plans: splits | Lesion-level splits, frozen across data versions, enforced by a test and a pipeline gate; patient overlap measured where recorded | 47 MSK patients span splits; dropping their test images moves the ensemble from 66.46% to 66.09% (`results/phase2/patient_overlap/patient_overlap.json`) |
 | Human review | Grad-CAM review worksheet with a blank reviewer-notes column in Unity Catalog (PR #25); the cohort service runs a definition only after a reviewer approves its exact hash (G2) | 150 images on the worksheet; nothing is called reviewed until a person fills it in (`results/research/d_review/results.json`) |
 | Error analysis | Confusion matrices per client and per skin type; worst-miss lists | Commonest error: nevus called melanoma, 199 of 3,262 test images (`results/research/d_review/results.json`) |
@@ -56,7 +56,8 @@ as an MLflow run (`results/mlflow_runs.json`).
 See [docs/BUILT_VS_PLANNED.md](BUILT_VS_PLANNED.md). In short:
 - the public API is built and tested in Docker CI but not deployed: Hugging Face now needs a
   paid plan for Docker and Gradio Spaces, and Render's free tier was declined as too tight on memory;
-- clinical text extraction is built but not scored (it waits for hand labels);
+- the clinical text extraction labels were pre-annotated by Claude and reviewed by one person, so
+  the extractor's score may be inflated, and the per-error label review is not done;
 - the CMS readmission model (Phase 6) is deferred: there is no monthly history of the CMS data
   to train on or monitor (see the PLAN decisions log, 2026-10-23);
 - ONNX serving failed parity and was closed;

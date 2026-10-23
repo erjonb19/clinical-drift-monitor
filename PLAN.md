@@ -255,7 +255,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - Model performance where it holds and where it does not: rows read from committed results files (`config/service_metrics.json`), each with the date it was first committed. Not a trend line, because the rows are different test sets. (Changed 2026-10-22 from "over time, from `results/mlflow_runs.json`", which would have drawn different test sets as one line.)
   - Every number comes from committed sources; request numbers from a committed snapshot of the issue tracker. Synthetic requests are labelled synthetic.
   - **Done when** the page regenerates from one command and a test checks its numbers against fixtures.
-- [ ] **G5: Clinical text extraction.**
+- [x] **G5: Clinical text extraction.** (Done 2026-10-23: 67 scoring notes scored, `results/research/g5_extraction/score.json`, logged to MLflow; $0.0265 of Haiku in total. Labels pre-annotated by Claude, human-reviewed (`label_provenance.json`). The per-error label review is not done.)
   - Haiku extracts diagnosis, body site and confirmation method from MTSamples notes about skin lesions (dermatology, skin pathology, and other specialties that name a skin-lesion diagnosis, biopsy or lesion; widened 2026-10-22, see the decisions log) into OMOP fields, using Phase A's concept map.
   - It is scored against a 50 to 100 note labelling sheet that you label: per-field accuracy on the concept, precision and recall of "stated" (docs/EVAL_PLAN.md section 5), and an error analysis.
   - A loader interface lets MIMIC-IV-Note swap in later, with code and aggregates only in the repo.

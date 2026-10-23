@@ -334,3 +334,26 @@ built.
 environment (the cdm wheel is installed; the model's own pip environment was not rebuilt)", and
 the README and `docs/BUILT_VS_PLANNED.md` state the correction. The committed file is logged to
 MLflow and kept as it ran. A true isolated reload check is not built.
+
+---
+
+## 14. LLM replies cut off at the token limit, scored as "invalid"
+
+**Symptom.** The first G5 dev run (8 notes, 2026-10-23) gave Claude Haiku 2 of 8 correct on
+diagnosis and 1 of 8 on body site, below the keyword baseline (counts read from that run's
+output; the rerun overwrote its predictions file, and the 200-token spend entries remain in
+`~/.cdm/llm_spend.jsonl`). Six of the eight replies were
+empty or stopped mid-word (`"confirmation": "histop`). The run reported success, and the parser
+turned each cut reply into "invalid", which scores as a wrong answer.
+
+**Cause.** `MAX_OUTPUT_TOKENS` was 200. Every cut reply had used exactly 200 output tokens while
+its visible text was a few dozen, so the model's thinking used up the budget before the answer.
+The transport never read `stop_reason`, and the cut replies were cached, so a rerun would have
+replayed them.
+
+**Caught by.** The "too bad" rule (EVAL_PLAN section 6): the dev numbers were looked at before
+any scoring run. Now `MAX_OUTPUT_TOKENS` is 2048; the transport records `stop_reason` and
+`llm_extract` raises `ReplyCutOff` (billed, never parsed or cached) when a reply hits the limit
+(`tests/test_extract.py::test_a_reply_cut_off_at_the_token_limit_fails_and_is_not_cached`); and
+the cache key holds the output limit, so the old cut replies are never reused. No scoring note
+had been run.

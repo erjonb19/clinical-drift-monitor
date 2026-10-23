@@ -1,0 +1,116 @@
+{
+  "scored_utc": "2026-10-23T18:24:56+00:00",
+  "code_version": "0c3d88f",
+  "notes_source": [
+    "mtsamples"
+  ],
+  "labelled_scoring_notes": 67,
+  "reportable": true,
+  "not_reportable_because": [],
+  "model": "claude-haiku-5-5",
+  "prompt_sha": [
+    "e097c49956ea"
+  ],
+  "methods": {
+    "llm": {
+      "notes": 67,
+      "diagnosis": {
+        "accuracy": 0.7761194029850746,
+        "interval": {
+          "low": 0.6716417910447762,
+          "high": 0.8656716417910447
+        },
+        "stated_precision": 0.8,
+        "stated_recall": 0.8484848484848485,
+        "labelled_stated": 33,
+        "errors": {
+          "hallucinated": 7,
+          "invalid": 1,
+          "missed": 5,
+          "wrong concept": 2
+        }
+      },
+      "body_site": {
+        "accuracy": 0.7611940298507462,
+        "interval": {
+          "low": 0.6567164179104478,
+          "high": 0.8511194029850726
+        },
+        "stated_precision": 0.7777777777777778,
+        "stated_recall": 0.9722222222222222,
+        "labelled_stated": 36,
+        "errors": {
+          "hallucinated": 10,
+          "invalid": 1,
+          "missed": 1,
+          "wrong concept": 2,
+          "wrong granularity": 2
+        }
+      },
+      "confirmation": {
+        "accuracy": 0.9253731343283582,
+        "interval": {
+          "low": 0.8652985074626866,
+          "high": 0.9850746268656716
+        },
+        "stated_precision": 0.7272727272727273,
+        "stated_recall": 0.8888888888888888,
+        "labelled_stated": 9,
+        "errors": {
+          "hallucinated": 3,
+          "invalid": 1,
+          "missed": 1
+        }
+      }
+    },
+    "keyword": {
+      "notes": 67,
+      "diagnosis": {
+        "accuracy": 0.5074626865671642,
+        "interval": {
+          "low": 0.3880597014925373,
+          "high": 0.6268656716417911
+        },
+        "stated_precision": 0.5517241379310345,
+        "stated_recall": 0.48484848484848486,
+        "labelled_stated": 33,
+        "errors": {
+          "hallucinated": 13,
+          "missed": 17,
+          "wrong concept": 3
+        }
+      },
+      "body_site": {
+        "accuracy": 0.1791044776119403,
+        "interval": {
+          "low": 0.08955223880597014,
+          "high": 0.26865671641791045
+        },
+        "stated_precision": 0.49056603773584906,
+        "stated_recall": 0.7222222222222222,
+        "labelled_stated": 36,
+        "errors": {
+          "hallucinated": 27,
+          "missed": 10,
+          "wrong concept": 11,
+          "wrong granularity": 7
+        }
+      },
+      "confirmation": {
+        "accuracy": 0.6268656716417911,
+        "interval": {
+          "low": 0.5074626865671642,
+          "high": 0.746268656716418
+        },
+        "stated_precision": 0.2647058823529412,
+        "stated_recall": 1.0,
+        "labelled_stated": 9,
+        "errors": {
+          "hallucinated": 25
+        }
+      }
+    }
+  },
+  "llm_calls": 85,
+  "llm_spend_usd": 0.0265
+}

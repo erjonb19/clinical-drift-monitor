@@ -677,9 +677,33 @@ data and **synthetic** requests, not a clinical service.
   [cdm-cohort-demo.streamlit.app](https://cdm-cohort-demo.streamlit.app/) (Streamlit Community Cloud, deployed 2026-10-22). Walkthrough script: [docs/demo_walkthrough.md](docs/demo_walkthrough.md).
 - **Clinical text extraction** (`src/cdm/extract.py`, `scripts/extraction.py`): Claude Haiku
   reads a note and returns diagnosis, body site and histopathology confirmation as Phase A
-  concept IDs, against a keyword baseline. It is built and tested on made-up notes only. It has
-  not been scored: that needs MTSamples notes and a labelled set, so there are no extraction
-  results yet. Note text never enters the repository.
+  concept labels, against a keyword baseline. Note text never enters the repository.
+  - **Labels:** 75 MTSamples notes (8 dev, 67 scoring), 225 labels, **pre-annotated by Claude,
+    human-reviewed**. Claude pre-annotated under a written protocol and flagged 33 notes as low
+    confidence; the owner reviewed every label and changed 2 (in 1 note; owner-reported, the
+    pre-annotated sheet was not kept). The written protocol is not in this repository
+    ([`label_provenance.json`](results/research/g5_extraction/label_provenance.json)).
+  - **Score** on the 67 scoring notes, one prompt frozen before scoring, 95% intervals from
+    resampling notes ([`score.json`](results/research/g5_extraction/score.json)):
+
+    | Field | Haiku | Keyword baseline |
+    |---|---|---|
+    | Diagnosis | 77.6% [67.2, 86.6] | 50.7% [38.8, 62.7] |
+    | Body site | 76.1% [65.7, 85.1] | 17.9% [9.0, 26.9] |
+    | Confirmation | 92.5% [86.5, 98.5] | 62.7% [50.7, 74.6] |
+
+  - Haiku's interval is above the baseline's on every field. Its main error is naming a value
+    the label calls not stated (7, 10 and 3 "hallucinated" by field). One reply held two
+    answers (Haiku corrected itself), which the parser, unchanged since before scoring, scores as invalid on all three
+    fields.
+  - **Limits:** the labels come from the same model family as the extractor, so Haiku's
+    agreement may be inflated; the keyword baseline does not share that bias. One reviewer, 67
+    notes, and transcription samples, not real records. Confirmation is "not stated" in 58 of
+    67 notes, which carries much of its accuracy. The per-error label review
+    (`errors.csv`, outside the repository) is not done.
+  - **Spend:** $0.0265 in total for the project's 85 Haiku calls, under the $5 cap.
+  - The first dev run lost 6 of 8 replies to a 200-token output limit, scored silently as
+    invalid; fixed before any scoring note ran (`docs/silent-failures.md` #14).
 
 ## Phase 0 results (HAM10000 only, CPU, history)
 
