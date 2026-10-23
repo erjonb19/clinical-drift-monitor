@@ -906,6 +906,15 @@
     "metrics": 0,
     "run_id": "9d461f81ed7c4acd843f80c0774bca74"
   },
+  "results/phase3/lineage/spark_writes_edges.json": {
+    "databricks_job_run": null,
+    "experiment_id": "3252981153928765",
+    "file_commit": "d92ef70",
+    "file_sha256": "6726d1725443a213cab8fe81d0b94f6b59368b70bef0eddc1254a340a2c51daa",
+    "logged_after_the_fact": false,
+    "metrics": 0,
+    "run_id": "3d3b941e237d48028010a5dadfc9d701"
+  },
   "results/phase3/lineage/spark_writes_spec.json": {
     "databricks_job_run": null,
     "experiment_id": "3252981153928765",
