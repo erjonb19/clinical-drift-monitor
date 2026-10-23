@@ -197,9 +197,9 @@ Known limits:
   pipeline update. Checks fail the build if the price join drops or duplicates usage rows,
   a row has no price, or a SKU is unknown.
 - `results/phase3/costs/result_costs.json` traces each committed results file that names a
-  job run to that run's cost: 8 of 16 so far. The 7 newest runs were billed after the
-  billing records' cutoff; the OMOP build's compute was billed to its pipeline update. Free
-  Edition charges nothing. Not yet scheduled (the monthly job, Phase 3).
+  job run to that run's cost. Refreshed 2026-10-23 (billing to 2026-10-22 23:00 UTC): 13 of 31
+  traced; the other 18 ran after the billing cutoff. Traced so far: 34.3 GPU DBUs and 26.7 CPU
+  DBUs, $31.62 at list price. Free Edition charges nothing. Not scheduled; refreshed by hand.
 
 ### Phase 3: serving bundle, risk-coverage and the API (built 2026-10-23; not deployed)
 
