@@ -1,0 +1,17 @@
+{
+  "spec": "results/phase3/retrain/spec.json",
+  "job_id": "1003309549002433",
+  "attempts": [
+    {
+      "job_run": "348183905966601",
+      "started_utc": "2026-10-23T03:03:22+00:00",
+      "result": "INTERNAL_ERROR: the compute environment failed to start within 900 seconds (twice, clusters 1023-030315-1ff4c6b6-cnx and 1023-031828-316c-cnx); no notebook code ran and nothing was written",
+      "source": "databricks jobs get-run and get-run-output, read 2026-10-23"
+    },
+    {
+      "job_run": "624636213399909",
+      "result": "SUCCESS: decision.json written (not promoted)",
+      "source": "results/phase3/retrain/decision.json"
+    }
+  ]
+}
