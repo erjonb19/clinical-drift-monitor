@@ -888,6 +888,33 @@
     "metrics": 3,
     "run_id": "d9aae9190f054b03961d5069105997a7"
   },
+  "results/phase3/lineage/spark_writes.json": {
+    "databricks_job_run": "355850019183618",
+    "experiment_id": "3252981153928765",
+    "file_commit": "80318ed",
+    "file_sha256": "dfeab937388f132b43df623a4547318880f048c760317b87249a4a176accd9fb",
+    "logged_after_the_fact": false,
+    "metrics": 18,
+    "run_id": "54045d5c1be9468b8733e5efffdbbd84"
+  },
+  "results/phase3/lineage/spark_writes_attempts.json": {
+    "databricks_job_run": "355850019183618",
+    "experiment_id": "3252981153928765",
+    "file_commit": "80318ed",
+    "file_sha256": "49b69c69a2b6476054b2485fb401ac854aa6137d31b44bb2f5e5a883e5699c44",
+    "logged_after_the_fact": false,
+    "metrics": 0,
+    "run_id": "9d461f81ed7c4acd843f80c0774bca74"
+  },
+  "results/phase3/lineage/spark_writes_spec.json": {
+    "databricks_job_run": null,
+    "experiment_id": "3252981153928765",
+    "file_commit": "df7afc4",
+    "file_sha256": "57f1a8b64697c8aeb8803571444c3df178947d45dbe5c80d2a9dca974e21bc89",
+    "logged_after_the_fact": false,
+    "metrics": 0,
+    "run_id": "adb823750a7b40f68420e7a7a9b6fb86"
+  },
   "results/phase3/monthly/month_01.json": {
     "databricks_job_run": "830837634650904",
     "experiment_id": "3252981153928765",
