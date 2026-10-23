@@ -19,6 +19,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -55,8 +56,8 @@ def git(*args: str) -> str:
     return out.stdout.strip()
 
 
-def check_bundle(bundle: Path) -> dict[str, object]:
-    manifest = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
+def check_bundle(bundle: Path) -> dict[str, Any]:
+    manifest: dict[str, Any] = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
     for name, digest in manifest["sha256"].items():
         if hashlib.sha256((bundle / name).read_bytes()).hexdigest() != digest:
             sys.exit(f"{bundle / name} does not match the bundle manifest")
