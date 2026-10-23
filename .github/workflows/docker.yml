@@ -54,7 +54,8 @@ jobs:
           if docker logs api 2>&1 | grep -q -E "POST /predict|172\.17\."; then echo "access log or client address found"; exit 1; fi
           # No upload may land on the container's disk: list every file the container added.
           docker diff api | tee changes.txt
-          if grep -v -E " /(tmp|home/demo)$" changes.txt | grep -q .; then echo "unexpected files written"; exit 1; fi
+          # Allowed: /tmp itself and the empty cache directory torch creates at start-up.
+          if grep -v -E " /(tmp|home/demo|tmp/torchinductor_demo)$" changes.txt | grep -q .; then echo "unexpected files written"; exit 1; fi
       - name: Container logs
         if: always()
         run: docker logs api || true
