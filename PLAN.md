@@ -355,6 +355,10 @@ Owner decisions that change scope, cost or process, newest first.
     locally in Docker first; any login step goes to the owner.
   - **Order after that:** monthly drift job, audit table and end-to-end lineage, per-skin-type
     alerts, retraining loop with the CI accuracy gate.
+  - **Audit table and the public API:** the owner's condition (only counts and timing from
+    uploads) overrides the plan's per-prediction API audit record (input SHA-256, label,
+    probabilities). The audit table holds every prediction of the monthly job; the API contributes
+    counts and timing only.
 - **2026-10-22 (night)**
   - **Phase 3 ONNX parity, first run failed (job run 436369232677286).** It ran out of memory
     (all 512 parity images in one batch) and wrote no results file. Before that, its job log
