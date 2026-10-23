@@ -1,0 +1,66 @@
+{
+  "month": 10,
+  "run_utc": "2026-10-23T02:15:46+00:00",
+  "job_run": "830837634650904",
+  "code_version": "01f25eb",
+  "bundle_version": "v2-ensemble-cpu-d7191f4",
+  "live": {
+    "count": 553019,
+    "new_since_last_run": 0
+  },
+  "delayed_accuracy_of_month": {
+    "month": 9,
+    "labelled": 277,
+    "melanoma_images": 51,
+    "balanced_accuracy": 0.4474304117224876
+  },
+  "by_source": {
+    "client_test": 0,
+    "buenos_aires": 0,
+    "pad_ufes": 300
+  },
+  "drift": {
+    "images": 300,
+    "ks_statistic": 0.6137694704049844,
+    "ks_p": 5.803168567181399e-99,
+    "psi": 3.9417836924523244,
+    "alert": true,
+    "warning": false
+  },
+  "by_skin_type": {
+    "I": {
+      "images": 15,
+      "alert": false,
+      "note": "counts only (under 100 images or not recorded)"
+    },
+    "II": {
+      "images": 124,
+      "ks_statistic": 0.6092503266003417,
+      "ks_p": 7.005862210876228e-43,
+      "psi": 4.817811218281491,
+      "alert": true,
+      "warning": false
+    },
+    "III": {
+      "images": 53,
+      "alert": false,
+      "note": "counts only (under 100 images or not recorded)"
+    },
+    "IV": {
+      "images": 4,
+      "alert": false,
+      "note": "counts only (under 100 images or not recorded)"
+    },
+    "V": {
+      "images": 1,
+      "alert": false,
+      "note": "counts only (under 100 images or not recorded)"
+    },
+    "not recorded": {
+      "images": 103,
+      "alert": false,
+      "note": "counts only (under 100 images or not recorded)"
+    }
+  },
+  "abstain_share": 0.2833333333333333
+}

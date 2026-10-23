@@ -1,0 +1,38 @@
+{
+  "month": 4,
+  "run_utc": "2026-10-23T02:12:27+00:00",
+  "job_run": "830837634650904",
+  "code_version": "01f25eb",
+  "bundle_version": "v2-ensemble-cpu-d7191f4",
+  "live": {
+    "count": 553019,
+    "new_since_last_run": 0
+  },
+  "delayed_accuracy_of_month": {
+    "month": 3,
+    "labelled": 300,
+    "melanoma_images": 49,
+    "balanced_accuracy": 0.5910713198670328
+  },
+  "by_source": {
+    "client_test": 300,
+    "buenos_aires": 0,
+    "pad_ufes": 0
+  },
+  "drift": {
+    "images": 300,
+    "ks_statistic": 0.047320872274143305,
+    "ks_p": 0.5536159999534882,
+    "psi": 0.03214598920647854,
+    "alert": false,
+    "warning": false
+  },
+  "by_skin_type": {
+    "not recorded": {
+      "images": 300,
+      "alert": false,
+      "note": "counts only (under 100 images or not recorded)"
+    }
+  },
+  "abstain_share": 0.07333333333333333
+}
