@@ -918,11 +918,14 @@
   "results/phase3/lineage/spark_writes_spec.json": {
     "databricks_job_run": null,
     "experiment_id": "3252981153928765",
-    "file_commit": "df7afc4",
-    "file_sha256": "57f1a8b64697c8aeb8803571444c3df178947d45dbe5c80d2a9dca974e21bc89",
+    "file_commit": "fdac7de",
+    "file_sha256": "761cffce721b241e74533b68b48e3429217b532c16139024a798d73090b79107",
     "logged_after_the_fact": false,
     "metrics": 0,
-    "run_id": "adb823750a7b40f68420e7a7a9b6fb86"
+    "run_id": "f4c58347d286434ebc9e38e4c4564700",
+    "superseded_runs": [
+      "adb823750a7b40f68420e7a7a9b6fb86"
+    ]
   },
   "results/phase3/monthly/month_01.json": {
     "databricks_job_run": "830837634650904",
