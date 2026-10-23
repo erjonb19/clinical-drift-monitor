@@ -365,7 +365,8 @@ risk areas is at the end.
 ## 2. Release info
 - **Release stage:** research prototype; the model is not released (the code is archived on Zenodo as v1.0.0,
   DOI 10.5281/zenodo.23600426, which includes no weights). The API and its Docker image are built
-  and tested; a free-tier public demo is prepared but not deployed (on hold pending the owner's decision on public weights).
+  and tested; a free-tier public demo is not deployed: Hugging Face now requires a paid plan for Docker and
+  Gradio Spaces, and the project stays at zero cost.
 - **Release date / version:** model not released; evaluated models are the v2 checkpoints recorded in
   `results/phase2/v2/training/final_models.json`.
 - **Global availability:** none. **EHR compatibility:** none. **Regulatory approval:** none.

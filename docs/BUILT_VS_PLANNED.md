@@ -212,8 +212,10 @@ Known limits:
   look at test and the new hospitals.
 - `app/api/` (FastAPI) and `Dockerfile`: tested in CI and run locally in Docker
   (`scripts/api_local_check.py`, `results/phase3/serving/api_local_checks.json`). Not
-  deployed: the Hugging Face Spaces deploy needs the owner's login, and
-  `scripts/deploy_space.py` refuses a bundle other than the evaluated one.
+  deployed: the free public deploy is blocked. On 2026-10-23, with the owner logged in and public
+  weights approved, Hugging Face returned 402 Payment Required for both a Docker and a Gradio Space ("hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription"); no Space was created. Render's free tier is too tight on memory, and
+  the owner chose not to pay. `scripts/deploy_space.py` stays (it refuses a bundle other than
+  the evaluated one).
 - Known gap: the bundle job wrote its attempt log after computing test features (the spec
   said before); stated in the README.
 
