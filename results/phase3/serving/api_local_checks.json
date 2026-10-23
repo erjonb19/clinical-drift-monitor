@@ -1,0 +1,37 @@
+{
+  "checked_utc": "2026-10-23T01:50:00+00:00",
+  "image": "cdm-api:local",
+  "image_id": "sha256:90da68a68517a2566c516603457b85d2c75c798f8d046a643fccec78723c886b",
+  "commit": "74e823e",
+  "made_up_images": {
+    "plain_green_400x300": {
+      "label": "vasc",
+      "ood_score": 552.7181,
+      "abstain": false
+    },
+    "plain_grey_400x300": {
+      "label": "vasc",
+      "ood_score": 3009.1246,
+      "abstain": true
+    },
+    "noise_1600x1200": {
+      "label": "vasc",
+      "ood_score": 264.6462,
+      "abstain": false
+    }
+  },
+  "abstain_threshold": "from the bundle; see results/phase3/serving/results.json",
+  "peak_memory_mib": 442,
+  "health": {
+    "status": "ok",
+    "model_version": "v2-ensemble-cpu-d7191f4",
+    "notice": "Research demo, not for medical use.",
+    "predictions": 5,
+    "rejected": 0,
+    "rate_limited": 0,
+    "latency_ms_p50": 174.4,
+    "latency_ms_p95": 237.6
+  },
+  "access_log_lines": 0,
+  "where": "the owner's laptop, Docker, no memory limit"
+}

@@ -60,7 +60,7 @@ Databricks Free Edition is the center, lined up with the Data Engineer Associate
 | Training | PyTorch on Databricks serverless GPU (1x A10G, confirmed 2026-09-30), Colab Pro as backup |
 | Tracking and registry | MLflow, model registered in Unity Catalog |
 | Federated learning | Flower |
-| Serving | ONNX Runtime behind FastAPI in Docker, public on Render |
+| Serving | PyTorch on CPU behind FastAPI in Docker, public on a free tier (Render, or Hugging Face Spaces if Render's memory cannot fit PyTorch); ONNX was attempted and failed parity |
 | LLM reports | Gemini free tier, groundedness check from the governed agent |
 | UI | Streamlit Community Cloud, calling the API |
 | Tests and CI | pytest and GitHub Actions |
@@ -117,7 +117,7 @@ This is where the project becomes real ML work: proper federated training and OO
 - [x] Accuracy and drift reported per Fitzpatrick skin type where a site has at least 100 images of that type; smaller groups are listed with counts only. Skin type is recorded only at Buenos Aires and PAD-UFES-20, with 98 images of types IV to VI in total, too few to judge darker skin. (Done: drift by type in the analysis look part A, `results/phase2/analysis_look/skin_type_drift.json`; accuracy by type in part B, `results/phase2/analysis_look/results.json`; within each site only, types I to III.)
 - [ ] **Moved to Phase 3 (2026-10-05):** Label delay: the monitor watches drift without labels first, then checks accuracy once diagnoses for that batch are released. Reason: it describes how the monthly monitoring job sequences drift and accuracy checks, which is built in Phase 3.
 - [x] (Done 2026-10-22 in research Phase D: confusion matrices by site and skin type in `results/research/d_review/results.json`; the worst-miss worksheet is built and **not yet reviewed**.) Error analysis: confusion matrix, which classes, sites and skin types fail, and a look at the 20 worst misses. (Partly done: the 20 worst missed melanomas are in the analysis look part B. **Moved to research Phase D (2026-10-20):** the confusion matrices by site and skin type and the reviewed worst-miss list, built as the human-review worksheet.)
-- [ ] **Moved to Phase 3 (2026-10-05):** Risk-coverage and abstain workload: for the shipped model and detector, accuracy and balanced accuracy against coverage when the least confident or most out-of-distribution images are abstained on, per site, and the share of images sent to human review at the abstain threshold Phase 3 will use. Computed on validation to set the threshold, then reported once on test and the held-out sites. Reason: the abstain threshold is set for the Phase 3 API, and Phase 2 showed scores must be computed on the serving hardware to be comparable.
+- [x] (Done 2026-10-23 in Phase 3: `results/phase3/serving/`.) **Moved to Phase 3 (2026-10-05):** Risk-coverage and abstain workload: for the shipped model and detector, accuracy and balanced accuracy against coverage when the least confident or most out-of-distribution images are abstained on, per site, and the share of images sent to human review at the abstain threshold Phase 3 will use. Computed on validation to set the threshold, then reported once on test and the held-out sites. Reason: the abstain threshold is set for the Phase 3 API, and Phase 2 showed scores must be computed on the serving hardware to be comparable.
 - [x] Triage operating point (triage framing, not a clinical claim): for the shipped model, the melanoma-probability threshold set on validation for at least 95% melanoma sensitivity, committed before test; then, once on test (own lock per model), melanoma sensitivity, specificity and referral rate with bootstrap intervals by lesion, per client and on Buenos Aires and PAD-UFES-20. (Done: `results/phase2/triage/threshold.json` committed before `results/phase2/triage/test.json`; sensitivity held on the client test split and fell 14 to 17 points at the external sites)
 - [x] Optional, CPU: simulated local recalibration at Buenos Aires (decided 2026-10-04), as evidence for the PCCP modification protocol, not a change to the shipped model. Its lesions are split 50/50 with a fixed seed; the 95%-sensitivity threshold is set on one half and sensitivity, specificity and referral rate are reported on the other with bootstrap intervals; repeated for 20 random splits, reporting mean and range. PAD-UFES-20 is excluded (52 melanomas). The spec is committed before it runs, after batch drift and label provenance. (Done: job run 485412553188780, `results/phase2/ba_recalibration/results.json`. Its halves are split by lesion, and 199 of 623 Buenos Aires patients have more than one lesion, so the local threshold's result is, if anything, optimistic: `docs/silent-failures.md` #9.)
 - [x] Patient-level split check (added 2026-10-20): splits are by lesion, so a patient's lesions can sit in two splits. Only MSK collection 289 among the clients records patient IDs: 47 patients span splits, documented in `config/patient_overlap_v1.csv` and allowed by a new gate that fails on any other; HAM10000, Barcelona and MSK 287 cannot be checked. Not re-split (that would move frozen v1 lesions). Measured test effect is small: `results/phase2/patient_overlap/patient_overlap.json`, `docs/silent-failures.md` #9.
@@ -271,7 +271,7 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 
 The model becomes a service with a threshold, a schedule and a CI gate, which is what production ML and forward deployed roles look for.
 
-- [ ] (Tried 2026-10-22: exported, but parity failed under the amended rule; see the decisions log and `results/phase3/onnx/`.) Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
+- [ ] (Closed 2026-10-22 as attempted, not done: parity failed under the amended rule; the owner chose PyTorch on CPU for serving. See the decisions log and `results/phase3/onnx/`.) Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
 - [ ] FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
 - [ ] Docker image, deployed free on Render.
 - [ ] Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
@@ -344,6 +344,21 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-22 (late night)**
+  - **Serving runtime:** PyTorch on CPU. ONNX was attempted and failed parity under the amended
+    rule (gaps 3 to 7x PyTorch's own batch-size noise; root cause unknown, see below). No more
+    ONNX work; the ONNX item is closed as attempted, not done.
+  - **Public API deploy:** approved on a free tier only: Render's free tier, or Hugging Face
+    Spaces (free CPU) if Render's memory cannot fit PyTorch. Conditions: uploaded images are never
+    stored or logged (only counts and timing); a visible "research demo, not for medical use"
+    notice; the non-commercial license terms and attribution; rate limiting. Built and tested
+    locally in Docker first; any login step goes to the owner.
+  - **Order after that:** monthly drift job, audit table and end-to-end lineage, per-skin-type
+    alerts, retraining loop with the CI accuracy gate.
+  - **Audit table and the public API:** the owner's condition (only counts and timing from
+    uploads) overrides the plan's per-prediction API audit record (input SHA-256, label,
+    probabilities). The audit table holds every prediction of the monthly job; the API contributes
+    counts and timing only.
 - **2026-10-22 (night)**
   - **Phase 3 ONNX parity, first run failed (job run 436369232677286).** It ran out of memory
     (all 512 parity images in one batch) and wrote no results file. Before that, its job log
