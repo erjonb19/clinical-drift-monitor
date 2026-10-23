@@ -1,7 +1,7 @@
 {
   "table": "workspace.cdm.gold_job_costs",
-  "built_utc": "2026-10-23T00:03:42+00:00",
-  "billing_records_up_to": "2026-10-22T21:00:00.000Z",
+  "built_utc": "2026-10-23T03:04:55+00:00",
+  "billing_records_up_to": "2026-10-22T23:00:00.000Z",
   "note": "Databricks Free Edition charges nothing; list_price_usd is the list price of the recorded SKU's DBUs, discounts excluded. Billing arrives with a delay. Wall minutes are from the job timeline, queue and start-up included, counted once per run. Pipeline compute is billed to the pipeline update, not the job run.",
   "files": {
     "results/phase2/analysis_look/results.json": {
@@ -12,20 +12,95 @@
         "cpu"
       ]
     },
+    "results/phase3/lineage/lineage.json": {
+      "job_run": "505700557738191",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/lineage/registered_model_check.json": {
+      "job_run": "8856224820882",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_01.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_02.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_03.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_04.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_05.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_06.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_07.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_08.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_09.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_10.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_11.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/monthly/month_12.json": {
+      "job_run": "830837634650904",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
     "results/phase3/onnx/noise.json": {
       "job_run": "540132085766008",
       "dbus": null,
-      "reason": "no billing row under this job run: billed after 2026-10-22T21:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
     },
     "results/phase3/onnx/results.json": {
       "job_run": "885785618939922",
       "dbus": null,
-      "reason": "no billing row under this job run: billed after 2026-10-22T21:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+    },
+    "results/phase3/serving/results.json": {
+      "job_run": "682399318227929",
+      "dbus": null,
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
     },
     "results/research/a_omop/build.json": {
       "job_run": "406164293865524",
       "dbus": null,
-      "reason": "no billing row under this job run: billed after 2026-10-22T21:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+      "reason": "no billing row under this job run: billed after 2026-10-22T23:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
     },
     "results/research/b_vlm/dry_run/databricks_run_138325650497812.json": {
       "job_run": "138325650497812",
@@ -69,46 +144,61 @@
     },
     "results/research/c_subgroups/results_v2.json": {
       "job_run": "534810524836120",
-      "dbus": null,
-      "reason": "no billing row under this job run: billed after 2026-10-22T21:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+      "dbus": 0.765988,
+      "list_price_usd": 0.268096,
+      "compute": [
+        "cpu"
+      ]
     },
     "results/research/d_review/results.json": {
       "job_run": "624234357242388",
-      "dbus": 0.538771,
-      "list_price_usd": 0.18857,
+      "dbus": 0.575761,
+      "list_price_usd": 0.201516,
       "compute": [
         "cpu"
       ]
     },
     "results/research/e_fusion/results.json": {
       "job_run": "75228269324996",
-      "dbus": null,
-      "reason": "no billing row under this job run: billed after 2026-10-22T21:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+      "dbus": 0.658001,
+      "list_price_usd": 0.2303,
+      "compute": [
+        "cpu"
+      ]
     },
     "results/research/e_fusion/shipped/features_summary.json": {
       "job_run": "498023462798649",
-      "dbus": null,
-      "reason": "no billing row under this job run: billed after 2026-10-22T21:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+      "dbus": 0.266863,
+      "list_price_usd": 0.173461,
+      "compute": [
+        "gpu"
+      ]
     },
     "results/research/e_fusion/shipped/results.json": {
       "job_run": "124072636853443",
-      "dbus": null,
-      "reason": "no billing row under this job run: billed after 2026-10-22T21:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+      "dbus": 0.234454,
+      "list_price_usd": 0.082059,
+      "compute": [
+        "cpu"
+      ]
     },
     "results/research/e_fusion/spec.json": {
       "job_run": "230673257459446",
-      "dbus": 0.059171,
-      "list_price_usd": 0.02071,
+      "dbus": 0.576212,
+      "list_price_usd": 0.201674,
       "compute": [
         "cpu"
       ]
     },
     "results/research/e_fusion/spec_shipped.json": {
       "job_run": "188952920098874",
-      "dbus": null,
-      "reason": "no billing row under this job run: billed after 2026-10-22T21:00:00.000Z (not yet in system.billing), or its compute was billed to a pipeline update"
+      "dbus": 0.438253,
+      "list_price_usd": 0.153389,
+      "compute": [
+        "cpu"
+      ]
     }
   },
-  "covered": 8,
-  "with_job_run": 16
+  "covered": 13,
+  "with_job_run": 31
 }
