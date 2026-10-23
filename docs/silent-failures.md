@@ -316,3 +316,21 @@ models file, so `decision.json` alone cannot show which weights it scored.
 code: a retraining run should record the champion weight hashes and the models file's SHA-256 in
 its decision, and refuse when the champion's validation score differs from the committed one by
 more than a set tolerance. Until that is built, this entry stays open.
+
+---
+
+## 13. A reload check that named the wrong environment
+
+**Symptom.** `results/phase3/lineage/registered_model_check.json` (job run 8856224820882) says the
+registered model was loaded in "a fresh serverless CPU environment (pip requirements from the
+model)". The job actually ran in its own environment with the cdm wheel installed, so the
+model's packaged code and pins were never tested alone. The check passed while describing a
+stronger test than it ran.
+
+**Cause.** The notebook's `loaded_in` text was written for the intended design, not the job as
+built.
+
+**Caught by.** A review the same night (commit 00f9da9): the notebook now writes "this job's
+environment (the cdm wheel is installed; the model's own pip environment was not rebuilt)", and
+the README and `docs/BUILT_VS_PLANNED.md` state the correction. The committed file is logged to
+MLflow and kept as it ran. A true isolated reload check is not built.
