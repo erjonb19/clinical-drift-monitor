@@ -1,0 +1,39 @@
+{
+  "spec": "results/phase3/lineage/spark_writes_spec.json",
+  "versions_before": {
+    "workspace.cdm.gold_prediction_audit": 15,
+    "workspace.cdm.gold_drift_baseline": 4,
+    "workspace.cdm.gold_drift_monthly": 17
+  },
+  "versions_after": {
+    "workspace.cdm.gold_prediction_audit": 16,
+    "workspace.cdm.gold_drift_baseline": 5,
+    "workspace.cdm.gold_drift_monthly": 19
+  },
+  "checks": {
+    "workspace.cdm.gold_prediction_audit": {
+      "rows_before": 3600,
+      "rows_after": 3600,
+      "only_before": 0,
+      "only_after": 0
+    },
+    "workspace.cdm.gold_drift_baseline": {
+      "rows_before": 3210,
+      "rows_after": 3210,
+      "only_before": 0,
+      "only_after": 0
+    },
+    "workspace.cdm.gold_drift_monthly": {
+      "rows_before": 12,
+      "rows_after": 12,
+      "only_before": 0,
+      "only_after": 0,
+      "count_columns_match_summary": true,
+      "months_mismatched": []
+    }
+  },
+  "all_checks_passed": true,
+  "code_version": "df7afc4",
+  "ran_on": "Databricks serverless CPU, job run 355850019183618",
+  "completed_utc": "2026-10-23T16:18:20+00:00"
+}
