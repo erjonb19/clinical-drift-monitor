@@ -14,8 +14,8 @@ risk areas is at the end.
 - **Developer contact:** issues on the project's GitHub repository (erjonb19/clinical-drift-monitor).
 
 ## 2. Release info
-- **Release stage:** research prototype; not released, not deployed. Serving (Phase 3) is not
-  built yet.
+- **Release stage:** research prototype; not released. The API and its Docker image are built
+  and tested; a free-tier public demo is prepared but not deployed (it needs the owner's login).
 - **Release date / version:** not released; evaluated models are the v2 checkpoints recorded in
   `results/phase2/v2/training/final_models.json`.
 - **Global availability:** none. **EHR compatibility:** none. **Regulatory approval:** none.
@@ -31,8 +31,8 @@ out-of-distribution detection, drift monitoring, federated learning, research pr
 - **Intended use and workflow:** a research and engineering demonstration of monitoring a
   medical-imaging classifier for site and acquisition drift. No clinical workflow.
 - **Primary intended users:** ML and MLOps engineers, and reviewers of this portfolio project.
-- **How to use:** offline evaluation from the repository's notebooks and scripts; a serving API
-  is planned (Phase 3) and is a stated gap.
+- **How to use:** offline evaluation from the repository's notebooks and scripts, or the API in
+  `app/api` (Docker), which returns probabilities, the drift score and an abstain flag.
 - **Targeted patient population:** none clinically. The data are dermoscopic images from the
   four client sources (HAM10000 Vienna and Queensland, Barcelona, MSK).
 - **Cautioned out-of-scope settings:** any diagnosis, screening, triage or referral of real
@@ -88,9 +88,15 @@ aggregation weight.
 - **Bias mitigation approaches:** lesion-level splits (no lesion in two splits, gated); class-
   weighted loss; per-site, bordered/non-bordered, skin-type, age, sex and body-site reporting
   (research Phase C). No mitigation beyond reporting.
-- **Ongoing maintenance:** planned in Phase 3 (monthly drift job, retraining with a champion/
-  challenger test); not built. A stated gap.
-- **Security:** not served yet; no endpoint exists. A stated gap until Phase 3.
+- **Serving and abstention:** a FastAPI service on CPU (`app/api`) returns the seven probabilities, the drift score and an abstain flag when the score is above 847.96, the 95th percentile of validation scores. Share of images flagged for review: validation 5.0%; clients' test split 6.6%, Buenos Aires 17.9%, PAD-UFES-20 30.4%. Keeping only the most confident 80% of Buenos Aires images raises balanced accuracy from 55.9% to 61.0% (`results/phase3/serving/results.json`, risk-coverage curves for confidence and drift score). The Docker image is built and smoke-tested in CI; it is not deployed.
+- **Ongoing maintenance:** a monthly Lakeflow job replays 12 months of real images (months 1 to 4 from the clients' test split, then Buenos Aires mixed in, then PAD-UFES-20; `results/phase3/monthly/spec.json`). Alerts (KS p < 0.01 and PSI at least 0.2) in months 9, 10, 11, 12 (PSI 0.62 to 4.01); warnings in months 7, 8; no alert in months 1 to 4. Per-skin-type alerts (type II, the only type with 100 images in a month) in months 7, 8, 9, 10, 11, 12: skin type is recorded only at the new sites, so these alerts measure the site shift as much as skin type (in months 7 and 8 the type II group, all Buenos Aires images, alerted while the whole month only warned). Every scored image is written to the `gold_prediction_audit` table with the bundle's manifest hash and the input's hash. Retraining: one retraining run under `results/phase3/retrain/spec.json`, triggered by months 7 to 9 (the drift table's alert flag also counts the type II alerts of months 7 and 8). Fine-tuned on the clients' training split plus 653 labelled Buenos Aires images; on 301 images of Buenos Aires patients the challenger never saw, balanced accuracy 56.7% (champion) and 62.9% (challenger), a gain of +6.2 points with a paired lower bound of +2.0; client validation change -1.6 points (limit -1.0). Decision: not promoted; the champion was kept (`results/phase3/retrain/decision.json`). The registered model
+  `workspace.cdm.skin_lesion_classifier` v1 (alias champion) reloads through
+  the registry and matches the bundle's answers (`results/phase3/lineage/registered_model_check.json`).
+  A CI test holds the shipped model's committed metrics above floors (`config/eval_gate.json`).
+- **Security and privacy of the API:** uploads are read as a capped stream (10 MB) and never
+  stored or logged; the access log is off and only counts and timing are logged; requests are
+  rate-limited; the container runs as a non-root user. The Docker CI job checks that no image
+  reaches the disk or the log.
 - **Transparency:** code, configuration, evidence files and the silent-failure log are public in
   the repository.
 - **Explanations:** Grad-CAM maps for 150 client-test images (the worst misses per class and the most out-of-distribution), from the shipped seed-0 checkpoint, are on a review worksheet (MLflow artifact and `workspace.cdm.gold_review_worksheet`). Weight-randomization check: mean rank correlation 0.045 (range -0.63 to 0.64) with a re-initialized network; 11 maps are flagged as not interpretable. Mean agreement across seeds 0.81. The maps are coarse (7x7) and **not reviewed** by a clinician (`results/research/d_review/results.json`).
@@ -251,8 +257,8 @@ This project is not certified health IT; the categories are used as a structure 
 | 5. Process used to ensure fairness in development | 6 (bias mitigation), 7 (fairness and equity: site, skin type, age, alert rates) |
 | 6. External validation process | 7 (external validation at Buenos Aires and PAD-UFES-20) |
 | 7. Quantitative measures of performance | 7 |
-| 8. Ongoing maintenance of implementation and use | 6 (ongoing maintenance): a stated gap until Phase 3 |
-| 9. Update and continued validation or fairness assessment schedule | `docs/change-control-plan.md`; schedule is a stated gap until Phase 3 |
+| 8. Ongoing maintenance of implementation and use | 6 (ongoing maintenance: monthly drift job, audit table, registry) |
+| 9. Update and continued validation or fairness assessment schedule | `docs/change-control-plan.md` (monthly drift and per-skin-type checks, retraining rule, CI gate) |
 
 | HTI-1 risk area | Evidence or stated gap |
 | --- | --- |
@@ -262,5 +268,5 @@ This project is not certified health IT; the categories are used as a structure 
 | Fairness | Per-site, skin-type (I to III, within site), age and alert-rate results; types IV to VI not assessable (gap) |
 | Intelligibility | Grad-CAM worksheet with a randomization sanity check (section 6); not reviewed by a clinician (gap) |
 | Safety | Not for clinical use; triage framing only; risks in section 5 |
-| Security | Not served; a stated gap until Phase 3 |
+| Security | API privacy and rate-limit conditions checked in CI (section 6); not deployed, so not tested under real traffic (gap) |
 | Privacy | Public de-identified data only; no patient data collected |
