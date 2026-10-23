@@ -19,7 +19,7 @@ portfolio project and research prototype: **not for clinical use**.
   worksheet) and E (image plus metadata) are built; Phase G
   (research data services) is in progress.
 - Phase 3 (serving and MLOps) is mostly built: the API with an abstain flag (Docker image built
-  and smoke-tested in CI with a test bundle, not deployed), the monthly drift job with per-skin-type alerts and an
+  and smoke-tested in CI with a test bundle; the free public deploy is blocked), the monthly drift job with per-skin-type alerts and an
   audit table, the Unity Catalog model registry, per-run cost tracking, a retraining loop and a
   CI accuracy gate. Phases 4 to 6 have not started.
 
@@ -514,9 +514,13 @@ threshold).
 - The research-demo notice, the non-commercial licence terms and attribution are on the page
   and in every response.
 - Tested locally in Docker: peak memory 442 MiB with full-size made-up images, close to
-  Render's 512 MiB free tier; a run capped at 512 MiB sat at its limit. The target is
-  Hugging Face Spaces (free CPU) for headroom. Dependencies are pinned to the tested image
-  (`docker/constraints.txt`). Not deployed yet.
+  Render's 512 MiB free tier; a run capped at 512 MiB sat at its limit. Dependencies are pinned
+  to the tested image (`docker/constraints.txt`).
+- **Not deployed: the free public deploy is blocked.** The owner approved public weights on
+  2026-10-23, but Hugging Face returned 402 Payment Required for both a Docker and a Gradio Space ("hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription"). No Space was created. Render's free tier is too tight (above), and
+  paying breaks the zero-cost rule, so the API stays built and tested in Docker CI. The public
+  demo that exists is the cohort service's
+  ([cdm-cohort-demo.streamlit.app](https://cdm-cohort-demo.streamlit.app/)), not this classifier.
 
 ## Phase 3: the monthly drift job
 

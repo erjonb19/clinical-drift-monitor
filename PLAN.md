@@ -60,7 +60,7 @@ Databricks Free Edition is the center, lined up with the Data Engineer Associate
 | Training | PyTorch on Databricks serverless GPU (1x A10G, confirmed 2026-09-30), Colab Pro as backup |
 | Tracking and registry | MLflow, model registered in Unity Catalog |
 | Federated learning | Flower |
-| Serving | PyTorch on CPU behind FastAPI in Docker, public on a free tier (Render, or Hugging Face Spaces if Render's memory cannot fit PyTorch); ONNX was attempted and failed parity |
+| Serving | PyTorch on CPU behind FastAPI in Docker, public on a free tier (Render, or Hugging Face Spaces if Render's memory cannot fit PyTorch; blocked 2026-10-23: Hugging Face now needs a paid plan, Render is too tight); ONNX was attempted and failed parity |
 | LLM reports | Gemini free tier, groundedness check from the governed agent |
 | UI | Streamlit Community Cloud, calling the API |
 | Tests and CI | pytest and GitHub Actions |
@@ -273,7 +273,7 @@ The model becomes a service with a threshold, a schedule and a CI gate, which is
 
 - [ ] (Closed 2026-10-22 as attempted, not done: parity failed under the amended rule; the owner chose PyTorch on CPU for serving. See the decisions log and `results/phase3/onnx/`.) Export to ONNX, confirm outputs match PyTorch within tolerance, and benchmark ONNX Runtime against PyTorch on CPU (p50 and p95 latency).
 - [x] (Done 2026-10-23: `app/api`, tested in CI and in Docker; `results/phase3/serving/`.) FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
-- [ ] Docker image, deployed free on Render. (Image built and smoke-tested in CI; the public deploy is on hold, see the decisions log, 2026-10-23 morning.)
+- [ ] Docker image, deployed free on Render. (Image built and smoke-tested in CI. Blocked 2026-10-23: no free host fits; see the decisions log, 2026-10-23 afternoon.)
 - [ ] (Built 2026-10-23: `databricks/monthly_drift_job.json`, 12-month replay in `results/phase3/monthly/`; ticked after the first scheduled run. New ISIC images are counted each month, not downloaded or scored.) Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
 - [ ] Gram as a backup detector (decided 2026-10-04): the monthly job scores Gram alongside the shipped Mahalanobis detector and logs both, because Phase 2's ship rule picked Mahalanobis by 0.18 AUROC points, within the seed spread, and Gram had the lower false-alarm rate on the real sites. Gram is not usable as a CPU backup unless it is refit and checked on the serving hardware: in Phase 2 a CPU refit missed the GPU fit's normalizer by up to 11.8% (tolerance 0.1%).
 - [ ] Test the actual serving setup (decided 2026-10-05): the detector fitted on GPU (its saved PCA, class means and precision matrix) applied to features computed on CPU, with the same score-match check as Phase 2's batch-drift reference (Spearman >= 0.999 and 99% of images within 1% relative difference). Phase 2 checked only a CPU refit against the GPU scores.
@@ -346,12 +346,17 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-23 (afternoon): decided by the owner**
+  - **Public API: weights approved for public release, but the free deploy is blocked.** Hugging Face returned 402 Payment Required for both a Docker and a Gradio Space ("hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription").
+    No Space was created. The owner declined to pay and declined Render (512 MiB free tier
+    against a 442 MiB measured peak). The API stays built and tested in Docker CI; the README links
+    the existing Streamlit cohort demo instead. The PLAN serving item stays unticked.
 - **2026-10-23 (morning): decided by the owner**
   - **Phase 6 (CMS readmission drift) is deferred.** Reason: the only CMS table in the workspace
     is `workspace.gold.gold_hospital_profile`, a single 748-row snapshot with no history, so there
     is no monthly series to train a readmission model on or to monitor for drift. Neither option in
     the overnight entry below is chosen yet. Phase 6 stays in the plan, and the project is not done until it is met.
-  - **Public API deploy is on hold** pending the owner's decision on public weights.
+  - **Public API deploy is on hold** pending the owner's decision on public weights (superseded by the afternoon entry).
   - **The employer name is removed** from `docs/FOR_REVIEWERS.md`; it now names clinical research
     informatics and AI engineering roles in general.
 - **2026-10-23 (overnight): proposed (decided in the morning entry above: Phase 6 deferred)**

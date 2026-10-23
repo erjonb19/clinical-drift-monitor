@@ -1,10 +1,14 @@
 """Deploy the research API (app/api) to a free Hugging Face Space (Docker, CPU).
 
+Not usable for free since 2026-10-23: Hugging Face answered 402 Payment Required (Docker and
+Gradio Spaces on free CPU need a PRO subscription), so nothing is deployed. Kept for a paid or
+changed tier.
+
 Run on a clean commit, after the owner has logged in (``hf auth login``). Stages exactly what
-the Dockerfile needs (pyproject, src, app/api, the serving bundle) with a Space README that
-carries the notice, licence and attribution, checks the bundle against its manifest, then
-creates the Space if needed and uploads. The Space is public, so the model weights in the
-bundle become downloadable there: non-commercial research use, with attribution.
+the Dockerfile needs (pyproject, docker/constraints.txt, src, app/api, the serving bundle) with
+a Space README that carries the notice, licence and attribution, checks the bundle against its
+manifest, then creates the Space if needed and uploads. The Space is public, so the model
+weights in the bundle become downloadable there: non-commercial research use, with attribution.
 
 Usage: python scripts/deploy_space.py <user>/<space-name> [--bundle dist/bundle] [--dry-run]
 """
@@ -65,7 +69,8 @@ def check_bundle(bundle: Path) -> dict[str, Any]:
 
 
 def stage(target: Path, bundle: Path) -> None:
-    for rel in ("Dockerfile", ".dockerignore", "pyproject.toml"):
+    for rel in ("Dockerfile", ".dockerignore", "pyproject.toml", "docker/constraints.txt"):
+        (target / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO / rel, target / rel)
     (target / "README.md").write_text(SPACE_README, encoding="utf-8", newline="\n")
     shutil.copytree(
@@ -84,7 +89,15 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if git(
-        "status", "--porcelain", "--", "src", "app", "Dockerfile", ".dockerignore", "pyproject.toml"
+        "status",
+        "--porcelain",
+        "--",
+        "src",
+        "app",
+        "docker",
+        "Dockerfile",
+        ".dockerignore",
+        "pyproject.toml",
     ):
         sys.exit("uncommitted changes: deploy a commit")
     manifest = check_bundle(args.bundle)
