@@ -1,0 +1,86 @@
+{
+  "spec": "results/phase3/lineage/spark_writes_spec.json",
+  "read_from": "system.access.table_lineage",
+  "edges": [
+    {
+      "source": "workspace.cdm.silver_images",
+      "target": "workspace.cdm.gold_drift_baseline",
+      "entity_type": "JOB",
+      "entity_run_id": "112875883597409",
+      "first_seen": "2026-10-23T16:12:22.734Z",
+      "events": "2"
+    },
+    {
+      "source": "workspace.cdm.silver_images",
+      "target": "workspace.cdm.gold_drift_baseline",
+      "entity_type": "JOB",
+      "entity_run_id": "355850019183618",
+      "first_seen": "2026-10-23T16:18:01.283Z",
+      "events": "1"
+    },
+    {
+      "source": "workspace.cdm.gold_drift_baseline",
+      "target": "workspace.cdm.gold_drift_monthly",
+      "entity_type": "JOB",
+      "entity_run_id": "112875883597409",
+      "first_seen": "2026-10-23T16:12:36.900Z",
+      "events": "2"
+    },
+    {
+      "source": "workspace.cdm.gold_drift_baseline",
+      "target": "workspace.cdm.gold_drift_monthly",
+      "entity_type": "JOB",
+      "entity_run_id": "355850019183618",
+      "first_seen": "2026-10-23T16:18:11.083Z",
+      "events": "1"
+    },
+    {
+      "source": "workspace.cdm.gold_prediction_audit",
+      "target": "workspace.cdm.gold_drift_monthly",
+      "entity_type": "JOB",
+      "entity_run_id": "112875883597409",
+      "first_seen": "2026-10-23T16:12:36.900Z",
+      "events": "2"
+    },
+    {
+      "source": "workspace.cdm.gold_prediction_audit",
+      "target": "workspace.cdm.gold_drift_monthly",
+      "entity_type": "JOB",
+      "entity_run_id": "355850019183618",
+      "first_seen": "2026-10-23T16:18:11.083Z",
+      "events": "1"
+    },
+    {
+      "source": "workspace.cdm.silver_images",
+      "target": "workspace.cdm.gold_prediction_audit",
+      "entity_type": "JOB",
+      "entity_run_id": "112875883597409",
+      "first_seen": "2026-10-23T16:12:10.312Z",
+      "events": "2"
+    },
+    {
+      "source": "workspace.cdm.silver_images",
+      "target": "workspace.cdm.gold_prediction_audit",
+      "entity_type": "JOB",
+      "entity_run_id": "355850019183618",
+      "first_seen": "2026-10-23T16:17:52.087Z",
+      "events": "1"
+    }
+  ],
+  "writes_with_no_source_table": [
+    {
+      "target": "workspace.cdm.gold_drift_baseline",
+      "events": "1"
+    },
+    {
+      "target": "workspace.cdm.gold_drift_monthly",
+      "events": "12"
+    },
+    {
+      "target": "workspace.cdm.gold_prediction_audit",
+      "events": "12"
+    }
+  ],
+  "expected_edges_present": true,
+  "read_utc": "2026-10-23T16:31:34+00:00"
+}

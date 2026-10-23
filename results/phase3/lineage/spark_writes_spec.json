@@ -1,0 +1,34 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-10-23",
+  "plan": "PLAN.md Phase 3 lineage; the gap recorded in docs/BUILT_VS_PLANNED.md: no lineage edge reaches gold_prediction_audit, gold_drift_monthly or gold_drift_baseline, because the monthly job writes them from pandas (spark.createDataFrame), so system.access.table_lineage records them with no source table",
+  "owner_request": "2026-10-23: write the audit and drift tables through Spark so Unity Catalog lineage reaches them",
+  "checked_before": {
+    "how": "read-only SQL on the workspace warehouse, 2026-10-23",
+    "gold_prediction_audit": "3,600 rows, 3,600 distinct ISIC IDs, months 1 to 12",
+    "gold_drift_baseline": "3,210 rows, one bundle version (v2-ensemble-cpu-d7191f4)",
+    "gold_drift_monthly": "12 rows, months 1 to 12",
+    "silver_images": "no duplicate ISIC ID; every audit and baseline ISIC ID is present",
+    "lineage_rows_into_the_three_tables": "entity_type JOB with no source table"
+  },
+  "future_runs": "databricks/notebooks/monthly_drift.py builds each write as a Spark query over the tables its rows come from: audit and baseline rows joined to workspace.cdm.silver_images on isic_id (an inner join that must keep every row), and the monthly row joined to that month's rows of gold_prediction_audit and the bundle's rows of gold_drift_baseline, whose counts it stores as two new columns, audit_rows and baseline_rows. Scores, flags and every other value are computed exactly as before.",
+  "one_off_rewrite": {
+    "notebook": "databricks/notebooks/lineage_rewrite.py, serverless CPU, SQL only, no model",
+    "steps": [
+      "record each table's current Delta version",
+      "gold_prediction_audit: INSERT OVERWRITE with its own rows inner-joined to silver_images on isic_id",
+      "gold_drift_baseline: the same",
+      "gold_drift_monthly: ADD COLUMNS audit_rows BIGINT, baseline_rows BIGINT; INSERT OVERWRITE with its own rows left-joined to the per-month row count of gold_prediction_audit and the per-bundle row count of gold_drift_baseline"
+    ],
+    "checks": [
+      "audit and baseline: the rewritten table equals its pre-rewrite version exactly (EXCEPT ALL both ways is empty, row counts equal)",
+      "monthly: the five original columns equal the pre-rewrite version exactly; audit_rows equals the sum of by_source in the row's summary (0 where the month scored nothing); baseline_rows equals sizes.baseline_images in the summary"
+    ],
+    "on_any_failed_check": "RESTORE each table to its recorded version, then fail the run",
+    "output": "results/phase3/lineage/spark_writes.json"
+  },
+  "lineage_read": "edges into the three tables from system.access.table_lineage, read after the run; the system table lags, so the read is repeated until the edges appear, and only edges seen in the table are reported",
+  "not_changed": "no score, flag, alert or month is recomputed; results/phase3/monthly/ is not touched; the monthly spec (results/phase3/monthly/spec.json) is unchanged apart from the two count columns stated here",
+  "amendment_2026_10_23": "After attempt 1 (job run 112875883597409) failed. The monthly check read sizes.baseline_images from each row's summary, but the 12-month replay ran at code 01f25eb, before the summary recorded sizes, so the check raised KeyError. Every table was restored to its recorded version (both task attempts; Databricks retried the task once although the job sets max_retries 0). Amended check: baseline_rows must equal the baseline table's row count for the row's bundle version as it was before the rewrite, and sizes.baseline_images where a summary has it. The audit check and every other step are unchanged. See spark_writes_attempts.json.",
+  "clarification_2026_10_23": "baseline_rows is the number of rows in gold_drift_baseline for the row's bundle version, in every month. After the replay (month 13 on) a run loads no baseline, so its summary records sizes.baseline_images as 0 while baseline_rows is the table count; the monthly job checks baseline_rows against sizes only in replay months. Added after review, before any run with the new monthly code."
+}

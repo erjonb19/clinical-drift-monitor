@@ -1,0 +1,18 @@
+{
+  "spec": "results/phase3/lineage/spark_writes_spec.json",
+  "job_id": "621764420309678",
+  "attempts": [
+    {
+      "job_run": "112875883597409",
+      "code_version": "cfc8792",
+      "result": "FAILED: KeyError 'sizes' in the monthly check (the replay's summaries predate that field). Databricks retried the task once (task runs 950040902534641 and 909053252286368, the second with trigger 'retry') although the job sets max_retries 0; each attempt rewrote the tables and then restored them. After the run all three tables had their original row counts and schemas (DESCRIBE HISTORY: WRITE then RESTORE, twice)",
+      "source": "databricks jobs get-run and get-run-output; DESCRIBE HISTORY on the three tables, read 2026-10-23"
+    },
+    {
+      "job_run": "355850019183618",
+      "code_version": "df7afc4",
+      "result": "SUCCESS: every check passed (spark_writes.json). A read-only check afterwards found each table equal to its version from before any attempt (audit v11, baseline v0, monthly v11 on its five original columns: EXCEPT ALL empty both ways)",
+      "source": "results/phase3/lineage/spark_writes.json; SQL on the workspace warehouse, 2026-10-23"
+    }
+  ]
+}

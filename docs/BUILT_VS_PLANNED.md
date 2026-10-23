@@ -235,9 +235,19 @@ Known limits:
   Correction: that file says "fresh environment (pip requirements from the model)"; the load ran in the
   job's own environment, which has the cdm wheel installed, so the model's packaged code and pins were
   not tested in isolation.
-- Gap: no lineage edge reaches `gold_prediction_audit`, `gold_drift_monthly` or `gold_drift_baseline`
-  (written from pandas);
-  the monthly job does not yet load the model through its registry URI.
+- Lineage into the audit and drift tables (built 2026-10-23): a one-off job (run
+  355850019183618) rewrote `gold_prediction_audit`, `gold_drift_baseline` and `gold_drift_monthly`
+  through Spark joins, with every row checked unchanged and a restore on any failed check
+  (`results/phase3/lineage/spark_writes.json`). `system.access.table_lineage` now has edges from
+  `silver_images` into the audit and baseline tables and from both into the monthly table
+  (`spark_writes_edges.json`). `gold_drift_monthly` gained two count columns, `audit_rows` and
+  `baseline_rows`. The first attempt failed on a check bug and was retried once by Databricks;
+  both attempts restored the tables, and their edges remain in the system table
+  (`spark_writes_attempts.json`).
+- The monthly job's writes now go through the same joins (staged at 44451c6). They have not run:
+  the first run with this code is the scheduled one on 1 November.
+- Gap: the monthly job does not load the model through its registry URI, so no edge runs from
+  the registered model to the audit table; no lineage screenshot.
 
 ### Phase 3: retraining loop and CI accuracy gate (built 2026-10-23)
 
