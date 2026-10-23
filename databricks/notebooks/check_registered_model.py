@@ -58,7 +58,7 @@ result = {
     "images": len(images),
     "labels_match": True,
     "max_probability_gap": float(np.max(gaps)),
-    "loaded_in": "a fresh serverless CPU environment (pip requirements from the model)",
+    "loaded_in": "this job's environment (the cdm wheel is installed; the model's own pip environment was not rebuilt)",
     "job_run": dbutils.widgets.get("job_run_id") or "manual",
     "checked_utc": datetime.now(UTC).isoformat(timespec="seconds"),
 }
