@@ -584,8 +584,20 @@ by us, so the progression is a scenario, not drift observed over time.
 bundle's answers exactly on 3 made-up images ([`registered_model_check.json`](results/phase3/lineage/registered_model_check.json);
 that job had the cdm wheel installed, so the model's own packaged environment was not tested
 alone). Unity Catalog lineage has 31 table edges, bronze to silver to OMOP
-([`lineage.json`](results/phase3/lineage/lineage.json)). **Gap:** the audit and drift tables are
-written from pandas, so no lineage edge reaches them.
+([`lineage.json`](results/phase3/lineage/lineage.json)). The audit and drift tables were first
+written from pandas, so lineage recorded them with no source. On 2026-10-23 a one-off job
+(run 355850019183618, under [`spark_writes_spec.json`](results/phase3/lineage/spark_writes_spec.json))
+rewrote them through Spark joins. Every row was checked unchanged: 3,600 audit, 3,210 baseline and
+12 monthly rows, each table equal to its version from before the rewrite. Unity Catalog now records
+four edges: `silver_images` to `gold_prediction_audit` and `gold_drift_baseline`, and both into
+`gold_drift_monthly` ([`spark_writes_edges.json`](results/phase3/lineage/spark_writes_edges.json)).
+The monthly job's own writes now take the same path; its first run with this code is the
+scheduled one on 1 November, so that path has not run yet.
+- The first attempt (run 112875883597409) failed on a check bug, and Databricks retried it once
+  although the job sets no retries. Both attempts restored the tables, but their edges stay in
+  the lineage table ([`spark_writes_attempts.json`](results/phase3/lineage/spark_writes_attempts.json)).
+- Still missing: no edge from the registered model to the audit table (the monthly job loads the
+  bundle from the volume, not through `models:/...@champion`), and no screenshot.
 
 **Retraining loop**, under [`spec.json`](results/phase3/retrain/spec.json), committed before
 the run. It is triggered by an alert month containing Buenos Aires images (months 7 to 9: the drift table's

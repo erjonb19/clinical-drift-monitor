@@ -59,4 +59,5 @@ See [docs/BUILT_VS_PLANNED.md](BUILT_VS_PLANNED.md). In short:
 - the CMS readmission model (Phase 6) is deferred: there is no monthly history of the CMS data
   to train on or monitor (see the PLAN decisions log, 2026-10-23);
 - ONNX serving failed parity and was closed;
-- lineage does not yet reach the audit table.
+- lineage reaches the audit and drift tables from silver (`results/phase3/lineage/spark_writes_edges.json`),
+  but not from the registered model, because the monthly job loads the bundle from the volume.
