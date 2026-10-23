@@ -458,15 +458,21 @@ PyTorch's own batch-size noise, root cause unknown (`results/phase3/onnx/`).
 **Serving bundle and abstain threshold.** Under [`spec.json`](results/phase3/serving/spec.json),
 one Databricks serverless CPU run (682399318227929) scored every set on CPU, the serving hardware.
 - Each seed's Mahalanobis detector was fit on its training features. The API's NumPy scorer
-  matched the detector to within 1e-15.
+  matched the detector to about 1e-15 (relative).
 - The OOD score is the mean of the three seeds' scores. The abstain threshold
   (848.0) is the 95th percentile on validation, so 5% of in-distribution
   images go to review by construction.
 - The CPU ensemble reproduces the committed balanced accuracy (66.46% on the client test split).
-- Test and the new hospitals were scored once, with an attempt log, results saved before the
-  lock ([`results.json`](results/phase3/serving/results.json)).
+- Test and the new hospitals were scored once, results saved before the lock
+  ([`results.json`](results/phase3/serving/results.json)). **Deviation from the spec:** the
+  spec says the attempt log comes before any test image is scored; the notebook computed
+  features and scores for every set first and wrote the attempt log before the test
+  metrics. Nothing but shapes was printed in between, but a crash there would have left no
+  attempt record. Later jobs log the attempt before extracting test features.
 
-**Risk-coverage and review workload** (balanced accuracy over the classes present):
+**Risk-coverage and review workload** (balanced accuracy over the classes present; at the
+new hospitals the workload uses all images, 1,616 and 2,298, and balanced accuracy the
+labelled ones, 1,458 and 2,106):
 
 | Set | Sent to review (OOD above threshold) | Balanced accuracy, all | At 90% coverage: drop least confident | At 90% coverage: drop most out-of-distribution |
 |---|---|---|---|---|
@@ -482,20 +488,27 @@ one Databricks serverless CPU run (682399318227929) scored every set on CPU, the
   the most out-of-distribution ones does not, in distribution (at PAD-UFES-20 it helps
   slightly: 40.9% against 40.2%). The OOD score flags new data; it
   is not a confidence score.
-- **Limitation found while testing the API:** a plain green image scored 552.7, below the
-  threshold, so it was not flagged. A detector fit on dermoscopy features can miss inputs
-  that are obviously not skin.
+- **Limitation found while testing the API** ([`api_local_checks.json`](results/phase3/serving/api_local_checks.json),
+  made-up images only): a plain green picture scored 552.7 and a 1,600 x 1,200 random-noise
+  picture 264.6, both below the threshold, so neither was flagged; a plain grey picture
+  (3,009.1) was. A detector fit on dermoscopy features can miss inputs that are obviously
+  not skin.
 
 **Public API** (`app/api/`, `Dockerfile`): FastAPI on CPU returning the label, class
 probabilities, the OOD score, the abstain flag and a melanoma referral flag (the Phase 2 triage
 threshold).
-- An upload is held in memory for one request and never stored or logged. There is no access
-  log; `/health` keeps counts and timing only.
-- Rate limits apply per client and in total.
+- An upload is sent as the raw request body and read into memory with a hard 10 MB cap, so
+  it is never written to disk (a multipart form would be spooled to a temporary file above
+  1 MB) and never logged. There is no access log; `/health` keeps counts and timing only.
+  The hosting platform's own proxy may log addresses, which this code does not control.
+- Rate limits apply per client (the address the trusted proxy appended, so a client cannot
+  choose it) and in total, before any body is read; tracked addresses are capped.
 - The research-demo notice, the non-commercial licence terms and attribution are on the page
   and in every response.
-- Tested locally in Docker: peak memory 646 MiB, over Render's 512 MiB free tier, so the
-  target is Hugging Face Spaces (free CPU). Not deployed yet.
+- Tested locally in Docker: peak memory 442 MiB with full-size made-up images, close to
+  Render's 512 MiB free tier; a run capped at 512 MiB sat at its limit. The target is
+  Hugging Face Spaces (free CPU) for headroom. Dependencies are pinned to the tested image
+  (`docker/constraints.txt`). Not deployed yet.
 
 ## Research informatics services (Phase G)
 

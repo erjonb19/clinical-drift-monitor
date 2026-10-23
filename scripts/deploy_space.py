@@ -88,6 +88,14 @@ def main() -> None:
     ):
         sys.exit("uncommitted changes: deploy a commit")
     manifest = check_bundle(args.bundle)
+    evaluated = json.loads(
+        (REPO / "results/phase3/serving/results.json").read_text(encoding="utf-8")
+    )
+    if (
+        hashlib.sha256((args.bundle / "manifest.json").read_bytes()).hexdigest()
+        != evaluated["bundle"]["manifest_sha256"]
+    ):
+        sys.exit("this bundle is not the one results/phase3/serving/results.json evaluated")
     commit = git("rev-parse", "--short", "HEAD")
     with tempfile.TemporaryDirectory() as tmp:
         target = Path(tmp)

@@ -32,6 +32,8 @@ from cdm.train import build_model, features_and_logits, weights_hash
 
 Array = NDArray[np.float64]
 NOTICE = "Research demo, not for medical use."
+# A decompression bomb under the 10 MB upload cap could need gigabytes; 50 megapixels is ample.
+Image.MAX_IMAGE_PIXELS = 50_000_000
 
 
 def detector_arrays(detector: MahalanobisDetector) -> dict[str, Array]:
