@@ -589,7 +589,7 @@ written from pandas, so lineage recorded them with no source. On 2026-10-23 a on
 (run 355850019183618, under [`spark_writes_spec.json`](results/phase3/lineage/spark_writes_spec.json))
 rewrote them through Spark joins. Every row was checked unchanged: 3,600 audit, 3,210 baseline and
 12 monthly rows, each table equal to its version from before the rewrite. Unity Catalog now records
-four edges: `silver_images` to `gold_prediction_audit` and `gold_drift_baseline`, and both into
+four source-to-target pairs (each logged by both attempts, so 8 rows): `silver_images` to `gold_prediction_audit` and `gold_drift_baseline`, and both into
 `gold_drift_monthly` ([`spark_writes_edges.json`](results/phase3/lineage/spark_writes_edges.json)).
 The monthly job's own writes now take the same path; its first run with this code is the
 scheduled one on 1 November, so that path has not run yet.
