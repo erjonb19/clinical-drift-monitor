@@ -95,10 +95,20 @@ try:
     )
     checks[MONTHLY] = differences(MONTHLY, before[MONTHLY], MONTHLY_COLUMNS)
     rows = spark.sql(f"SELECT month, summary, audit_rows, baseline_rows FROM {MONTHLY}").collect()
+    # The replay ran before the summary recorded `sizes`, so baseline_rows is checked against the
+    # baseline table as it was before this run (and against `sizes` where a summary has it).
+    baseline_before = {
+        r["bundle_version"]: int(r["n"])
+        for r in spark.sql(
+            f"SELECT bundle_version, COUNT(*) AS n FROM {BASELINE} VERSION AS OF {before[BASELINE]} "
+            "GROUP BY bundle_version"
+        ).collect()
+    }
     mismatched = []
     for r in rows:
         s = json.loads(r["summary"])
-        if r["audit_rows"] != sum(s.get("by_source", {}).values()) or r["baseline_rows"] != s["sizes"]["baseline_images"]:  # fmt: skip
+        expected_baseline = s.get("sizes", {}).get("baseline_images", baseline_before.get(s["bundle_version"]))  # fmt: skip
+        if r["audit_rows"] != sum(s.get("by_source", {}).values()) or r["baseline_rows"] != expected_baseline or r["baseline_rows"] != baseline_before.get(s["bundle_version"]):  # fmt: skip
             mismatched.append(int(r["month"]))
     checks[MONTHLY]["count_columns_match_summary"] = not mismatched
     checks[MONTHLY]["months_mismatched"] = mismatched

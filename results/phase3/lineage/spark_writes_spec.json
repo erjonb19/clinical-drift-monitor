@@ -28,5 +28,6 @@
     "output": "results/phase3/lineage/spark_writes.json"
   },
   "lineage_read": "edges into the three tables from system.access.table_lineage, read after the run; the system table lags, so the read is repeated until the edges appear, and only edges seen in the table are reported",
-  "not_changed": "no score, flag, alert or month is recomputed; results/phase3/monthly/ is not touched; the monthly spec (results/phase3/monthly/spec.json) is unchanged apart from the two count columns stated here"
+  "not_changed": "no score, flag, alert or month is recomputed; results/phase3/monthly/ is not touched; the monthly spec (results/phase3/monthly/spec.json) is unchanged apart from the two count columns stated here",
+  "amendment_2026_10_23": "After attempt 1 (job run 112875883597409) failed. The monthly check read sizes.baseline_images from each row's summary, but the 12-month replay ran at code 01f25eb, before the summary recorded sizes, so the check raised KeyError. Every table was restored to its recorded version (both task attempts; Databricks retried the task once although the job sets max_retries 0). Amended check: baseline_rows must equal the baseline table's row count for the row's bundle version as it was before the rewrite, and sizes.baseline_images where a summary has it. The audit check and every other step are unchanged. See spark_writes_attempts.json."
 }
