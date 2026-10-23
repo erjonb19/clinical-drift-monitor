@@ -344,6 +344,15 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-10-23 (overnight): proposed, not decided (waiting for the owner)**
+  - **Phase 6 data source.** Phase 6 assumes the governed agent's Type 2 history table of CMS
+    hospital data. A read-only check of the workspace found only
+    `workspace.gold.gold_hospital_profile` (748 rows, one snapshot, no history), so there is no
+    monthly series to train on or monitor. Options: (a) build the history from CMS's public
+    archived quarterly releases of the hospital quality data (free downloads; a few quarters
+    give a short series), or (b) connect the governed agent's history table once it exists.
+    Nothing is built until the owner chooses.
+
 - **2026-10-22 (late night)**
   - **Serving runtime:** PyTorch on CPU. ONNX was attempted and failed parity under the amended
     rule (gaps 3 to 7x PyTorch's own batch-size noise; root cause unknown, see below). No more
