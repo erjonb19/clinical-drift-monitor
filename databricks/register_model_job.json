@@ -1,0 +1,48 @@
+{
+  "name": "cdm-phase3-register-model",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/b0a9e71/cdm-0.1.0-py3-none-any.whl",
+          "torch==2.14.0",
+          "torchvision==0.29.0",
+          "mlflow==3.17.1"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "register_model",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 10800,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/register_model",
+        "base_parameters": {
+          "code_version": "b0a9e71",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/b0a9e71/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "0a89543353d46c0824eb510dfaa24557565bc82851b75484e5dcc055006e2102",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/b0a9e71/repo",
+          "files_sha256": "{\"results/phase3/serving/results.json\": \"81a5906e4d081312f4c17a70af2940af2691cb0ada1aaa86ff7e51eafd41609e\", \"databricks/notebooks/register_model.py\": \"29b51d3bf4666f9eecc464784bbfadd02b58d1014ccfa6cae9efeb2c466ede06\"}",
+          "bundle": "/Volumes/workspace/cdm/raw/deploy/serving/d7191f4",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/lineage",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}
