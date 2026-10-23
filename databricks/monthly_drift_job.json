@@ -1,0 +1,53 @@
+{
+  "name": "cdm-phase3-monthly-drift",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/01f25eb/cdm-0.1.0-py3-none-any.whl",
+          "torch==2.14.0",
+          "torchvision==0.29.0"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "monthly_drift",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 10800,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/monthly_drift",
+        "base_parameters": {
+          "code_version": "01f25eb",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/01f25eb/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "f12d1ff63c43603f549f9e701977fc83fcf24cbad62d42572b0e7ea56071cf91",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/01f25eb/repo",
+          "files_sha256": "{\"results/phase3/monthly/spec.json\": \"8659ffa8f53934f946f248cb80cd8b93fec6e4dfcb7ef2edcf1c3039d1c00ae7\", \"results/phase3/serving/results.json\": \"81a5906e4d081312f4c17a70af2940af2691cb0ada1aaa86ff7e51eafd41609e\", \"databricks/notebooks/monthly_drift.py\": \"21cb2c992dca0e4ce2984aa1727388689c9a6cbf51b54c5feae476bdbaab1bdd\"}",
+          "bundle": "/Volumes/workspace/cdm/raw/deploy/serving/d7191f4",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/monthly",
+          "count": "1",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ],
+  "schedule": {
+    "quartz_cron_expression": "0 0 6 1 * ?",
+    "timezone_id": "UTC",
+    "pause_status": "UNPAUSED"
+  }
+}
