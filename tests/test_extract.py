@@ -340,10 +340,9 @@ def test_workbook_has_dropdowns_and_locks_the_note_text(tmp_path: Path) -> None:
         letter = "GHI"[k]
         assert header.index(column) == 6 + k
         span = checks[f"{letter}2:{letter}4"]
-        values = [c.value for c in wb["choices"]["ABC"[k]]]
-        assert span.endswith(f"${len(values)}") and values == ALLOWED.labels(
-            column.removeprefix("label_")
-        )
+        values = [c.value for c in wb["choices"]["ABC"[k]] if c.value is not None]
+        assert span.endswith(f"${len(values)}")
+        assert values == ALLOWED.labels(column.removeprefix("label_"))
     with pytest.raises(FileExistsError):
         write_workbook(tmp_path)
     # Labels come back into the CSV by note ID; everything else stays as written.
