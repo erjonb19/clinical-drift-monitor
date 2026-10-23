@@ -1,0 +1,44 @@
+{
+  "name": "cdm-phase3-lineage-rewrite",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "/Volumes/workspace/cdm/raw/deploy/cfc8792/cdm-0.1.0-py3-none-any.whl"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "lineage_rewrite",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/lineage_rewrite",
+        "base_parameters": {
+          "code_version": "cfc8792",
+          "wheel": "/Volumes/workspace/cdm/raw/deploy/cfc8792/cdm-0.1.0-py3-none-any.whl",
+          "wheel_sha256": "2039360d6cc49590eb7311bd0956a7e7868092019d222a7b5da29d25c8f2c964",
+          "repo": "/Volumes/workspace/cdm/raw/deploy/cfc8792/repo",
+          "files_sha256": "{\"results/phase3/lineage/spark_writes_spec.json\": \"f7cb31e34c6a733182718e0636b2497f690658f565659563c0c9c82c88c89398\", \"databricks/notebooks/lineage_rewrite.py\": \"993d032f3218e6d7cbfcd6b71f63afc20233b7b483dcebbf4e7f5c6fcca9060c\"}",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/lineage",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}
