@@ -32,7 +32,7 @@ jobs:
           docker run -d --name api -p 7860:7860 cdm-api:ci
           for i in $(seq 1 60); do curl -sf http://localhost:7860/health && break; sleep 2; done
           python - <<'PY'
-          import io, json, urllib.request
+          import io, json, urllib.error, urllib.request
           from PIL import Image
           buf = io.BytesIO(); Image.new("RGB", (300, 200), (180, 120, 100)).save(buf, format="JPEG")
           req = urllib.request.Request("http://localhost:7860/predict", data=buf.getvalue(), headers={"Content-Type": "image/jpeg"})
@@ -46,9 +46,15 @@ jobs:
               assert err.code == 400, err.code
           health = json.load(urllib.request.urlopen("http://localhost:7860/health"))
           assert health["predictions"] == 1 and health["rejected"] == 1, health
+          allowed = {"status", "model_version", "notice", "predictions", "rejected", "rate_limited",
+                     "latency_ms_p50", "latency_ms_p95"}
+          assert set(health) == allowed, set(health) ^ allowed  # counts and timing only
           print("smoke test passed", health)
           PY
-          if docker logs api 2>&1 | grep -q "POST /predict"; then echo "access log found"; exit 1; fi
+          if docker logs api 2>&1 | grep -q -E "POST /predict|172\.17\."; then echo "access log or client address found"; exit 1; fi
+          # No upload may land on the container's disk: list every file the container added.
+          docker diff api | tee changes.txt
+          if grep -v -E " /(tmp|home/demo)$" changes.txt | grep -q .; then echo "unexpected files written"; exit 1; fi
       - name: Container logs
         if: always()
         run: docker logs api || true

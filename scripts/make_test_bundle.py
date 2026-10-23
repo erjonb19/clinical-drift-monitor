@@ -29,8 +29,9 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=REPO / "dist" / "test_bundle")
     out = parser.parse_args().out
     existing = out / "manifest.json"
-    if existing.exists() and json.loads(existing.read_text())["version"] != VERSION:
-        raise SystemExit(f"{out} holds a real bundle: refusing to overwrite it")
+    is_test = existing.exists() and json.loads(existing.read_text()).get("version") == VERSION
+    if out.exists() and any(out.iterdir()) and not is_test:
+        raise SystemExit(f"{out} is not empty and is not a test bundle: refusing to overwrite it")
     OUT = out
     OUT.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(0)
@@ -43,7 +44,7 @@ def main() -> None:
     manifest = {
         "version": VERSION,
         "abstain_threshold": 1e12,
-        "refer_threshold": 0.0638,
+        "refer_threshold": 0.5,  # arbitrary: the test bundle's outputs mean nothing
         "seeds": [
             {
                 "seed": 0,
