@@ -101,7 +101,7 @@ strict = true
 # None of these ship type information.
 [[tool.mypy.overrides]]
 module = ["medmnist.*", "sklearn.*", "torchvision.*", "pyspark.*", "scipy.*", "mlflow.*", "open_clip.*",
-          "onnxruntime.*"]
+          "onnxruntime.*", "huggingface_hub.*"]
 ignore_missing_imports = true
 
 # The pipeline's decorators come from pyspark, which is not installed outside Databricks.

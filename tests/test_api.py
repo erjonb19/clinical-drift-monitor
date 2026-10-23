@@ -37,7 +37,7 @@ def client(limiter: RateLimiter | None = None, hops: int = 0) -> TestClient:
 
 def post(c: TestClient, body: bytes, **headers: str) -> int:
     headers = {"content-type": "image/jpeg", **headers}
-    return c.post("/predict", content=body, headers=headers).status_code
+    return int(c.post("/predict", content=body, headers=headers).status_code)
 
 
 def test_page_and_health_carry_the_notice() -> None:
