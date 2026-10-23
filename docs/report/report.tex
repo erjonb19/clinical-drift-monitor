@@ -218,7 +218,8 @@ hash-checked inside the job, and a test look writes its lock only after its resu
 so a crash cannot use up the look. The OMOP tables feed a governed cohort service whose
 definitions run only after a reviewer approves their exact hash, with small counts suppressed
 and every decision in a hash-chained audit log. Its requests are synthetic: a portfolio exercise,
-not a clinical service. The public API is built and tested in CI but not deployed: no free host could run it. Unity Catalog lineage reaches the audit and drift
+not a clinical service. The public API is built and tested in CI but not deployed: Hugging Face now charges for it, and Render's free tier
+leaves too little memory headroom. Unity Catalog lineage reaches the audit and drift
 tables from silver, after a one-off rewrite through Spark that left every row unchanged. No edge
 runs from the registered model to the audit table, because the monthly job loads the bundle
 from the volume.

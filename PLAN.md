@@ -356,7 +356,7 @@ Owner decisions that change scope, cost or process, newest first.
     is `workspace.gold.gold_hospital_profile`, a single 748-row snapshot with no history, so there
     is no monthly series to train a readmission model on or to monitor for drift. Neither option in
     the overnight entry below is chosen yet. Phase 6 stays in the plan, and the project is not done until it is met.
-  - **Public API deploy is on hold** pending the owner's decision on public weights.
+  - **Public API deploy is on hold** pending the owner's decision on public weights (superseded by the afternoon entry).
   - **The employer name is removed** from `docs/FOR_REVIEWERS.md`; it now names clinical research
     informatics and AI engineering roles in general.
 - **2026-10-23 (overnight): proposed (decided in the morning entry above: Phase 6 deferred)**
