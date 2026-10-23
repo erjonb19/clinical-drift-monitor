@@ -896,11 +896,14 @@
   "results/phase3/serving/api_local_checks.json": {
     "databricks_job_run": null,
     "experiment_id": "3252981153928765",
-    "file_commit": "bf0d4f1",
-    "file_sha256": "6220feea440412734e794e75b683e9134797eefa3bcd43b6b89f63c2a7ee73a5",
+    "file_commit": "e157242",
+    "file_sha256": "01a908b65cd9c4a2e5b0e784c5fcc7e8fb566c4105b7f9fd57fd3d210d63a72d",
     "logged_after_the_fact": false,
     "metrics": 10,
-    "run_id": "f76296d7af5f4c40b53485bc3b9d6f8d"
+    "run_id": "0f619424c0dc40968ef5f79f7a8c6fc9",
+    "superseded_runs": [
+      "f76296d7af5f4c40b53485bc3b9d6f8d"
+    ]
   },
   "results/phase3/serving/results.json": {
     "databricks_job_run": "682399318227929",
