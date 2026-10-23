@@ -236,6 +236,20 @@ Known limits:
   (written from pandas);
   the monthly job does not yet load the model through its registry URI.
 
+### Phase 3: retraining loop and CI accuracy gate (built 2026-10-23)
+
+- `databricks/notebooks/retrain.py` and `databricks/retrain_job.json` (one A10 task, 45-minute
+  deadline, no retries): it refuses to run without an alert month containing Buenos Aires images,
+  fine-tunes a challenger per champion seed, compares it on patient-disjoint Buenos Aires images
+  and client validation, and applies the rule in `results/phase3/retrain/spec.json`. One run
+  (624636213399909): not promoted (+6.2 points at Buenos Aires, -1.6 on client validation
+  against a -1.0 limit); the decision is also appended to `workspace.cdm.gold_model_decisions`.
+  The first attempt (348183905966601) never started (GPU start-up timed out; no code ran).
+- The promotion path is written but has never run: checkpoints to the volume, a bundle rebuild,
+  then a new registry version.
+- `tests/test_eval_gate.py` with `config/eval_gate.json`: floors on the committed serving
+  metrics and on any promoted challenger, with a self-test that a regression fails.
+
 ## Scaffolded
 
 ### Phase 3: ONNX export (tried 2026-10-22; parity failed)
