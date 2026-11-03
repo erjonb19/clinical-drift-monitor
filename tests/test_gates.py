@@ -103,7 +103,9 @@ def cc_by_without_attribution(f: pd.DataFrame) -> None:
 
 def duplicate_file(f: pd.DataFrame) -> None:
     """The same file landed twice under two IDs, faithfully recorded in the manifest."""
-    f.at[len(f) - 1, "sha256"] = f.at[len(f) - 1, "manifest_sha256"] = f.at[0, "sha256"]
+    first = str(f.at[0, "sha256"])
+    f.at[len(f) - 1, "sha256"] = first
+    f.at[len(f) - 1, "manifest_sha256"] = first
 
 
 def file_never_landed(f: pd.DataFrame) -> None:
