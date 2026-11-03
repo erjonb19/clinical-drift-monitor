@@ -1,4 +1,7 @@
-# Plan: finishing Phases 3 to 5 from a cloud session (proposal, not approved)
+# Plan: finishing Phases 3 to 5 from a cloud session
+
+> **Decided 2026-11-03.** The owner answered section 7; the decisions are recorded in PLAN.md's
+> decisions log (2026-11-03 entry), which governs where this proposal and it differ.
 
 Nov 3, 2026 · drafted by Claude Code for Erjon Brucaj's review
 
@@ -134,8 +137,8 @@ Each PR: a short plan first, a fresh review before merge, CI green, docs and
     synthetic scenarios and aggregate drift numbers would be sent, no images and no patient
     data. Free-tier rate limits and terms should be checked on the day; not verified here.
   - **Claude Haiku**, reusing `cdm.extract`'s transport, spend log and $5 cap. Secret:
-    `ANTHROPIC_API_KEY`. CLAUDE.md allows Haiku for G5 and "evals"; using it to write the reports
-    is outside that, so CLAUDE.md and PLAN.md would need amending. Rough size, using the price
+    `ANTHROPIC_API_KEY`. CLAUDE.md allows Haiku "for G5 clinical text extraction and evals", which can be read
+    as G5 evals only; writing the reports is outside it either way, so CLAUDE.md and PLAN.md would need amending. Rough size, using the price
     recorded in `src/cdm/extract.py` ($0.10 in, $0.50 out per million tokens, not re-checked):
     30 scenarios × about 3k input and 2k output tokens is about $0.04 per eval pass. G5 has
     spent $0.0265 of the $5.
@@ -182,7 +185,7 @@ least certain.
 | 3.10 lineage run | 0 | 0.3 to 1 | One monthly-job run that loads the model through the registry |
 | 3.6 Gram backup (if kept) | 0 | 2 to 6 | CPU refit needs intermediate-layer features for the training split |
 | 3.7 serving-setup check (if kept) | 0 | 0.5 to 2 | CPU features for validation and test |
-| Retraining rerun | not proposed | | Would be up to about 3 GPU DBUs at the 45-minute cap |
+| Retraining rerun | not proposed | | About 3 GPU DBUs at the 45-minute widget deadline, which is checked only between seeds; up to about 3.9 at the job's 60-minute `timeout_seconds` |
 | **Total if all run** | **0** | **about 6 to 21** | No GPU work is proposed |
 
 Free Edition limits daily compute; if a job hits the limit it stops until the next day.
