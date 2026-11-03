@@ -47,6 +47,7 @@ import torch
 from pyspark.sql import functions as F
 from torch.utils.data import DataLoader
 
+from cdm.champion import champion_record, check_champion_val, committed_val_balanced_accuracy
 from cdm.data import eval_transform, train_transform
 from cdm.ood import extract
 from cdm.serving import balanced_accuracy
@@ -65,7 +66,10 @@ INDEX = {c: i for i, c in enumerate(CLASSES)}
 
 WHEEL_SHA = hashlib.sha256(Path(dbutils.widgets.get("wheel")).read_bytes()).hexdigest()
 assert dbutils.widgets.get("wheel_sha256") == WHEEL_SHA, f"wheel sha256 {WHEEL_SHA}"
-for rel, digest in json.loads(dbutils.widgets.get("files_sha256")).items():
+FILES = json.loads(dbutils.widgets.get("files_sha256"))
+# The champion check reads the committed validation result, so it must be one of the checked files.
+assert "results/phase3/serving/results.json" in FILES, "files_sha256 must cover the serving results"
+for rel, digest in FILES.items():
     got = hashlib.sha256((REPO / rel).read_bytes()).hexdigest()
     assert got == digest, f"{rel}: sha256 {got}, expected {digest}"
 if (OUT / "decision.json").exists():
@@ -136,7 +140,8 @@ def dataset(frame: pd.DataFrame, augment: bool) -> EncodedImages:
 train_set = dataset(pd.concat([train_rows, ba_train], ignore_index=True), True)
 val_set, held_set = dataset(val_rows, False), dataset(ba_held, False)
 device = torch.device("cuda")
-manifest = {m["seed"]: m for m in json.loads(Path(dbutils.widgets.get("models_file")).read_text())}
+MODELS_FILE = Path(dbutils.widgets.get("models_file"))
+manifest = {m["seed"]: m for m in json.loads(MODELS_FILE.read_text())}
 
 
 def softmax_on(model: torch.nn.Module, data: EncodedImages) -> np.ndarray:
@@ -148,15 +153,36 @@ def softmax_on(model: torch.nn.Module, data: EncodedImages) -> np.ndarray:
 
 probs = {"champion": {"held": [], "val": []}, "challenger": {"held": [], "val": []}}
 challengers = {}
+checked: dict[int, str] = {}
+
+
+def load_champion(seed: int) -> torch.nn.Module:
+    champ = build_model(pretrained=False, arch="b0")
+    champ.load_state_dict(torch.load(manifest[seed]["checkpoint"], map_location="cpu"))
+    digest = weights_hash(champ)
+    assert digest == manifest[seed]["weights_sha256"], f"seed {seed}: weights {digest}"
+    checked[seed] = digest
+    return champ.to(device).eval()
+
+
+# The champion is scored and checked against its committed validation result before any
+# challenger is trained (silent-failures #12): a gap past the tolerance stops the run here.
+for seed in (0, 1, 2):
+    champ = load_champion(seed)
+    probs["champion"]["held"].append(softmax_on(champ, held_set))
+    probs["champion"]["val"].append(softmax_on(champ, val_set))
+    del champ
+y_val_check = np.asarray(val_set.labels, dtype=np.int64)
+champ_val = balanced_accuracy(y_val_check, np.mean(probs["champion"]["val"], axis=0).argmax(1))
+COMMITTED_VAL = committed_val_balanced_accuracy(REPO / "results/phase3/serving/results.json")
+CHAMPION = champion_record(MODELS_FILE, checked, COMMITTED_VAL, champ_val)
+print(json.dumps(CHAMPION), flush=True)
+check_champion_val(champ_val, COMMITTED_VAL)
+
 for seed in (0, 1, 2):
     if time.time() > DEADLINE:
         raise RuntimeError("deadline reached: stopping inside the GPU cap")
-    champ = build_model(pretrained=False, arch="b0")
-    champ.load_state_dict(torch.load(manifest[seed]["checkpoint"], map_location="cpu"))
-    assert weights_hash(champ) == manifest[seed]["weights_sha256"]
-    champ = champ.to(device).eval()
-    probs["champion"]["held"].append(softmax_on(champ, held_set))
-    probs["champion"]["val"].append(softmax_on(champ, val_set))
+    champ = load_champion(seed)
     generator = seed_everything(seed, cfg.num_threads, gpu=True)
     model, history = train(copy.deepcopy(champ), train_set, val_set, cfg, seed, device, generator)
     model.eval()
@@ -196,7 +222,7 @@ decision = {
     "spec": "results/phase3/retrain/spec.json",
     "code_version": CODE, "wheel_sha256": WHEEL_SHA, "ran_on": f"Databricks serverless GPU (A10), job run {JOB_RUN}",
     "trigger_months": [int(m) for m in sorted(trigger["month"])], "sizes": sizes,
-    "champion": metrics["champion"], "challenger": metrics["challenger"],
+    "champion": metrics["champion"], "challenger": metrics["challenger"], "champion_check": CHAMPION,
     "held_out_gain_points": 100 * gain, "client_val_change_points": 100 * val_change,
     "paired_bootstrap_held_out": paired,
     "rule": "gain >= 2.0 points, paired lower bound > 0, client validation change >= -1.0 point",

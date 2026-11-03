@@ -297,7 +297,7 @@ it as "not detected; the reviewer checks". Here the reviewer was a script, and n
 
 ---
 
-## 12. A champion validation score that differs from its committed value (open)
+## 12. A champion validation score that differs from its committed value (cause not found; check built, not yet run)
 
 **Symptom.** The retraining run (job run 624636213399909) scored the champion ensemble at
 68.45% balanced accuracy on the clients' 3,210 validation images. The same three checkpoints
@@ -312,10 +312,15 @@ evaluation, or GPU arithmetic differences on near-tied predictions (0.19 points 
 images per class). The run did not record the weight hashes it checked or the hash of the
 models file, so `decision.json` alone cannot show which weights it scored.
 
-**Caught by.** A fresh review comparing the decision with committed numbers. Not yet caught by
-code: a retraining run should record the champion weight hashes and the models file's SHA-256 in
-its decision, and refuse when the champion's validation score differs from the committed one by
-more than a set tolerance. Until that is built, this entry stays open.
+**Caught by.** A fresh review comparing the decision with committed numbers. Since 2026-11-03,
+also by code (`cdm.champion`, `tests/test_champion.py`): the retraining notebook scores the
+champion on client validation **before** training any challenger, records the models file's
+SHA-256 and every checked weight hash in `decision.json` (`champion_check`), and refuses to go on
+when the champion's score is more than 0.25 points from the committed 68.26%
+(`results/phase3/serving/results.json`). The tolerance was set before any run used it; it lets
+through a gap the size of this one (0.19 points) and refuses a larger one. The job must also
+hash-check the committed serving results it reads. **Not yet run:** no retraining has run with
+this code, and the 0.19-point gap's cause is still not found.
 
 ---
 

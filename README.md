@@ -631,7 +631,9 @@ Aires images scored in months 5 to 9. One GPU run (624636213399909, A10, 366 s;
   serving run (CPU). Against 68.26% the change would be -1.40, still past the limit, so the
   decision stands. The cause is not found; the run did not record the champion weight hashes
   it checked or the hash of the models file it read, so they cannot be confirmed from
-  `decision.json` alone (a gap in the record, `docs/silent-failures.md` #12).
+  `decision.json` alone (a gap in the record, `docs/silent-failures.md` #12). Future runs record
+  both and refuse a champion more than 0.25 points off the committed score (built 2026-11-03,
+  not yet run).
 - Rounded rows differ by 1.5 on validation; the change (-1.59) is computed from unrounded values.
 - The first attempt (run 348183905966601) never started: the GPU environment timed out twice
   at start-up, and no code ran ([`attempts.json`](results/phase3/retrain/attempts.json)).

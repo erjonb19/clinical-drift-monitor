@@ -263,6 +263,10 @@ Known limits:
   The first attempt (348183905966601) never started (GPU start-up timed out; no code ran).
 - If promoted, the notebook saves the challenger checkpoints to the volume (written, never
   run). The bundle rebuild and the registry move are not built.
+- Champion check (2026-11-03, silent-failures #12; written and tested, not yet run on
+  Databricks): `cdm.champion` and the notebook score the champion before any training, record
+  the models file's SHA-256 and weight hashes in the decision, and refuse a champion validation
+  score more than 0.25 points from the committed one.
 - `tests/test_eval_gate.py` with `config/eval_gate.json`: floors on the committed serving
   metrics and on any promoted challenger, with a self-test that a regression fails.
 
