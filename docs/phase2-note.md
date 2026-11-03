@@ -41,8 +41,8 @@ breaking ties. Mahalanobis (PCA size by method D) scored 75.05% and Gram
 Buenos Aires alone spans 66.35% to 69.46%). The rule picked Mahalanobis and it is kept.
 Gram has the lower false-alarm rate: mean FPR@95TPR on the real sites 75.09% against
 82.02% for Mahalanobis. The two split the real sites: Gram is better at Buenos Aires,
-Mahalanobis at PAD-UFES-20. Gram therefore runs alongside Mahalanobis as a backup detector in
-Phase 3 monitoring (PLAN.md). Evidence: `results/phase2/drift/v2/table.json`, `table.md`.
+Mahalanobis at PAD-UFES-20. Gram therefore was to run alongside Mahalanobis as a backup detector in
+Phase 3 monitoring (PLAN.md; dropped by the owner on 2026-11-03, see below and the decisions log). Evidence: `results/phase2/drift/v2/table.json`, `table.md`.
 
 ## Limitation: method C's PCA search topped out
 
@@ -112,7 +112,8 @@ Hypothesis, not verified: on the A10 GPU, PyTorch's default convolution arithmet
 differs slightly from CPU float32; Gram raises activations to powers up to 10, which magnifies
 those differences, and then takes per-class minimums and maximums, which are sensitive to
 them. Whatever the cause, Gram scores are only comparable to a fit made on the same hardware
-and settings, which matters for running Gram as a backup detector (PLAN.md, Phase 3). Evidence:
+and settings, which is why the Gram backup detector was dropped from Phase 3 (PLAN.md decisions log,
+2026-11-03). Evidence:
 the failed run's error output, recorded in `results/phase2/batch_drift/spec.json`.
 
 ## Label provenance
