@@ -320,7 +320,8 @@ Known limits:
 - `cdm.scenarios` and `scripts/phase4_scenarios.py`: 30 synthetic (staged) drift scenarios in
   `results/phase4/scenarios.json`, each a month record shaped like `gold_drift_monthly`'s summary,
   built from seeded made-up scores run through the monitoring code's own drift tests; known
-  findings derived from each record. `results/phase4/eval_spec.json` proposes the scoring and a
+  findings derived from each record and a fixed rules context (the job's rules and the finding
+  words, committed with the scenarios). `results/phase4/eval_spec.json` proposes the scoring and a
   pass threshold (owner to set). No generator, groundedness check or LLM call exists yet.
 
 ## Not started

@@ -3,8 +3,9 @@
 Usage: python scripts/phase4_scenarios.py [--check]
 
 Every scenario is built by `cdm.scenarios.build` from seeded synthetic scores and the monitoring
-code's own drift tests, so rerunning reproduces the committed file exactly. ``--check`` fails
-if the committed file differs from a fresh build.
+code's own drift tests. ``--check`` fails if the committed file differs from a fresh build; it is
+run by hand, not in CI, because numpy does not promise the same random streams across versions.
+The committed file is the eval's input.
 """
 
 from __future__ import annotations
@@ -14,14 +15,18 @@ import json
 import sys
 from pathlib import Path
 
-from cdm.scenarios import STAGED, build
+from cdm.scenarios import RULES, STAGED, build, in_distribution_accuracy_floor
 
 OUT = Path("results/phase4/scenarios.json")
 
 
 def render() -> str:
     scenarios = build()
+    floor = in_distribution_accuracy_floor()
     doc = {"staged": STAGED, "built_by": "scripts/phase4_scenarios.py", "count": len(scenarios),
+           "rules": RULES, "accuracy_floor": floor,
+           "accuracy_floor_source": "lowest delayed balanced accuracy of real replay months 1 to 4 "
+                                    "(results/phase3/monthly/month_02.json to month_05.json)",
            "scenarios": scenarios}  # fmt: skip
     return json.dumps(doc, indent=1, sort_keys=True) + "\n"
 
