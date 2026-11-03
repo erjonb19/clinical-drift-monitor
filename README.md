@@ -91,8 +91,8 @@ FPR@95TPR and the federated models.
 
 About the detectors:
 - **Mahalanobis was shipped by a rule fixed before any result:** best mean AUROC on the two real
-  held-out sites. It won over Gram by 0.18 points, within the seed spread, so Gram runs as a
-  backup in Phase 3.
+  held-out sites. It won over Gram by 0.18 points, within the seed spread, so Gram was planned as a
+  backup in Phase 3 (dropped 2026-11-03: a CPU refit missed the GPU fit by up to 11.8%).
 - **The real-site shift is far harder than the benchmark sets.** PathMNIST (histopathology) and
   CIFAR-10 (natural photos) only show that a detector works at all.
 

@@ -358,14 +358,16 @@ Owner decisions that change scope, cost or process, newest first.
     in Phase 2 (tolerance 0.1%).
   - **Phase 4 LLM:** Gemini free tier. The key (`GEMINI_API_KEY`) comes from a Google project
     with no billing account, stored as a secret in a GitHub Environment that needs the owner's
-    approval to run. CI replays recorded responses and never calls an LLM.
+    approval to run. Live calls only through a manual workflow with a spend cap, and CI replays
+    recorded responses with no keys (owner's instruction, 2026-11-03).
   - **Phase 4 reports run from committed drift rows** in a manual GitHub workflow, not inside the
     Databricks job, so no LLM key goes into Databricks.
   - **Demo weights (Phase 5):** published as a GitHub release asset; the demo checks its SHA-256.
   - **Databricks access from the cloud:** a service principal first; if Free Edition does not
     allow it, a personal access token with a 7-day lifetime. Either one is a GitHub Environment
-    secret with the owner as required reviewer, used only by `workflow_dispatch` workflows. No
-    Databricks run and no live LLM call without the owner's approval for that run.
+    secret with the owner as required reviewer, used only by `workflow_dispatch` workflows.
+  - **Standing rule (owner's instruction, 2026-11-03):** no Databricks run and no live LLM call
+    without the owner's approval for that run.
   - **Branches:** `phase3/retraining` (its fixes are on main as 684d7ea) and the other branches
     fully merged into main are approved for deletion (27 branches, each checked: no commit
     missing from main). The cloud session could not delete them (its git proxy refused); the

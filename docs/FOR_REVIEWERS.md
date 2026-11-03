@@ -26,7 +26,7 @@ as an MLflow run (`results/mlflow_runs.json`).
 4. **It runs as a service (30 s).** This is the README's Phase 3 section:
    - an API with an abstain flag, its Docker image built and smoke-tested in CI (with an
      untrained test bundle; the real bundle was checked locally);
-   - a monthly drift job (schedule set; its first scheduled run is due on the 1st of next month)
+   - a monthly drift job (schedule set; its first scheduled run was due on 1 November 2026, outcome not yet recorded here)
      whose 12-month replay alerted on every fully shifted month and on none of the
      in-distribution months;
    - a retraining loop whose pre-registered rule declined a challenger that gained 6.2 points
