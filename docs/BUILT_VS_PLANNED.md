@@ -224,7 +224,8 @@ Known limits:
 - `cdm.monitor` (replay schedule, PSI and KS alert rule, per-skin-type alerts, delayed
   accuracy; tested) and `databricks/notebooks/monthly_drift.py`, scheduled monthly. The
   12-month replay ran as one backfill (830837634650904); `gold_drift_monthly`,
-  `gold_prediction_audit` and `gold_drift_baseline` exist. No scheduled run yet.
+  `gold_prediction_audit` and `gold_drift_baseline` exist. The first scheduled run was due on
+  1 November 2026; its outcome is not yet recorded in this repository.
 
 ### Phase 3: Unity Catalog model and lineage (partly built 2026-10-23)
 
@@ -247,7 +248,7 @@ Known limits:
   both attempts restored the tables, and their edges remain in the system table
   (`spark_writes_attempts.json`).
 - The monthly job's writes now go through the same joins (staged at 44451c6). They have not run:
-  the first run with this code is the scheduled one on 1 November.
+  the first run with this code was the scheduled one due on 1 November, not yet recorded here.
 - Gap: the monthly job does not load the model through its registry URI, so no edge runs from
   the registered model to the audit table; no lineage screenshot.
 
@@ -311,8 +312,12 @@ Known limits:
 
 ## Not started
 
-- Phase 3's remaining items (Gram backup, the serving-setup check, CPU batch drift, the
-  diagnosis_confirm_type ingest, staged shifts) and Phases 4 and 5.
+- Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
+  shifts) and Phases 4 and 5.
+- Closed without being built (owner, 2026-11-03): the Gram backup detector (dropped: a CPU
+  refit missed the GPU fit's normalizer by up to 11.8% in Phase 2) and the GPU-fit serving-setup
+  check (superseded: the served bundle fits its detector on CPU features). See PLAN.md's
+  decisions log.
 - Phase 6 (CMS readmission drift) is deferred (owner decision, 2026-10-23): the only CMS table
   is a single 748-row snapshot with no monthly history. See the PLAN decisions log.
 - The course notebook in `reference/` is history,

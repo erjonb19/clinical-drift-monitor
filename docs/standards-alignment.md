@@ -8,7 +8,7 @@ Each item is mapped to evidence in this repository or to a stated gap.
 | # | Principle | Evidence or gap |
 | --- | --- | --- |
 | 1 | Multi-disciplinary expertise is leveraged throughout the total product life cycle | Gap: a solo project; no clinical or regulatory reviewers. |
-| 2 | Good software engineering and security practices are implemented | Typed code, tests and CI on every push; small commits; gates in the pipeline; `docs/silent-failures.md`. Security: gap until serving exists. |
+| 2 | Good software engineering and security practices are implemented | Typed code, tests and CI on every push; small commits; gates in the pipeline; `docs/silent-failures.md`. Security: the API's privacy and rate-limit conditions are checked in CI; it is not deployed, so not tested under real traffic (gap). |
 | 3 | Clinical study participants and data sets are representative of the intended patient population | Partial: four clients and two held-out sites, per-site reporting; skin types IV to VI barely represented (gap). |
 | 4 | Training data sets are independent of test sets | Lesion-level splits, gated (no lesion in two splits; frozen v1 splits); held-out sites never used in training or model choice. |
 | 5 | Selected reference datasets are based upon best available methods | Partial: melanoma labels all histopathology-confirmed; benign labels partly confirmed without biopsy (`results/phase2/label_provenance/label_provenance.json`). |

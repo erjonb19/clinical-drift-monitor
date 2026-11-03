@@ -9,7 +9,7 @@ A skin lesion classifier trained across hospitals, with an out-of-distribution (
 tested on real new hospitals. Built on Databricks Free Edition at zero cost. A personal
 portfolio project and research prototype: **not for clinical use**.
 
-**Status (2026-10-23):**
+**Status (2026-11-03):**
 - Phases 0 to 2 are done: fix the science, data engineering, and ML. The one Phase 2 item left,
   error analysis, moved to research Phase D.
 - The research extension (Phases A to F: OMOP data, a vision-language baseline, subgroups,
@@ -21,7 +21,9 @@ portfolio project and research prototype: **not for clinical use**.
 - Phase 3 (serving and MLOps) is mostly built: the API with an abstain flag (Docker image built
   and smoke-tested in CI with a test bundle; the free public deploy is blocked), the monthly drift job with per-skin-type alerts and an
   audit table, the Unity Catalog model registry, per-run cost tracking, a retraining loop and a
-  CI accuracy gate. Phases 4 to 6 have not started.
+  CI accuracy gate. On 2026-11-03 the owner amended Phase 3's "Done when" (no live URL needed),
+  closed the serving-setup check as superseded and dropped the Gram backup (PLAN.md decisions
+  log). Phases 4 and 5 have not started; Phase 6 is deferred.
 
 A short technical report, written for 4 to 6 pages (LaTeX source with standard packages, written to build on Overleaf;
 not yet compiled, since no TeX is installed on the build machine):
@@ -576,8 +578,8 @@ by us, so the progression is a scenario, not drift observed over time.
   of new-site images. These alerts detect the site, not anything about skin type.
 - **Live check:** 553,019 public ISIC images throughout. The backfill ran all months within
   minutes, so it saw no new data.
-- **Not yet shown:** a scheduled run. The first one is due on the 1st of next month; it will
-  report month 12's delayed accuracy and the live check. After the replay, runs load no model:
+- **Not yet shown:** a scheduled run. The first one was due on 1 November 2026; its outcome is
+  not yet recorded in this repository. It reports month 12's delayed accuracy and the live check. After the replay, runs load no model:
   they log the live count (new images are counted, not scored).
 
 ## Phase 3: registry, retraining, CI gate and costs
@@ -595,8 +597,8 @@ rewrote them through Spark joins. Every row was checked unchanged: 3,600 audit, 
 12 monthly rows, each table equal to its version from before the rewrite. Unity Catalog now records
 four source-to-target pairs (each logged by both attempts, so 8 rows): `silver_images` to `gold_prediction_audit` and `gold_drift_baseline`, and both into
 `gold_drift_monthly` ([`spark_writes_edges.json`](results/phase3/lineage/spark_writes_edges.json)).
-The monthly job's own writes now take the same path; its first run with this code is the
-scheduled one on 1 November, so that path has not run yet.
+The monthly job's own writes now take the same path; its first run with this code was the
+scheduled one due on 1 November, whose outcome is not yet recorded here, so that path is not yet shown to work.
 - The first attempt (run 112875883597409) failed on a check bug, and Databricks retried it once
   although the job sets no retries. Both attempts restored the tables, but their edges stay in
   the lineage table ([`spark_writes_attempts.json`](results/phase3/lineage/spark_writes_attempts.json)).

@@ -61,7 +61,7 @@ Databricks Free Edition is the center, lined up with the Data Engineer Associate
 | Tracking and registry | MLflow, model registered in Unity Catalog |
 | Federated learning | Flower |
 | Serving | PyTorch on CPU behind FastAPI in Docker, public on a free tier (Render, or Hugging Face Spaces if Render's memory cannot fit PyTorch; blocked 2026-10-23: Hugging Face now needs a paid plan, Render is too tight); ONNX was attempted and failed parity |
-| LLM reports | Gemini free tier, groundedness check from the governed agent |
+| LLM reports | Gemini free tier, run from committed drift rows in a manual GitHub workflow (not inside the Databricks job), groundedness check from the governed agent |
 | UI | Streamlit Community Cloud, calling the API |
 | Tests and CI | pytest and GitHub Actions |
 
@@ -275,8 +275,8 @@ The model becomes a service with a threshold, a schedule and a CI gate, which is
 - [x] (Done 2026-10-23: `app/api`, tested in CI and in Docker; `results/phase3/serving/`.) FastAPI `/predict` returns the label, class probabilities, the OOD score, and an abstain flag when the score passes a threshold chosen on validation data.
 - [ ] Docker image, deployed free on Render. (Image built and smoke-tested in CI. Blocked 2026-10-23: no free host fits; see the decisions log, 2026-10-23 afternoon.)
 - [ ] (Built 2026-10-23: `databricks/monthly_drift_job.json`, 12-month replay in `results/phase3/monthly/`; ticked after the first scheduled run. New ISIC images are counted each month, not downloaded or scored.) Monthly Lakeflow Job: pulls the month's replayed and new ISIC images, scores them, compares the score distribution to the gold baseline (population stability index and a KS test), writes a gold drift table, and flags past a set threshold.
-- [ ] Gram as a backup detector (decided 2026-10-04): the monthly job scores Gram alongside the shipped Mahalanobis detector and logs both, because Phase 2's ship rule picked Mahalanobis by 0.18 AUROC points, within the seed spread, and Gram had the lower false-alarm rate on the real sites. Gram is not usable as a CPU backup unless it is refit and checked on the serving hardware: in Phase 2 a CPU refit missed the GPU fit's normalizer by up to 11.8% (tolerance 0.1%).
-- [ ] Test the actual serving setup (decided 2026-10-05): the detector fitted on GPU (its saved PCA, class means and precision matrix) applied to features computed on CPU, with the same score-match check as Phase 2's batch-drift reference (Spearman >= 0.999 and 99% of images within 1% relative difference). Phase 2 checked only a CPU refit against the GPU scores.
+- [ ] (Dropped 2026-11-03 by the owner, not done: a CPU refit missed the GPU fit's normalizer by up to 11.8% in Phase 2, so Gram is not expected to be usable on the serving hardware. See the decisions log.) Gram as a backup detector (decided 2026-10-04): the monthly job scores Gram alongside the shipped Mahalanobis detector and logs both, because Phase 2's ship rule picked Mahalanobis by 0.18 AUROC points, within the seed spread, and Gram had the lower false-alarm rate on the real sites. Gram is not usable as a CPU backup unless it is refit and checked on the serving hardware: in Phase 2 a CPU refit missed the GPU fit's normalizer by up to 11.8% (tolerance 0.1%).
+- [ ] (Closed 2026-11-03 as superseded, not done: the shipped serving bundle fits each seed's Mahalanobis detector on CPU features (`databricks/notebooks/serving_bundle.py`), so a GPU-fit detector is not what is served. See the decisions log.) Test the actual serving setup (decided 2026-10-05): the detector fitted on GPU (its saved PCA, class means and precision matrix) applied to features computed on CPU, with the same score-match check as Phase 2's batch-drift reference (Spearman >= 0.999 and 99% of images within 1% relative difference). Phase 2 checked only a CPU refit against the GPU scores.
 - [ ] Batch-level drift detection (decided 2026-10-04, moved from Phase 2 on 2026-10-05 after the CPU and GPU scores did not match): the spec in `results/phase2/batch_drift/spec.json` (shipped Mahalanobis detector; reference = validation scores; batches of 25, 50, 100 and 200 with 0%, 10%, 25%, 50% and 100% Buenos Aires or PAD-UFES-20 images, the rest from the in-distribution test split; two-sample KS at alpha 0.01; 1,000 batches per cell; false-alarm finding above 2%), with the baseline and every batch scored on the same CPU setup the monitoring job uses. CPU re-scoring of test and new-site images does not reopen the detector choice: Mahalanobis stays shipped. Any AUROC computed from CPU scores is reported only as a reproducibility check against the Phase 2 GPU table, never as a replacement.
 - [x] (Done 2026-10-23 in the monthly job: `cdm.monitor.by_skin_type`.) Per-skin-type drift alerts: the monthly job also computes PSI and KS per Fitzpatrick type wherever that month has at least 100 images of the type (the Phase 2 rule); smaller groups are logged with counts only and never alert.
 - [x] (Done 2026-10-23 for the monthly job: `workspace.cdm.gold_prediction_audit`; the API keeps counts only, the owner's condition.) Prediction audit table: every prediction from the monthly job and the API is written to a gold audit table (request ID, model version and registry URI, input SHA-256, label, class probabilities, OOD score, abstain flag, timestamp). The API appends to a volume file that Auto Loader ingests, so the free Render tier needs no database connection.
@@ -287,7 +287,7 @@ The model becomes a service with a threshold, a schedule and a CI gate, which is
 - [x] (Done 2026-10-23: one run under `results/phase3/retrain/spec.json`; the challenger gained 6.2 points at Buenos Aires but lost 1.6 on client validation, past the 1.0 limit, so it was not promoted and the registry did not change. `results/phase3/retrain/decision.json`.) Retraining loop: a confirmed drift trains a challenger, which replaces the current model in the Unity Catalog registry only if it wins on held-out data.
 - [x] (Done 2026-10-23: `tests/test_eval_gate.py` with floors in `config/eval_gate.json`: client test macro AUROC and balanced accuracy, balanced accuracy at both new hospitals, and test review workload. It reads committed results, so a regression fails once worse numbers are committed.) CI: pytest on every push plus a small eval gate that fails the build if AUROC drops, copied from the governed agent's setup.
 
-**Done when** the API has a live URL, the drift job has one green scheduled run, and CI blocks a regression.
+**Done when** the API is built and smoke-tested in Docker CI (the public deploy is blocked by free hosting limits; decisions log 2026-10-23), the drift job has one green scheduled run, and CI blocks a regression. (Amended 2026-11-03; it said "the API has a live URL".)
 
 ## Phase 4: LLM layer (about 1 week)
 
@@ -337,7 +337,7 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 | --- | --- | --- |
 | Data engineering | Phase 1 | Built a medallion image lakehouse with lesion-level, leak-free splits and write-audit-publish gates, published to Databricks Delta |
 | ML | Phases 0 and 2 | Trained EfficientNet (B0 or B3, chosen on validation) on HAM10000 and ISIC and federated it across sites with Flower, comparing 4 OOD detectors on a real site shift, with results by skin type (AUROC to fill in) |
-| MLOps | Phase 3 | Served the model through ONNX Runtime and FastAPI with a validated abstain threshold, a monthly drift job, and a CI accuracy gate |
+| MLOps | Phase 3 | Served the model with PyTorch on CPU behind FastAPI (ONNX Runtime was tried and failed parity), with a validated abstain threshold, a monthly drift job, and a CI accuracy gate |
 | LLMOps and applied AI | Phase 4 | Generated grounded drift incident reports from an LLM, scored on a scenario eval with cost and latency tracked |
 | Forward deployed | Phases 3 and 5 | Shipped a one-command demo and runbook a clinical ops team could operate |
 | Healthcare data | Phase 6 | Pointed the same drift monitor at a CMS readmission model on monthly public hospital data, with feature drift each month and performance checked once the next refresh arrives |
@@ -345,6 +345,32 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 ## Decisions log
 
 Owner decisions that change scope, cost or process, newest first.
+
+- **2026-11-03: decided by the owner** (on the cloud-session plan,
+  `docs/plan-2026-11-phases-3-to-5.md`, PR #47)
+  - **Phase 3 "Done when" amended:** the API is built and smoke-tested in Docker CI, and the
+    public deploy is blocked by free hosting limits (2026-10-23 entries). The live-URL condition
+    is removed. The other two conditions (one green scheduled drift run, CI blocks a regression)
+    stay.
+  - **Serving-setup check closed as superseded:** the shipped bundle fits each seed's detector
+    on CPU features, so a GPU-fit detector on CPU features is not the served setup.
+  - **Gram backup detector dropped:** a CPU refit missed the GPU fit's normalizer by up to 11.8%
+    in Phase 2 (tolerance 0.1%).
+  - **Phase 4 LLM:** Gemini free tier. The key (`GEMINI_API_KEY`) comes from a Google project
+    with no billing account, stored as a secret in a GitHub Environment that needs the owner's
+    approval to run. CI replays recorded responses and never calls an LLM.
+  - **Phase 4 reports run from committed drift rows** in a manual GitHub workflow, not inside the
+    Databricks job, so no LLM key goes into Databricks.
+  - **Demo weights (Phase 5):** published as a GitHub release asset; the demo checks its SHA-256.
+  - **Databricks access from the cloud:** a service principal first; if Free Edition does not
+    allow it, a personal access token with a 7-day lifetime. Either one is a GitHub Environment
+    secret with the owner as required reviewer, used only by `workflow_dispatch` workflows. No
+    Databricks run and no live LLM call without the owner's approval for that run.
+  - **Branches:** `phase3/retraining` (its fixes are on main as 684d7ea) and the other branches
+    fully merged into main are approved for deletion (27 branches, each checked: no commit
+    missing from main). The cloud session could not delete them (its git proxy refused); the
+    owner deletes them.
+  - **STATUS.md** is cut to a pointer to the README status and `docs/BUILT_VS_PLANNED.md`.
 
 - **2026-10-23 (afternoon): decided by the owner**
   - **Public API: weights approved for public release, but the free deploy is blocked.** Hugging Face returned 402 Payment Required for both a Docker and a Gradio Space ("hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription").

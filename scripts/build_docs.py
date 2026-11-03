@@ -659,7 +659,8 @@ def standards() -> str:
         (
             "Good software engineering and security practices are implemented",
             "Typed code, tests and CI on every push; small commits; gates in the pipeline; "
-            "`docs/silent-failures.md`. Security: gap until serving exists.",
+            "`docs/silent-failures.md`. Security: the API's privacy and rate-limit conditions are "
+            "checked in CI; it is not deployed, so not tested under real traffic (gap).",
         ),
         (
             "Clinical study participants and data sets are representative of the intended patient population",
