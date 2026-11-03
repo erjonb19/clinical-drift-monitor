@@ -1,6 +1,6 @@
 # Plan: finishing Phases 3 to 5 from a cloud session
 
-> **Decided 2026-11-03.** The owner answered section 7; the decisions are recorded in PLAN.md's
+> **Decided 2026-11-03.** The owner answered section 7; the next PR records the decisions in PLAN.md's
 > decisions log (2026-11-03 entry), which governs where this proposal and it differ.
 
 Nov 3, 2026 · drafted by Claude Code for Erjon Brucaj's review
