@@ -316,10 +316,13 @@ models file, so `decision.json` alone cannot show which weights it scored.
 also by code (`cdm.champion`, `tests/test_champion.py`): the retraining notebook scores the
 champion on client validation **before** training any challenger, records the models file's
 SHA-256 and every checked weight hash in `decision.json` (`champion_check`), and refuses to go on
-when the champion's score is more than 0.25 points from the committed 68.26%
-(`results/phase3/serving/results.json`). The tolerance was set before any run used it; it lets
-through a gap the size of this one (0.19 points) and refuses a larger one. The job must also
-hash-check the committed serving results it reads. **Not yet run:** no retraining has run with
+when the champion's score is more than 0.75 points from the committed 68.26%
+(`results/phase3/serving/results.json`), writing `champion_refused_<run>.json` first. The
+tolerance is two images of the smallest validation class (df, 38 images: one image moves
+balanced accuracy by up to 0.38 points). It was set on 2026-11-03, after this 0.19-point gap was
+seen, and is a judgement. The job must also hash-check the committed serving results it reads,
+so `databricks/retrain_job.json` (which records run 624636213399909 at 817eb62) must be
+regenerated before any rerun. **Not yet run:** no retraining has run with
 this code, and the 0.19-point gap's cause is still not found.
 
 ---

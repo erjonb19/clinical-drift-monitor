@@ -47,7 +47,12 @@ import torch
 from pyspark.sql import functions as F
 from torch.utils.data import DataLoader
 
-from cdm.champion import champion_record, check_champion_val, committed_val_balanced_accuracy
+from cdm.champion import (
+    ChampionMismatch,
+    champion_record,
+    check_champion_val,
+    committed_val_balanced_accuracy,
+)
 from cdm.data import eval_transform, train_transform
 from cdm.ood import extract
 from cdm.serving import balanced_accuracy
@@ -168,6 +173,8 @@ def load_champion(seed: int) -> torch.nn.Module:
 # The champion is scored and checked against its committed validation result before any
 # challenger is trained (silent-failures #12): a gap past the tolerance stops the run here.
 for seed in (0, 1, 2):
+    if time.time() > DEADLINE:
+        raise RuntimeError("deadline reached: stopping inside the GPU cap")
     champ = load_champion(seed)
     probs["champion"]["held"].append(softmax_on(champ, held_set))
     probs["champion"]["val"].append(softmax_on(champ, val_set))
@@ -177,7 +184,16 @@ champ_val = balanced_accuracy(y_val_check, np.mean(probs["champion"]["val"], axi
 COMMITTED_VAL = committed_val_balanced_accuracy(REPO / "results/phase3/serving/results.json")
 CHAMPION = champion_record(MODELS_FILE, checked, COMMITTED_VAL, champ_val)
 print(json.dumps(CHAMPION), flush=True)
-check_champion_val(champ_val, COMMITTED_VAL)
+try:
+    check_champion_val(champ_val, COMMITTED_VAL)
+except ChampionMismatch as err:
+    # A refusal is recorded beside where the decision would go (decision.json is not written,
+    # so a fixed rerun is not blocked), then the run fails.
+    OUT.mkdir(parents=True, exist_ok=True)
+    refusal = {"job_run": JOB_RUN, "code_version": CODE, "refused": str(err), "champion_check": CHAMPION,
+               "refused_utc": datetime.now(UTC).isoformat(timespec="seconds")}  # fmt: skip
+    (OUT / f"champion_refused_{JOB_RUN}.json").write_text(json.dumps(refusal, indent=2) + "\n")
+    raise
 
 for seed in (0, 1, 2):
     if time.time() > DEADLINE:

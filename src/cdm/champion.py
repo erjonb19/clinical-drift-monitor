@@ -17,12 +17,19 @@ import json
 from pathlib import Path
 from typing import Any
 
-# Balanced accuracy points (0.25 = a quarter of a percentage point). Set 2026-11-03, before any
-# run used it: the unexplained gap in silent-failures #12 was 0.19 points, so this tolerates a
-# gap of that size (GPU arithmetic on near-tied predictions is a candidate cause) and refuses a
-# larger one, which wrong or changed weights would be expected to produce.
-TOLERANCE_POINTS = 0.25
+# The tolerance is sized in images, not picked from the gap already seen (0.19 points in
+# silent-failures #12, which was known when this was set on 2026-11-03). Balanced accuracy is the
+# mean of 7 class recalls, so one image of the smallest validation class (df, 38 images in the
+# v2 validation split, `results/phase2/v2/training/v2-final-seed0.json`, scores.val.pooled
+# .support) moves it by 100 / (7 * 38) = 0.38 points, the most one image can move it. Two such
+# images are tolerated (0.75 points): a flip or two of near-tied predictions between GPU and CPU
+# passes, a larger change refuses. A judgement call; the weight hashes are checked separately.
+CLASSES_N = 7
+SMALLEST_CLASS_IMAGES = 38
+IMAGES_TOLERATED = 2
+TOLERANCE_POINTS = IMAGES_TOLERATED * 100 / (CLASSES_N * SMALLEST_CLASS_IMAGES)
 COMMITTED = Path("results/phase3/serving/results.json")
+SUPPORT_SOURCE = Path("results/phase2/v2/training/v2-final-seed0.json")
 
 
 class ChampionMismatch(RuntimeError):

@@ -9,7 +9,10 @@ from pathlib import Path
 import pytest
 
 from cdm.champion import (
+    CLASSES_N,
     COMMITTED,
+    SMALLEST_CLASS_IMAGES,
+    SUPPORT_SOURCE,
     TOLERANCE_POINTS,
     ChampionMismatch,
     champion_record,
@@ -31,16 +34,24 @@ def test_the_run_behind_entry_12_is_within_tolerance() -> None:
     assert 0.18 < gap < 0.20 < TOLERANCE_POINTS
 
 
-@pytest.mark.parametrize("observed", [0.6790, 0.6860, 0.60, 0.75])
+def test_tolerance_is_two_images_of_the_smallest_validation_class() -> None:
+    record = json.loads((REPO / SUPPORT_SOURCE).read_text())
+    support = record["scores"]["val"]["pooled"]["support"]
+    assert sum(support.values()) == 3210 and len(support) == CLASSES_N
+    assert min(support.values()) == SMALLEST_CLASS_IMAGES == support["df"]
+    assert pytest.approx(2 * 100 / (7 * 38)) == TOLERANCE_POINTS  # 0.75 points
+
+
+@pytest.mark.parametrize("observed", [0.6740, 0.6910, 0.60, 0.75])
 def test_a_gap_past_the_tolerance_refuses(observed: float) -> None:
     with pytest.raises(ChampionMismatch, match="refusing to retrain"):
         check_champion_val(observed, 0.6826)
 
 
 def test_the_tolerance_edge() -> None:
-    assert check_champion_val(0.6826 + 0.0024, 0.6826) == pytest.approx(0.24)
+    assert check_champion_val(0.6826 + 0.0074, 0.6826) == pytest.approx(0.74)
     with pytest.raises(ChampionMismatch):
-        check_champion_val(0.6826 + 0.0026, 0.6826)
+        check_champion_val(0.6826 - 0.0076, 0.6826)
 
 
 def test_points_not_fractions() -> None:
@@ -73,3 +84,4 @@ def test_the_notebook_checks_before_training() -> None:
         "train(copy.deepcopy"
     )
     assert '"champion_check": CHAMPION' in text
+    assert "champion_refused_" in text  # a refusal leaves a record, not only a log line
