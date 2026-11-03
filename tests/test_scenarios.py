@@ -59,7 +59,8 @@ def test_every_scenario_is_labelled_staged_and_uses_no_real_source() -> None:
 def test_records_have_the_real_month_record_shape() -> None:
     real = json.loads((REPO / "results" / "phase3" / "monthly" / "month_09.json").read_text())
     for s in SCENARIOS:
-        assert set(s["record"]) - {"staged"} <= set(real)
+        required = set(real) - {"delayed_accuracy_of_month"}  # left out until labels arrive
+        assert set(s["record"]) - {"staged", "delayed_accuracy_of_month"} == required
         assert set(s["record"]["drift"]) == set(real["drift"])
         delayed = s["record"].get("delayed_accuracy_of_month")
         if delayed is not None:  # real records leave the key out until labels arrive

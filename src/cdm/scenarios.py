@@ -36,7 +36,8 @@ ABSTAIN_QUANTILE = 0.95  # the abstain threshold is the baseline's 95th percenti
 NEW_SITES = ("site_x", "site_y", "site_z")
 SKIN_TYPES = ("I", "II", "III", "IV")
 UNRECORDED_AT_NEW_SITE = 0.15  # share of new-site images with no skin type (real sites leave some)
-MONTHLY = Path("results/phase3/monthly")
+# The repository checkout (editable install); not the working directory.
+MONTHLY = Path(__file__).resolve().parents[2] / "results" / "phase3" / "monthly"
 
 
 def in_distribution_accuracy_floor(monthly: Path = MONTHLY) -> float:
