@@ -1,0 +1,2136 @@
+{
+ "built_by": "scripts/phase4_scenarios.py",
+ "count": 30,
+ "scenarios": [
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "none",
+    "delayed_accuracy_available": false,
+    "new_sources": [],
+    "overall_alert": false,
+    "severity": "none"
+   },
+   "family": "no_drift",
+   "id": "no_drift_00",
+   "record": {
+    "abstain_share": 0.04666666666666667,
+    "by_skin_type": {
+     "not recorded": {
+      "alert": false,
+      "images": 300,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 300,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.9894567095552149,
+     "ks_statistic": 0.026137071651090343,
+     "psi": 0.02776991127387823,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "no_drift_00",
+    "seed": 20261103,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "none",
+    "delayed_accuracy_available": true,
+    "new_sources": [],
+    "overall_alert": false,
+    "severity": "none"
+   },
+   "family": "no_drift",
+   "id": "no_drift_01",
+   "record": {
+    "abstain_share": 0.043333333333333335,
+    "by_skin_type": {
+     "not recorded": {
+      "alert": false,
+      "images": 300,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 300,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4814,
+     "labelled": 285,
+     "melanoma_images": 65,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.9693661412243652,
+     "ks_statistic": 0.029034267912772586,
+     "psi": 0.01724156299923985,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "no_drift_01",
+    "seed": 20261104,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "new_images_counted_not_scored"
+    ],
+    "containment": "none",
+    "delayed_accuracy_available": true,
+    "new_sources": [],
+    "overall_alert": false,
+    "severity": "none"
+   },
+   "family": "no_drift",
+   "id": "no_drift_02",
+   "record": {
+    "abstain_share": 0.05333333333333334,
+    "by_skin_type": {
+     "not recorded": {
+      "alert": false,
+      "images": 300,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 300,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6439,
+     "labelled": 262,
+     "melanoma_images": 53,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.2873034258436409,
+     "ks_statistic": 0.05878504672897196,
+     "psi": 0.05873078764133221,
+     "warning": false
+    },
+    "live": {
+     "count": 553324,
+     "new_since_last_run": 305
+    },
+    "month": 8,
+    "scenario": "no_drift_02",
+    "seed": 20261105,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "new_images_counted_not_scored"
+    ],
+    "containment": "none",
+    "delayed_accuracy_available": true,
+    "new_sources": [],
+    "overall_alert": false,
+    "severity": "none"
+   },
+   "family": "no_drift",
+   "id": "no_drift_03",
+   "record": {
+    "abstain_share": 0.03666666666666667,
+    "by_skin_type": {
+     "not recorded": {
+      "alert": false,
+      "images": 300,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 300,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3833,
+     "labelled": 279,
+     "melanoma_images": 59,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.4544644978731527,
+     "ks_statistic": 0.051121495327102806,
+     "psi": 0.04926267696414072,
+     "warning": false
+    },
+    "live": {
+     "count": 553138,
+     "new_since_last_run": 119
+    },
+    "month": 8,
+    "scenario": "no_drift_03",
+    "seed": 20261106,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "monitor",
+    "delayed_accuracy_available": false,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_00",
+   "record": {
+    "abstain_share": 0.14,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 26,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 45,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 24,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 33,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 172,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 172,
+     "site_x": 128,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 2.29116713479217e-06,
+     "ks_statistic": 0.15691588785046728,
+     "psi": 0.18327138790062655,
+     "warning": true
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "warning_00",
+    "seed": 20261107,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "monitor",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_01",
+   "record": {
+    "abstain_share": 0.13333333333333333,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 30,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 33,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 23,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 25,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 189,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 189,
+     "site_x": 0,
+     "site_y": 111,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6167,
+     "labelled": 274,
+     "melanoma_images": 43,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 2.357257754942244e-05,
+     "ks_statistic": 0.14292834890965733,
+     "psi": 0.13271773202054338,
+     "warning": true
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "warning_01",
+    "seed": 20261110,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "monitor",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_02",
+   "record": {
+    "abstain_share": 0.10666666666666667,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 31,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 38,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 37,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 38,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 156,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 156,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 144
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6351,
+     "labelled": 269,
+     "melanoma_images": 62,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.01361270457110936,
+     "ks_statistic": 0.09467289719626168,
+     "psi": 0.10922669667138564,
+     "warning": true
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "warning_02",
+    "seed": 20261118,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "monitor",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_03",
+   "record": {
+    "abstain_share": 0.09666666666666666,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 35,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 40,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 34,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 25,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 166,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 166,
+     "site_x": 134,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6269,
+     "labelled": 287,
+     "melanoma_images": 47,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 3.2594646126940275e-05,
+     "ks_statistic": 0.14087227414330217,
+     "psi": 0.11390536992761542,
+     "warning": true
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "warning_03",
+    "seed": 20261122,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "monitor",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_04",
+   "record": {
+    "abstain_share": 0.13333333333333333,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 28,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 30,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 28,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 18,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 196,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 196,
+     "site_x": 0,
+     "site_y": 104,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3686,
+     "labelled": 262,
+     "melanoma_images": 31,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 1.9992658592403503e-06,
+     "ks_statistic": 0.15769470404984423,
+     "psi": 0.1572819472715335,
+     "warning": true
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "warning_04",
+    "seed": 20261126,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_00",
+   "record": {
+    "abstain_share": 0.19333333333333333,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 36,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 64,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 39,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 49,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 112,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 112,
+     "site_x": 188,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4593,
+     "labelled": 263,
+     "melanoma_images": 40,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 3.517293407222562e-11,
+     "ks_statistic": 0.21090342679127727,
+     "psi": 0.28262770213868876,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_moderate_00",
+    "seed": 20261127,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_01",
+   "record": {
+    "abstain_share": 0.24666666666666667,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 50,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 83,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 72,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 68,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 27,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 27,
+     "site_x": 0,
+     "site_y": 273,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 2.840485766718413e-19,
+     "ks_statistic": 0.27841121495327104,
+     "psi": 0.5317048443541142,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_moderate_01",
+    "seed": 20261128,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_02",
+   "record": {
+    "abstain_share": 0.3566666666666667,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 62,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 81,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 76,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 67,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 14,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 14,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 286
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4472,
+     "labelled": 283,
+     "melanoma_images": 69,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 6.790221857746378e-47,
+     "ks_statistic": 0.4320872274143302,
+     "psi": 1.1006962785613297,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_moderate_02",
+    "seed": 20261130,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_03",
+   "record": {
+    "abstain_share": 0.18666666666666668,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 36,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 49,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 46,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 38,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 131,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 131,
+     "site_x": 169,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 8.638029746566322e-12,
+     "ks_statistic": 0.2167601246105919,
+     "psi": 0.27785470968027326,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_moderate_03",
+    "seed": 20261131,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "new_images_counted_not_scored",
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_04",
+   "record": {
+    "abstain_share": 0.14666666666666667,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 37,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 52,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 34,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 36,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 141,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 141,
+     "site_x": 0,
+     "site_y": 159,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 3.1524101160518343e-09,
+     "ks_statistic": 0.19090342679127725,
+     "psi": 0.20502741200872285,
+     "warning": false
+    },
+    "live": {
+     "count": 553063,
+     "new_since_last_run": 44
+    },
+    "month": 8,
+    "scenario": "alert_moderate_04",
+    "seed": 20261132,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_05",
+   "record": {
+    "abstain_share": 0.18333333333333332,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 38,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 49,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 34,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 30,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 149,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 149,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 151
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6945,
+     "labelled": 279,
+     "melanoma_images": 51,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.91608478014537e-15,
+     "ks_statistic": 0.24887850467289718,
+     "psi": 0.3773671834060599,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_moderate_05",
+    "seed": 20261133,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_00",
+   "record": {
+    "abstain_share": 0.7633333333333333,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 68,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 77,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 66,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 61,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 28,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 28,
+     "site_x": 272,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6672,
+     "labelled": 277,
+     "melanoma_images": 45,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.346505160858159e-155,
+     "ks_statistic": 0.7471028037383177,
+     "psi": 3.186806834201516,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_strong_00",
+    "seed": 20261134,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_01",
+   "record": {
+    "abstain_share": 0.7233333333333334,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 74,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 79,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 62,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 62,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 23,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 23,
+     "site_x": 0,
+     "site_y": 277,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 2.0135912023735741e-137,
+     "ks_statistic": 0.709190031152648,
+     "psi": 2.89297816400875,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_strong_01",
+    "seed": 20261135,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_02",
+   "record": {
+    "abstain_share": 0.72,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 65,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 91,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 64,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 68,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 12,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 12,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 288
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 3.3548065113278657e-128,
+     "ks_statistic": 0.6883489096573209,
+     "psi": 4.499765582181275,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_strong_02",
+    "seed": 20261136,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_03",
+   "record": {
+    "abstain_share": 0.45666666666666667,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 60,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 90,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 71,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 67,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 12,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 12,
+     "site_x": 288,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3733,
+     "labelled": 269,
+     "melanoma_images": 49,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 4.3466979254613863e-73,
+     "ks_statistic": 0.5338006230529595,
+     "psi": 2.6389622348565656,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_strong_03",
+    "seed": 20261137,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_04",
+   "record": {
+    "abstain_share": 0.7866666666666666,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 70,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 93,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 61,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 75,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 1,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 1,
+     "site_x": 0,
+     "site_y": 299,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3502,
+     "labelled": 262,
+     "melanoma_images": 36,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 4.28697127644758e-159,
+     "ks_statistic": 0.7539563862928349,
+     "psi": 4.435855163052451,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_strong_04",
+    "seed": 20261138,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_05",
+   "record": {
+    "abstain_share": 0.4866666666666667,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 68,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 94,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 71,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 63,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 4,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 4,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 296
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3669,
+     "labelled": 266,
+     "melanoma_images": 30,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 5.0820482201184474e-79,
+     "ks_statistic": 0.553582554517134,
+     "psi": 1.781086047384476,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_strong_05",
+    "seed": 20261139,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites",
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": false,
+    "severity": "alert"
+   },
+   "family": "alert_skin_type_only",
+   "id": "alert_skin_type_only_00",
+   "record": {
+    "abstain_share": 0.17666666666666667,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 1,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 109,
+      "ks_p": 9.604993061687868e-16,
+      "ks_statistic": 0.4003315327674412,
+      "psi": 1.161276035994089,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 2,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 2,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 186,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 186,
+     "site_x": 114,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 1.2594893714475052e-05,
+     "ks_statistic": 0.14682242990654207,
+     "psi": 0.18865915224342272,
+     "warning": true
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_skin_type_only_00",
+    "seed": 20261140,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites",
+     "new_images_counted_not_scored"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": false,
+    "severity": "alert"
+   },
+   "family": "alert_skin_type_only",
+   "id": "alert_skin_type_only_01",
+   "record": {
+    "abstain_share": 0.14,
+    "by_skin_type": {
+     "II": {
+      "alert": true,
+      "images": 122,
+      "ks_p": 1.5393588456039367e-12,
+      "ks_statistic": 0.33890506102854806,
+      "psi": 1.820656585417897,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 3,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 2,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 173,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 173,
+     "site_x": 0,
+     "site_y": 127,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6101,
+     "labelled": 260,
+     "melanoma_images": 57,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 2.001073760414991e-05,
+     "ks_statistic": 0.1439563862928349,
+     "psi": 0.18274785826784706,
+     "warning": true
+    },
+    "live": {
+     "count": 553396,
+     "new_since_last_run": 377
+    },
+    "month": 8,
+    "scenario": "alert_skin_type_only_01",
+    "seed": 20261144,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites",
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": false,
+    "severity": "alert"
+   },
+   "family": "alert_skin_type_only",
+   "id": "alert_skin_type_only_02",
+   "record": {
+    "abstain_share": 0.14,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 2,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 100,
+      "ks_p": 2.2524459142293662e-18,
+      "ks_statistic": 0.44950155763239874,
+      "psi": 2.015500752504092,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 1,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 197,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 197,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 103
+    },
+    "delayed_accuracy_of_month": null,
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 1.4662286604149648e-05,
+     "ks_statistic": 0.14588785046728972,
+     "psi": 0.1576841831160494,
+     "warning": true
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_skin_type_only_02",
+    "seed": 20261146,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": false,
+    "severity": "alert"
+   },
+   "family": "alert_skin_type_only",
+   "id": "alert_skin_type_only_03",
+   "record": {
+    "abstain_share": 0.17,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 2,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 124,
+      "ks_p": 8.297628651352125e-18,
+      "ks_statistic": 0.4008541855089941,
+      "psi": 1.021348849361905,
+      "warning": false
+     },
+     "IV": {
+      "alert": false,
+      "images": 1,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 173,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 173,
+     "site_x": 127,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4682,
+     "labelled": 292,
+     "melanoma_images": 55,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 3.6229485746806705e-06,
+     "ks_statistic": 0.15426791277258567,
+     "psi": 0.1383993173619325,
+     "warning": true
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_skin_type_only_03",
+    "seed": 20261148,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_00",
+   "record": {
+    "abstain_share": 0.38666666666666666,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 26,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 195,
+      "ks_p": 2.339213619822361e-42,
+      "ks_statistic": 0.4971722981068775,
+      "psi": 1.547746080678933,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 19,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 33,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 27,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 27,
+     "site_x": 273,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6243,
+     "labelled": 267,
+     "melanoma_images": 40,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 2.444767007594032e-51,
+     "ks_statistic": 0.45137071651090344,
+     "psi": 1.3228365065592191,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_overall_and_skin_type_00",
+    "seed": 20261149,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_01",
+   "record": {
+    "abstain_share": 0.4266666666666667,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 28,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 146,
+      "ks_p": 1.2079666630903237e-49,
+      "ks_statistic": 0.6070157470234285,
+      "psi": 4.107220058886808,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 21,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 25,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 80,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 80,
+     "site_x": 0,
+     "site_y": 220,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6794,
+     "labelled": 282,
+     "melanoma_images": 54,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 2.229120790509336e-50,
+     "ks_statistic": 0.4472897196261682,
+     "psi": 1.2156598327131003,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_overall_and_skin_type_01",
+    "seed": 20261150,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_02",
+   "record": {
+    "abstain_share": 0.29,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 16,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 146,
+      "ks_p": 1.760614895373437e-35,
+      "ks_statistic": 0.5194981436435796,
+      "psi": 2.503326043542718,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 21,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 21,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 96,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 96,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 204
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.5867,
+     "labelled": 260,
+     "melanoma_images": 61,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.2616599320131114e-32,
+     "ks_statistic": 0.3619314641744548,
+     "psi": 0.6824944300748003,
+     "warning": false
+    },
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "scenario": "alert_overall_and_skin_type_02",
+    "seed": 20261151,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites",
+     "new_images_counted_not_scored"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_03",
+   "record": {
+    "abstain_share": 0.22666666666666666,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 31,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 185,
+      "ks_p": 5.204656865319221e-16,
+      "ks_statistic": 0.31598888608234404,
+      "psi": 0.6098306901121434,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 29,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 20,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 35,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 35,
+     "site_x": 265,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4934,
+     "labelled": 276,
+     "melanoma_images": 42,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 3.556109845858527e-15,
+     "ks_statistic": 0.24666666666666667,
+     "psi": 0.37726071252054755,
+     "warning": false
+    },
+    "live": {
+     "count": 553171,
+     "new_since_last_run": 152
+    },
+    "month": 8,
+    "scenario": "alert_overall_and_skin_type_03",
+    "seed": 20261152,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  },
+  {
+   "expected": {
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites",
+     "new_images_counted_not_scored"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_04",
+   "record": {
+    "abstain_share": 0.26,
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 32,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 154,
+      "ks_p": 9.74996527703875e-26,
+      "ks_statistic": 0.4348666909414573,
+      "psi": 1.1294797265395018,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 31,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 21,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 62,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 62,
+     "site_x": 0,
+     "site_y": 238,
+     "site_z": 0
+    },
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4421,
+     "labelled": 283,
+     "melanoma_images": 60,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 2.937717225234842e-24,
+     "ks_statistic": 0.31246105919003114,
+     "psi": 0.5970058904503639,
+     "warning": false
+    },
+    "live": {
+     "count": 553276,
+     "new_since_last_run": 257
+    },
+    "month": 8,
+    "scenario": "alert_overall_and_skin_type_04",
+    "seed": 20261153,
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   }
+  }
+ ],
+ "staged": "synthetic (staged) scenario: made-up scores, not real data"
+}

@@ -1,0 +1,29 @@
+{
+  "status": "PROPOSED 2026-11-03, not approved: PLAN.md Phase 4 says the owner sets the pass threshold in advance. No report has been generated and no LLM has been called.",
+  "plan": "PLAN.md Phase 4: an 8D incident report from a drift-table row, a groundedness check, an eval of 20 to 30 synthetic drift scenarios with known findings scored for correctness and groundedness with cost and latency per call, and a human review queue",
+  "scenarios": {
+    "file": "results/phase4/scenarios.json",
+    "built_by": "scripts/phase4_scenarios.py (cdm.scenarios), committed before any generator exists",
+    "staged": "all 30 are synthetic (staged): made-up scores run through the monthly job's own drift tests; no real image, patient or month is in them, and no number from them is ever reported as a drift result",
+    "families": {"no_drift": 4, "warning": 5, "alert_moderate": 6, "alert_strong": 6, "alert_skin_type_only": 4, "alert_overall_and_skin_type": 5},
+    "known_findings": "cdm.scenarios.expected_findings(record): severity, overall alert, alerting skin types, new sources, containment, whether delayed accuracy is available, and the caveats a correct report must state; derived from the record, never typed by hand"
+  },
+  "model": "Gemini, free tier (owner's decision 2026-11-03); the exact model ID is fixed in the generator PR before any live call",
+  "input": "one scenario record (the same JSON shape as a gold_drift_monthly summary) and nothing else",
+  "output": "an 8D report as JSON: problem, containment, root cause, permanent fix, verification, prevention (prose), plus structured findings in the same fields as known_findings, plus a list of numeric claims, each naming the record field it comes from",
+  "scoring": {
+    "groundedness": "every number in the report's prose and claims must match a value in its scenario record (cdm groundedness check, to be built in its own PR; rounding rules fixed there before any live call). A report with any unmatched number is ungrounded",
+    "correctness": "the structured findings equal the known findings on every field, and every expected caveat is stated. For no_drift scenarios the correct output is 'no incident' (no 8D report)",
+    "scenario_pass": "correct and grounded",
+    "runs_per_scenario": 3,
+    "scenario_result": "passes if at least 2 of its 3 runs pass",
+    "provider_outage": "a call that fails at the provider after retries (quota, timeout, 5xx) is an outage, not a wrong answer: it is counted apart and the run is not scored"
+  },
+  "thresholds_proposed": {
+    "pass": "at least 27 of 30 scenarios pass (90%) AND no scored run anywhere in the eval contains an ungrounded number",
+    "inconclusive": "more than 3 scenarios have fewer than 2 scored runs because of outages: reported as inconclusive (exit 2), never as a pass",
+    "fail": "anything else"
+  },
+  "tracked_per_call": ["model ID", "prompt hash", "scenario", "run", "input and output tokens", "latency (ms)", "outcome: ok, outage or invalid output", "dollar cost (0 on the free tier; tokens still recorded)"],
+  "where_it_runs": "a manual (workflow_dispatch) GitHub workflow in an Environment that needs the owner's approval; CI replays recorded responses and never calls an LLM (owner's instruction, 2026-11-03)"
+}

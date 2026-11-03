@@ -315,10 +315,19 @@ Known limits:
   committed metrics (`tests/test_eval_gate.py`), and a Docker build and smoke test with an
   untrained test bundle.
 
+### Phase 4: eval scenarios (2026-11-03)
+
+- `cdm.scenarios` and `scripts/phase4_scenarios.py`: 30 synthetic (staged) drift scenarios in
+  `results/phase4/scenarios.json`, each a month record shaped like `gold_drift_monthly`'s summary,
+  built from seeded made-up scores run through the monitoring code's own drift tests; known
+  findings derived from each record. `results/phase4/eval_spec.json` proposes the scoring and a
+  pass threshold (owner to set). No generator, groundedness check or LLM call exists yet.
+
 ## Not started
 
 - Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
-  shifts) and Phases 4 and 5.
+  shifts); the rest of Phase 4 (generator, groundedness check, eval harness, review queue) and
+  Phase 5.
 - Closed without being built (owner, 2026-11-03): the Gram backup detector (dropped: a CPU
   refit missed the GPU fit's normalizer by up to 11.8% in Phase 2) and the GPU-fit serving-setup
   check (superseded: the served bundle fits its detector on CPU features). See PLAN.md's
