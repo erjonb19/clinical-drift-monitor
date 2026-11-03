@@ -85,3 +85,10 @@ def test_the_notebook_checks_before_training() -> None:
     )
     assert '"champion_check": CHAMPION' in text
     assert "champion_refused_" in text  # a refusal leaves a record, not only a log line
+
+
+def test_exactly_two_smallest_class_images_pass() -> None:
+    """Two df images flipped the same way land on the boundary and are tolerated."""
+    two = 2 / (CLASSES_N * SMALLEST_CLASS_IMAGES)
+    assert check_champion_val(0.6826 + two, 0.6826) == pytest.approx(TOLERANCE_POINTS)
+    assert check_champion_val(0.6826 - two, 0.6826) == pytest.approx(-TOLERANCE_POINTS)

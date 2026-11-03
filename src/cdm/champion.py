@@ -49,7 +49,8 @@ def check_champion_val(
     if not (0.0 <= observed <= 1.0 and 0.0 <= committed <= 1.0):
         raise ValueError(f"balanced accuracy outside [0, 1]: {observed}, {committed}")
     gap = 100 * (observed - committed)
-    if abs(gap) > tolerance_points:
+    # The epsilon keeps a gap of exactly two images (the boundary) from being decided by rounding.
+    if abs(gap) > tolerance_points + 1e-9:
         raise ChampionMismatch(
             f"champion validation balanced accuracy {100 * observed:.2f}% is {gap:+.2f} points "
             f"from the committed {100 * committed:.2f}% (tolerance {tolerance_points} points): "
