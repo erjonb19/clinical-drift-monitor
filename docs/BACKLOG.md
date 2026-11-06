@@ -13,18 +13,76 @@ gets a **Blocked:** line with the reason.
 
 1. [ ] **Scheduled drift job.** A Databricks job scores drift on a schedule without anyone
    pressing anything.
-   - **Done when:** one run started by the schedule (not by hand) finishes green, and its
-     results file and job run ID are committed, with the run's trigger shown as scheduled.
+   - **Done when (first version, replaced below):** one run started by the schedule (not by
+     hand) finishes green, and its results file and job run ID are committed.
    - **Today:** `databricks/monthly_drift_job.json` is scheduled at 06:00 UTC on the 1st, and
      emails the owner on success and failure. The 12-month replay ran once as a manual backfill.
      The first scheduled run was due on 1 November 2026; its outcome is not recorded in the
      repo. After the replay, scheduled runs only log the ISIC live count and score nothing
      new, so a green run alone would not show drift being scored.
-   - **Blocked (2026-11-06):** (a) the 1 November outcome is unknown: the owner received
-     no email (inbox, spam and promotions checked), although the job emails on both success
-     and failure, and this session has no Databricks access to read the run; (b) the owner has not said what a scheduled run
-     should score after replay month 12 (for example: new ISIC images each month, or another
-     replay), which it must do to "score drift on a schedule".
+   - **Found in the workspace (owner, 2026-11-06):** no run on 1 November. The job's only run
+     ever is the manual backfill on 22 October 2026 at 10:02 PM (succeeded, 15m 14s). The
+     schedule reads "At 06:00 AM, on day 1 of the month (UTC)" and shows a pause control, so it
+     looks active. The job runs as the owner on serverless compute. No email arrived, which fits
+     a run that never started.
+   - **Cause: not found yet.** No run record at all means the scheduler did not start a run, not
+     that a run failed. Candidates, most likely first:
+     1. The schedule was paused, or the job's settings were reset, between the backfill and
+        1 November. The job file changed at a846b19 on 23 October ("staged at 44451c6"); whether
+        and how it was redeployed is not recorded in the repo, and any reset or UI edit is a job
+        update in the audit log. A reply on the Databricks Community forum says the docs describe
+        no case where Databricks pauses a schedule on its own.
+     2. A run was skipped (for example the Free Edition quota, or a run already active). A
+        skipped run is a real status and would be listed; the owner saw none, so this is less
+        likely, but the run timeline shows it for certain.
+     3. The Free Edition scheduler did not fire, for no recorded reason. A Free Edition user
+        reported the same in September 2026 (Community thread 169936); no cause was confirmed.
+   - **Needed from the workspace** (SQL editor; replace `<job_id>` with the job's ID from its
+     page). Whether Free Edition exposes `system.access.audit` is not known; the repo has read
+     `system.access.table_lineage` and `system.billing` before.
+     1. Job changes: `SELECT event_time, action_name, user_identity.email, request_params
+        FROM system.access.audit WHERE service_name = 'jobs' AND event_date BETWEEN
+        '2026-10-22' AND '2026-11-06' AND request_params['job_id'] = '<job_id>' ORDER BY
+        event_time`
+     2. Schedule history: `SELECT change_time, paused, trigger FROM system.lakeflow.jobs
+        WHERE job_id = '<job_id>' ORDER BY change_time`
+     3. Runs that never started: `SELECT period_start_time, result_state, termination_code
+        FROM system.lakeflow.job_run_timeline WHERE job_id = '<job_id>' ORDER BY
+        period_start_time DESC`
+     4. The exact word on the schedule's button ("Pause" means active, "Resume" means paused),
+        and the next run time if one is shown.
+   - **Fix (planned, written before code):**
+     1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
+        each month that the job has a run started by the schedule since the 1st, and fails
+        loudly if not. Proposed: a scheduled GitHub Actions workflow calling the Jobs API with
+        a read-only credential (Can View on this job only). A scheduled workflow cannot wait
+        for an Environment approval, so this credential would not sit behind the approval gate.
+        **Owner decision.** Databricks job notifications cover start, success, failure and
+        duration, not a run that never starts, so the check has to live outside the job.
+     2. If a redeploy or reset paused it: `scripts/deploy_databricks.py --job` reads the job
+        back after `jobs reset`, refuses if the schedule is not `UNPAUSED`, and prints the next
+        run time. A test checks that every committed job with a schedule says `UNPAUSED`.
+     3. Then a scheduled run is shown green once (this item's "Done when").
+   - **After replay month 12 (owner, 2026-11-06), written before code:**
+     1. New images are public ISIC images whose IDs the job has not seen before (a table of
+        seen IDs). Whether ISIC records an upload date is still an open question in PLAN.md, so
+        the job does not rely on one.
+     2. The job scores whatever new images arrived with the champion, records each image's
+        license and attribution, and reports drift signals that need no labels, each against
+        the validation baseline: the OOD score (the existing KS and PSI test), the embedding
+        (input) drift, the prediction mix across the 7 classes, and the confidence (top
+        softmax probability). Each signal's test and threshold go in a spec committed before
+        the first such run.
+     3. Every run writes an explicit status: `scored` (with counts), `no_new_data`, or
+        `failed`. A month with no new images records `no_new_data`; it is never a silent green
+        run.
+     4. Labelled metrics are added later, when labels exist for new images.
+     5. **Limit to check first:** Free Edition restricts outbound internet to a set of trusted
+        domains. The job reached `api.isic-archive.com` for the count; whether it can download
+        image files, which may be served from another host, is not known.
+   - **Done when (updated):** one run started by the schedule finishes green and records
+     `scored` or `no_new_data`, with its results file and run ID committed; the watchdog
+     exists and has been seen to fail on a missing run.
 
 2. [ ] **Model versioning and rollbacks** through the MLflow model registry, with the steps to
    roll back to the previous version.
