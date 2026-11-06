@@ -18,8 +18,7 @@
     {
       "environment_key": "cpu",
       "spec": {
-        "environment_version": "4",
-        "dependencies": []
+        "environment_version": "4"
       }
     }
   ],

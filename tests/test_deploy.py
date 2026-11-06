@@ -158,10 +158,15 @@ def test_the_scheduler_probe_is_small_and_writes_only_its_own_folder() -> None:
     spec = json.loads((REPO / "databricks" / "scheduler_probe_job.json").read_text("utf-8"))
     monthly = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
     assert spec["schedule"]["quartz_cron_expression"] == "0 0 6 8,9,10 * ?"
-    # Same shape as the monthly cron: seconds, minute and hour equal, day-of-month field set.
-    assert monthly["schedule"]["quartz_cron_expression"].split()[:3] == ["0", "0", "6"]
+    # Same shape as the monthly cron: same seconds, minute and hour; a day-of-month field
+    # (a day or a list of days); every month; no day-of-week.
+    probe = spec["schedule"]["quartz_cron_expression"].split()
+    month = monthly["schedule"]["quartz_cron_expression"].split()
+    assert probe[:3] == month[:3] == ["0", "0", "6"]
+    assert month[3] == "1" and all(d.isdigit() for d in probe[3].split(","))
+    assert probe[4:] == month[4:] == ["*", "?"]
     assert spec["max_concurrent_runs"] == 1
-    assert spec["environments"][0]["spec"]["dependencies"] == []
+    assert "dependencies" not in spec["environments"][0]["spec"]
     (task,) = spec["tasks"]
     assert task["timeout_seconds"] <= 600 and task["max_retries"] == 0
     params = task["notebook_task"]["base_parameters"]
@@ -170,3 +175,6 @@ def test_the_scheduler_probe_is_small_and_writes_only_its_own_folder() -> None:
     source = (REPO / "databricks" / "notebooks" / "scheduler_probe.py").read_text("utf-8")
     for forbidden in ("spark", "saveAsTable", "gold_", "import cdm", "from cdm"):
         assert forbidden not in source, forbidden
+    # The notebook's default folder is the same, and OUT is the only place it writes.
+    assert f'"out": "{params["out"]}"' in source
+    assert source.count("write_text(") == 1 and "(OUT / " in source

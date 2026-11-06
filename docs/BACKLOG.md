@@ -53,8 +53,8 @@ gets a **Blocked:** line with the reason.
      schedule (`0 0 6 8,9,10 * ?`, UTC), firing at 06:00 UTC on 8, 9 and 10 November 2026. Each
      run writes one JSON file to `/Volumes/workspace/cdm/raw/results/scheduler_probe/` (run ID,
      trigger type and time) and tries the one-image ISIC download, recorded without failing the
-     run. It touches no table. Written and tested in CI; deployed by the owner; deleted after
-     10 November. The production job is not changed.
+     run. It touches no table. Written and tested in CI; to be deployed by the owner (notebook
+     import, then `scripts/deploy_databricks.py --job`); deleted after 10 November. The production job is not changed.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
