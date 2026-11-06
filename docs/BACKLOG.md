@@ -26,48 +26,38 @@ gets a **Blocked:** line with the reason.
      schedule reads "At 06:00 AM, on day 1 of the month (UTC)" and shows a pause control, so it
      looks active. The job runs as the owner on serverless compute. No email arrived, which fits
      a run that never started.
-   - **Cause: not found yet.** No run record at all means the scheduler did not start a run, not
-     that a run failed. Candidates, most likely first:
-     1. The schedule was paused, or the job's settings were changed, between the backfill and
-        1 November. The job file changed twice after the backfill (81a1590 on 22 October,
-        27 minutes after it, and a846b19 on 23 October); whether either was deployed is not
-        recorded. Every committed version says `"pause_status": "UNPAUSED"`, and
-        `scripts/deploy_databricks.py` applies the file with `jobs reset`, so a redeploy from
-        the repo would unpause the job, not pause it. A pause would have come from a UI edit or
-        another definition. Any of these is a job update in the audit log. A reply on the
-        Databricks Community forum
-        (community.databricks.com/t5/databricks-free-edition-help/jobs-suddenly-stopped-running-with-no-errors/td-p/169936)
-        says the docs describe no case where Databricks pauses a schedule on its own.
-     2. A run was skipped (for example the Free Edition quota, or a run already active). A
-        skipped run is a real status and would be listed; the owner saw none, so this is less
-        likely, but the run timeline lists any skipped run.
-     3. The Free Edition scheduler did not fire, for no recorded reason. A Free Edition user
-        reported the same in September 2026 (the thread above); no cause was confirmed.
-   - **Needed from the workspace** (SQL editor; replace `<job_id>` with the job's ID from its
-     page). Whether Free Edition exposes `system.access.audit` is not known; the repo has read
-     `system.access.table_lineage` and `system.billing` before.
-     1. Job changes: `SELECT event_time, action_name, user_identity.email, request_params
-        FROM system.access.audit WHERE service_name = 'jobs' AND event_date BETWEEN
-        '2026-10-22' AND '2026-11-06' AND request_params['job_id'] = '<job_id>' ORDER BY
-        event_time`
-     2. Schedule history: `SELECT change_time, paused, trigger FROM system.lakeflow.jobs
-        WHERE job_id = '<job_id>' ORDER BY change_time`
-     3. Every run the job has, including skipped ones (a run that was never created has no row
-        at all): `SELECT run_id, period_start_time, trigger_type, result_state,
-        termination_code FROM system.lakeflow.job_run_timeline WHERE job_id = '<job_id>' ORDER
-        BY period_start_time DESC`
+   - **Cause (inferred, not documented by Databricks), 2026-11-07:** the schedule was active
+     and correct on 1 November, and the Free Edition scheduler did not start a run. No pause
+     and no bad edit was found. Evidence, from four queries the owner ran in the workspace:
+     1. `system.access.audit`, jobs events for this job, 22 October to 6 November: three
+        events, all by the owner on 23 October: `runNow` at 02:02:13 UTC (the backfill), then
+        `reset` at 02:29:20 and 16:21:02 UTC. No pause event.
+     2. `system.lakeflow.jobs`: two rows, both at 2026-10-23 02:02:05 UTC, `paused = false`,
+        quartz `0 0 6 1 * ?`. **Anomaly:** no rows for the two later resets, which query 1
+        shows; why this table missed them is not known.
+     3. `system.lakeflow.job_run_timeline`: one run only (ID starting 8308376346509, the
+        backfill, 2026-10-23 02:02 UTC, trigger `ONETIME`, `SUCCEEDED`). Nothing on
+        1 November, not even a skipped run.
+     4. The schedule each reset set (`get_json_object(request_params['new_settings'],
+        '$.schedule')` on the query 1 rows): both set `0 0 6 1 * ?`, `UTC`, `UNPAUSED`.
 
-        Query 2 only covers changes made after the system table was enabled; column names in 2
-        and 3 are from the docs and may need adjusting.
-     4. The exact word on the schedule's button ("Pause" means active, "Resume" means paused),
-        and the next run time if one is shown.
+     Earlier candidates ruled out: a pause or edit (queries 1, 2 and 4) and a skipped run
+     (query 3). A Free Edition user reported schedules that stopped firing with no record in
+     September 2026 on the Databricks Community forum
+     (community.databricks.com/t5/databricks-free-edition-help/jobs-suddenly-stopped-running-with-no-errors/td-p/169936);
+     no cause was confirmed there either. Not yet checked: the notification address (the owner will
+     check
+     it; it does not change the cause, since no run means no email was due).
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
         loudly if not. Proposed: a scheduled GitHub Actions workflow calling the Jobs API with
         a read-only credential (Can View on this job only). Behind the approval gate, a
         scheduled workflow would sit waiting (up to 30 days) until approved, which defeats a
-        watchdog, so this credential would sit outside the gate. **Owner decision.** Databricks job
+        watchdog, so this credential would sit outside the gate. **Owner decision (2026-11-07):**
+        OK, only with a credential that can view this one job and nothing else; if Free Edition
+        allows only a personal access token, stop and tell the owner before storing anything.
+        Databricks job
         notifications cover start, success, failure and
         duration, not a run that never starts, so the check has to live outside the job.
      2. A guard, not the likely cause (a redeploy from the repo unpauses):
@@ -79,7 +69,7 @@ gets a **Blocked:** line with the reason.
      whatever new ISIC images arrive; report drift signals that need no labels (input or
      embedding drift, prediction mix, confidence); if no new images arrive, record "no new data"
      as an explicit status, never a silent green run; add labelled metrics later, when labels
-     exist. **Proposed by Claude, for the owner to confirm:**
+     exist. **Proposed by Claude, confirmed by the owner on 2026-11-07:**
      1. New images are public ISIC images whose IDs the job has not seen before, kept in a
         table of seen IDs. Whether ISIC records an upload date is still an open question in
         PLAN.md, so the job would not rely on one.
@@ -89,7 +79,8 @@ gets a **Blocked:** line with the reason.
         7 classes, and the confidence (top softmax probability). Each signal's test and
         threshold go in a spec committed before the first such run.
      3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
-     4. **Limit to check first:** Free Edition restricts outbound internet to a set of trusted
+     4. **Limit to check first (owner OK, 2026-11-07, to test with one image):** Free Edition
+     restricts outbound internet to a set of trusted
         domains. The job reached `api.isic-archive.com` for the count; whether it can download
         image files, which may be served from another host, is not known.
    - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
