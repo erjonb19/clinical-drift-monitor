@@ -56,8 +56,9 @@ gets a **Blocked:** line with the reason.
         at all): `SELECT run_id, period_start_time, trigger_type, result_state,
         termination_code FROM system.lakeflow.job_run_timeline WHERE job_id = '<job_id>' ORDER
         BY period_start_time DESC`
-     Query 2 only covers changes made after the system table was enabled; column names in 2
-     and 3 are from the docs and may need adjusting.
+
+        Query 2 only covers changes made after the system table was enabled; column names in 2
+        and 3 are from the docs and may need adjusting.
      4. The exact word on the schedule's button ("Pause" means active, "Resume" means paused),
         and the next run time if one is shown.
    - **Fix (planned, written before code):**
@@ -66,7 +67,8 @@ gets a **Blocked:** line with the reason.
         loudly if not. Proposed: a scheduled GitHub Actions workflow calling the Jobs API with
         a read-only credential (Can View on this job only). Behind the approval gate, a
         scheduled workflow would sit waiting (up to 30 days) until approved, which defeats a
-        watchdog, so this credential would sit outside the gate. **Owner decision.** Databricks job notifications cover start, success, failure and
+        watchdog, so this credential would sit outside the gate. **Owner decision.** Databricks job
+        notifications cover start, success, failure and
         duration, not a run that never starts, so the check has to live outside the job.
      2. A guard, not the likely cause (a redeploy from the repo unpauses):
         `scripts/deploy_databricks.py --job` reads the job back after `jobs reset`, refuses if
@@ -87,7 +89,7 @@ gets a **Blocked:** line with the reason.
         7 classes, and the confidence (top softmax probability). Each signal's test and
         threshold go in a spec committed before the first such run.
      3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
-     5. **Limit to check first:** Free Edition restricts outbound internet to a set of trusted
+     4. **Limit to check first:** Free Edition restricts outbound internet to a set of trusted
         domains. The job reached `api.isic-archive.com` for the count; whether it can download
         image files, which may be served from another host, is not known.
    - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
@@ -153,7 +155,8 @@ gets a **Blocked:** line with the reason.
      thresholds are listed in one place, and a self-test shows a regression fails the build.
    - **Today:** built for pushes to `main` and every pull request, not for pushes to other
      branches (`.github/workflows/ci.yml`, `docker.yml`): ruff, mypy, pytest, and the eval gate
-     with a regression self-test, plus the Docker smoke test. **The eval gate does not run inference:** `tests/test_eval_gate.py`
+     with a regression self-test, plus the Docker smoke test. **The eval gate does not run
+     inference:** `tests/test_eval_gate.py`
      reads committed results files (`config/eval_gate.json` says so). The Docker smoke test
      runs inference, but on an untrained test bundle.
    - **Decided (owner, 2026-11-06):** add a CPU smoke test in CI that loads the champion and
@@ -205,7 +208,8 @@ gets a **Blocked:** line with the reason.
 - The research informatics extensions: OMOP and SNOMED CT mapping, a vision-language baseline,
   subgroup evaluation, interpretability and human review, multimodal fusion. *Note:* Phases A
   to E are built. F is a draft waiting for the owner's review. In G, G5 and G6 are ticked in
-  PLAN.md but filed under Scaffolded in BUILT_VS_PLANNED, and G1 to G4 are open. See `docs/BUILT_VS_PLANNED.md` and PLAN.md.
+  PLAN.md but filed under Scaffolded in BUILT_VS_PLANNED, and G1 to G4 are open. See
+  `docs/BUILT_VS_PLANNED.md` and PLAN.md.
 
 ## Open from PLAN.md, not placed (owner to decide)
 
