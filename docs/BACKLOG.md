@@ -20,6 +20,11 @@ gets a **Blocked:** line with the reason.
      The first scheduled run was due on 1 November 2026; its outcome is not recorded in the
      repo. After the replay, scheduled runs only log the ISIC live count and score nothing
      new, so a green run alone would not show drift being scored.
+   - **Blocked (2026-11-06):** (a) the 1 November outcome is not known here (the owner's answer
+     was left as a placeholder; the job's success or failure email says which), and this session
+     has no Databricks access to read the run; (b) the owner has not said what a scheduled run
+     should score after replay month 12 (for example: new ISIC images each month, or another
+     replay), which it must do to "score drift on a schedule".
 
 2. [ ] **Model versioning and rollbacks** through the MLflow model registry, with the steps to
    roll back to the previous version.
@@ -38,8 +43,12 @@ gets a **Blocked:** line with the reason.
    - **Today:** a retraining loop with this rule exists and ran once (2026-10-23): the
      challenger gained 6.2 points at Buenos Aires but lost 1.6 on client validation (limit 1.0),
      so it was not promoted, and its weights were not kept. Registry "v1" is the model the
-     earlier phases call "v2" (the 3-seed ensemble). Which model is "v2" here needs the owner's
-     answer before any run.
+     earlier phases call "v2" (the 3-seed ensemble).
+   - **Decided (owner, 2026-11-06):** train a new challenger on Databricks serverless GPU (a run
+     the owner approves, with its GPU estimate, before it starts). Every challenger is
+     registered in MLflow whether or not it is promoted; only the `champion` alias decides what
+     serves. Every registry version carries a `model_gen` tag naming its model generation, so
+     registry v1 is tagged `model_gen=v2`.
 
 4. [ ] **SLOs as model targets**, such as a minimum melanoma sensitivity, written in the README,
    with an alert when drift breaks a target.
@@ -50,6 +59,14 @@ gets a **Blocked:** line with the reason.
      SLOs. **Limit:** the job reports melanoma sensitivity only for a month with at least 100
      melanomas; the replay months had 5 to 64, so a monthly melanoma-sensitivity SLO can't be
      measured at 300 images a month without pooling months or changing the rule.
+   - **Rule (owner, 2026-11-06), written before any code:** melanoma sensitivity is measured on
+     a trailing window of labelled months. The window starts at the latest month whose labels
+     have arrived and adds earlier months one at a time until it holds at least 100 melanoma
+     images. Sensitivity is reported with a 95% Wilson score interval, with the months in the
+     window and the melanoma count. If all available months together have fewer than 100
+     melanomas, the month is marked "insufficient data" and the target is neither met nor
+     broken. The target's value, and whether it is judged on the point estimate or the
+     interval's lower bound, are set in the item's PR before any month is judged.
 
 5. [ ] **Alerts** when drift, or equity drift by Fitzpatrick skin type, crosses a threshold,
    with the thresholds and why.
@@ -66,8 +83,14 @@ gets a **Blocked:** line with the reason.
    - **Done when:** CI runs the tests and the eval gate on every push and pull request, the
      thresholds are listed in one place, and a self-test shows a regression fails the build.
    - **Today:** built (ruff, mypy, pytest, and the eval gate with a regression self-test, plus
-     the Docker smoke test). The gate reads committed results; it does not run a model in CI.
-     Owner to decide whether that counts as done.
+     the Docker smoke test). **The eval gate does not run inference:** `tests/test_eval_gate.py`
+     reads committed results files (`config/eval_gate.json` says so). The Docker smoke test
+     runs inference, but on an untrained test bundle.
+   - **Decided (owner, 2026-11-06):** add a CPU smoke test in CI that loads the champion and
+     scores a fixed set of about 50 images, then mark the item done. This needs the champion
+     bundle downloadable in CI (the release asset with a checked SHA-256, decided 2026-11-03)
+     and a committed manifest of the images (ISIC IDs, license, attribution, SHA-256), fetched
+     at test time and never committed.
 
 7. [ ] **Observability on Databricks:** a prediction audit table, Unity Catalog lineage, and
    per-run cost tracking.
