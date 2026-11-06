@@ -20,9 +20,9 @@ gets a **Blocked:** line with the reason.
      The first scheduled run was due on 1 November 2026; its outcome is not recorded in the
      repo. After the replay, scheduled runs only log the ISIC live count and score nothing
      new, so a green run alone would not show drift being scored.
-   - **Blocked (2026-11-06):** (a) the 1 November outcome is not known here (the owner's answer
-     was left as a placeholder; the job's success or failure email says which), and this session
-     has no Databricks access to read the run; (b) the owner has not said what a scheduled run
+   - **Blocked (2026-11-06):** (a) the 1 November outcome is unknown: the owner received no
+     email (inbox, spam and promotions checked), although the job emails on both success and
+     failure, and this session has no Databricks access to read the run; (b) the owner has not said what a scheduled run
      should score after replay month 12 (for example: new ISIC images each month, or another
      replay), which it must do to "score drift on a schedule".
 
@@ -82,8 +82,9 @@ gets a **Blocked:** line with the reason.
 6. [ ] **Tests and model evals in CI** on every push, with pass and fail thresholds.
    - **Done when:** CI runs the tests and the eval gate on every push and pull request, the
      thresholds are listed in one place, and a self-test shows a regression fails the build.
-   - **Today:** built (ruff, mypy, pytest, and the eval gate with a regression self-test, plus
-     the Docker smoke test). **The eval gate does not run inference:** `tests/test_eval_gate.py`
+   - **Today:** built for pushes to `main` and every pull request, not for pushes to other
+     branches (`.github/workflows/ci.yml`, `docker.yml`): ruff, mypy, pytest, and the eval gate
+     with a regression self-test, plus the Docker smoke test. **The eval gate does not run inference:** `tests/test_eval_gate.py`
      reads committed results files (`config/eval_gate.json` says so). The Docker smoke test
      runs inference, but on an untrained test bundle.
    - **Decided (owner, 2026-11-06):** add a CPU smoke test in CI that loads the champion and
@@ -134,16 +135,22 @@ gets a **Blocked:** line with the reason.
   monthly history of the CMS data exists yet.
 - The research informatics extensions: OMOP and SNOMED CT mapping, a vision-language baseline,
   subgroup evaluation, interpretability and human review, multimodal fusion. *Note:* Phases A
-  to E and G are already built; see `docs/BUILT_VS_PLANNED.md`.
+  to E are built. F is a draft waiting for the owner's review. In G, G5 and G6 are scaffolded
+  and G1 to G4 are open. See `docs/BUILT_VS_PLANNED.md` and PLAN.md.
 
 ## Open from PLAN.md, not placed (owner to decide)
 
 These were open in PLAN.md and are not in the list above. They stay here until the owner adds
 them to the list or drops them.
 
+- Recompute the gold embeddings and baseline score distributions with the registered model (a
+  Phase 2 item moved to Phase 3).
 - Phase 3: CPU batch-level drift, staged shifts scored for time to detect and false-alarm rate,
-  and `diagnosis_confirm_type` in bronze and silver.
+  `diagnosis_confirm_type` in bronze and silver, and the free public API deploy (blocked by
+  free hosting limits, 2026-10-23).
 - Phase 4: the report generator, groundedness check, eval harness, human review queue and
   manual live-eval workflow (item 8 needs most of these).
 - Phase 5: the one-command demo (`docker compose up`), the 8D runbook, the README refresh
-  (results first), and the standards-alignment document.
+  (results first), the standards-alignment document, the "structured after, not compliant
+  with" check across the standards documents, and the optional demo recording.
+- Research: Phase F (the cohort contract, a draft waiting for review) and G1 to G4.

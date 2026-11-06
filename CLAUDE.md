@@ -18,12 +18,12 @@ PLAN.md is the source of truth for scope and order. Do not add features that are
 ## Ground rules (production upgrade, added 2026-11-06)
 - One backlog item per branch and PR. Keep each change small. Tests must stay green.
 - Databricks stays central. Training stays on Databricks, not Colab (this replaces the Colab Pro allowance below for training).
-- Cost stays at $0. Ask before adding anything that could bill.
+- Cost stays at $0, except the $5 Claude Haiku cap below (owner, 2026-11-06). Ask before adding anything that could bill.
 - Public data only. Never Montefiore data.
 - Incident reports and the runbook keep the 8D structure. These count as our postmortems.
 - The README stays honest. Only list a capability once it's built and working.
 - If blocked, write the reason under the item in `docs/BACKLOG.md` and stop.
-- When an item is done: tick it in `docs/BACKLOG.md`, add one line to `docs/PROGRESS.md` (what changed, how to check it), add it to the README's "Production readiness" checklist, and tell me in short numbered steps how to check it.
+- When an item is done: tick it in `docs/BACKLOG.md`, add one line to `docs/PROGRESS.md` (what changed, how to check it), add it to the README's "Production readiness" checklist (created with the first finished item), and tell me in short numbered steps how to check it.
 
 ## Honesty rules (most important)
 - Every number in the README, results tables, or anywhere else must come from a run that is committed in this repo. No estimates presented as results.
