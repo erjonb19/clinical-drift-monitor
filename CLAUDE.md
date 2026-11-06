@@ -7,11 +7,23 @@ A personal portfolio project: a skin lesion classifier served with a drift (out-
 
 PLAN.md is the source of truth for scope and order. Do not add features that are not in PLAN.md. If something in the plan turns out wrong or impossible, stop and tell me, and propose a change to PLAN.md before coding around it.
 
+**From 2026-11-06, `docs/BACKLOG.md` is the source of truth for what to work on and in what order: always work the first unchecked item.** PLAN.md stays as the record of Phases 0 to 3 and the research phases, and keeps the decisions log. Where this file still says PLAN.md or "phase", read BACKLOG.md and "backlog item".
+
 ## How to work with me
 - Work one phase at a time, in order, starting with Phase 0. Do not start a phase until the previous phase's "Done when" is met and I have confirmed it.
 - Before each phase, write a short plan (files to create, commands to run) and wait for my OK.
 - When you give me steps to run, use short numbered steps that say exactly what to open and what to run. Keep the number of files small.
 - Tick the PLAN.md checkboxes as items are finished.
+
+## Ground rules (production upgrade, added 2026-11-06)
+- One backlog item per branch and PR. Keep each change small. Tests must stay green.
+- Databricks stays central. Training stays on Databricks, not Colab (this replaces the Colab Pro allowance below for training).
+- Cost stays at $0. Ask before adding anything that could bill.
+- Public data only. Never Montefiore data.
+- Incident reports and the runbook keep the 8D structure. These count as our postmortems.
+- The README stays honest. Only list a capability once it's built and working.
+- If blocked, write the reason under the item in `docs/BACKLOG.md` and stop.
+- When an item is done: tick it in `docs/BACKLOG.md`, add one line to `docs/PROGRESS.md` (what changed, how to check it), add it to the README's "Production readiness" checklist, and tell me in short numbered steps how to check it.
 
 ## Honesty rules (most important)
 - Every number in the README, results tables, or anywhere else must come from a run that is committed in this repo. No estimates presented as results.
