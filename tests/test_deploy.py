@@ -139,3 +139,34 @@ def test_job_mode_refuses_the_deploy_templates(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr("sys.argv", ["deploy", "--job", str(REPO / "databricks" / "job.json")])
     with pytest.raises(SystemExit, match="full run"):
         deploy_module().main()
+
+
+@pytest.mark.parametrize(
+    "path", sorted((REPO / "databricks").glob("*_job.json")), ids=lambda p: p.name
+)
+def test_every_scheduled_job_is_unpaused_and_in_utc(path: Path) -> None:
+    """Backlog item 1: a committed schedule is never paused, and every time is UTC."""
+    schedule = json.loads(path.read_text(encoding="utf-8")).get("schedule")
+    if schedule is not None:
+        assert schedule["pause_status"] == "UNPAUSED", path.name
+        assert schedule["timezone_id"] == "UTC", path.name
+
+
+def test_the_scheduler_probe_is_small_and_writes_only_its_own_folder() -> None:
+    """Backlog item 1's probe: the monthly job's kind of schedule, firing on 8 to 10 November at
+    06:00 UTC; one file per run in its own folder; no table, no wheel, a short timeout."""
+    spec = json.loads((REPO / "databricks" / "scheduler_probe_job.json").read_text("utf-8"))
+    monthly = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    assert spec["schedule"]["quartz_cron_expression"] == "0 0 6 8,9,10 * ?"
+    # Same shape as the monthly cron: seconds, minute and hour equal, day-of-month field set.
+    assert monthly["schedule"]["quartz_cron_expression"].split()[:3] == ["0", "0", "6"]
+    assert spec["max_concurrent_runs"] == 1
+    assert spec["environments"][0]["spec"]["dependencies"] == []
+    (task,) = spec["tasks"]
+    assert task["timeout_seconds"] <= 600 and task["max_retries"] == 0
+    params = task["notebook_task"]["base_parameters"]
+    assert params["out"] == "/Volumes/workspace/cdm/raw/results/scheduler_probe"
+    assert params["trigger_type"] == "{{job.trigger.type}}"
+    source = (REPO / "databricks" / "notebooks" / "scheduler_probe.py").read_text("utf-8")
+    for forbidden in ("spark", "saveAsTable", "gold_", "import cdm", "from cdm"):
+        assert forbidden not in source, forbidden

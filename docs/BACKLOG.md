@@ -48,6 +48,13 @@ gets a **Blocked:** line with the reason.
      (community.databricks.com/t5/databricks-free-edition-help/jobs-suddenly-stopped-running-with-no-errors/td-p/169936);
      no cause was confirmed there either. Not yet checked: the notification address (the owner
      will check it; it does not change the cause, since no run means no email was due).
+   - **Scheduler probe (owner OK, 2026-11-06; temporary):** `databricks/scheduler_probe_job.json`
+     and `databricks/notebooks/scheduler_probe.py`, a separate job with the same kind of
+     schedule (`0 0 6 8,9,10 * ?`, UTC), firing at 06:00 UTC on 8, 9 and 10 November 2026. Each
+     run writes one JSON file to `/Volumes/workspace/cdm/raw/results/scheduler_probe/` (run ID,
+     trigger type and time) and tries the one-image ISIC download, recorded without failing the
+     run. It touches no table. Written and tested in CI; deployed by the owner; deleted after
+     10 November. The production job is not changed.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails

@@ -1,0 +1,45 @@
+{
+  "name": "cdm-scheduler-probe",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 0 6 8,9,10 * ?",
+    "timezone_id": "UTC",
+    "pause_status": "UNPAUSED"
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": []
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "scheduler_probe",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 600,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/scheduler_probe",
+        "base_parameters": {
+          "out": "/Volumes/workspace/cdm/raw/results/scheduler_probe",
+          "image_id": "ISIC_6589782",
+          "job_run_id": "{{job.run_id}}",
+          "trigger_type": "{{job.trigger.type}}",
+          "trigger_time": "{{job.trigger.time.iso_datetime}}"
+        }
+      }
+    }
+  ]
+}
