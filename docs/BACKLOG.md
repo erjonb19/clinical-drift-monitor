@@ -79,8 +79,9 @@ gets a **Blocked:** line with the reason.
         threshold go in a spec committed before the first such run.
      3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
      4. **Limit to check first (owner OK, 2026-11-06, to test with one image):** Free Edition
-        restricts outbound internet to a set of trusted domains. The job reached `api.isic-archive.com` for the count; whether it can download
-        image files, which may be served from another host, is not known.
+        restricts outbound internet to a set of trusted domains. The job reached
+        `api.isic-archive.com` for the count; whether it can download image files, which may be
+        served from another host, is not known.
    - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
      run timeline committed with it) finishes green and records `scored` or `no_new_data`,
      with its results file and run ID committed; and, if the owner approves the watchdog, it
