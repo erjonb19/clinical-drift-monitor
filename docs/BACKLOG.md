@@ -20,9 +20,9 @@ gets a **Blocked:** line with the reason.
      The first scheduled run was due on 1 November 2026; its outcome is not recorded in the
      repo. After the replay, scheduled runs only log the ISIC live count and score nothing
      new, so a green run alone would not show drift being scored.
-   - **Blocked (2026-11-06):** (a) the 1 November outcome is unknown: the owner received no
-     email (inbox, spam and promotions checked), although the job emails on both success and
-     failure, and this session has no Databricks access to read the run; (b) the owner has not said what a scheduled run
+   - **Blocked (2026-11-06):** (a) the 1 November outcome is unknown: the owner received
+     no email (inbox, spam and promotions checked), although the job emails on both success
+     and failure, and this session has no Databricks access to read the run; (b) the owner has not said what a scheduled run
      should score after replay month 12 (for example: new ISIC images each month, or another
      replay), which it must do to "score drift on a schedule".
 
@@ -135,8 +135,8 @@ gets a **Blocked:** line with the reason.
   monthly history of the CMS data exists yet.
 - The research informatics extensions: OMOP and SNOMED CT mapping, a vision-language baseline,
   subgroup evaluation, interpretability and human review, multimodal fusion. *Note:* Phases A
-  to E are built. F is a draft waiting for the owner's review. In G, G5 and G6 are scaffolded
-  and G1 to G4 are open. See `docs/BUILT_VS_PLANNED.md` and PLAN.md.
+  to E are built. F is a draft waiting for the owner's review. In G, G5 and G6 are ticked in
+  PLAN.md but filed under Scaffolded in BUILT_VS_PLANNED, and G1 to G4 are open. See `docs/BUILT_VS_PLANNED.md` and PLAN.md.
 
 ## Open from PLAN.md, not placed (owner to decide)
 
