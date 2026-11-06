@@ -13,18 +13,89 @@ gets a **Blocked:** line with the reason.
 
 1. [ ] **Scheduled drift job.** A Databricks job scores drift on a schedule without anyone
    pressing anything.
-   - **Done when:** one run started by the schedule (not by hand) finishes green, and its
-     results file and job run ID are committed, with the run's trigger shown as scheduled.
+   - **Done when (first version, replaced below):** one run started by the schedule (not by
+     hand) finishes green, and its results file and job run ID are committed, with the run's
+     trigger shown as scheduled.
    - **Today:** `databricks/monthly_drift_job.json` is scheduled at 06:00 UTC on the 1st, and
      emails the owner on success and failure. The 12-month replay ran once as a manual backfill.
      The first scheduled run was due on 1 November 2026; its outcome is not recorded in the
      repo. After the replay, scheduled runs only log the ISIC live count and score nothing
      new, so a green run alone would not show drift being scored.
-   - **Blocked (2026-11-06):** (a) the 1 November outcome is unknown: the owner received
-     no email (inbox, spam and promotions checked), although the job emails on both success
-     and failure, and this session has no Databricks access to read the run; (b) the owner has not said what a scheduled run
-     should score after replay month 12 (for example: new ISIC images each month, or another
-     replay), which it must do to "score drift on a schedule".
+   - **Found in the workspace (owner, 2026-11-06):** no run on 1 November. The job's only run
+     ever is the manual backfill on 22 October 2026 at 10:02 PM (succeeded, 15m 14s). The
+     schedule reads "At 06:00 AM, on day 1 of the month (UTC)" and shows a pause control, so it
+     looks active. The job runs as the owner on serverless compute. No email arrived, which fits
+     a run that never started.
+   - **Cause: not found yet.** No run record at all means the scheduler did not start a run, not
+     that a run failed. Candidates, most likely first:
+     1. The schedule was paused, or the job's settings were changed, between the backfill and
+        1 November. The job file changed twice after the backfill (81a1590 on 22 October,
+        27 minutes after it, and a846b19 on 23 October); whether either was deployed is not
+        recorded. Every committed version says `"pause_status": "UNPAUSED"`, and
+        `scripts/deploy_databricks.py` applies the file with `jobs reset`, so a redeploy from
+        the repo would unpause the job, not pause it. A pause would have come from a UI edit or
+        another definition. Any of these is a job update in the audit log. A reply on the
+        Databricks Community forum
+        (community.databricks.com/t5/databricks-free-edition-help/jobs-suddenly-stopped-running-with-no-errors/td-p/169936)
+        says the docs describe no case where Databricks pauses a schedule on its own.
+     2. A run was skipped (for example the Free Edition quota, or a run already active). A
+        skipped run is a real status and would be listed; the owner saw none, so this is less
+        likely, but the run timeline lists any skipped run.
+     3. The Free Edition scheduler did not fire, for no recorded reason. A Free Edition user
+        reported the same in September 2026 (the thread above); no cause was confirmed.
+   - **Needed from the workspace** (SQL editor; replace `<job_id>` with the job's ID from its
+     page). Whether Free Edition exposes `system.access.audit` is not known; the repo has read
+     `system.access.table_lineage` and `system.billing` before.
+     1. Job changes: `SELECT event_time, action_name, user_identity.email, request_params
+        FROM system.access.audit WHERE service_name = 'jobs' AND event_date BETWEEN
+        '2026-10-22' AND '2026-11-06' AND request_params['job_id'] = '<job_id>' ORDER BY
+        event_time`
+     2. Schedule history: `SELECT change_time, paused, trigger FROM system.lakeflow.jobs
+        WHERE job_id = '<job_id>' ORDER BY change_time`
+     3. Every run the job has, including skipped ones (a run that was never created has no row
+        at all): `SELECT run_id, period_start_time, trigger_type, result_state,
+        termination_code FROM system.lakeflow.job_run_timeline WHERE job_id = '<job_id>' ORDER
+        BY period_start_time DESC`
+
+        Query 2 only covers changes made after the system table was enabled; column names in 2
+        and 3 are from the docs and may need adjusting.
+     4. The exact word on the schedule's button ("Pause" means active, "Resume" means paused),
+        and the next run time if one is shown.
+   - **Fix (planned, written before code):**
+     1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
+        each month that the job has a run started by the schedule since the 1st, and fails
+        loudly if not. Proposed: a scheduled GitHub Actions workflow calling the Jobs API with
+        a read-only credential (Can View on this job only). Behind the approval gate, a
+        scheduled workflow would sit waiting (up to 30 days) until approved, which defeats a
+        watchdog, so this credential would sit outside the gate. **Owner decision.** Databricks job
+        notifications cover start, success, failure and
+        duration, not a run that never starts, so the check has to live outside the job.
+     2. A guard, not the likely cause (a redeploy from the repo unpauses):
+        `scripts/deploy_databricks.py --job` reads the job back after `jobs reset`, refuses if
+        the schedule is not `UNPAUSED`, and prints the next run time. A test checks that every
+        committed job with a schedule says `UNPAUSED`.
+     3. Then a scheduled run is shown green once (this item's "Done when").
+   - **After replay month 12, written before code.** The owner's rules (2026-11-06): score
+     whatever new ISIC images arrive; report drift signals that need no labels (input or
+     embedding drift, prediction mix, confidence); if no new images arrive, record "no new data"
+     as an explicit status, never a silent green run; add labelled metrics later, when labels
+     exist. **Proposed by Claude, for the owner to confirm:**
+     1. New images are public ISIC images whose IDs the job has not seen before, kept in a
+        table of seen IDs. Whether ISIC records an upload date is still an open question in
+        PLAN.md, so the job would not rely on one.
+     2. They are scored with the model under the `champion` alias. Each image's license and
+        attribution is recorded. Each signal is compared with the validation baseline: the OOD
+        score (the existing KS and PSI test), the embedding drift, the prediction mix across the
+        7 classes, and the confidence (top softmax probability). Each signal's test and
+        threshold go in a spec committed before the first such run.
+     3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
+     4. **Limit to check first:** Free Edition restricts outbound internet to a set of trusted
+        domains. The job reached `api.isic-archive.com` for the count; whether it can download
+        image files, which may be served from another host, is not known.
+   - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
+     run timeline committed with it) finishes green and records `scored` or `no_new_data`,
+     with its results file and run ID committed; and, if the owner approves the watchdog, it
+     exists and has been seen to fail on a missing run.
 
 2. [ ] **Model versioning and rollbacks** through the MLflow model registry, with the steps to
    roll back to the previous version.
@@ -84,7 +155,8 @@ gets a **Blocked:** line with the reason.
      thresholds are listed in one place, and a self-test shows a regression fails the build.
    - **Today:** built for pushes to `main` and every pull request, not for pushes to other
      branches (`.github/workflows/ci.yml`, `docker.yml`): ruff, mypy, pytest, and the eval gate
-     with a regression self-test, plus the Docker smoke test. **The eval gate does not run inference:** `tests/test_eval_gate.py`
+     with a regression self-test, plus the Docker smoke test. **The eval gate does not run
+     inference:** `tests/test_eval_gate.py`
      reads committed results files (`config/eval_gate.json` says so). The Docker smoke test
      runs inference, but on an untrained test bundle.
    - **Decided (owner, 2026-11-06):** add a CPU smoke test in CI that loads the champion and
@@ -136,7 +208,8 @@ gets a **Blocked:** line with the reason.
 - The research informatics extensions: OMOP and SNOMED CT mapping, a vision-language baseline,
   subgroup evaluation, interpretability and human review, multimodal fusion. *Note:* Phases A
   to E are built. F is a draft waiting for the owner's review. In G, G5 and G6 are ticked in
-  PLAN.md but filed under Scaffolded in BUILT_VS_PLANNED, and G1 to G4 are open. See `docs/BUILT_VS_PLANNED.md` and PLAN.md.
+  PLAN.md but filed under Scaffolded in BUILT_VS_PLANNED, and G1 to G4 are open. See
+  `docs/BUILT_VS_PLANNED.md` and PLAN.md.
 
 ## Open from PLAN.md, not placed (owner to decide)
 
