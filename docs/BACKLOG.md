@@ -26,7 +26,7 @@ gets a **Blocked:** line with the reason.
      schedule reads "At 06:00 AM, on day 1 of the month (UTC)" and shows a pause control, so it
      looks active. The job runs as the owner on serverless compute. No email arrived, which fits
      a run that never started.
-   - **Cause (inferred, not documented by Databricks), 2026-11-07:** the schedule was active
+   - **Cause (inferred, not documented by Databricks), 2026-11-06:** the schedule was active
      and correct on 1 November, and the Free Edition scheduler did not start a run. No pause
      and no bad edit was found. Evidence, from four queries the owner ran in the workspace:
      1. `system.access.audit`, jobs events for this job, 22 October to 6 November: three
@@ -36,7 +36,8 @@ gets a **Blocked:** line with the reason.
         quartz `0 0 6 1 * ?`. **Anomaly:** no rows for the two later resets, which query 1
         shows; why this table missed them is not known.
      3. `system.lakeflow.job_run_timeline`: one run only (ID starting 8308376346509, the
-        backfill, 2026-10-23 02:02 UTC, trigger `ONETIME`, `SUCCEEDED`). Nothing on
+        backfill, 2026-10-23 02:02 UTC, trigger `ONETIME`, `SUCCEEDED`, termination code
+        `SUCCESS`). Nothing on
         1 November, not even a skipped run.
      4. The schedule each reset set (`get_json_object(request_params['new_settings'],
         '$.schedule')` on the query 1 rows): both set `0 0 6 1 * ?`, `UTC`, `UNPAUSED`.
@@ -45,21 +46,19 @@ gets a **Blocked:** line with the reason.
      (query 3). A Free Edition user reported schedules that stopped firing with no record in
      September 2026 on the Databricks Community forum
      (community.databricks.com/t5/databricks-free-edition-help/jobs-suddenly-stopped-running-with-no-errors/td-p/169936);
-     no cause was confirmed there either. Not yet checked: the notification address (the owner will
-     check
-     it; it does not change the cause, since no run means no email was due).
+     no cause was confirmed there either. Not yet checked: the notification address (the owner
+     will check it; it does not change the cause, since no run means no email was due).
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
         loudly if not. Proposed: a scheduled GitHub Actions workflow calling the Jobs API with
         a read-only credential (Can View on this job only). Behind the approval gate, a
         scheduled workflow would sit waiting (up to 30 days) until approved, which defeats a
-        watchdog, so this credential would sit outside the gate. **Owner decision (2026-11-07):**
+        watchdog, so this credential would sit outside the gate. **Owner decision (2026-11-06):**
         OK, only with a credential that can view this one job and nothing else; if Free Edition
         allows only a personal access token, stop and tell the owner before storing anything.
-        Databricks job
-        notifications cover start, success, failure and
-        duration, not a run that never starts, so the check has to live outside the job.
+        Databricks job notifications cover start, success, failure and duration, not a run
+        that never starts, so the check has to live outside the job.
      2. A guard, not the likely cause (a redeploy from the repo unpauses):
         `scripts/deploy_databricks.py --job` reads the job back after `jobs reset`, refuses if
         the schedule is not `UNPAUSED`, and prints the next run time. A test checks that every
@@ -69,7 +68,7 @@ gets a **Blocked:** line with the reason.
      whatever new ISIC images arrive; report drift signals that need no labels (input or
      embedding drift, prediction mix, confidence); if no new images arrive, record "no new data"
      as an explicit status, never a silent green run; add labelled metrics later, when labels
-     exist. **Proposed by Claude, confirmed by the owner on 2026-11-07:**
+     exist. **Proposed by Claude, confirmed by the owner on 2026-11-06:**
      1. New images are public ISIC images whose IDs the job has not seen before, kept in a
         table of seen IDs. Whether ISIC records an upload date is still an open question in
         PLAN.md, so the job would not rely on one.
@@ -79,9 +78,8 @@ gets a **Blocked:** line with the reason.
         7 classes, and the confidence (top softmax probability). Each signal's test and
         threshold go in a spec committed before the first such run.
      3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
-     4. **Limit to check first (owner OK, 2026-11-07, to test with one image):** Free Edition
-     restricts outbound internet to a set of trusted
-        domains. The job reached `api.isic-archive.com` for the count; whether it can download
+     4. **Limit to check first (owner OK, 2026-11-06, to test with one image):** Free Edition
+        restricts outbound internet to a set of trusted domains. The job reached `api.isic-archive.com` for the count; whether it can download
         image files, which may be served from another host, is not known.
    - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
      run timeline committed with it) finishes green and records `scored` or `no_new_data`,
