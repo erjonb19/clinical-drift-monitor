@@ -18,8 +18,7 @@ gets a **Blocked:** line with the reason.
      trigger shown as scheduled.
    - **Today:** `databricks/monthly_drift_job.json` is scheduled at 06:00 UTC on the 1st, and
      emails the owner on success and failure. The 12-month replay ran once as a manual backfill.
-     The first scheduled run was due on 1 November 2026; its outcome is not recorded in the
-     repo. After the replay, scheduled runs only log the ISIC live count and score nothing
+     The first scheduled run was due on 1 November 2026; it did not start (below). After the replay, scheduled runs only log the ISIC live count and score nothing
      new, so a green run alone would not show drift being scored.
    - **Found in the workspace (owner, 2026-11-06):** no run on 1 November. The job's only run
      ever is the manual backfill on 22 October 2026 at 10:02 PM (succeeded, 15m 14s). The
@@ -46,15 +45,26 @@ gets a **Blocked:** line with the reason.
      (query 3). A Free Edition user reported schedules that stopped firing with no record in
      September 2026 on the Databricks Community forum
      (community.databricks.com/t5/databricks-free-edition-help/jobs-suddenly-stopped-running-with-no-errors/td-p/169936);
-     no cause was confirmed there either. Not yet checked: the notification address (the owner
-     will check it; it does not change the cause, since no run means no email was due).
+     no cause was confirmed there either. Notification address (owner, 2026-11-07): the monthly
+     job (524433148303929) and the probe both email the owner's login address, an inbox the
+     owner watches; it does not change the cause, since no run means no email was due.
    - **Scheduler probe (owner OK, 2026-11-06; temporary):** `databricks/scheduler_probe_job.json`
      and `databricks/notebooks/scheduler_probe.py`, a separate job with the same kind of
      schedule (`0 0 6 8,9,10 * ?`, UTC), firing at 06:00 UTC on 8, 9 and 10 November 2026. Each
      run writes one JSON file to `/Volumes/workspace/cdm/raw/results/scheduler_probe/` (run ID,
      trigger type and time) and tries the one-image ISIC download, recorded without failing the
-     run. It touches no table. Written and tested in CI; to be deployed by the owner (notebook
-     import, then `scripts/deploy_databricks.py --job`); deleted after 10 November. The production job is not changed.
+     run. It touches no table. Written and tested in CI; deployed by the owner (notebook import,
+     then `scripts/deploy_databricks.py --job`); to be deleted after 10 November. The production
+     job is not changed.
+     - **Deployed by the owner, 2026-11-07:** job ID 325029901767432; notebook at
+       `/Users/<owner>/cdm/scheduler_probe`. The deploy needed the repo's virtual environment
+       (`.venv/Scripts/python.exe` on Windows); plain `python` failed with "No module named
+       'cdm'". `databricks jobs get` showed the schedule `0 0 6 8,9,10 * ?`, UTC, `UNPAUSED`,
+       the notebook path above, and success and failure emails to the owner's login address.
+     - **Manual test run, 2026-11-07:** run 621176150087695, `TERMINATED` / `SUCCESS`, 27 seconds;
+       its file recorded `run_utc` 2026-11-07T13:57:24+00:00 and `trigger_type` `one_time`. The
+       success email arrived (started 2026-11-07 13:57:17 UTC, "Launched: Manually"). This tests
+       the notebook and the email, not the scheduler: the scheduled fires are on 8 to 10 November.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
@@ -64,6 +74,9 @@ gets a **Blocked:** line with the reason.
         watchdog, so this credential would sit outside the gate. **Owner decision (2026-11-06):**
         OK, only with a credential that can view this one job and nothing else; if Free Edition
         allows only a personal access token, stop and tell the owner before storing anything.
+        **Checked (owner, 2026-11-07):** "Add new" exists under Settings, Identity and access,
+        Service principals, so a service principal can be created; nothing is created or stored
+        yet.
         Databricks job notifications cover start, success, failure and duration, not a run
         that never starts, so the check has to live outside the job.
      2. A guard, not the likely cause (a redeploy from the repo unpauses):
@@ -85,10 +98,12 @@ gets a **Blocked:** line with the reason.
         7 classes, and the confidence (top softmax probability). Each signal's test and
         threshold go in a spec committed before the first such run.
      3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
-     4. **Limit to check first (owner OK, 2026-11-06, to test with one image):** Free Edition
-        restricts outbound internet to a set of trusted domains. The job reached
-        `api.isic-archive.com` for the count; whether it can download image files, which may be
-        served from another host, is not known.
+     4. **Limit checked (2026-11-07, the probe's manual run):** Free Edition restricts outbound
+        internet to a set of trusted domains, but a serverless job reached both hosts it needs.
+        For `ISIC_6589782` it read the metadata from `api.isic-archive.com` (license CC-BY,
+        attribution Memorial Sloan Kettering Cancer Center) and downloaded the file, 2,658,276
+        bytes, from `isic-archive.s3.amazonaws.com`. One image on one day; the SHA-256 was not
+        captured (cut off in the owner's terminal).
    - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
      run timeline committed with it) finishes green and records `scored` or `no_new_data`,
      with its results file and run ID committed; and, if the owner approves the watchdog, it
