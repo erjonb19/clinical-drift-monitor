@@ -18,8 +18,7 @@ gets a **Blocked:** line with the reason.
      trigger shown as scheduled.
    - **Today:** `databricks/monthly_drift_job.json` is scheduled at 06:00 UTC on the 1st, and
      emails the owner on success and failure. The 12-month replay ran once as a manual backfill.
-     The first scheduled run was due on 1 November 2026; its outcome is not recorded in the
-     repo. After the replay, scheduled runs only log the ISIC live count and score nothing
+     The first scheduled run was due on 1 November 2026; it did not start (below). After the replay, scheduled runs only log the ISIC live count and score nothing
      new, so a green run alone would not show drift being scored.
    - **Found in the workspace (owner, 2026-11-06):** no run on 1 November. The job's only run
      ever is the manual backfill on 22 October 2026 at 10:02 PM (succeeded, 15m 14s). The
@@ -75,6 +74,9 @@ gets a **Blocked:** line with the reason.
         watchdog, so this credential would sit outside the gate. **Owner decision (2026-11-06):**
         OK, only with a credential that can view this one job and nothing else; if Free Edition
         allows only a personal access token, stop and tell the owner before storing anything.
+        **Checked (owner, 2026-11-07):** "Add new" exists under Settings, Identity and access,
+        Service principals, so a service principal can be created; nothing is created or stored
+        yet.
         Databricks job notifications cover start, success, failure and duration, not a run
         that never starts, so the check has to live outside the job.
      2. A guard, not the likely cause (a redeploy from the repo unpauses):
