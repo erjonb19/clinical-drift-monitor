@@ -120,6 +120,9 @@ gets a **Blocked:** line with the reason.
         error), never passing without an answer. It needs three repo secrets from the owner's
         view-only service principal: `DATABRICKS_HOST`, `DATABRICKS_CLIENT_ID`,
         `DATABRICKS_CLIENT_SECRET`. Until they exist every run fails as "not configured".
+        It reads every page of runs, counts a `SKIPPED` run as missed, and never counts a later
+        month's run. The secret must allow the `all-apis` scope. GitHub disables scheduled
+        workflows after 60 days without repository activity, which would silence it too.
         Tested with fake API replies; not yet run against the workspace.
      2. A guard, not the likely cause (a redeploy from the repo unpauses):
         `scripts/deploy_databricks.py --job` reads the job back after `jobs reset`, refuses if

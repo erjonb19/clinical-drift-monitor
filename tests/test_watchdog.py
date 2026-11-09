@@ -10,6 +10,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+import pytest
+
 REPO = Path(__file__).resolve().parents[1]
 ENV = {
     "DATABRICKS_HOST": "https://x.example/",
@@ -36,8 +38,13 @@ def fake(runs: list[dict[str, Any]], seen: list[urllib.request.Request]) -> Any:
     return fetch
 
 
-def test_window_starts_at_the_scheduled_time() -> None:
-    assert watchdog().window_start("2026-12") == datetime(2026, 12, 1, 6, tzinfo=UTC)
+def test_window_runs_from_this_schedule_to_the_next() -> None:
+    w = watchdog().window
+    assert w("2026-12") == (
+        datetime(2026, 12, 1, 6, tzinfo=UTC),
+        datetime(2027, 1, 1, 6, tzinfo=UTC),
+    )
+    assert w("2026-11")[1] == datetime(2026, 12, 1, 6, tzinfo=UTC)
 
 
 def test_the_window_matches_the_committed_schedule() -> None:
@@ -54,6 +61,7 @@ def test_no_scheduled_run_is_missed() -> None:
     code, message = watchdog().check("2026-11", 524433148303929, ENV, fake(runs, seen))
     assert code == 1 and message.startswith("MISSED")
     assert "start_time_from=1793512800000" in seen[1].full_url  # 2026-11-01T06:00Z
+    assert "start_time_to=1796104799999" in seen[1].full_url  # just before 2026-12-01T06:00Z
     assert "job_id=524433148303929" in seen[1].full_url
 
 
@@ -90,3 +98,48 @@ def test_the_workflow_runs_on_the_2nd_and_never_on_push() -> None:
     assert 'cron: "17 7 2 * *"' in text and "workflow_dispatch" in text
     assert "push:" not in text and "pull_request" not in text
     assert "permissions:\n  contents: read" in text
+
+
+def test_every_page_is_read() -> None:
+    """The scheduled run is the oldest in the window, so it can sit on a later page."""
+    pages: list[dict[str, Any]] = [
+        {"runs": [{"run_id": 2, "trigger": "ONE_TIME"}], "next_page_token": "p2"},
+        {"runs": [{"run_id": 1, "trigger": "PERIODIC", "state": {"result_state": "SUCCESS"}}]},
+    ]
+    seen: list[urllib.request.Request] = []
+
+    def fetch(request: urllib.request.Request) -> dict[str, Any]:
+        seen.append(request)
+        if request.full_url.endswith("/oidc/v1/token"):
+            return {"access_token": "t"}
+        return pages.pop(0)
+
+    code, message = watchdog().check("2026-12", 1, ENV, fetch)
+    assert code == 0 and "run 1 SUCCESS" in message
+    assert "page_token=p2" in seen[2].full_url
+
+
+def test_a_skipped_scheduled_run_is_missed() -> None:
+    runs = [{"run_id": 5, "trigger": "PERIODIC", "state": {"life_cycle_state": "SKIPPED"}}]
+    code, message = watchdog().check("2026-12", 1, ENV, fake(runs, []))
+    assert code == 1 and "1 skipped" in message
+
+
+def test_a_bad_month_is_inconclusive_with_a_message() -> None:
+    code, message = watchdog().check("2026-13", 1, ENV, fake([], []))
+    assert code == 2 and "bad month" in message
+
+
+def test_main_annotates_and_exits_with_the_code(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    for k in ENV:
+        monkeypatch.delenv(k, raising=False)
+    assert watchdog().main(["--month", "2026-12"]) == 2
+    assert capsys.readouterr().out.startswith("::error title=Watchdog inconclusive::")
+
+
+def test_the_token_request_sends_basic_auth() -> None:
+    seen: list[urllib.request.Request] = []
+    watchdog().check("2026-12", 1, ENV, fake([], seen))
+    assert seen[0].get_header("Authorization") == "Basic aWQ6cw=="  # base64 of "id:s"
