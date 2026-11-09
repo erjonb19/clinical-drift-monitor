@@ -22,7 +22,8 @@ merged commit.
 | #65 | 15, 17 | Specs only: detector quality on staged shifts; the retraining pipeline. |
 
 No backlog item was ticked: each still waits on a deploy, an asset or a decision below.
-CI on `main` after the last merges: green (`quality`, `image`, CodeQL).
+CI on `main`: green at 415506a (after #64: `quality`, `image`, CodeQL); the run for the final
+merge, 5648df6 (#65, docs only), was still running when this was written.
 
 ## Open, and why
 
@@ -76,7 +77,8 @@ CI on `main` after the last merges: green (`quality`, `image`, CodeQL).
 1. Open `scripts/deploy_databricks.py` and find `check_deployed_schedule`.
 2. Run `pytest tests/test_deploy.py tests/test_watchdog.py tests/test_post_replay.py`.
 3. In GitHub, open Actions → "Drift watchdog" → Run workflow with month `2026-11`: without
-   secrets it fails "not configured"; once the secrets exist it should fail "MISSED".
+   secrets it fails as inconclusive ("watchdog not configured"); once the secrets exist it
+   should fail "MISSED", since no run started on 1 November (BACKLOG item 1).
 
 **Item 6 (CI on every push, smoke test)**
 1. Push any branch: the CI and Docker workflows start.
@@ -91,7 +93,8 @@ CI on `main` after the last merges: green (`quality`, `image`, CodeQL).
 **Items 4 and 5 (targets and alerts)**
 1. Read the README section "Alerts and model targets".
 2. Run `python scripts/slo_report.py`: months 1 to 6 list no alert; 7 and 8 list skin type II;
-   9 to 12 list broken targets.
+   9 to 12 list broken targets. It rewrites `results/phase3/monthly/slo_replay.json`; `git diff`
+   should then show no change.
 3. Run `pytest tests/test_slo.py`.
 
 **Item 18 (input contract)**
