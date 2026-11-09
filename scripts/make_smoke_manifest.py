@@ -51,9 +51,9 @@ def main() -> None:
         if len(rows) == args.n:
             break
         image = first_image(lesion)
-        if image is None:
+        url = ((image or {}).get("files") or {}).get("full", {}).get("url")
+        if image is None or not url:
             continue
-        url = image["files"]["full"]["url"]
         meta = image.get("metadata", {}).get("clinical", {})
         rows.append(
             {

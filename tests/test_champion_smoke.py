@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import shutil
 import tarfile
 import urllib.request
 from pathlib import Path
@@ -65,10 +66,15 @@ def test_the_champion_loads_and_scores_fixed_images() -> None:
     asset = CONFIG["bundle_asset"]
     archive = CACHE / "bundle.tar.gz"
     fetch(asset["url"], asset["sha256"], archive)
-    folder = CACHE / "bundle"
+    # Keyed by the asset's SHA-256 and extracted to a temporary folder first, so a stale or
+    # half-extracted bundle is never reused (filter="data" needs Python 3.11.4 or later).
+    folder = CACHE / f"bundle-{asset['sha256'][:16]}"
     if not folder.exists():
+        partial = folder.with_suffix(".partial")
+        shutil.rmtree(partial, ignore_errors=True)
         with tarfile.open(archive) as tar:
-            tar.extractall(folder, filter="data")
+            tar.extractall(partial, filter="data")
+        partial.rename(folder)
     roots = [p.parent for p in folder.rglob("manifest.json")]
     assert len(roots) == 1, roots
     service = Service.load(roots[0])  # checks every file's SHA-256 and each seed's weights hash
@@ -76,6 +82,9 @@ def test_the_champion_loads_and_scores_fixed_images() -> None:
     with (REPO / CONFIG["images_manifest"]).open(encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     assert 30 <= len(rows) <= 60
+    for row in rows:  # every image's license is one the repo may use, with attribution kept
+        assert row["license"] in {"CC-0", "CC-BY", "CC-BY-NC"}, row["isic_id"]
+        assert row["attribution"].strip(), row["isic_id"]
     answers: list[dict[str, Any]] = []
     for row in rows:
         image = fetch(row["url"], row["sha256"], CACHE / "images" / f"{row['isic_id']}.jpg")
