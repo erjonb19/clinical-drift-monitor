@@ -64,3 +64,19 @@ def test_dependabot_keeps_python_311_and_the_model_stack_on_patches() -> None:
     stack = ["torch", "torchvision", "numpy", "scikit-learn", "flwr", "mlflow", "mlflow-skinny"]
     for name in stack:
         assert sorted(_ignored(pip, name)) == both, name
+
+
+def test_the_image_keeps_the_cpu_torch_wheels() -> None:
+    """A Dependabot pip PR (#68) dropped the `+cpu` label from torch and torchvision in the
+    image's constraints, which would pull the CUDA wheels; and it cannot see the Dockerfile's
+    RUN line, so the two pins could disagree."""
+    pins = dict(
+        line.split("==", 1)
+        for line in (REPO / "docker" / "constraints.txt").read_text("utf-8").splitlines()
+        if line.startswith(("torch==", "torchvision=="))
+    )
+    assert set(pins) == {"torch", "torchvision"}
+    dockerfile = (REPO / "Dockerfile").read_text("utf-8")
+    for name, version in pins.items():
+        assert version.endswith("+cpu"), f"{name}=={version}"
+        assert f"{name}=={version.removesuffix('+cpu')}" in dockerfile, f"{name} differs"
