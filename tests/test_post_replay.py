@@ -50,7 +50,11 @@ def test_a_shifted_month_alerts_and_scores_point_the_right_way() -> None:
     base, month = batch(rng, 3000), batch(rng, 300, shift=1.5)
     signals = pr.label_free_signals(base, month, K)
     assert signals["ood"]["alert"] and signals["embedding"]["alert"]
-    assert np.mean(month["ood"]) > np.mean(base["ood"])  # higher OOD score = further from training
+    # Scores point the right way: the shifted month's drift exceeds a clean month's.
+    clean = pr.label_free_signals(base, batch(rng, 300), K)
+    assert signals["ood"]["psi"] > clean["ood"]["psi"]
+    worst = max(c["psi"] for c in signals["embedding"]["components"])
+    assert worst > max(c["psi"] for c in clean["embedding"]["components"])
     assert pr.month_alert(signals)
 
 
@@ -83,12 +87,35 @@ def test_status_is_explicit() -> None:
 
 
 def test_embedding_statistics_come_from_the_baseline_only() -> None:
-    """The month's own spread must not change the projection: a copy of the baseline as the
-    month scores as no drift, whatever is appended to the month afterwards."""
+    """The components are the baseline's: a month whose only change lies along a direction the
+    baseline barely varies in (outside its top 5 components) does not alert, while a fit on
+    baseline and month pooled would put that direction first."""
     rng = np.random.default_rng(5)
-    base = rng.standard_normal((2000, 8))
-    same = pr.embedding_drift(base, base[:500])
-    assert not same["alert"] and same["alpha"] == pr.ALERT_P / pr.EMBEDDING_COMPONENTS
+    scale = np.array([5.0] * 5 + [0.1] * 11)
+    base = rng.standard_normal((3000, 16)) * scale
+    month = rng.standard_normal((300, 16)) * scale
+    month[:, 10] = rng.standard_normal(300) * 50
+    assert not pr.embedding_drift(base, month)["alert"]
+    pooled = np.vstack([base, month])
+    top = np.linalg.svd(pooled - pooled.mean(axis=0), full_matrices=False)[2][0]
+    assert abs(top[10]) > 0.9
+
+
+def test_a_class_the_baseline_never_predicted_alerts_instead_of_crashing() -> None:
+    mix = pr.prediction_mix([0] * 2000 + [1] * 1000, [0] * 50 + [6] * 50, K)
+    assert mix["alert"] and mix["chi2_p"] is not None and mix["chi2_p"] < pr.ALERT_P
+
+
+def test_one_cell_means_no_chi_square_and_the_distance_decides() -> None:
+    uniform = [i % K for i in range(7000)]
+    mix = pr.prediction_mix(uniform, [i % K for i in range(30)], K)
+    assert mix["chi2_p"] is None and not mix["alert"]
+
+
+def test_counts_only_months_clear_the_warning_too() -> None:
+    rng = np.random.default_rng(6)
+    signals = pr.label_free_signals(batch(rng, 3000), batch(rng, 50, shift=0.4), K)
+    assert not any(v.get("warning") for v in signals.values() if isinstance(v, dict))
 
 
 def test_the_spec_matches_the_code() -> None:

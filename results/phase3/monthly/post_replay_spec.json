@@ -23,29 +23,36 @@
       "components": 5,
       "alert": "any component with KS p < 0.01 / 5 (Bonferroni) and PSI >= 0.2",
       "psi": 0.2,
-      "why": "input drift that the single OOD score can miss; 5 components and Bonferroni keep the false-alarm rate near the OOD test's"
+      "why": "input drift that the single OOD score can miss; Bonferroni over 5 components bounds this signal's own false-alarm rate near 0.01 per month"
     },
     "prediction_mix": {
       "test": "chi-square goodness of fit of the month's predicted classes against the baseline's predicted-class shares (classes expected below 5 images pooled), and the total variation distance",
       "alert": "chi-square p < 0.01 and total variation distance >= 0.1",
       "tvd": 0.1,
-      "why": "a shift in what the model says, without labels; the distance floor stops a large month from alarming on a trivial change"
+      "why": "a shift in what the model says, without labels; the distance floor stops a large month alarming on a small change"
     },
     "confidence": {
       "test": "two-sample KS on the top softmax probability, and the change in its median",
       "alert": "KS p < 0.01 and |median change| >= 0.05",
       "median_change": 0.05,
-      "why": "falling confidence is the earliest label-free sign of trouble; the floor stops trivial changes alarming"
+      "why": "falling confidence is an early label-free sign of trouble; the floor stops small changes alarming"
     }
   },
-  "month_alert": "any of the four signals alerts",
-  "min_images": 30,
+  "month_alert": "any of the four signals alerts. The month-level false-alarm rate can be up to about four times one test's; it is not measured yet (backlog item 15 measures false-alarm rates on staged shifts)",
+  "min_images": 100,
   "below_min_images": "signals reported as counts only; none alerts",
-  "statuses": ["scored", "no_new_data", "failed"],
+  "statuses": [
+    "scored",
+    "no_new_data",
+    "failed"
+  ],
   "no_new_data": "written as an explicit row and results file with status no_new_data; the run is green but the status says nothing was scored",
   "labels": "not used; labelled metrics are added when labels exist for new images",
   "limits": [
     "one image download was tested from Databricks Free Edition (2026-11-07); a month's batch was not",
     "listing every public ISIC ID each month means paging through about 553,000 records; its cost is not measured"
-  ]
+  ],
+  "min_images_why": "the repo's minimum for a reported metric (cdm.eval.MIN_GROUP); below about 100 images PSI over 10 bins is large even with no drift (a review's synthetic check averaged about 0.78 at 30 and 0.10 at 100, not a committed result), so the PSI floors would not mean anything",
+  "baseline_note": "the baseline is the clients' validation split, as for the replay's OOD baseline (results/phase3/monthly/spec.json); all statistics are fitted on it only, never on a month",
+  "prediction_mix_pooling": "classes expected below 5 images are pooled; a pooled cell still below 5 joins the smallest other cell; a class the baseline never predicted stays in the test; with fewer than two cells there is no chi-square test and the distance alone decides"
 }

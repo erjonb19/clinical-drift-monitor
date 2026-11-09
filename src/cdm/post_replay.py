@@ -26,7 +26,11 @@ from cdm.monitor import drift_test, psi
 Array = NDArray[np.float64]
 SCORED, NO_NEW_DATA, FAILED = "scored", "no_new_data", "failed"
 ALERT_P = 0.01
-MIN_IMAGES = 30  # below this a month's signals are reported as counts only and never alert
+# Below this a month's signals are counts only and never alert. 100 is the repo's minimum for a
+# reported metric (cdm.eval.MIN_GROUP); with no drift, PSI over 10 bins averages about 0.78 at
+# 30 images and 0.10 at 100 (a review's synthetic check, 2026-11-09, not a committed result), so
+# the 0.2 PSI floor only means something from about 100 images.
+MIN_IMAGES = 100
 EMBEDDING_COMPONENTS = 5
 EMBEDDING_PSI = 0.2
 MIX_TVD = 0.1
@@ -62,25 +66,42 @@ def embedding_drift(
 def prediction_mix(
     baseline: Sequence[int], current: Sequence[int], n_classes: int
 ) -> dict[str, Any]:
-    """The month's predicted classes against the baseline's predicted-class proportions: a
-    chi-square goodness-of-fit test (classes expected below MIN_EXPECTED pooled) and the total
-    variation distance. Alert when p < ALERT_P and TVD >= MIX_TVD."""
+    """The month's predicted classes against the baseline's predicted-class shares: a chi-square
+    goodness-of-fit test and the total variation distance. Alert when p < ALERT_P and
+    TVD >= MIX_TVD.
+
+    Classes expected below MIN_EXPECTED images are pooled into one cell; if that cell is still
+    below MIN_EXPECTED it joins the smallest other cell. A class the baseline never predicted
+    stays in the pool, so the strongest shift (a new class) is tested, not dropped. With fewer
+    than two cells no chi-square test is possible: ``chi2_p`` is None and the TVD alone decides.
+    """
     p = np.bincount(np.asarray(baseline), minlength=n_classes) / len(baseline)
     obs = np.bincount(np.asarray(current), minlength=n_classes).astype(np.float64)
     exp = p * len(current)
     keep = exp >= MIN_EXPECTED
-    o = np.append(obs[keep], obs[~keep].sum())
-    e = np.append(exp[keep], exp[~keep].sum())
-    if e[-1] == 0:
-        o, e = o[:-1], e[:-1]
-    test = chisquare(o, e)
+    o, e = [float(x) for x in obs[keep]], [float(x) for x in exp[keep]]
+    if (~keep).any():
+        po, pe = float(obs[~keep].sum()), float(exp[~keep].sum())
+        if pe >= MIN_EXPECTED or not e:
+            o.append(po)
+            e.append(pe)
+        else:
+            j = int(np.argmin(e))
+            o[j] += po
+            e[j] += pe
     tvd = float(0.5 * np.abs(obs / len(current) - p).sum())
+    chi2_p: float | None = None
+    if len(e) >= 2 and min(e) > 0:
+        chi2_p = float(chisquare(o, e).pvalue)
+        alert = chi2_p < ALERT_P and tvd >= MIX_TVD
+    else:
+        alert = tvd >= MIX_TVD
     return {
         "observed_share": (obs / len(current)).tolist(),
         "baseline_share": p.tolist(),
-        "chi2_p": float(test.pvalue),
+        "chi2_p": chi2_p,
         "tvd": tvd,
-        "alert": bool(test.pvalue < ALERT_P and tvd >= MIX_TVD),
+        "alert": bool(alert),
     }
 
 
@@ -112,6 +133,8 @@ def label_free_signals(
     if n < MIN_IMAGES:
         for s in signals.values():
             s["alert"] = False
+            if "warning" in s:
+                s["warning"] = False
         return {"images": n, "note": f"counts only: under {MIN_IMAGES} images", **signals}
     return {"images": n, **signals}
 
