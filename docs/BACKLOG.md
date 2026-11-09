@@ -353,7 +353,10 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       `/health`, and returns `input_flags`; tested in `tests/test_contract.py` and
       `tests/test_api.py` on synthetic images. **Not done:** the monthly job does not run the
       contract yet (it belongs with the post-month-12 scoring wiring), so no monthly counts
-      exist; thresholds for the owner to confirm; blur and exposure need calibrating.
+      exist; thresholds for the owner to confirm; blur and exposure need calibrating (16-bit
+      PNGs, for one, read as heavily clipped). Decompression bombs (over the 50M-pixel limit)
+      are unreadable (400), as before; the check runs off the event loop and computes no hash
+      in the API; flat images hash to zero and are never matched as duplicates.
 
 19. [ ] **Least-privilege access.** The watchdog's service principal (item 1) can view one job
     and nothing else, with the `users` group's default grants checked and removed; the

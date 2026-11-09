@@ -23,6 +23,10 @@ from typing import Any
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 
+# The same pixel limit as the serving code (cdm.serving), set here too so a caller that never
+# imports cdm.serving (the monthly job) refuses decompression bombs alike.
+Image.MAX_IMAGE_PIXELS = 50_000_000
+
 CONTRACT: dict[str, Any] = {
     "enforced": {
         # The formats the ISIC Archive serves; anything else is not what the model trained on.
@@ -61,6 +65,7 @@ class Verdict:
     quarantined: list[str] = field(default_factory=list)
     flags: list[str] = field(default_factory=list)
     dhash: int | None = None
+    unreadable: bool = False
 
     @property
     def ok(self) -> bool:
@@ -85,9 +90,12 @@ def laplacian_variance(gray: np.ndarray) -> float:
     return float(lap.var())
 
 
-def check(data: bytes, config: dict[str, Any], seen: Iterable[int] = ()) -> Verdict:
+def check(
+    data: bytes, config: dict[str, Any], seen: Iterable[int] = (), hash_image: bool = True
+) -> Verdict:
     """Check one image's bytes. ``seen`` holds earlier images' difference hashes (the monthly
-    job passes them; the API passes none)."""
+    job passes them). The API passes ``hash_image=False``: it computes no hash of any upload.
+    An image over the pixel limit (a decompression bomb) is unreadable, like a non-image."""
     v = Verdict()
     rules = config["enforced"]
     try:
@@ -95,8 +103,9 @@ def check(data: bytes, config: dict[str, Any], seen: Iterable[int] = ()) -> Verd
             fmt = img.format
             img.load()
             rgb = img.convert("RGB")
-    except (UnidentifiedImageError, OSError, ValueError):
+    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
         v.quarantined.append("format: not a readable image")
+        v.unreadable = True
         return v
     if fmt not in rules["formats"]:
         v.quarantined.append(f"format: {fmt} (allowed: {', '.join(rules['formats'])})")
@@ -106,10 +115,14 @@ def check(data: bytes, config: dict[str, Any], seen: Iterable[int] = ()) -> Verd
     if max(w, h) / max(1, min(w, h)) > rules["max_aspect_ratio"]:
         v.quarantined.append(f"aspect ratio: {w}x{h}, over {rules['max_aspect_ratio']}:1")
     gray = rgb.convert("L")
-    v.dhash = dhash(gray)
-    near = [s for s in seen if hamming(v.dhash, s) <= rules["duplicate_max_hamming"]]
-    if near:
-        v.quarantined.append("duplicate: near-identical to an image already seen")
+    if hash_image:
+        v.dhash = dhash(gray)
+        # A flat image hashes to all zeros (or all ones); such hashes say nothing about
+        # identity, so they are never matched as duplicates.
+        informative = v.dhash not in (0, (1 << 64) - 1)
+        near = [s for s in seen if hamming(v.dhash, s) <= rules["duplicate_max_hamming"]]
+        if informative and near:
+            v.quarantined.append("duplicate: near-identical to an image already seen")
     report = config["report_only"]
     small = gray.copy()
     small.thumbnail((report["analysis_long_side_px"],) * 2)

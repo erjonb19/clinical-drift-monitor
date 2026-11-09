@@ -78,3 +78,21 @@ def test_the_config_cannot_be_changed_through_a_copy() -> None:
     copy = contract.load_config()
     copy["enforced"]["min_side_px"] = 1
     assert contract.CONTRACT["enforced"]["min_side_px"] == 224
+
+
+def test_a_decompression_bomb_is_unreadable_not_a_crash() -> None:
+    """Over twice the 50M pixel limit PIL refuses to decode; the contract reports unreadable."""
+    bomb = encode(Image.new("L", (12000, 9000)), "PNG")  # 108M pixels, compresses to little
+    v = contract.check(bomb, CONFIG)
+    assert v.unreadable and not v.ok
+
+
+def test_the_api_mode_computes_no_hash() -> None:
+    assert contract.check(encode(textured()), CONFIG, hash_image=False).dhash is None
+
+
+def test_flat_images_are_never_duplicates_of_each_other() -> None:
+    flat = encode(Image.new("RGB", (400, 400), (120, 120, 120)))
+    first = contract.check(flat, CONFIG)
+    assert first.dhash == 0
+    assert contract.check(flat, CONFIG, seen=[0]).ok

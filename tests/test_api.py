@@ -103,3 +103,11 @@ def test_the_input_contract_quarantines_with_a_reason_and_counts_it() -> None:
     assert ok.status_code == 200 and isinstance(ok.json()["input_flags"], list)
     health = c.get("/health").json()
     assert health["quarantined"] == 2 and health["rejected"] == 0 and health["predictions"] == 1
+
+
+def test_a_decompression_bomb_gets_400_not_a_server_error() -> None:
+    buf = io.BytesIO()
+    Image.new("L", (12000, 9000)).save(buf, format="PNG")
+    c = client()
+    r = c.post("/predict", content=buf.getvalue(), headers={"content-type": "image/png"})
+    assert r.status_code == 400 and c.get("/health").json()["rejected"] == 1

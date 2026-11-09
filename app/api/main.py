@@ -204,8 +204,8 @@ def create_app(
         # The input contract (backlog item 18): an unreadable body is the client's error (400);
         # a readable image that breaks an enforced rule is quarantined with its reason (422).
         # Duplicates are never checked here: the API keeps no hash of any upload.
-        verdict = contract.check(data, CONTRACT)
-        if verdict.quarantined and verdict.quarantined[0].startswith("format: not a readable"):
+        verdict = await run_in_threadpool(contract.check, data, CONTRACT, (), False)
+        if verdict.unreadable:
             stats.add("rejected")
             raise HTTPException(400, "could not read that body as an image")
         if not verdict.ok:
