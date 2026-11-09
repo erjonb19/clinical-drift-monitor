@@ -170,6 +170,15 @@ gets a **Blocked:** line with the reason.
      match the older version, and the rollback steps are in the runbook.
    - **Today:** `workspace.cdm.skin_lesion_classifier` has one version (v1, alias `champion`).
      With one version there is nothing to roll back to yet.
+   - **Built 2026-11-09 (not used):** `cdm.registry` and `scripts/move_champion.py` move the
+     `champion` alias (dry run unless `--apply`), refusing if the alias is not where the owner
+     expects, or if the target is missing, has no `model_gen` tag or was `rejected` by the
+     promotion rule; a promotion must name its decision file's SHA-256. Each applied move is read
+     back and logged to `results/phase3/registry/alias_moves.jsonl`. The steps, and the check
+     after a rollback (the existing `check_registered_model` job against the older version's
+     bundle), are in `docs/rollback.md`. Tested with a fake registry. **Waits on:** a second
+     registry version (item 3's challenger, a GPU run the owner approves), and tagging v1
+     `model_gen=v2` (the owner, step 2 of `docs/rollback.md`).
 
 3. [ ] **Champion vs challenger.** The current model (v1) is the champion and v2 is the
    challenger. Score both on the same data, compare them, and promote the challenger only if it
