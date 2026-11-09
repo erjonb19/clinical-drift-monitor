@@ -32,6 +32,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
 
+from cdm import contract
 from cdm.serving import NOTICE, Service
 
 MAX_BYTES = 10 * 1024 * 1024
@@ -86,11 +87,14 @@ class RateLimiter:
             return True
 
 
+CONTRACT = contract.load_config()
+
+
 class Stats:
     """Counts and timing only: no image, filename, hash or address is kept."""
 
     def __init__(self) -> None:
-        self.counts = {"predictions": 0, "rejected": 0, "rate_limited": 0}
+        self.counts = {"predictions": 0, "rejected": 0, "quarantined": 0, "rate_limited": 0}
         self.millis: deque[float] = deque(maxlen=1000)
         self.lock = threading.Lock()
 
@@ -197,6 +201,16 @@ def create_app(
         except HTTPException:
             stats.add("rejected")
             raise
+        # The input contract (backlog item 18): an unreadable body is the client's error (400);
+        # a readable image that breaks an enforced rule is quarantined with its reason (422).
+        # Duplicates are never checked here: the API keeps no hash of any upload.
+        verdict = contract.check(data, CONTRACT)
+        if verdict.quarantined and verdict.quarantined[0].startswith("format: not a readable"):
+            stats.add("rejected")
+            raise HTTPException(400, "could not read that body as an image")
+        if not verdict.ok:
+            stats.add("quarantined")
+            raise HTTPException(422, "; ".join(verdict.quarantined))
         model = service()  # a bundle problem is a server error, not the client's file
         start = time.perf_counter()
         try:
@@ -207,7 +221,7 @@ def create_app(
         finally:
             del data
         stats.add("predictions", 1000 * (time.perf_counter() - start))
-        return {**out, "license": LICENSE}
+        return {**out, "input_flags": verdict.flags, "license": LICENSE}
 
     return app
 

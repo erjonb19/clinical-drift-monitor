@@ -343,6 +343,17 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
     - **Done when:** tests with bad images show each one quarantined with its reason; the
       monthly results carry the counts.
     - **Today:** no image quality checks before scoring.
+    - **Built 2026-11-09 (API and library; monthly job not yet):** `cdm.contract` checks format
+      (JPEG or PNG), resolution (shorter side at least 224 px, the model's input), aspect ratio
+      (at most 3:1) and near-duplicates (64-bit difference hash within 4 bits; monthly job only,
+      since the API keeps no hashes); these quarantine with a reason. Blur (Laplacian variance)
+      and exposure (mean brightness, clipped share) are **report-only** until calibrated on real
+      images; their values are guesses. `month_counts` gives counts per reason and a spike flag
+      (over 10% quarantined). The API returns 422 with the reason, counts `quarantined` in
+      `/health`, and returns `input_flags`; tested in `tests/test_contract.py` and
+      `tests/test_api.py` on synthetic images. **Not done:** the monthly job does not run the
+      contract yet (it belongs with the post-month-12 scoring wiring), so no monthly counts
+      exist; thresholds for the owner to confirm; blur and exposure need calibrating.
 
 19. [ ] **Least-privilege access.** The watchdog's service principal (item 1) can view one job
     and nothing else, with the `users` group's default grants checked and removed; the

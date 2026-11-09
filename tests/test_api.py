@@ -24,7 +24,7 @@ class FakeService:
         return {"label": "nv", "abstain": False, "notice": NOTICE}
 
 
-def jpeg(size: tuple[int, int] = (64, 64)) -> bytes:
+def jpeg(size: tuple[int, int] = (256, 256)) -> bytes:
     buf = io.BytesIO()
     Image.new("RGB", size, (200, 150, 120)).save(buf, format="JPEG")
     return buf.getvalue()
@@ -89,3 +89,17 @@ def test_rate_limiter_window_slides_and_memory_stays_bounded() -> None:
     for i in range(50):
         limiter.allow(f"c{i}")
     assert len(limiter.clients) <= 5
+
+
+def test_the_input_contract_quarantines_with_a_reason_and_counts_it() -> None:
+    """Backlog item 18: a readable image that breaks an enforced rule gets 422 and its reason,
+    is counted as quarantined (not rejected), and is never scored."""
+    c = client()
+    small = c.post("/predict", content=jpeg((100, 100)), headers={"content-type": "image/jpeg"})
+    assert small.status_code == 422 and "resolution" in small.json()["detail"]
+    wide = c.post("/predict", content=jpeg((1200, 300)), headers={"content-type": "image/jpeg"})
+    assert wide.status_code == 422 and "aspect ratio" in wide.json()["detail"]
+    ok = c.post("/predict", content=jpeg(), headers={"content-type": "image/jpeg"})
+    assert ok.status_code == 200 and isinstance(ok.json()["input_flags"], list)
+    health = c.get("/health").json()
+    assert health["quarantined"] == 2 and health["rejected"] == 0 and health["predictions"] == 1

@@ -315,6 +315,12 @@ Known limits:
   committed metrics (`tests/test_eval_gate.py`), and a Docker build and smoke test with an
   untrained test bundle.
 
+### Backlog item 18: input contract (2026-11-09)
+
+- `cdm.contract`: enforced checks (format, resolution, aspect ratio, near-duplicates) quarantine
+  with a reason; blur and exposure only flag (uncalibrated). In the API (422, a `quarantined`
+  count, `input_flags`); not yet in the monthly job. Tested on synthetic images only.
+
 ## Not started
 
 - Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
