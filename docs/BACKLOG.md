@@ -475,6 +475,18 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       challenger) and a separate `promote_challenger` job the owner runs by hand with the
       decision file's hash (**approved by the owner, 2026-11-09**; the item's wording above is
       updated). About 3 to 4 GPU DBUs a run (an estimate); (ask) before any.
+    - **Built 2026-11-09 (the approval half; not run):** `cdm.pipeline.trigger_check` (a month
+      triggers when it alerted and its labels have arrived; on the committed replay, months 7 to
+      11 would) and `cdm.pipeline.verify_promotion`, with
+      `databricks/notebooks/promote_challenger.py` and `databricks/promote_challenger_job.json`
+      (no schedule; the owner passes the registry version, the expected current version, the
+      decision file and its SHA-256). It refuses unless that decision's rule promoted and the
+      version was registered from it with a checked serving bundle (tags `decision_sha256` and
+      `serving_bundle_sha256`), then moves the alias through `cdm.registry`, reads it back and
+      logs the move to `gold_model_decisions`. Tested in `tests/test_pipeline.py`. **Not built:**
+      the training job's tasks (trigger check, train with checkpoints always kept, evaluate,
+      decide, build and check the serving bundle, register with those tags): they change the
+      GPU notebook `retrain.py` and can only be tried with a GPU run, an (ask).
 
 18. [ ] **An input contract for images.** Before scoring, each image is checked: format,
     resolution, aspect ratio, blur, exposure, and duplicates (perceptual hash); failures are

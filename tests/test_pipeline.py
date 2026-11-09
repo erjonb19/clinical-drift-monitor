@@ -1,142 +1,68 @@
-"""End to end on tiny synthetic images: the plumbing ``cdm.reproduce`` runs, on CPU, in CI."""
+"""Backlog item 17: the pipeline's trigger and the promotion's refusals (cdm.pipeline)."""
 
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
 import pytest
-import torch
-from PIL import Image
-from torch.utils.data import TensorDataset
 
-from cdm.data import CLASSES, HamDataset, OODImages, eval_transform, md5sum, train_transform
-from cdm.reproduce import (
-    DETECTORS,
-    Result,
-    ResumeMismatchError,
-    _limit,
-    aggregate,
-    check_plausible,
-    load_finished,
-    results_markdown,
-    run_seed,
-    write_json,
-)
-from cdm.train import TrainConfig, build_model
+from cdm.pipeline import PromotionRefused, trigger_check, verify_promotion
+
+REPO = Path(__file__).resolve().parents[1]
+REPLAY = [
+    json.loads((REPO / "results/phase3/monthly" / f"month_{m:02d}.json").read_text("utf-8"))
+    for m in range(1, 13)
+]
 
 
-def fake_ham(tmp_path: Path, per_class: int) -> pd.DataFrame:
-    rng = np.random.default_rng(0)
-    rows = []
-    for label, dx in enumerate(CLASSES):
-        for k in range(per_class):
-            path = tmp_path / f"{dx}_{k}.jpg"
-            pixels = rng.integers(0, 255, size=(48, 64, 3), dtype=np.uint8)
-            Image.fromarray(pixels).save(path)
-            rows.append({"dx": dx, "label": label, "image_path": str(path)})
-    return pd.DataFrame(rows)
-
-
-@pytest.fixture(scope="module")
-def result_and_sets(tmp_path_factory: pytest.TempPathFactory) -> tuple[Result, int]:
-    frame = fake_ham(tmp_path_factory.mktemp("ham"), per_class=3)
-    checkpoint = tmp_path_factory.mktemp("ckpt") / "seed0.pt"
-    sets = {
-        "train": HamDataset(frame, train_transform()),
-        "train_eval": HamDataset(frame, eval_transform()),
-        "val": HamDataset(frame, eval_transform()),
-        "test": HamDataset(frame, eval_transform()),
+def test_the_replay_triggers_only_on_alert_months_whose_labels_arrived() -> None:
+    out = trigger_check(REPLAY)
+    alerted = {r["month"] for r in REPLAY if r["drift"]["alert"]} | {
+        r["month"] for r in REPLAY if any(v["alert"] for v in r["by_skin_type"].values())
     }
-    noise = TensorDataset(torch.randn(10, 3, 224, 224), torch.zeros(10))
-    ood = {"noise": OODImages(noise, range(10))}  # type: ignore[arg-type]
-    cfg = TrainConfig(epochs=1, batch_size=8, num_workers=0, pretrained=False)
-    return run_seed(0, sets, ood, cfg, torch.device("cpu"), checkpoint), len(frame)
+    assert out["status"] == "trigger"
+    assert set(out["months"]) == alerted - {12}  # month 12's labels arrive after the replay
+    assert all(m >= 7 for m in out["months"])  # months 1 to 6 did not alert
 
 
-def test_run_seed_reports_every_metric(result_and_sets: tuple[Result, int]) -> None:
-    result, n_images = result_and_sets
-    assert set(result["test"]["recall"]) == set(CLASSES)
-    assert sum(result["test"]["support"].values()) == n_images
-    for detector in DETECTORS:
-        metrics = result["ood"]["noise"][detector]
-        assert 0.0 <= metrics["auroc"] <= 1.0
-        assert 0.0 <= metrics["fpr95"] <= 1.0
-    assert result["ood"]["noise"]["n"] == {"id": n_images, "ood": 10}
+def test_no_trigger_says_why() -> None:
+    quiet = [r for r in REPLAY if r["month"] <= 6]
+    assert trigger_check(quiet) == {"status": "no_trigger", "reason": "no month in alert"}
+    last = trigger_check([r for r in REPLAY if r["month"] == 12])
+    assert last["status"] == "no_trigger" and "[12]" in last["reason"]
 
 
-def test_aggregate_and_markdown(result_and_sets: tuple[Result, int]) -> None:
-    result, _ = result_and_sets
-    summary = aggregate([result, {**result, "seed": 1}])
-    assert summary["seeds"] == [0, 1]
-    provenance = {"code_version": "abc", "device": "cpu", "split_fingerprint": "f00"}
-    table = results_markdown(summary, provenance)
-    assert "Balanced accuracy" in table
-    assert all(f"| {d} |" in table for d in DETECTORS)
+def _decision(promoted: bool) -> bytes:
+    return json.dumps({"promoted": promoted, "rule": "spec"}).encode()
 
 
-def test_implausible_auroc_is_flagged(result_and_sets: tuple[Result, int]) -> None:
-    result, _ = result_and_sets
-    broken = {
-        **result,
-        "ood": {"noise": {d: {"auroc": 0.041, "fpr95": 1.0} for d in DETECTORS}},
-    }
-    assert len(check_plausible(broken)) == len(DETECTORS)
+def test_a_promotion_needs_the_named_promoting_decision_and_a_checked_bundle() -> None:
+    good = _decision(True)
+    sha = hashlib.sha256(good).hexdigest()
+    tags = {"decision_sha256": sha, "serving_bundle_sha256": "ab" * 32}
+    assert verify_promotion(good, sha, tags)["promoted"] is True
+    with pytest.raises(PromotionRefused, match="not the one given"):
+        verify_promotion(good, "00" * 32, tags)
+    bad = _decision(False)
+    with pytest.raises(PromotionRefused, match="did not promote"):
+        verify_promotion(bad, hashlib.sha256(bad).hexdigest(), tags)
+    with pytest.raises(PromotionRefused, match="not registered from"):
+        verify_promotion(good, sha, {**tags, "decision_sha256": "cd" * 32})
+    with pytest.raises(PromotionRefused, match="serving bundle"):
+        verify_promotion(good, sha, {"decision_sha256": sha})
 
 
-def test_limit_keeps_every_class() -> None:
-    frame = pd.DataFrame({"dx": [c for c in CLASSES for _ in range(20)]})
-    limited = _limit(frame, 20, seed=0)
-    assert len(limited) == 20
-    assert set(limited["dx"]) == set(CLASSES)
-
-
-def test_resume_reuses_only_a_matching_seed(tmp_path: Path) -> None:
-    key = {"code_version": "abc1234", "config": {"epochs": 12}}
-    path = tmp_path / "seed0.json"
-    assert load_finished(path, key) is None
-    write_json(path, {"run_key": key, "seed": 0})
-    assert load_finished(path, key) == {"run_key": key, "seed": 0}
-    changed = {**key, "config": {"epochs": 1}}
-    with pytest.raises(ResumeMismatchError):
-        load_finished(path, changed)
-
-
-def test_checkpoint_is_saved_and_reloads(result_and_sets: tuple[Result, int]) -> None:
-    result, _ = result_and_sets
-    path = Path(result["checkpoint"]["path"])
-    assert md5sum(path) == result["checkpoint"]["md5"]
-    build_model(pretrained=False).load_state_dict(torch.load(path, map_location="cpu"))
-
-
-def test_same_seed_gives_identical_model_whatever_ran_before(tmp_path: Path) -> None:
-    """Seed 0, then seed 1, then seed 0 again: the two seed 0 runs must match exactly.
-
-    Before the fix, the classifier head was initialised before seeding, so a seed's model
-    depended on which seeds had run earlier in the process (silent-failures #6). Two
-    DataLoader workers exercise worker seeding; thread count and deterministic algorithms
-    come from ``seed_everything``.
-    """
-    (tmp_path / "ham").mkdir()
-    frame = fake_ham(tmp_path / "ham", per_class=2)
-    sets = {
-        "train": HamDataset(frame, train_transform()),
-        "train_eval": HamDataset(frame, eval_transform()),
-        "val": HamDataset(frame, eval_transform()),
-        "test": HamDataset(frame, eval_transform()),
-    }
-    noise = TensorDataset(torch.randn(6, 3, 224, 224), torch.zeros(6))
-    ood = {"noise": OODImages(noise, range(6))}  # type: ignore[arg-type]
-    cfg = TrainConfig(epochs=1, batch_size=4, num_workers=2, pretrained=False, num_threads=2)
-    cpu = torch.device("cpu")
-
-    first = run_seed(0, sets, ood, cfg, cpu, tmp_path / "first.pt")
-    other = run_seed(1, sets, ood, cfg, cpu, tmp_path / "other.pt")
-    again = run_seed(0, sets, ood, cfg, cpu, tmp_path / "again.pt")
-
-    # Compare weight values, not file MD5s: torch.save embeds the file name.
-    assert first["checkpoint"]["weights_sha256"] == again["checkpoint"]["weights_sha256"]
-    assert first["checkpoint"]["weights_sha256"] != other["checkpoint"]["weights_sha256"]
-    for key in ("best_epoch", "history", "test", "ood"):
-        assert first[key] == again[key], key
+def test_the_promotion_job_runs_only_by_hand_with_the_owners_inputs() -> None:
+    """No schedule and no trigger: running it, with the version and the decision's hash, is the
+    owner's approval. Its approval inputs are empty in the file, so they must be given."""
+    spec = json.loads((REPO / "databricks/promote_challenger_job.json").read_text("utf-8"))
+    assert "schedule" not in spec and "trigger" not in spec and spec["max_concurrent_runs"] == 1
+    task = spec["tasks"][0]
+    assert task["max_retries"] == 0
+    params = task["notebook_task"]["base_parameters"]
+    for name in ("version", "expect_current", "decision_path", "decision_sha256"):
+        assert params[name] == ""
+    notebook = (REPO / "databricks/notebooks/promote_challenger.py").read_text("utf-8")
+    assert "verify_promotion(" in notebook and "plan_move(" in notebook
