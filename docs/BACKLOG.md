@@ -198,6 +198,15 @@ gets a **Blocked:** line with the reason.
      melanomas, the month is marked "insufficient data" and the target is neither met nor
      broken. The target's value, and whether it is judged on the point estimate or the
      interval's lower bound, are set in the item's PR before any month is judged.
+   - **Built 2026-11-09 (code, not run):** `cdm.slo` (the window rule above, the Wilson
+     interval, three targets in `config/slo.json`: melanoma referral sensitivity 0.90, judged
+     broken when the whole interval is below it; delayed balanced accuracy 0.55; abstain share
+     0.15), `delayed_accuracy` now counts melanomas referred, and the monthly notebook checks the
+     targets after saving each month. Checked on the committed replay
+     (`results/phase3/monthly/slo_replay.json`); the README has the table. **Waits on:** the
+     owner's confirmation of the three values, and a redeploy (the job pins the notebook's hash
+     and needs `config/slo.json` staged). Melanoma sensitivity cannot be judged on the replay
+     records (no referral count); the first run with this code records it.
 
 5. [ ] **Alerts** when drift, or equity drift by Fitzpatrick skin type, crosses a threshold,
    with the thresholds and why.
@@ -209,6 +218,11 @@ gets a **Blocked:** line with the reason.
      `gold_drift_monthly`. The job's email goes out on every success or failure, not on an
      alert. **Limit:** skin type is recorded only at the two new hospitals, so a skin-type alert
      so far detects the site, not anything about skin type.
+   - **Built 2026-11-09 (code, not run):** the alert path in `cdm.slo`: after saving a month's
+     results the job fails its run with "ALERT (not a job error)" and each reason (a broken
+     target, an overall drift alert, a skin-type drift alert); the failure email reaches the
+     owner. Thresholds and reasons are in the README's "Alerts and model targets" table. Not
+     ticked: no run has sent an alert yet.
 
 6. [ ] **Tests and model evals in CI** on every push, with pass and fail thresholds.
    - **Done when:** CI runs the tests and the eval gate on every push and pull request, the

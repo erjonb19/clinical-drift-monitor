@@ -45,6 +45,7 @@ from pyspark.sql import functions as F
 from cdm.data import eval_transform
 from cdm.monitor import by_skin_type, delayed_accuracy, draw_schedule, drift_test
 from cdm.serving import Service, mahalanobis
+from cdm.slo import alerts, evaluate, load_config, raise_if_alerts
 from cdm.splits import CLASSES
 from cdm.train import features_and_logits
 
@@ -71,6 +72,9 @@ evaluated = json.loads((REPO / "results/phase3/serving/results.json").read_text(
 manifest_sha = hashlib.sha256((BUNDLE / "manifest.json").read_bytes()).hexdigest()
 assert manifest_sha == evaluated["bundle"]["manifest_sha256"], "not the evaluated bundle"
 VERSION = json.loads((BUNDLE / "manifest.json").read_text(encoding="utf-8"))["version"]
+SLO_CONFIG = load_config(REPO / "config/slo.json")
+# The referral threshold, for the melanoma-referral target (backlog item 4; cdm.slo).
+REFER = float(json.loads((BUNDLE / "manifest.json").read_text(encoding="utf-8"))["refer_threshold"])
 LAST_REPLAY = max(int(m) for m in spec["replay"]["schedule"])
 transform = eval_transform(224)
 
@@ -227,7 +231,7 @@ def run_month(month: int) -> dict:
         probs = prev[[f"p_{c}" for c in CLASSES]].to_numpy(np.float64)
         row["delayed_accuracy_of_month"] = {
             "month": month - 1,
-            **delayed_accuracy(labels.astype(np.int64), probs),
+            **delayed_accuracy(labels.astype(np.int64), probs, refer_threshold=REFER),
         }
     batch = months.get(month) if REPLAYING else None
     if batch is None:
@@ -291,6 +295,15 @@ def run_month(month: int) -> dict:
     out.write.mode("append").saveAsTable(MONTHLY)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / f"month_{month:02d}.json").write_text(json.dumps(row, indent=2) + "\n")
+    # Targets (backlog item 4) and the alert path (item 5): checked after the results are saved,
+    # so an alert never loses the month's record.
+    history = [
+        json.loads(r["summary"]).get("delayed_accuracy_of_month")
+        for r in spark.table(MONTHLY).orderBy("month").select("summary").collect()
+    ]
+    slo = evaluate(row, [h for h in history if h], SLO_CONFIG)
+    (OUT / f"slo_{month:02d}.json").write_text(json.dumps(slo, indent=2) + "\n")
+    raise_if_alerts(alerts(row, slo), month)
     return row
 
 

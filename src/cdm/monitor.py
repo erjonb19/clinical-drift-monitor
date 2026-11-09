@@ -95,15 +95,24 @@ def by_skin_type(
 
 
 def delayed_accuracy(
-    labels: NDArray[np.int64], probs: Array, min_mel: int = MIN_GROUP
+    labels: NDArray[np.int64],
+    probs: Array,
+    min_mel: int = MIN_GROUP,
+    refer_threshold: float | None = None,
 ) -> dict[str, Any]:
-    """A month's accuracy once its labels have arrived (labelled images only)."""
+    """A month's accuracy once its labels have arrived (labelled images only). With the
+    service's referral threshold it also counts the melanomas flagged for referral, which the
+    pooled melanoma-sensitivity target needs (backlog item 4; cdm.slo)."""
     keep = labels >= 0
     y, p = labels[keep], probs[keep].argmax(axis=1)
     mel = CLASSES.index("mel")
     n_mel = int((y == mel).sum())
     out: dict[str, Any] = {"labelled": int(keep.sum()), "melanoma_images": n_mel,
-                           "balanced_accuracy": balanced_accuracy(y, p)}  # fmt: skip
+                           "balanced_accuracy": balanced_accuracy(y, p),
+                           "melanoma_correct": int(((y == mel) & (p == mel)).sum())}  # fmt: skip
+    if refer_threshold is not None:
+        referred = probs[keep][:, mel] >= refer_threshold
+        out["melanoma_referred"] = int(((y == mel) & referred).sum())
     if n_mel >= min_mel:
         out["melanoma_sensitivity"] = float(np.mean(p[y == mel] == mel))
     return out
