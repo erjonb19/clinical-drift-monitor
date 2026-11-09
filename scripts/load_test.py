@@ -35,6 +35,11 @@ UNTRAINED = (
     "the CI test bundle has untrained weights: these numbers measure serving speed only, "
     "never accuracy"
 )
+CONDITIONS = (
+    "client and server share the same machine's CPUs; every request opens a new connection "
+    "(urllib sends Connection: close); the API runs each request in a worker thread, so "
+    "concurrent requests compute in parallel and compete for the CPUs; CPU use is not measured"
+)
 SERVER = (
     "scripts/bench_app.py: app/api/main.py's create_app, one uvicorn worker, "
     "rate limiter opened wide"
@@ -57,6 +62,8 @@ def post(url: str, body: bytes) -> tuple[int, float]:
             code = r.status
     except urllib.error.HTTPError as err:
         code = err.code
+    except OSError:  # a connection error is counted, never dropped with its thread
+        code = -1
     return code, 1000 * (time.perf_counter() - start)
 
 
@@ -142,6 +149,8 @@ def main() -> None:
                 break
             except OSError:
                 time.sleep(1)
+        else:
+            raise RuntimeError("the benchmark server never answered /health")
         body = image()
         for _ in range(10):  # warm-up, not counted
             post(url + "/predict", body)
@@ -174,9 +183,12 @@ def main() -> None:
         "software": {
             "python": platform.python_version(),
             "torch": torch.__version__,
-            "torch_threads": torch.get_num_threads(),
+            "torch_threads_default": torch.get_num_threads(),
+            "torch_threads_note": "read in the client process; the server uses the same default",
         },
         "server": SERVER,
+        "networks_in_bundle": len(manifest["seeds"]),
+        "conditions": CONDITIONS,
         "image": "one synthetic 448x448 JPEG, sent repeatedly; 10 warm-up requests not counted",
         "memory_after_warmup_kb": idle,
         "levels": levels,
