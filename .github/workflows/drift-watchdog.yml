@@ -1,0 +1,41 @@
+# Backlog item 1: fails loudly when the monthly drift job (cdm-phase3-monthly-drift, job
+# 524433148303929) has no run started by its schedule since 06:00 UTC on the 1st. Runs on the
+# 2nd of each month, and by hand for any month. Needs three repo secrets from a service principal
+# that can view that one job and nothing else (owner creates it; until then every run fails as
+# "not configured", never as a pass). No secret is used on pushes or pull requests.
+name: Drift watchdog
+
+on:
+  schedule:
+    - cron: "17 7 2 * *"
+  workflow_dispatch:
+    inputs:
+      month:
+        description: "Month to check (YYYY-MM); default the current month"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: drift-watchdog
+  cancel-in-progress: false
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check the scheduled run
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+          MONTH: ${{ inputs.month }}
+        run: |
+          if [ -n "$MONTH" ]; then python scripts/watchdog.py --month "$MONTH"; else python scripts/watchdog.py; fi

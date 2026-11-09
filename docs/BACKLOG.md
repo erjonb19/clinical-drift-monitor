@@ -112,7 +112,15 @@ gets a **Blocked:** line with the reason.
         Service principals, so a service principal can be created; nothing is created or stored
         yet.
         Databricks job notifications cover start, success, failure and duration, not a run
-        that never starts, so the check has to live outside the job.
+        that never starts, so the check has to live outside the job. **Built 2026-11-09, not
+        configured:** `scripts/watchdog.py` and `.github/workflows/drift-watchdog.yml` (07:17 UTC
+        on the 2nd, and by hand for any month; never on push or pull request). It asks the Jobs
+        API for a run of job 524433148303929 with trigger `PERIODIC` since 06:00 UTC on the 1st,
+        and exits 0 (ran; state printed), 1 (missed) or 2 (inconclusive: no credential or API
+        error), never passing without an answer. It needs three repo secrets from the owner's
+        view-only service principal: `DATABRICKS_HOST`, `DATABRICKS_CLIENT_ID`,
+        `DATABRICKS_CLIENT_SECRET`. Until they exist every run fails as "not configured".
+        Tested with fake API replies; not yet run against the workspace.
      2. A guard, not the likely cause (a redeploy from the repo unpauses):
         `scripts/deploy_databricks.py --job` reads the job back after `jobs reset`, refuses if
         the schedule is not `UNPAUSED`, and prints the next run time. A test checks that every
