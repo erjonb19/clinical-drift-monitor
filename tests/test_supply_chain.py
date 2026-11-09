@@ -45,3 +45,22 @@ def test_every_trivyignore_entry_has_a_reason_above_it() -> None:
     for i, line in enumerate(lines):
         if line.strip() and not line.startswith("#"):
             assert i > 0 and lines[i - 1].startswith("#"), f"no reason above {line}"
+
+
+def _ignored(text: str, name: str) -> list[str]:
+    """The update types ignored for one dependency in dependabot.yml (plain text, no YAML lib)."""
+    match = re.search(rf"- dependency-name: {re.escape(name)}\n\s+update-types: \[([^\]]+)\]", text)
+    return [t.strip() for t in match.group(1).split(",")] if match else []
+
+
+def test_dependabot_keeps_python_311_and_the_model_stack_on_patches() -> None:
+    """Owner, 2026-11-09: no Python minor or major bump of the image (PR #66 tried 3.15), and
+    patch-only updates for the stack behind committed results (PR #68 tried flwr 1.43.0)."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    both = ["version-update:semver-major", "version-update:semver-minor"]
+    docker = text.split("package-ecosystem: docker", 1)[1].split("package-ecosystem:", 1)[0]
+    assert sorted(_ignored(docker, "python")) == both
+    pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
+    stack = ["torch", "torchvision", "numpy", "scikit-learn", "flwr", "mlflow", "mlflow-skinny"]
+    for name in stack:
+        assert sorted(_ignored(pip, name)) == both, name

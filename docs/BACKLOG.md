@@ -325,6 +325,14 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       `FROM` image only, not the torch pin in the Dockerfile's `RUN` line or
       `docker/constraints.txt`; those still need a manual bump (the Trivy scan reports their
       vulnerabilities).
+    - **Owner decisions, 2026-11-09:** the `cryptography` and `uv` findings stay accepted until
+      the 2026-12-09 review, and `flwr` is not upgraded. Dependabot's first PRs: #67 (three
+      Actions) merged green; #66 (Python 3.11 to 3.15 in the image) and #68 (33 packages,
+      including `flwr` 1.43.0 and torch without its `+cpu` label) closed. `dependabot.yml` now
+      ignores Python minor and major updates of the image, and gives torch, torchvision, numpy,
+      scikit-learn, `flwr` and MLflow patch updates only (a test checks both rules); the rest
+      of the Python group is merged when its next PR is green. The owner turns on branch
+      protection (`quality`, `image`, `analyze`).
 
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
