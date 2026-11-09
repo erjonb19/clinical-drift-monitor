@@ -1,0 +1,2312 @@
+{
+ "accuracy_floor": 0.5910713198670328,
+ "accuracy_floor_source": "lowest delayed balanced accuracy of real replay months 1 to 4 (results/phase3/monthly/month_02.json to month_05.json)",
+ "built_by": "scripts/phase4_scenarios.py",
+ "count": 30,
+ "rules": {
+  "abstain_share": "the share of the month's images whose OOD score is above the abstain threshold (the baseline's 95th percentile)",
+  "accuracy_floor": "delayed balanced accuracy below the lowest in-distribution month is a drop",
+  "alert_rule": "alert when KS p < 0.01 and PSI >= 0.2; warning when PSI >= 0.1 without an alert",
+  "containment_words": {
+   "alert": "abstain_and_hold",
+   "none": "none",
+   "warning": "monitor"
+  },
+  "labels": "a month's accuracy is reported by the next month's run; when the key is missing, labels have not arrived",
+  "live_check": "new public images are counted each month, not downloaded or scored",
+  "month_alert": "the month is in alert when the overall test or any skin-type test alerts",
+  "report_when": "an 8D report only when the month is in alert; for a warning or no drift, findings only and no 8D report",
+  "skin_type_caveat": "skin type is recorded only at the new sites, so a skin-type alert detects the site, not anything about skin type",
+  "skin_type_rule": "the same test per Fitzpatrick type with at least 100 images that month; smaller or unrecorded groups get counts only and never alert"
+ },
+ "scenarios": [
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "none",
+    "delayed_accuracy_available": true,
+    "eight_d_report": false,
+    "new_sources": [],
+    "overall_alert": false,
+    "severity": "none"
+   },
+   "family": "no_drift",
+   "id": "no_drift_00",
+   "record": {
+    "abstain_share": 0.04666666666666667,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "not recorded": {
+      "alert": false,
+      "images": 300,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 300,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6883,
+     "labelled": 269,
+     "melanoma_images": 61,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.9894567095552149,
+     "ks_statistic": 0.026137071651090343,
+     "psi": 0.02776991127387823,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20261103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [
+     "new_images_counted_not_scored"
+    ],
+    "containment": "none",
+    "delayed_accuracy_available": true,
+    "eight_d_report": false,
+    "new_sources": [],
+    "overall_alert": false,
+    "severity": "none"
+   },
+   "family": "no_drift",
+   "id": "no_drift_01",
+   "record": {
+    "abstain_share": 0.056666666666666664,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "not recorded": {
+      "alert": false,
+      "images": 300,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 300,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6959,
+     "labelled": 270,
+     "melanoma_images": 59,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.17900470979202002,
+     "ks_statistic": 0.06566978193146418,
+     "psi": 0.031514312606017406,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553181,
+     "new_since_last_run": 162
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20262103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "none",
+    "delayed_accuracy_available": true,
+    "eight_d_report": false,
+    "new_sources": [],
+    "overall_alert": false,
+    "severity": "none"
+   },
+   "family": "no_drift",
+   "id": "no_drift_02",
+   "record": {
+    "abstain_share": 0.04666666666666667,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "not recorded": {
+      "alert": false,
+      "images": 300,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 300,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6602,
+     "labelled": 296,
+     "melanoma_images": 47,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.7005266447951537,
+     "ks_statistic": 0.04202492211838006,
+     "psi": 0.035085007185899096,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20263103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "none",
+    "delayed_accuracy_available": true,
+    "eight_d_report": false,
+    "new_sources": [],
+    "overall_alert": false,
+    "severity": "none"
+   },
+   "family": "no_drift",
+   "id": "no_drift_03",
+   "record": {
+    "abstain_share": 0.04,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "not recorded": {
+      "alert": false,
+      "images": 300,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 300,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6563,
+     "labelled": 278,
+     "melanoma_images": 62,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 0.16373768327896732,
+     "ks_statistic": 0.06688473520249222,
+     "psi": 0.03983779230453722,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20264103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "monitor",
+    "delayed_accuracy_available": true,
+    "eight_d_report": false,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_00",
+   "record": {
+    "abstain_share": 0.11333333333333333,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 18,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 39,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 29,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 22,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 192,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 175,
+     "site_x": 125,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6994,
+     "labelled": 299,
+     "melanoma_images": 32,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 5.277833422525581e-05,
+     "ks_statistic": 0.13775700934579438,
+     "psi": 0.12378217428275956,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20361104
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "monitor",
+    "delayed_accuracy_available": true,
+    "eight_d_report": false,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_01",
+   "record": {
+    "abstain_share": 0.15666666666666668,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 31,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 37,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 36,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 22,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 174,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 152,
+     "site_x": 0,
+     "site_y": 148,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4936,
+     "labelled": 267,
+     "melanoma_images": 63,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 3.757624025488086e-07,
+     "ks_statistic": 0.16694704049844236,
+     "psi": 0.18403631233138318,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20362105
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "monitor",
+    "delayed_accuracy_available": true,
+    "eight_d_report": false,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_02",
+   "record": {
+    "abstain_share": 0.15,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 36,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 37,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 21,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 29,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 177,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 160,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 140
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6767,
+     "labelled": 284,
+     "melanoma_images": 50,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 1.493176203317021e-07,
+     "ks_statistic": 0.17183800623052958,
+     "psi": 0.16412956850614713,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20363105
+  },
+  {
+   "expected": {
+    "accuracy_drop": null,
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "monitor",
+    "delayed_accuracy_available": false,
+    "eight_d_report": false,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_03",
+   "record": {
+    "abstain_share": 0.13666666666666666,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 16,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 24,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 15,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 17,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 228,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 211,
+     "site_x": 89,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 3.823464123121857e-07,
+     "ks_statistic": 0.16685358255451713,
+     "psi": 0.16596075426432416,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20364105
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "monitor",
+    "delayed_accuracy_available": true,
+    "eight_d_report": false,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": false,
+    "severity": "warning"
+   },
+   "family": "warning",
+   "id": "warning_04",
+   "record": {
+    "abstain_share": 0.09,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 16,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 15,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 10,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 11,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 248,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 240,
+     "site_x": 0,
+     "site_y": 60,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6217,
+     "labelled": 264,
+     "melanoma_images": 51,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 7.418511355172255e-06,
+     "ks_statistic": 0.1500311526479751,
+     "psi": 0.12553214199208196,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20365105
+  },
+  {
+   "expected": {
+    "accuracy_drop": null,
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_00",
+   "record": {
+    "abstain_share": 0.17333333333333334,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 49,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 64,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 61,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 31,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 95,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 70,
+     "site_x": 230,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 7.199824006459295e-12,
+     "ks_statistic": 0.21750778816199376,
+     "psi": 0.263406527249022,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20461103
+  },
+  {
+   "expected": {
+    "accuracy_drop": null,
+    "alerting_skin_types": [],
+    "caveats": [
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_01",
+   "record": {
+    "abstain_share": 0.17666666666666667,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 80,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 62,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 49,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 48,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 61,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 23,
+     "site_x": 0,
+     "site_y": 277,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.4638230247976624e-11,
+     "ks_statistic": 0.21457943925233644,
+     "psi": 0.29131403364570674,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20462103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_02",
+   "record": {
+    "abstain_share": 0.2,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 52,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 64,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 65,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 63,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 56,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 30,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 270
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.7078,
+     "labelled": 275,
+     "melanoma_images": 48,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 2.133402166540669e-19,
+     "ks_statistic": 0.2793146417445483,
+     "psi": 0.5201458193689628,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20463103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_03",
+   "record": {
+    "abstain_share": 0.19333333333333333,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 44,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 78,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 56,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 59,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 63,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 29,
+     "site_x": 271,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6768,
+     "labelled": 276,
+     "melanoma_images": 42,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.1834651420138023e-14,
+     "ks_statistic": 0.24230529595015576,
+     "psi": 0.3352791152097948,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20464103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_04",
+   "record": {
+    "abstain_share": 0.17666666666666667,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 50,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 76,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 59,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 54,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 61,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 9,
+     "site_x": 0,
+     "site_y": 291,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6656,
+     "labelled": 291,
+     "melanoma_images": 44,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 2.759601935985668e-23,
+     "ks_statistic": 0.30613707165109033,
+     "psi": 0.4752924563155858,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20465103
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_moderate",
+   "id": "alert_moderate_05",
+   "record": {
+    "abstain_share": 0.18666666666666668,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 50,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 68,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 42,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 54,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 86,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 39,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 261
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4717,
+     "labelled": 272,
+     "melanoma_images": 44,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 7.639603312963886e-18,
+     "ks_statistic": 0.2677881619937695,
+     "psi": 0.3811591374638261,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20466103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_00",
+   "record": {
+    "abstain_share": 0.7633333333333333,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 45,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 67,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 53,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 57,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 78,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 45,
+     "site_x": 255,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6418,
+     "labelled": 273,
+     "melanoma_images": 61,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.3186003982390301e-146,
+     "ks_statistic": 0.7288473520249221,
+     "psi": 2.803762347977165,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20561103
+  },
+  {
+   "expected": {
+    "accuracy_drop": null,
+    "alerting_skin_types": [],
+    "caveats": [
+     "new_images_counted_not_scored",
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_01",
+   "record": {
+    "abstain_share": 0.6266666666666667,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 54,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 65,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 52,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 50,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 79,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 41,
+     "site_x": 0,
+     "site_y": 259,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.6465120959933653e-104,
+     "ks_statistic": 0.6290342679127726,
+     "psi": 2.1557067213445302,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553061,
+     "new_since_last_run": 42
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20562103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [],
+    "caveats": [
+     "new_images_counted_not_scored"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_02",
+   "record": {
+    "abstain_share": 0.6533333333333333,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 51,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 68,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 57,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 45,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 79,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 40,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 260
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6249,
+     "labelled": 277,
+     "melanoma_images": 45,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 3.994448725067141e-111,
+     "ks_statistic": 0.6465109034267913,
+     "psi": 3.2478110991049887,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553230,
+     "new_since_last_run": 211
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20563103
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_03",
+   "record": {
+    "abstain_share": 0.77,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 69,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 62,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 36,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 55,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 78,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 34,
+     "site_x": 266,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3815,
+     "labelled": 287,
+     "melanoma_images": 30,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.0447374458815598e-158,
+     "ks_statistic": 0.753208722741433,
+     "psi": 3.0843400163572667,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20564103
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [],
+    "caveats": [],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_04",
+   "record": {
+    "abstain_share": 0.7933333333333333,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 55,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 80,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 52,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 59,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 54,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 15,
+     "site_x": 0,
+     "site_y": 285,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3868,
+     "labelled": 294,
+     "melanoma_images": 30,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 1.8046519509524262e-162,
+     "ks_statistic": 0.7604361370716511,
+     "psi": 3.4411763106475033,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20565103
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [],
+    "caveats": [
+     "new_images_counted_not_scored"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_strong",
+   "id": "alert_strong_05",
+   "record": {
+    "abstain_share": 0.6866666666666666,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 53,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": false,
+      "images": 83,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "III": {
+      "alert": false,
+      "images": 58,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 51,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 55,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 4,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 296
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4174,
+     "labelled": 292,
+     "melanoma_images": 41,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 3.483441644319765e-125,
+     "ks_statistic": 0.6812772585669782,
+     "psi": 2.762523713888802,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553351,
+     "new_since_last_run": 332
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20566103
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": false,
+    "severity": "alert"
+   },
+   "family": "alert_skin_type_only",
+   "id": "alert_skin_type_only_00",
+   "record": {
+    "abstain_share": 0.16,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "II": {
+      "alert": true,
+      "images": 112,
+      "ks_p": 2.3413982244564043e-22,
+      "ks_statistic": 0.4694370271473075,
+      "psi": 1.430616009315362,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 1,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 4,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 183,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 169,
+     "site_x": 131,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3692,
+     "labelled": 265,
+     "melanoma_images": 55,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 1.0303053354468853e-08,
+     "ks_statistic": 0.18526479750778815,
+     "psi": 0.19162757447768028,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20661114
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": false,
+    "severity": "alert"
+   },
+   "family": "alert_skin_type_only",
+   "id": "alert_skin_type_only_01",
+   "record": {
+    "abstain_share": 0.16666666666666666,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 2,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 109,
+      "ks_p": 8.45019028445614e-17,
+      "ks_statistic": 0.4133870645059876,
+      "psi": 1.0094574636194065,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 1,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 188,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 172,
+     "site_x": 0,
+     "site_y": 128,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4479,
+     "labelled": 299,
+     "melanoma_images": 67,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 3.127568344015031e-08,
+     "ks_statistic": 0.17981308411214952,
+     "psi": 0.1628263371038198,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20662109
+  },
+  {
+   "expected": {
+    "accuracy_drop": null,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites",
+     "labels_not_yet_arrived"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": false,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": false,
+    "severity": "alert"
+   },
+   "family": "alert_skin_type_only",
+   "id": "alert_skin_type_only_02",
+   "record": {
+    "abstain_share": 0.15666666666666668,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 2,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 101,
+      "ks_p": 1.0000849203810674e-11,
+      "ks_statistic": 0.35790691218654574,
+      "psi": 0.8403488515826832,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 1,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 196,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 185,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 115
+    },
+    "code_version": "synthetic",
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 2.124190122188353e-05,
+     "ks_statistic": 0.14358255451713395,
+     "psi": 0.15702495845893083,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20663118
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": false,
+    "severity": "alert"
+   },
+   "family": "alert_skin_type_only",
+   "id": "alert_skin_type_only_03",
+   "record": {
+    "abstain_share": 0.17,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 3,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 100,
+      "ks_p": 1.1424754930976475e-13,
+      "ks_statistic": 0.3883800623052959,
+      "psi": 0.9155432620386755,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 1,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 2,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 194,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 175,
+     "site_x": 125,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6228,
+     "labelled": 277,
+     "melanoma_images": 65,
+     "month": 7
+    },
+    "drift": {
+     "alert": false,
+     "images": 300,
+     "ks_p": 5.248013161210613e-07,
+     "ks_statistic": 0.16514018691588786,
+     "psi": 0.1812188912389845,
+     "warning": true
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20664106
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites",
+     "new_images_counted_not_scored"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_00",
+   "record": {
+    "abstain_share": 0.48,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 19,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 138,
+      "ks_p": 5.5979829667226244e-64,
+      "ks_statistic": 0.6951645672490857,
+      "psi": 4.409782182276315,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 20,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 12,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 111,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 73,
+     "site_x": 227,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4983,
+     "labelled": 290,
+     "melanoma_images": 66,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 8.56942630620826e-64,
+     "ks_statistic": 0.5006853582554517,
+     "psi": 1.3403270590469922,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553303,
+     "new_since_last_run": 284
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20761103
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_01",
+   "record": {
+    "abstain_share": 0.33,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 15,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 134,
+      "ks_p": 5.330913099206034e-24,
+      "ks_statistic": 0.44776584367880223,
+      "psi": 1.150737734930769,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 25,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 19,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 107,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 64,
+     "site_x": 0,
+     "site_y": 236,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.3585,
+     "labelled": 293,
+     "melanoma_images": 45,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 8.742353746619113e-25,
+     "ks_statistic": 0.31582554517133954,
+     "psi": 0.622993681186836,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20762103
+  },
+  {
+   "expected": {
+    "accuracy_drop": true,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_z"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_02",
+   "record": {
+    "abstain_share": 0.33666666666666667,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 18,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 158,
+      "ks_p": 2.5033076812985613e-26,
+      "ks_statistic": 0.4346030994913049,
+      "psi": 1.1488273642863924,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 22,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 21,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 81,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 33,
+     "site_x": 0,
+     "site_y": 0,
+     "site_z": 267
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.4402,
+     "labelled": 299,
+     "melanoma_images": 42,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 4.922308563586434e-42,
+     "ks_statistic": 0.40975077881619937,
+     "psi": 0.9720120769817961,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20763104
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_x"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_03",
+   "record": {
+    "abstain_share": 0.4633333333333333,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 32,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 168,
+      "ks_p": 1.552974242449657e-42,
+      "ks_statistic": 0.5319092122830441,
+      "psi": 1.8533420613467155,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 22,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 20,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 58,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 14,
+     "site_x": 286,
+     "site_y": 0,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6376,
+     "labelled": 276,
+     "melanoma_images": 35,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 8.299473970037456e-66,
+     "ks_statistic": 0.5080996884735203,
+     "psi": 1.6059083115330668,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20764103
+  },
+  {
+   "expected": {
+    "accuracy_drop": false,
+    "alerting_skin_types": [
+     "II"
+    ],
+    "caveats": [
+     "skin_type_recorded_only_at_new_sites"
+    ],
+    "containment": "abstain_and_hold",
+    "delayed_accuracy_available": true,
+    "eight_d_report": true,
+    "new_sources": [
+     "site_y"
+    ],
+    "overall_alert": true,
+    "severity": "alert"
+   },
+   "family": "alert_overall_and_skin_type",
+   "id": "alert_overall_and_skin_type_04",
+   "record": {
+    "abstain_share": 0.25,
+    "bundle_version": "synthetic",
+    "by_skin_type": {
+     "I": {
+      "alert": false,
+      "images": 23,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "II": {
+      "alert": true,
+      "images": 136,
+      "ks_p": 3.1962303461686787e-13,
+      "ks_statistic": 0.3308960967564596,
+      "psi": 0.7085854155108295,
+      "warning": false
+     },
+     "III": {
+      "alert": false,
+      "images": 20,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "IV": {
+      "alert": false,
+      "images": 17,
+      "note": "counts only (under 100 images or not recorded)"
+     },
+     "not recorded": {
+      "alert": false,
+      "images": 104,
+      "note": "counts only (under 100 images or not recorded)"
+     }
+    },
+    "by_source": {
+     "client_test": 63,
+     "site_x": 0,
+     "site_y": 237,
+     "site_z": 0
+    },
+    "code_version": "synthetic",
+    "delayed_accuracy_of_month": {
+     "balanced_accuracy": 0.6287,
+     "labelled": 272,
+     "melanoma_images": 36,
+     "month": 7
+    },
+    "drift": {
+     "alert": true,
+     "images": 300,
+     "ks_p": 5.37626020338084e-19,
+     "ks_statistic": 0.27638629283489097,
+     "psi": 0.4712851114343245,
+     "warning": false
+    },
+    "job_run": "synthetic",
+    "live": {
+     "count": 553019,
+     "new_since_last_run": 0
+    },
+    "month": 8,
+    "run_utc": "synthetic",
+    "staged": "synthetic (staged) scenario: made-up scores, not real data"
+   },
+   "seed": 20765103
+  }
+ ],
+ "staged": "synthetic (staged) scenario: made-up scores, not real data"
+}
