@@ -1,0 +1,58 @@
+# Backlog item 15: detector quality on staged shifts (results/phase3/detector_quality/spec.json).
+# Approved by the owner on 2026-11-09 to run here, on a GitHub-hosted runner (free for a public
+# repo), not on Databricks. Run by hand only. It needs the champion bundle as a release asset
+# (config/champion_smoke.json bundle_asset) and silver's image IDs (config/detector_quality_ids.csv,
+# exported once by the owner), and fails, saying which is missing, until both exist. The images
+# come from the public ISIC Archive and are never committed; results.json (aggregates only, every
+# shift labelled staged) is uploaded as an artifact for the owner to commit.
+name: Detector quality (item 15)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  detector-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install (CPU torch)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[train]"
+      - name: Champion bundle (release asset, SHA-256 checked)
+        run: |
+          python - <<'PY'
+          import hashlib, json, sys, tarfile, urllib.request
+          asset = json.load(open("config/champion_smoke.json"))["bundle_asset"]
+          if not asset.get("url") or not asset.get("sha256"):
+              sys.exit("::error::waits for the champion bundle release asset "
+                       "(config/champion_smoke.json bundle_asset url and sha256)")
+          data = urllib.request.urlopen(asset["url"], timeout=300).read()
+          if hashlib.sha256(data).hexdigest() != asset["sha256"]:
+              sys.exit("::error::the bundle's SHA-256 does not match config/champion_smoke.json")
+          open("/tmp/bundle.tar.gz", "wb").write(data)
+          with tarfile.open("/tmp/bundle.tar.gz") as t:
+              t.extractall("/tmp/bundle", filter="data")
+          PY
+          echo "BUNDLE=$(dirname "$(find /tmp/bundle -name manifest.json | head -1)")" >> "$GITHUB_ENV"
+      - name: Fetch the images (ISIC Archive)
+        run: python scripts/detector_quality.py fetch --work /tmp/dq
+      - name: Score (CPU)
+        run: python scripts/detector_quality.py score --work /tmp/dq --bundle "$BUNDLE"
+      - name: Simulate
+        run: python scripts/detector_quality.py simulate --work /tmp/dq --out results.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: detector-quality-${{ github.run_id }}
+          path: |
+            results.json
+            /tmp/dq/manifest.csv
+            /tmp/dq/score_meta.json
