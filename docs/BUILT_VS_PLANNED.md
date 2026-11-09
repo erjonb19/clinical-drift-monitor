@@ -315,6 +315,21 @@ Known limits:
   committed metrics (`tests/test_eval_gate.py`), and a Docker build and smoke test with an
   untrained test bundle.
 
+### Backlog item 1: scoring after replay month 12 (2026-11-09)
+
+- `cdm.post_replay` and `results/phase3/monthly/post_replay_spec.json`: label-free signals (OOD
+  score, embedding drift on the baseline's top 5 components, predicted-class mix, top softmax
+  probability), a 100-image minimum and an explicit `scored` / `no_new_data` / `failed` status.
+  Tested on synthetic data only; not wired into the monthly notebook; nothing scored with it.
+
+### Backlog items 4 and 5: model targets and alerts (2026-11-09)
+
+- `cdm.slo`, `config/slo.json`, `scripts/slo_report.py`: three targets (melanoma referral
+  sensitivity over a pooled window with a Wilson interval, delayed balanced accuracy, abstain
+  share) and the alert path (a failed run with an "ALERT" message, which Databricks emails).
+  Wired into `databricks/notebooks/monthly_drift.py`; not deployed, so no alert has been sent.
+  Checked on the committed replay months only.
+
 ### Backlog item 18: input contract (2026-11-09)
 
 - `cdm.contract`: enforced checks (format, resolution, aspect ratio, near-duplicates) quarantine
