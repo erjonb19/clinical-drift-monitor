@@ -1,11 +1,29 @@
 # Backlog item 11: weekly, grouped dependency updates for Python, the Docker base image and the
 # GitHub Actions. Each group arrives as one PR, reviewed and CI-gated like any other change.
+# Ignore rules (owner, 2026-11-09): the API image stays on Python 3.11 (the repo's standard),
+# and the model and training stack gets patch releases only, since a minor release can change
+# the numbers behind committed results (flwr is held at 1.39.x on purpose: config/pip_audit_ignore.json).
 version: 2
 updates:
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: torch
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: torchvision
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: numpy
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: scikit-learn
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: flwr
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: mlflow
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: mlflow-skinny
+        update-types: [version-update:semver-major, version-update:semver-minor]
     groups:
       python:
         patterns: ["*"]
@@ -13,6 +31,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: python
+        update-types: [version-update:semver-major, version-update:semver-minor]
     groups:
       docker:
         patterns: ["*"]
