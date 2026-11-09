@@ -52,6 +52,17 @@ def test_unsafe_moves_are_refused(current: int, expect: int, target: int, why: s
         plan_move(VERSIONS, current, expect, target, decision_sha256="ab" * 32)
 
 
+class NoTags:
+    """A Unity Catalog search result: reading ``tags`` raises, as mlflow's does."""
+
+    def __init__(self, version: str) -> None:
+        self.version = version
+
+    @property
+    def tags(self) -> dict[str, str]:
+        raise Exception("UC Model Versions gathered through search_model_versions do not have tags")
+
+
 class FakeRegistry:
     """Stands in for mlflow.MlflowClient: the alias, the versions and the calls made."""
 
@@ -60,7 +71,12 @@ class FakeRegistry:
         self.calls: list[tuple[object, ...]] = []
 
     def search_model_versions(self, _: str) -> list[Any]:
-        return [SimpleNamespace(version=str(v["version"]), tags=v["tags"]) for v in VERSIONS]
+        """Like Unity Catalog's: the results have no readable tags."""
+        return [NoTags(str(v["version"])) for v in VERSIONS]
+
+    def get_model_version(self, _: str, version: str) -> Any:
+        tags = next(v["tags"] for v in VERSIONS if v["version"] == int(version))
+        return SimpleNamespace(version=version, tags=tags)
 
     def get_model_version_by_alias(self, _: str, __: str) -> Any:
         return SimpleNamespace(version=str(self.alias))

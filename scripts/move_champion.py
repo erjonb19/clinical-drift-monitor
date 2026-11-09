@@ -39,9 +39,11 @@ def client() -> Any:
 
 
 def versions(mc: Any) -> list[dict[str, Any]]:
+    """Unity Catalog's search results carry no tags (reading ``.tags`` raises), so the search
+    lists version numbers only and each version's tags are read with ``get_model_version``."""
+    numbers = sorted({int(v.version) for v in mc.search_model_versions(f"name='{NAME}'")})
     return [
-        {"version": int(v.version), "tags": dict(v.tags or {})}
-        for v in mc.search_model_versions(f"name='{NAME}'")
+        {"version": n, "tags": dict(mc.get_model_version(NAME, str(n)).tags or {})} for n in numbers
     ]
 
 

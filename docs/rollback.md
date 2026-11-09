@@ -38,11 +38,16 @@ has been made with this script.
 
 5. Check the served answers now match v1: run the `cdm-phase3-check-registered-model` job
    (`databricks/check_registered_model_job.json`) with its `bundle` parameter set to v1's
-   serving bundle (`/Volumes/workspace/cdm/raw/deploy/serving/d7191f4`). It loads
+   serving bundle (`/Volumes/workspace/cdm/raw/deploy/serving/d7191f4`) and its `out`
+   parameter set to `/Volumes/workspace/cdm/raw/results/phase3/registry` (not the default
+   `lineage` folder, whose `registered_model_check.json` is the committed record of v1's
+   registration and must not be overwritten). It loads
    `models:/workspace.cdm.skin_lesion_classifier@champion` and fails unless every label matches
    that bundle and every OOD score is within 1e-3.
-6. Commit `alias_moves.jsonl` (set its `check_after` to the job's run ID and result) and the
-   job's `registered_model_check.json`.
+6. Confirm the job's `registered_model_check.json` says `"version": 1` (the version rolled back
+   to; the job records the alias's version but does not assert it). Then commit it to
+   `results/phase3/registry/`, with `alias_moves.jsonl` (its `check_after` set to the job's
+   run ID and result).
 
 The API container serves a bundle file, not the alias; after a rollback, rebuild or redeploy it
 from the same bundle (`serving_bundle` job) so the API and the registry agree.
