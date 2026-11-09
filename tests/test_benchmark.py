@@ -14,6 +14,8 @@ def test_the_benchmark_names_its_hardware_model_and_limits() -> None:
     assert "never accuracy" in d["caveat"] and "not accuracy" in d["what"]
     assert d["hardware"]["cpu"] and d["hardware"]["logical_cpus"] and d["where"]
     assert d["software"]["torch"] and "differs_from_the_api_image" in d
+    assert d["networks_in_bundle"] == 1 and "not_the_champion" in d  # the champion runs three
+    assert d["code_version"] and d["uncommitted_changes"] is False
     assert [lv["users"] for lv in d["levels"]] == [1, 5, 20]
     for lv in d["levels"]:
         assert lv["status_codes"] == {"200": lv["requests"]}  # every request scored, none limited

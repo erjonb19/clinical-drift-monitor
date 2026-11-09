@@ -524,6 +524,23 @@ threshold).
   demo that exists is the cohort service's
   ([cdm-cohort-demo.streamlit.app](https://cdm-cohort-demo.streamlit.app/)), not this classifier.
 
+**Serving speed (backlog item 13), measured on the untrained CI test bundle, so serving speed
+only, never accuracy** ([`benchmark.json`](results/phase3/serving/benchmark.json); one network,
+where the champion runs three; this cloud session's 4-CPU Xeon VM, torch 2.15.0+cu132
+not the image's CPU build, no container; one uvicorn worker, the rate limiter opened wide):
+
+| Concurrent users | p50 ms | p95 ms | p99 ms | Images/s | Server memory peak (MB) |
+|---|---|---|---|---|---|
+| 1 | 16.8 | 25.1 | 50.7 | 54.29 | 874 |
+| 5 | 91.1 | 111.5 | 118.7 | 54.22 | 990 |
+| 20 | 458.8 | 513.3 | 529.1 | 43.47 | 1413 |
+
+Throughput stays flat while latency grows with the number of users: the single worker is
+CPU-bound and requests queue. The champion's numbers need its bundle (a release asset), and the
+dispatch-only `benchmark.yml` workflow repeats this on a GitHub runner. ONNX was not
+re-benchmarked (it failed parity, Phase 3), and int8 quantization needs the champion to check
+accuracy.
+
 ## Phase 3: the monthly drift job
 
 A Lakeflow job (`databricks/monthly_drift_job.json`, scheduled at 06:00 UTC on the 1st of each

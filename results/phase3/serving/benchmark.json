@@ -1,0 +1,90 @@
+{
+  "what": "serving speed of the API (backlog item 13); not accuracy",
+  "bundle_version": "ci-test-bundle-untrained",
+  "caveat": "the CI test bundle has untrained weights: these numbers measure serving speed only, never accuracy",
+  "measured_utc": "2026-11-09T04:35:52+00:00",
+  "code_version": "6124be5",
+  "uncommitted_changes": false,
+  "where": "Claude Code cloud session container (shared VM), 2026-11-09",
+  "hardware": {
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "logical_cpus": 4,
+    "memory_mb": 16086,
+    "os": "Linux-6.18.44-fc-v310-x86_64-with-glibc2.39"
+  },
+  "software": {
+    "python": "3.11.18",
+    "torch": "2.15.0+cu132",
+    "torch_threads": 4
+  },
+  "server": "scripts/bench_app.py: app/api/main.py's create_app, one uvicorn worker, rate limiter opened wide",
+  "image": "one synthetic 448x448 JPEG, sent repeatedly; 10 warm-up requests not counted",
+  "memory_after_warmup_kb": {
+    "VmHWM": 895196,
+    "VmRSS": 895196
+  },
+  "levels": [
+    {
+      "users": 1,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 16.8,
+        "p95": 25.1,
+        "p99": 50.7,
+        "mean": 18.4
+      },
+      "throughput_per_s": 54.29,
+      "wall_s": 3.7,
+      "server_memory_kb": {
+        "VmHWM": 895196,
+        "VmRSS": 895196
+      }
+    },
+    {
+      "users": 5,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 91.1,
+        "p95": 111.5,
+        "p99": 118.7,
+        "mean": 90.4
+      },
+      "throughput_per_s": 54.22,
+      "wall_s": 3.7,
+      "server_memory_kb": {
+        "VmHWM": 1014620,
+        "VmRSS": 1014620
+      }
+    },
+    {
+      "users": 20,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 458.8,
+        "p95": 513.3,
+        "p99": 529.1,
+        "mean": 455.4
+      },
+      "throughput_per_s": 43.47,
+      "wall_s": 4.6,
+      "server_memory_kb": {
+        "VmHWM": 1447664,
+        "VmRSS": 1447664
+      }
+    }
+  ],
+  "differs_from_the_api_image": "this run used torch 2.15.0+cu132 (a CUDA build from PyPI, run on CPU), not the image's torch 2.14.0 CPU build, and no Docker container; memory in particular may differ from the image (CUDA libraries load even when unused). The dispatch-only workflow .github/workflows/benchmark.yml measures on a GitHub runner with the CPU build.",
+  "reading": "throughput stays at about 43 to 54 images a second from 1 to 20 users while median latency grows from 16.8 ms to 458.8 ms: one uvicorn worker running the test bundle's single network on 4 CPUs is CPU-bound, so concurrent requests queue. More workers or a lighter model would be the levers; not measured here.",
+  "networks_in_bundle": 1,
+  "champion_networks": 3,
+  "not_the_champion": "the champion bundle runs three networks per image (the 3-seed ensemble); its per-image compute is larger, so its latency and throughput are not these numbers. Measuring it needs the champion bundle (a release asset the owner uploads, as for item 6)."
+}
