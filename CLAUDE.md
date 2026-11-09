@@ -7,7 +7,7 @@ A personal portfolio project: a skin lesion classifier served with a drift (out-
 
 PLAN.md is the source of truth for scope and order. Do not add features that are not in PLAN.md. If something in the plan turns out wrong or impossible, stop and tell me, and propose a change to PLAN.md before coding around it.
 
-**From 2026-11-06, `docs/BACKLOG.md` is the source of truth for what to work on and in what order: always work the first unchecked item.** PLAN.md stays as the record of Phases 0 to 3 and the research phases, and keeps the decisions log. Where this file still says PLAN.md or "phase", read BACKLOG.md and "backlog item".
+**From 2026-11-06, `docs/BACKLOG.md` is the source of truth for what to work on and in what order: always work the first unchecked item in its "Order of work" (owner, 2026-11-08; item numbers never change, the order is set there).** PLAN.md stays as the record of Phases 0 to 3 and the research phases, and keeps the decisions log. Where this file still says PLAN.md or "phase", read BACKLOG.md and "backlog item".
 
 ## How to work with me
 - Work one phase at a time, in order, starting with Phase 0. Do not start a phase until the previous phase's "Done when" is met and I have confirmed it.
