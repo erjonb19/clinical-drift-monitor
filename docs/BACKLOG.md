@@ -276,15 +276,19 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
     - **Built 2026-11-09 (repo side), waiting on the owner:** `.github/dependabot.yml` (pip,
       Docker, Actions; weekly, grouped); `.github/workflows/codeql.yml` (Python and Actions);
       in `ci.yml`, `pip-audit` 2.10.1 audits a freeze of the installed packages from its own
-      environment and fails on any finding not accepted in `config/pip_audit_ignore.json`, and a
-      second step shows it fails on a known-vulnerable pin (`tests/fixtures/`); in `docker.yml`,
+      environment (torch's `+cpu` labels stripped so it is audited, and any package it cannot audit
+      fails the step) and fails on any finding not accepted in `config/pip_audit_ignore.json`; a
+      second step shows it reports a known-vulnerable pin by name (`tests/fixtures/`); in `docker.yml`,
       Trivy (pinned to a commit) fails on fixable CRITICAL findings in the API image, with
       accepted ones in `.trivyignore` (none). **Accepted, for the owner to confirm:** four
       `cryptography` 46.0.7 findings, held back by `flwr` 1.39.0 (`federated` extra, training
       only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
       committed federated results. **Owner:** turn on branch protection for `main` (Settings,
-      Branches) requiring the `quality` and `image` checks; the first Dependabot PR appears on
-      its weekly run.
+      Branches) requiring the `quality`, `image` and CodeQL `analyze` checks; the first
+      Dependabot PR appears on its weekly run. **Gap:** Dependabot's Docker updates cover the
+      `FROM` image only, not the torch pin in the Dockerfile's `RUN` line or
+      `docker/constraints.txt`; those still need a manual bump (the Trivy scan reports their
+      vulnerabilities).
 
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
