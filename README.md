@@ -524,6 +524,26 @@ threshold).
   demo that exists is the cohort service's
   ([cdm-cohort-demo.streamlit.app](https://cdm-cohort-demo.streamlit.app/)), not this classifier.
 
+**Serving speed (backlog item 13), measured on the untrained CI test bundle, so serving speed
+only, never accuracy** ([`benchmark.json`](results/phase3/serving/benchmark.json); one network,
+where the champion runs three; this cloud session's 4-CPU Xeon VM, torch 2.15.0+cu132
+not the image's CPU build, no container; one uvicorn worker, the rate limiter opened wide):
+
+| Concurrent users | p50 ms | p95 ms | p99 ms | Images/s | Server memory peak (MB) |
+|---|---|---|---|---|---|
+| 1 | 18.4 | 24.0 | 27.0 | 52.54 | 874 |
+| 5 | 94.2 | 111.0 | 116.3 | 52.75 | 990 |
+| 20 | 458.6 | 510.1 | 529.5 | 43.63 | 1435 |
+
+Throughput stays flat while latency grows with the number of users: the machine is saturated
+(concurrent requests compute in parallel threads and compete for the CPUs; CPU use was not
+measured). Phase 3 measured PyTorch at about 93 ms per seed per image on Databricks serverless,
+about 5 times slower than this whole request; the gap is not explained (different hardware,
+torch build and threads). The champion's numbers need its bundle (a release asset), and the
+dispatch-only `benchmark.yml` workflow repeats this on a GitHub runner. ONNX was not
+re-benchmarked (it failed parity, Phase 3), and int8 quantization needs the champion to check
+accuracy.
+
 ## Phase 3: the monthly drift job
 
 A Lakeflow job (`databricks/monthly_drift_job.json`, scheduled at 06:00 UTC on the 1st of each

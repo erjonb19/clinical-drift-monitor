@@ -345,6 +345,16 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       README's serving section links it.
     - **Today:** an ONNX export exists (`results/phase3/onnx/`), not shipped (PyTorch serves);
       no load test.
+    - **Built 2026-11-09, partly measured:** `scripts/load_test.py` (1, 5 and 20 concurrent
+      users; p50, p95 and p99 latency, throughput, server memory), `scripts/bench_app.py` (the
+      API's own app with the rate limiter opened wide) and the dispatch-only
+      `.github/workflows/benchmark.yml`. **Measured** in this cloud session on the untrained
+      test bundle (one network; the champion runs three), so serving speed only:
+      `results/phase3/serving/benchmark.json`, linked from the README. The machine saturates
+      (throughput flat at about 44 to 53 images a second, latency growing with users); the mechanism and
+      a 5x gap with Phase 3's PyTorch timing are not explained.
+      **Not done:** the champion's numbers (needs its bundle), the ONNX export (failed parity in
+      Phase 3) and int8 quantization (needs the champion's accuracy on validation). Not ticked.
 
 14. [ ] **Batch scoring at scale.** Score a large slice of the public ISIC archive (for example
     50,000 images) on Databricks serverless as a distributed job (Spark with a pandas UDF, or
