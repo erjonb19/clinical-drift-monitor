@@ -10,7 +10,7 @@
     "each signal is compared with the validation baseline",
     "the status is one of scored, no_new_data or failed"
   ],
-  "thresholds_chosen_by": "Claude, 2026-11-09, before any such run; listed for the owner to confirm or change before the first one",
+  "thresholds_chosen_by": "Claude, 2026-11-09, before any such run; accepted by the owner on 2026-11-09 (see owner_confirmed)",
   "baseline": "the clients' validation split (3,210 images), scored once on CPU with the same bundle, as for the existing OOD baseline: OOD scores, penultimate-layer features, predicted classes and top softmax probabilities",
   "signals": {
     "ood": {

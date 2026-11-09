@@ -153,7 +153,7 @@ gets a **Blocked:** line with the reason.
      - **Built 2026-11-09 (code and spec, not run):** `cdm.post_replay` (new-ID diff; OOD,
        embedding, prediction-mix and confidence signals against the validation baseline; a
        100-image minimum; the explicit status) and `results/phase3/monthly/post_replay_spec.json`
-       (each test and threshold, chosen by Claude before any such run, for the owner to confirm).
+       (each test and threshold, chosen by Claude before any such run, accepted by the       owner on 2026-11-09).
        Tested on synthetic data in `tests/test_post_replay.py`. Not yet wired into
        `databricks/notebooks/monthly_drift.py`, and no month has been scored with it.
        **Owner decision, 2026-11-09:** the signal thresholds are accepted as specced.
@@ -214,8 +214,8 @@ gets a **Blocked:** line with the reason.
      the point estimate; delayed balanced accuracy 0.55, from 100 labelled images; abstain share
      0.15), `delayed_accuracy` now counts melanomas referred, and the monthly notebook checks the
      targets after saving each month. Checked on the committed replay
-     (`results/phase3/monthly/slo_replay.json`); the README has the table. **Waits on:** the
-     owner's confirmation of the three values, and a redeploy (the job pins the notebook's hash
+     (`results/phase3/monthly/slo_replay.json`); the README has the table. **Waits on:** a
+     redeploy (the values were accepted on 2026-11-09, below) (the job pins the notebook's hash
      and needs `config/slo.json` staged). **Melanoma sensitivity cannot be judged yet:** the
      replay records (months 1 to 12) have no referral count, and after the replay no labelled
      months arrive, so it stays "insufficient data" until months 1 to 12 are backfilled from
@@ -325,7 +325,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       Pillow 12.3.0 findings in the API image** (CVE-2026-112393, -112398, -112403, -112900,
       -96639; fixed in 13.0.0), including a heap overflow in JPEG decoding, which the API does
       on every upload; `docker/constraints.txt` now pins Pillow 13.0.0 (the full test suite
-      passes with it). **Accepted, for the owner to confirm:** four
+      passes with it). **Accepted (confirmed by the owner, 2026-11-09):** four
       `cryptography` 46.0.7 findings and one `uv` 0.11.33 finding, both held back by `flwr`
       1.39.0 (`federated` extra, training only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
       committed federated results. **Owner:** turn on branch protection for `main` (Settings,
@@ -430,7 +430,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       `/health`, and returns `input_flags`; tested in `tests/test_contract.py` and
       `tests/test_api.py` on synthetic images. **Not done:** the monthly job does not run the
       contract yet (it belongs with the post-month-12 scoring wiring), so no monthly counts
-      exist; thresholds for the owner to confirm; blur and exposure need calibrating (16-bit
+      exist; blur and exposure need calibrating (16-bit
       PNGs, for one, read as heavily clipped). Decompression bombs (over the 50M-pixel limit)
       are unreadable (400), as before; the check runs off the event loop and computes no hash
       in the API; flat images hash to zero and are never matched as duplicates.
