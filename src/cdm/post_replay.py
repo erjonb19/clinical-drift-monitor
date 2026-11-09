@@ -71,12 +71,11 @@ def prediction_mix(
     TVD >= MIX_TVD.
 
     Classes expected below MIN_EXPECTED images are pooled into one cell; if that cell is still
-    below MIN_EXPECTED it joins the smallest other cell. A class the baseline never predicted
-    stays in the pool, so the strongest shift (a new class) is tested, not dropped. With fewer
-    than two cells no chi-square test is possible: ``chi2_p`` is None and the TVD alone decides.
-    The same holds when the month predicts a class the baseline never predicted (expected 0):
-    merged into another cell it could hide behind a class that vanished, so the classes are
-    listed in ``unseen_classes`` and the TVD alone decides.
+    below MIN_EXPECTED it joins the smallest other cell. With fewer than two cells no
+    chi-square test is possible: ``chi2_p`` is None and the TVD alone decides. The same holds
+    when the month predicts a class the baseline never predicted (expected 0), the strongest
+    shift: merged into another cell it could hide behind a class that vanished, so those classes
+    are listed in ``unseen_classes`` and the TVD alone decides.
     """
     p = np.bincount(np.asarray(baseline), minlength=n_classes) / len(baseline)
     obs = np.bincount(np.asarray(current), minlength=n_classes).astype(np.float64)
