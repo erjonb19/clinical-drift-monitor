@@ -1,0 +1,58 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-11-09",
+  "status": "Code and spec only. No month after replay month 12 has been scored with it; the notebook wiring and the first run come later (the owner deploys).",
+  "plan": "docs/BACKLOG.md item 1, 'After replay month 12'",
+  "owner_rules_2026_11_06": "score whatever new ISIC images arrive; report drift signals that need no labels (input or embedding drift, prediction mix, confidence); a month with no new images records 'no new data' as an explicit status, never a silent green run; add labelled metrics later, when labels exist",
+  "confirmed_proposals_2026_11_06": [
+    "new images are public ISIC IDs the job has not seen before, kept in a table of seen IDs (no upload date is relied on)",
+    "they are scored with the model under the champion alias; each image's license and attribution is recorded",
+    "each signal is compared with the validation baseline",
+    "the status is one of scored, no_new_data or failed"
+  ],
+  "thresholds_chosen_by": "Claude, 2026-11-09, before any such run; listed for the owner to confirm or change before the first one",
+  "baseline": "the clients' validation split (3,210 images), scored once on CPU with the same bundle, as for the existing OOD baseline: OOD scores, penultimate-layer features, predicted classes and top softmax probabilities",
+  "signals": {
+    "ood": {
+      "test": "two-sample KS on the ensemble OOD score, and PSI over 10 baseline-decile bins (cdm.monitor.drift_test)",
+      "alert": "KS p < 0.01 and PSI >= 0.2",
+      "why": "the rule the replay already used (results/phase3/monthly/spec.json), so months before and after month 12 are judged alike"
+    },
+    "embedding": {
+      "test": "features projected onto the baseline's top principal components (fitted on the baseline only); per component, a KS test and PSI",
+      "components": 5,
+      "alert": "any component with KS p < 0.01 / 5 (Bonferroni) and PSI >= 0.2",
+      "psi": 0.2,
+      "why": "input drift that the single OOD score can miss; Bonferroni over 5 components bounds this signal's own false-alarm rate near 0.01 per month"
+    },
+    "prediction_mix": {
+      "test": "chi-square goodness of fit of the month's predicted classes against the baseline's predicted-class shares (classes expected below 5 images pooled), and the total variation distance",
+      "alert": "chi-square p < 0.01 and total variation distance >= 0.1",
+      "tvd": 0.1,
+      "why": "a shift in what the model says, without labels; the distance floor stops a large month alarming on a small change"
+    },
+    "confidence": {
+      "test": "two-sample KS on the top softmax probability, and the change in its median",
+      "alert": "KS p < 0.01 and |median change| >= 0.05",
+      "median_change": 0.05,
+      "why": "falling confidence is an early label-free sign of trouble; the floor stops small changes alarming"
+    }
+  },
+  "month_alert": "any of the four signals alerts. The month-level false-alarm rate can be up to about four times one test's; it is not measured yet (backlog item 15 measures false-alarm rates on staged shifts)",
+  "min_images": 100,
+  "below_min_images": "signals reported as counts only; none alerts",
+  "statuses": [
+    "scored",
+    "no_new_data",
+    "failed"
+  ],
+  "no_new_data": "written as an explicit row and results file with status no_new_data; the run is green but the status says nothing was scored",
+  "labels": "not used; labelled metrics are added when labels exist for new images",
+  "limits": [
+    "one image download was tested from Databricks Free Edition (2026-11-07); a month's batch was not",
+    "listing every public ISIC ID each month means paging through about 553,000 records; its cost is not measured"
+  ],
+  "min_images_why": "the repo's minimum for a reported metric (cdm.eval.MIN_GROUP); below about 100 images PSI over 10 bins is large even with no drift (a review's synthetic check averaged about 0.78 at 30 and 0.10 at 100, not a committed result), so the PSI floors would not mean anything",
+  "baseline_note": "the baseline is the clients' validation split, as for the replay's OOD baseline (results/phase3/monthly/spec.json); all statistics are fitted on it only, never on a month",
+  "prediction_mix_pooling": "classes expected below 5 images are pooled; a pooled cell still below 5 joins the smallest other cell; with fewer than two cells there is no chi-square test and the distance alone decides. A class the baseline never predicted is listed in unseen_classes, and then the distance alone decides (merged into another cell it could hide behind a class that vanished)"
+}
