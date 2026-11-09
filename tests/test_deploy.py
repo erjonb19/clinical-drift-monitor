@@ -220,3 +220,29 @@ def test_upsert_reads_the_job_back_after_reset(monkeypatch: pytest.MonkeyPatch) 
     with pytest.raises(SystemExit, match="not UNPAUSED"):
         module.upsert_job(cli, spec, dry_run=False)
     assert [c[:2] for c in calls] == [("jobs", "list"), ("jobs", "reset"), ("jobs", "get")]
+
+
+def test_the_guard_treats_a_missing_pause_status_as_the_api_default() -> None:
+    """The Jobs API omits pause_status for an unpaused schedule; that passes."""
+    check = deploy_module().check_deployed_schedule
+    spec = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    bare = {k: v for k, v in spec["schedule"].items() if k != "pause_status"}
+    check(spec, {"settings": {"schedule": bare}})
+
+
+def test_upsert_reads_back_the_created_job_by_its_new_id() -> None:
+    module = deploy_module()
+    spec = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    calls: list[tuple[str, ...]] = []
+
+    def cli(*args: str, ok_if: str | None = None) -> str:
+        calls.append(args)
+        if args[:2] == ("jobs", "list"):
+            return "[]"
+        if args[:2] == ("jobs", "create"):
+            return json.dumps({"job_id": 42})
+        return json.dumps({"settings": {"schedule": dict(spec["schedule"])}})
+
+    (REPO / "dist").mkdir(exist_ok=True)
+    assert module.upsert_job(cli, spec, dry_run=False) == "42"
+    assert calls[-1][:3] == ("jobs", "get", "42")
