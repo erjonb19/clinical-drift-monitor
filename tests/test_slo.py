@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -49,13 +50,13 @@ def test_months_without_the_referral_count_cannot_join() -> None:
     assert w["status"] == slo.INSUFFICIENT and "no melanoma_referred" in w["reason"]
 
 
-def test_judging_met_at_risk_and_broken() -> None:
-    def window(hits: int, n: int) -> dict[str, object]:
+def test_judged_on_the_point_estimate() -> None:
+    def window(hits: int, n: int) -> dict[str, Any]:
         return slo.melanoma_window([month(1, n, hits)], 100)
 
-    assert slo.judge_sensitivity(window(95, 100), 0.9) == slo.MET
-    assert slo.judge_sensitivity(window(86, 100), 0.9) == slo.AT_RISK  # interval reaches 0.9
-    assert slo.judge_sensitivity(window(80, 100), 0.9) == slo.BROKEN  # upper bound 0.87
+    assert slo.judge_sensitivity(window(90, 100), 0.9) == slo.MET
+    assert slo.judge_sensitivity(window(89, 100), 0.9) == slo.BROKEN
+    assert window(89, 100)["wilson_95"][1] > 0.9  # reported beside it, not used to judge
 
 
 def test_delayed_accuracy_counts_referred_melanomas() -> None:
@@ -70,18 +71,42 @@ def test_delayed_accuracy_counts_referred_melanomas() -> None:
 
 
 def test_alerts_name_each_broken_target_and_each_drift_alert() -> None:
-    record = {"month": 9, "abstain_share": 0.3, "drift": {"alert": True},
-              "by_skin_type": {"II": {"alert": True}, "I": {"alert": False}},
-              "delayed_accuracy_of_month": {"month": 8, "balanced_accuracy": 0.7}}  # fmt: skip
+    record = {
+        "month": 9,
+        "abstain_share": 0.3,
+        "drift": {"alert": True},
+        "by_skin_type": {"II": {"alert": True}, "I": {"alert": False}},
+        "delayed_accuracy_of_month": {"month": 8, "balanced_accuracy": 0.7},
+    }
     reasons = slo.alerts(record, slo.evaluate(record, [], CONFIG))
     assert reasons == [
         "target broken: abstain_share",
         "drift alert (overall)",
         "drift alert (skin type II)",
     ]
-    with pytest.raises(slo.AlertRaised, match="ALERT \\(not a job error\\), month 9"):
-        slo.raise_if_alerts(reasons, 9)
-    slo.raise_if_alerts([], 9)  # no alert, no exception
+    with pytest.raises(
+        slo.AlertRaised, match="ALERT \\(not a job error\\), month 9: target broken"
+    ):
+        slo.raise_if_alerts({8: [], 9: reasons})
+    slo.raise_if_alerts({8: [], 9: []})  # no alert, no exception
+
+
+def test_a_backfill_alerts_once_at_the_end_naming_every_month() -> None:
+    with pytest.raises(slo.AlertRaised) as err:
+        slo.raise_if_alerts({9: ["drift alert (overall)"], 10: ["target broken: abstain_share"]})
+    assert "month 9: drift alert (overall) | month 10: target broken" in str(err.value)
+    text = (REPO / "databricks" / "notebooks" / "monthly_drift.py").read_text("utf-8")
+    assert text.rindex("raise_if_alerts(raised)") > text.rindex("for m in range(START")
+
+
+def test_few_labels_are_insufficient_for_accuracy() -> None:
+    record = {
+        "month": 5,
+        "abstain_share": 0.05,
+        "delayed_accuracy_of_month": {"month": 4, "labelled": 40, "balanced_accuracy": 0.2},
+    }
+    out = slo.evaluate(record, [], CONFIG)["delayed_balanced_accuracy"]
+    assert out["status"] == slo.INSUFFICIENT
 
 
 def test_the_committed_replay_report_is_current() -> None:

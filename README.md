@@ -593,20 +593,22 @@ owner's confirmation (`config/slo.json`, `results/phase3/monthly/post_replay_spe
 | Drift, OOD score | KS p < 0.01 and PSI >= 0.2 (warning: PSI >= 0.1) | Both a significant and a sizeable shift; fixed in `results/phase3/monthly/spec.json` before the replay |
 | Drift by skin type (equity) | the same test, per Fitzpatrick type with at least 100 images that month | 100 is the repo's minimum for a reported metric; smaller groups are counts only. **Caveat:** skin type is recorded only at the two new hospitals, so these alerts have so far detected the site, not anything about skin type |
 | After replay month 12 | any of: the OOD test; embedding drift on the baseline's top 5 components (Bonferroni); predicted-class mix (chi-square p < 0.01 and total variation >= 0.1); confidence (KS p < 0.01 and median change >= 0.05), from 100 images | Label-free, since new images have no labels; spec committed before any such run |
-| Melanoma referral sensitivity | the 95% Wilson interval of the trailing window (at least 100 melanomas) lies wholly below 90% | The referral threshold was set for 95% on validation and reached 96.2% on the client test split, 81.8% and 78.8% at the new hospitals |
+| Melanoma referral sensitivity | the trailing window's sensitivity (at least 100 melanomas) is below 90%; its 95% Wilson interval is reported beside it | The referral threshold was set for 95% on validation and reached 96.2% on the client test split, 81.8% and 78.8% at the new hospitals |
 | Delayed balanced accuracy | below 0.55 | In-distribution replay months scored 59.1% to 68.4% at 300 images |
 | Abstain share | above 0.15 | 5% abstain by construction; 15% means about three times the review workload |
 
-**How an alert reaches the owner:** after saving a month's results, the job fails its run with a
-message starting "ALERT (not a job error)" and naming each breach; Databricks emails the owner
+**How an alert reaches the owner:** after saving every month of a run, the job fails the run with
+a message starting "ALERT (not a job error)" and naming each month's breaches; Databricks emails the owner
 on a failed run. Not yet deployed: the next monthly run with this code is the first.
 
 **On the committed replay** (real images in an order we chose, not drift over time;
 `results/phase3/monthly/slo_replay.json`): months 1 to 6 would not alert; months 7 and 8 alert
 on skin type II only (the site caveat above); month 9 breaks the abstain target and alerts on
 drift; months 10 to 12 also break the accuracy target. Melanoma referral sensitivity reads
-"insufficient data" for every replay month, because those records predate the referral count;
-the monthly job records it from the next run.
+"insufficient data" for every replay month, because those records predate the referral count.
+It stays so after the replay too, since new images have no labels, until months 1 to 12 are
+backfilled from the audit table's referral flags and their labels (a Databricks run for the
+owner).
 
 ## Phase 3: registry, retraining, CI gate and costs
 

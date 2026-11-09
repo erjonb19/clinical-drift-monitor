@@ -303,12 +303,16 @@ def run_month(month: int) -> dict:
     ]
     slo = evaluate(row, [h for h in history if h], SLO_CONFIG)
     (OUT / f"slo_{month:02d}.json").write_text(json.dumps(slo, indent=2) + "\n")
-    raise_if_alerts(alerts(row, slo), month)
+    row["alerts"] = alerts(row, slo)
     return row
 
 
 # COMMAND ----------
 
+raised: dict[int, list[str]] = {}
 for m in range(START, START + COUNT):
     r = run_month(int(m))
+    raised[int(m)] = r.get("alerts", [])
     print(m, json.dumps({k: r.get(k) for k in ("by_source", "drift", "abstain_share")}), flush=True)
+# Every month is saved before this; an alert then fails the run, which emails the owner.
+raise_if_alerts(raised)

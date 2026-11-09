@@ -21,7 +21,8 @@ from pathlib import Path
 from typing import Any
 
 CONFIG = Path(__file__).resolve().parents[2] / "config" / "slo.json"
-MET, BROKEN, AT_RISK, INSUFFICIENT = "met", "broken", "at_risk", "insufficient_data"
+MET, BROKEN, INSUFFICIENT = "met", "broken", "insufficient_data"
+MIN_LABELLED = 100  # the repo's minimum for a reported metric (cdm.eval.MIN_GROUP)
 
 
 class AlertRaised(RuntimeError):
@@ -82,13 +83,12 @@ def melanoma_window(
 
 
 def judge_sensitivity(window: dict[str, Any], target: float) -> str:
-    """Met when the point estimate reaches the target; broken when the whole interval is below
-    it (the upper bound misses); at risk in between; insufficient data stays so."""
+    """Judged on the point estimate (one of the owner's two options, 2026-11-06): met when it
+    reaches the target, broken when below; the Wilson interval is reported beside it.
+    Insufficient data stays so."""
     if window.get("status") == INSUFFICIENT:
         return INSUFFICIENT
-    if window["sensitivity"] >= target:
-        return MET
-    return BROKEN if window["wilson_95"][1] < target else AT_RISK
+    return MET if window["sensitivity"] >= target else BROKEN
 
 
 def evaluate(
@@ -111,6 +111,11 @@ def evaluate(
         out["delayed_balanced_accuracy"] = {
             "status": INSUFFICIENT,
             "reason": "labels not yet arrived",
+        }
+    elif int(delayed.get("labelled", 0)) < MIN_LABELLED:
+        out["delayed_balanced_accuracy"] = {
+            "status": INSUFFICIENT,
+            "reason": f"fewer than {MIN_LABELLED} labelled images",
         }
     else:
         value = float(delayed["balanced_accuracy"])
@@ -146,7 +151,9 @@ def alerts(record: dict[str, Any], slo: dict[str, Any]) -> list[str]:
     return reasons
 
 
-def raise_if_alerts(reasons: list[str], month: int) -> None:
-    """The alert path: fail the run with a message the owner can tell from a job error."""
-    if reasons:
-        raise AlertRaised(f"ALERT (not a job error), month {month}: " + "; ".join(reasons))
+def raise_if_alerts(by_month: dict[int, list[str]]) -> None:
+    """The alert path: fail the run with a message the owner can tell from a job error. Called
+    once at the end of a run, so a backfill of several months scores every month first."""
+    parts = [f"month {m}: " + "; ".join(r) for m, r in sorted(by_month.items()) if r]
+    if parts:
+        raise AlertRaised("ALERT (not a job error), " + " | ".join(parts))

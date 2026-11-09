@@ -5,13 +5,14 @@
       "value": 0.9,
       "measure": "share of labelled melanoma images the service flags for referral (melanoma probability >= the triage threshold 0.0638, results/phase2/triage/threshold.json), over the owner's trailing window of at least 100 melanoma images, with a 95% Wilson interval",
       "min_melanoma_images": 100,
-      "judged": "met when the point estimate is at least 0.90; broken when the interval's upper bound is below 0.90; at risk in between; insufficient data below 100 melanomas",
-      "why": "the threshold was set for 95% sensitivity on validation and reached 96.2% on the client test split, 81.8% at Buenos Aires and 78.8% at PAD-UFES-20 (results/phase2/triage/test.json); 90% leaves room for sampling noise and breaks at the new hospitals' level"
+      "judged": "on the point estimate (one of the owner's two options): met when at least 0.90, broken when below; the Wilson interval is reported beside it; insufficient data below 100 melanomas",
+      "why": "the threshold was set for 95% sensitivity on validation and reached 96.2% on the client test split, 81.8% at Buenos Aires and 78.8% at PAD-UFES-20 (results/phase2/triage/test.json); 90% leaves room for sampling noise and breaks at the new hospitals' level",
+      "can_it_be_judged_now": "not yet: the trailing window needs each labelled month's referral count, and the committed replay months (1 to 12) predate it. After the replay no labelled months arrive (new ISIC images have no labels), so the target stays 'insufficient data' until months 1 to 12 are backfilled from gold_prediction_audit (refer_melanoma) and their labels, a Databricks run for the owner"
     },
     "delayed_balanced_accuracy": {
       "value": 0.55,
       "measure": "the month's balanced accuracy once its labels arrive (reported by the next month's run)",
-      "judged": "broken when below 0.55",
+      "judged": "broken when below 0.55; insufficient data when fewer than 100 images are labelled",
       "why": "the replay's in-distribution months scored 59.1% to 68.4% at 300 images (results/phase3/monthly, months 2 to 5); 0.55 sits below that range to allow for noise and above the new hospitals' 35% to 45%"
     },
     "abstain_share": {
@@ -21,5 +22,5 @@
       "why": "the threshold is the validation 95th percentile, so about 5% abstain in distribution (5.7% to 7.3% in replay months 1 to 4); 15% means the review workload has about tripled"
     }
   },
-  "alert_path": "after writing its results the monthly job fails its run with a message starting 'ALERT (not a job error)' when any target is broken or any drift alert fired; Databricks emails the owner on a failed run. Not yet wired into the notebook or deployed."
+  "alert_path": "after every month of a run is saved, the monthly job fails the run with a message starting 'ALERT (not a job error)' that names each month's breaches (a broken target, an overall drift alert, a skin-type drift alert); Databricks emails the owner on a failed run. Wired into databricks/notebooks/monthly_drift.py; not yet deployed"
 }
