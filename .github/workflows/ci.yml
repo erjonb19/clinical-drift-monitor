@@ -1,8 +1,8 @@
 name: CI
 
 on:
+  # Every push to every branch (backlog item 6), and every pull request.
   push:
-    branches: [main]
   pull_request:
 
 concurrency:
