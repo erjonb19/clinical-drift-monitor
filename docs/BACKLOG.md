@@ -400,14 +400,19 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
     - **Owner decision, 2026-11-09:** approved, to run on a GitHub Actions runner (dispatch
       only), not on Databricks.
     - **Built 2026-11-09 (not run):** `cdm.detector_quality` (the shifts, applied to the exact
-      224 px input the model sees; month draws; time to detect; false-alarm rates with Wilson
+      224 px input the model sees; month draws; each sequence paired with a control that draws
+      the same months with no image altered; time to detect; false-alarm rates with Wilson
       intervals; the post-replay rule's false-alarm rate), `scripts/detector_quality.py` (fetch
-      from the ISIC Archive, score with the champion bundle on CPU, simulate) and
-      `.github/workflows/detector-quality.yml`. The spec's pool is amended before any run: the
-      runner fetches every dermoscopic image of the split's lesions, which can differ from
-      silver's labelled 3,262 and 3,210; it fails beyond 10% and records the counts. Tested on
-      synthetic scores (`tests/test_detector_quality.py`). **Waits on:** the champion bundle as
-      a release asset (as item 6 does); the workflow fails, saying so, until it exists.
+      by ID from the ISIC Archive, score with the champion bundle on CPU, simulate) and
+      `.github/workflows/detector-quality.yml`. The spec is amended before any run: the runner
+      fetches exactly silver's labelled 3,262 and 3,210 images by ID, and fails on any other
+      count. Tested on synthetic scores (`tests/test_detector_quality.py`). **Waits on:** (1)
+      the champion bundle as a release asset (as item 6 does), and (2) the owner exporting
+      `config/detector_quality_ids.csv` once from Databricks (`isic_id, split`; public IDs only;
+      the query is in the script):
+      `SELECT isic_id, split FROM workspace.cdm.silver_images WHERE role = 'client' AND split
+      IN ('val', 'test') AND label IS NOT NULL ORDER BY split, isic_id`. The workflow fails,
+      saying which is missing, until both exist.
 
 16. [ ] **Shadow scoring.** The challenger scores the same monthly images as the champion
     without serving them; both scores land in the audit table with the model version, and a

@@ -1,7 +1,8 @@
 # Backlog item 15: detector quality on staged shifts (results/phase3/detector_quality/spec.json).
 # Approved by the owner on 2026-11-09 to run here, on a GitHub-hosted runner (free for a public
 # repo), not on Databricks. Run by hand only. It needs the champion bundle as a release asset
-# (config/champion_smoke.json bundle_asset) and fails, saying so, until that exists. The images
+# (config/champion_smoke.json bundle_asset) and silver's image IDs (config/detector_quality_ids.csv,
+# exported once by the owner), and fails, saying which is missing, until both exist. The images
 # come from the public ISIC Archive and are never committed; results.json (aggregates only, every
 # shift labelled staged) is uploaded as an artifact for the owner to commit.
 name: Detector quality (item 15)

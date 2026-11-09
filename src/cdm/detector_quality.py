@@ -58,15 +58,18 @@ def draw_month(
     old: NDArray[np.bool_] | None = None,
     old_share: float | None = None,
     n: int = PER_MONTH,
+    known: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.int64], bool]:
     """Indices of one month's images, without replacement within the month. With ``old_share``
-    (the age-mix shift) that share of the month comes from patients aged 75 or over; if either
-    age group is too small for its share, that group is drawn with replacement, and the second
-    value says so."""
+    (the age-mix shift) that share of the month comes from patients aged 75 or over and the rest
+    from younger patients; images of unknown age (``known`` False) are left out of an age-mixed
+    month. If either age group is too small for its share, that group is drawn with
+    replacement, and the second value says so."""
     if old_share is None or old is None:
         return rng.choice(n_pool, size=n, replace=False), False
+    known = np.ones(n_pool, dtype=bool) if known is None else known
     k = round(old_share * n)
-    olds, youngs = np.flatnonzero(old), np.flatnonzero(~old)
+    olds, youngs = np.flatnonzero(old & known), np.flatnonzero(~old & known)
     replaced = k > len(olds) or n - k > len(youngs)
     a = rng.choice(olds, size=k, replace=k > len(olds))
     b = rng.choice(youngs, size=n - k, replace=n - k > len(youngs))
@@ -74,26 +77,33 @@ def draw_month(
 
 
 def run_sequence(
-    rng: np.random.Generator,
+    seed: Sequence[int],
     baseline: Array,
     unshifted: Array,
     shifted: Array | None = None,
     share: float = 0.0,
     old: NDArray[np.bool_] | None = None,
     old_share: float | None = None,
+    known: NDArray[np.bool_] | None = None,
 ) -> dict[str, Any]:
     """One 12-month sequence: months 1 to 3 unshifted, the shift from month 4 on. ``shifted``
     holds each pool image's score after the image shift (``share`` of each shifted month's
     images use it); ``old_share`` resamples shifted months by age instead. With neither it is
-    the no-shift control. Returns each month's alert and warning."""
+    the no-shift control. The months are drawn from one generator and the shifted images
+    picked from another, both from ``seed``, so the same seed without the shift is that
+    sequence's paired control: the same images every month, none altered."""
+    month_rng = np.random.default_rng([*seed, 0])
+    pick_rng = np.random.default_rng([*seed, 1])
     alerts, warnings, replaced = [], [], False
     for month in range(1, MONTHS + 1):
         shifting = month >= START
-        idx, rep = draw_month(rng, len(unshifted), old, old_share if shifting else None)
+        idx, rep = draw_month(
+            month_rng, len(unshifted), old, old_share if shifting else None, known=known
+        )
         replaced |= rep
         scores = unshifted[idx].copy()
         if shifting and shifted is not None and share > 0:
-            pick = rng.choice(len(idx), size=round(share * len(idx)), replace=False)
+            pick = pick_rng.choice(len(idx), size=round(share * len(idx)), replace=False)
             scores[pick] = shifted[idx[pick]]
         test = drift_test(baseline, scores)
         alerts.append(bool(test["alert"]))
@@ -109,9 +119,15 @@ def time_to_detect(alerts: Sequence[bool]) -> int | None:
     return None
 
 
-def summarise(sequences: Sequence[Mapping[str, Any]], control: bool = False) -> dict[str, Any]:
+def summarise(
+    sequences: Sequence[Mapping[str, Any]],
+    control: bool = False,
+    paired: Sequence[Mapping[str, Any]] | None = None,
+) -> dict[str, Any]:
     """Time to detect over the repeats, and the alarm rate on the unshifted months (months 1 to
-    3; every month for the control, which never shifts)."""
+    3; every month for the control, which never shifts). ``paired`` are the cell's paired
+    controls (the same seeds, no shift): how often they alert in months 4 to 12 is the chance
+    level a detection is read against."""
     unshifted = slice(0, MONTHS) if control else slice(0, START - 1)
     out: dict[str, Any] = {"repeats": len(sequences)}
     for key in ("alerts", "warnings"):
@@ -136,6 +152,18 @@ def summarise(sequences: Sequence[Mapping[str, Any]], control: bool = False) -> 
     else:
         out["months_after_month_3_alerting"] = float(
             np.mean([a for s in sequences for a in s["alerts"][START - 1 :]])
+        )
+    if paired is not None:
+        later = [a for s in paired for a in s["alerts"][START - 1 :]]
+        low, high = wilson(int(sum(later)), len(later))
+        out["paired_control_months_4_to_12_alert_rate"] = {
+            "months": len(later),
+            "rate": float(np.mean(later)),
+            "wilson_95": [low, high],
+        }
+        chance = [time_to_detect(s["alerts"]) for s in paired]
+        out["paired_control_share_alerting_by_month_12"] = sum(t is not None for t in chance) / len(
+            chance
         )
     out["any_month_with_replacement"] = any(s.get("with_replacement") for s in sequences)
     return out
@@ -165,9 +193,17 @@ def post_replay_false_alarms(
             "by_signal": {k: v / months for k, v in by_signal.items()}}  # fmt: skip
 
 
-def cell_seed(index: int, seed: int = 20261109) -> np.random.Generator:
+SEED = 20261109
+
+
+def cell_seed(index: int, seed: int = SEED) -> np.random.Generator:
     """The spec's seeding: numpy default_rng(20261109) combined with the cell's index."""
     return np.random.default_rng([seed, index])
+
+
+def sequence_seed(cell: int, repeat: int) -> list[int]:
+    """One sequence's seed: the spec's seed, the cell's index and the repeat."""
+    return [SEED, cell, repeat]
 
 
 def check_direction(baseline: Array, shifted_means: Mapping[str, float]) -> list[str]:

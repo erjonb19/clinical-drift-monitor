@@ -1,19 +1,21 @@
 """Backlog item 15: detector quality on staged shifts (results/phase3/detector_quality/spec.json).
 
 Approved by the owner on 2026-11-09 to run on a GitHub Actions runner (dispatch only,
-.github/workflows/detector-quality.yml), not on Databricks. Three steps, each resumable:
+.github/workflows/detector-quality.yml), not on Databricks. Three steps:
 
-  fetch     download the clients' validation and test images from the public ISIC Archive and
-            keep each one's 224 px model input as a lossless PNG
-            (lesion-level splits in config/splits_v1.csv), recording each image's license,
-            attribution, age and SHA-256; refuse a license outside config/sites.json, and refuse
-            pool sizes other than the spec's (a wrong pool would otherwise pass unnoticed)
+  fetch     download, from the public ISIC Archive by ID, exactly the images silver holds for the
+            clients' labelled validation and test splits (config/detector_quality_ids.csv,
+            exported once by the owner from silver_images; IDs only, no data), keep each one's
+            224 px model input as a lossless PNG, and record its license, attribution, age and
+            SHA-256; refuse a license outside config/sites.json, and refuse any count other
+            than silver's 3,210 and 3,262 (a wrong pool would otherwise pass unnoticed)
   score     score every image with the champion bundle on CPU: the validation baseline, the
             unshifted test pool and the pool under each staged image shift (cdm.detector_quality)
-  simulate  12-month sequences from the scores; write results.json (aggregates only, staged)
+  simulate  12-month sequences from the scores, each with its paired control (the same months,
+            no image altered); write results.json (aggregates only, staged)
 
 Images and scores stay in the work folder (never committed). Unverified until the first run:
-the ISIC search syntax (``lesion_id:<id>``), as in scripts/make_smoke_manifest.py.
+the ISIC endpoint's response fields, as in scripts/make_smoke_manifest.py.
 
 Usage: python scripts/detector_quality.py {fetch,score,simulate} --work <folder> [--bundle <dir>]
 """
@@ -29,7 +31,6 @@ import platform
 import subprocess
 import sys
 import time
-import urllib.parse
 import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
@@ -44,10 +45,14 @@ from cdm.splits import CLASSES
 REPO = Path(__file__).resolve().parents[1]
 SPEC_PATH = REPO / "results" / "phase3" / "detector_quality" / "spec.json"
 OUT = REPO / "results" / "phase3" / "detector_quality" / "results.json"
-SEARCH = "https://api.isic-archive.com/api/v2/images/search/?"
+IMAGE = "https://api.isic-archive.com/api/v2/images/{}/"
+IDS = REPO / "config" / "detector_quality_ids.csv"
 POOL_SIZES = {"val": 3210, "test": 3262}  # silver's labelled baseline and pool (the spec)
-POOL_TOLERANCE = 0.10  # the spec's: the fetched pool may differ from silver's by at most 10%
-FIELDS = ["isic_id", "lesion_id", "split", "license", "attribution", "age_approx", "sha256"]
+EXPORT_SQL = (
+    "SELECT isic_id, split FROM workspace.cdm.silver_images WHERE role = 'client' "
+    "AND split IN ('val', 'test') AND label IS NOT NULL ORDER BY split, isic_id"
+)
+FIELDS = ["isic_id", "split", "license", "attribution", "age_approx", "sha256"]
 
 
 def get(url: str) -> bytes:
@@ -63,55 +68,54 @@ def get(url: str) -> bytes:
     raise AssertionError("unreachable")
 
 
-def lesion_images(lesion_id: str) -> list[dict[str, Any]]:
-    url: str | None = SEARCH + urllib.parse.urlencode(
-        {"query": f"lesion_id:{lesion_id}", "limit": 100}
-    )
-    out: list[dict[str, Any]] = []
-    while url:
-        page = json.loads(get(url))
-        out += page.get("results", [])
-        url = page.get("next")
-    return out
+def wanted_ids() -> list[tuple[str, str]]:
+    """``(isic_id, split)`` for silver's labelled client validation and test images."""
+    if not IDS.exists():
+        sys.exit(
+            f"{IDS.relative_to(REPO)} is missing: the owner exports it once from Databricks "
+            f"(public ISIC IDs only) with: {EXPORT_SQL}"
+        )
+    with IDS.open(encoding="utf-8") as f:
+        rows = [(r["isic_id"], r["split"]) for r in csv.DictReader(f)]
+    counts = {s: sum(split == s for _, split in rows) for s in POOL_SIZES}
+    if counts != POOL_SIZES or len({i for i, _ in rows}) != len(rows):
+        sys.exit(f"{IDS.name}: counts {counts} or repeated IDs; silver's are {POOL_SIZES}")
+    return rows
 
 
 def fetch(work: Path) -> None:
     allowed = set(json.loads((REPO / "config" / "sites.json").read_text())["license_allowed"])
-    with (REPO / "config" / "splits_v1.csv").open(encoding="utf-8") as f:
-        lesions = [(r["lesion_id"], r["split"]) for r in csv.DictReader(f) if r["split"] != "train"]
     images = work / "images"
     images.mkdir(parents=True, exist_ok=True)
     manifest = work / "manifest.csv"
     done = {r["isic_id"] for r in csv.DictReader(manifest.open())} if manifest.exists() else set()
+    new_file = not manifest.exists() or manifest.stat().st_size == 0
     with manifest.open("a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, FIELDS)
-        if not done:
+        if new_file:
             writer.writeheader()
-        for lesion, split in sorted(lesions):
-            for image in lesion_images(lesion):
-                if image["isic_id"] in done:
-                    continue
-                meta = image.get("metadata", {})
-                clinical, acquisition = meta.get("clinical", {}), meta.get("acquisition", {})
-                if acquisition.get("image_type", "dermoscopic") != "dermoscopic":
-                    continue
-                if clinical.get("lesion_id", lesion) != lesion:
-                    raise RuntimeError(f"{image['isic_id']}: search returned another lesion")
-                license_ = image.get("copyright_license", "")
-                if license_ not in allowed:
-                    raise RuntimeError(f"{image['isic_id']}: license {license_!r} not allowed")
-                data = get(image["files"]["full"]["url"])
-                # Only the model's 224 px input is kept, losslessly: full-size files would
-                # not fit on a runner's disk. The original's SHA-256 is recorded.
-                with Image.open(io.BytesIO(data)) as original:
-                    dq.to_input(original).save(images / f"{image['isic_id']}.png")
-                writer.writerow({
-                    "isic_id": image["isic_id"], "lesion_id": lesion, "split": split,
-                    "license": license_, "attribution": image.get("attribution", ""),
-                    "age_approx": clinical.get("age_approx", ""),
-                    "sha256": hashlib.sha256(data).hexdigest(),
-                })  # fmt: skip
-                done.add(image["isic_id"])
+        for isic_id, split in wanted_ids():
+            if isic_id in done:
+                continue
+            image = json.loads(get(IMAGE.format(isic_id)))
+            if image.get("isic_id") != isic_id:
+                raise RuntimeError(f"{isic_id}: the archive returned {image.get('isic_id')}")
+            license_ = image.get("copyright_license", "")
+            if license_ not in allowed:
+                raise RuntimeError(f"{isic_id}: license {license_!r} not allowed")
+            data = get(image["files"]["full"]["url"])
+            # Only the model's 224 px input is kept, losslessly: full-size files would not fit
+            # on a runner's disk. The original's SHA-256 is recorded.
+            with Image.open(io.BytesIO(data)) as original:
+                dq.to_input(original).save(images / f"{isic_id}.png")
+            clinical = image.get("metadata", {}).get("clinical", {})
+            writer.writerow({
+                "isic_id": isic_id, "split": split, "license": license_,
+                "attribution": image.get("attribution", ""),
+                "age_approx": clinical.get("age_approx", ""),
+                "sha256": hashlib.sha256(data).hexdigest(),
+            })  # fmt: skip
+            done.add(isic_id)
     check_pool(manifest)
 
 
@@ -121,16 +125,13 @@ def read_manifest(work: Path) -> list[dict[str, str]]:
 
 
 def check_pool(manifest: Path) -> dict[str, int]:
-    """The fetched images are every dermoscopic image of the split's lesions, so they can differ
-    a little from silver's labelled images; a large difference means a broken fetch."""
+    """Exactly silver's labelled images, each once: anything else is not the spec's pool."""
     rows = list(csv.DictReader(manifest.open(encoding="utf-8")))
     counts = {s: sum(r["split"] == s for r in rows) for s in POOL_SIZES}
-    for split, n in counts.items():
-        if abs(n - POOL_SIZES[split]) > POOL_TOLERANCE * POOL_SIZES[split]:
-            raise RuntimeError(
-                f"{split}: {n} images fetched, silver has {POOL_SIZES[split]}: more than "
-                f"{POOL_TOLERANCE:.0%} apart, so the fetch is not the spec's pool; stop and check"
-            )
+    if counts != POOL_SIZES or len({r["isic_id"] for r in rows}) != len(rows):
+        raise RuntimeError(
+            f"fetched {counts} (or an image twice), silver has {POOL_SIZES}: not the spec's pool"
+        )
     return counts
 
 
@@ -202,25 +203,31 @@ def simulate(work: Path, repeats: int | None = None) -> dict[str, Any]:
     cells: list[dict[str, Any]] = []
     index = 0
 
-    def cell(**kwargs: Any) -> list[dict[str, Any]]:
+    def cell(**kwargs: Any) -> dict[str, Any]:
+        """The cell's sequences and, with the same seeds, their paired controls."""
         nonlocal index
-        rng = dq.cell_seed(index)
+        seeds = [dq.sequence_seed(index, r) for r in range(repeats)]
         index += 1
-        return [dq.run_sequence(rng, baseline, pool, **kwargs) for _ in range(repeats)]
+        runs = [dq.run_sequence(s, baseline, pool, **kwargs) for s in seeds]
+        paired = [dq.run_sequence(s, baseline, pool) for s in seeds]
+        return dq.summarise(runs, paired=paired)
 
-    control = cell()
+    seeds = [dq.sequence_seed(index, r) for r in range(repeats)]
+    index += 1
+    control = [dq.run_sequence(s, baseline, pool) for s in seeds]
     cells.append({"shift": "none (control)", **dq.summarise(control, control=True)})
     for kind in ("blur", "brightness", "jpeg"):
         for size in spec["shifts"][kind]["sizes"]:
             shifted = z[f"test/{kind}:{float(size):g}/ood"]
             for share in spec["share_shifted"]:
-                runs = cell(shifted=shifted, share=float(share))
-                cells.append({"shift": kind, "size": size, "share": share, **dq.summarise(runs)})
+                summary = cell(shifted=shifted, share=float(share))
+                cells.append({"shift": kind, "size": size, "share": share, **summary})
     ages = z["test/age"]
+    known = np.isfinite(ages)
     old = np.nan_to_num(ages, nan=-1) >= dq.OLD_AGE
     for p in spec["shifts"]["age_mix"]["sizes"]:
-        runs = cell(old=old, old_share=float(p))
-        cells.append({"shift": "age_mix", "size": p, "share": None, **dq.summarise(runs)})
+        summary = cell(old=old, old_share=float(p), known=known)
+        cells.append({"shift": "age_mix", "size": p, "share": None, **summary})
     first = {k: z[f"val/none:0/{k}"] for k in ("ood", "features")}
     base_set = {**first, "predicted": z["val/none:0/probs"].argmax(1),
                 "top_prob": z["val/none:0/probs"].max(1)}  # fmt: skip
@@ -251,13 +258,10 @@ def simulate(work: Path, repeats: int | None = None) -> dict[str, Any]:
         "built_utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "pool_images": int(len(pool)),
         "baseline_images": int(len(baseline)),
-        "silver_sizes": {
-            "pool": POOL_SIZES["test"],
-            "baseline": POOL_SIZES["val"],
-            "note": "fetched from ISIC at run time: every dermoscopic image of the "
-            "split's lesions, so the counts can differ from silver's labelled ones",
-        },
+        "pool_source": "silver's labelled client images, by ID (config/detector_quality_ids.csv), "
+        "fetched from the ISIC Archive at run time; the baseline is rescored on the runner",
         "pool_aged_75_or_over": int(old.sum()),
+        "pool_age_unknown": int((~known).sum()),
         "mean_ood": {"baseline": float(np.mean(baseline)), **means},
         "lower_than_baseline_mean": dq.check_direction(baseline, means),
         "cells": cells,

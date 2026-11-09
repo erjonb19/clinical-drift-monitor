@@ -53,13 +53,16 @@ def test_a_month_is_drawn_without_replacement_and_the_age_mix_holds() -> None:
 
 
 def test_no_shift_rarely_alarms_and_a_large_shift_is_found_in_the_first_month() -> None:
-    control = [dq.run_sequence(dq.cell_seed(0), BASELINE, POOL) for _ in range(20)]
+    control = [dq.run_sequence(dq.sequence_seed(0, r), BASELINE, POOL) for r in range(20)]
     summary = dq.summarise(control, control=True)
     assert summary["unshifted_month_alert_rate"]["months"] == 240
     assert summary["unshifted_month_alert_rate"]["rate"] < 0.05
     shifted = POOL + 6.0  # far outside the baseline: every shifted month should alert
-    runs = [dq.run_sequence(dq.cell_seed(1), BASELINE, POOL, shifted, 1.0) for _ in range(20)]
-    out = dq.summarise(runs)
+    seeds = [dq.sequence_seed(1, r) for r in range(20)]
+    runs = [dq.run_sequence(s, BASELINE, POOL, shifted, 1.0) for s in seeds]
+    paired = [dq.run_sequence(s, BASELINE, POOL) for s in seeds]
+    out = dq.summarise(runs, paired=paired)
+    assert out["paired_control_months_4_to_12_alert_rate"]["rate"] < 0.05
     assert out["share_detected"] == 1.0 and out["months_to_detect"]["median"] == 1.0
     assert out["unshifted_month_alert_rate"]["months"] == 60  # months 1 to 3 only
 
@@ -72,10 +75,14 @@ def test_time_to_detect_counts_from_the_first_shifted_month() -> None:
     assert dq.time_to_detect([False] * 5 + [True] * 7) == 3
 
 
-def test_cells_are_seeded_reproducibly() -> None:
-    a = dq.run_sequence(dq.cell_seed(7), BASELINE, POOL, POOL + 1, 0.5)
-    b = dq.run_sequence(dq.cell_seed(7), BASELINE, POOL, POOL + 1, 0.5)
-    assert a == b
+def test_sequences_are_seeded_and_paired_with_their_control() -> None:
+    """The same seed gives the same months with or without the shift, so the paired control
+    is the shifted sequence with no image altered (review of PR #75)."""
+    seed = dq.sequence_seed(7, 3)
+    a = dq.run_sequence(seed, BASELINE, POOL, POOL + 1, 0.5)
+    assert a == dq.run_sequence(seed, BASELINE, POOL, POOL + 1, 0.5)
+    tiny = POOL + 1e-9  # a shift too small to change any test: the paired run must match it
+    assert dq.run_sequence(seed, BASELINE, POOL, tiny, 0.5) == dq.run_sequence(seed, BASELINE, POOL)
 
 
 def test_a_shift_that_lowers_scores_is_listed_for_a_look() -> None:
@@ -125,17 +132,29 @@ def test_simulate_reports_every_cell_labelled_staged(tmp_path: Path) -> None:
     assert all(c["share_detected"] == 1.0 for c in blur)  # the fake blur adds 2 to every score
     assert result["post_replay_rule_false_alarms"]["months"] == 3 * 12
     assert "none:0" not in result["mean_ood"]
+    shifted_cells = [c for c in result["cells"] if c["shift"] != "none (control)"]
+    assert all("paired_control_months_4_to_12_alert_rate" in c for c in shifted_cells)
+    assert result["pool_age_unknown"] > 0  # the fake ages include unknowns, left out of age mixes
 
 
-def test_the_pool_check_refuses_a_broken_fetch(tmp_path: Path) -> None:
+def test_the_pool_check_wants_exactly_silvers_images(tmp_path: Path) -> None:
     script = _script()
     with (tmp_path / "manifest.csv").open("w", newline="") as f:
         writer = csv.DictWriter(f, script.FIELDS)
         writer.writeheader()
-        for i in range(3000):  # 3,000 test images, and no validation images at all
-            writer.writerow({"isic_id": f"ISIC_{i}", "split": "test"})
-    with pytest.raises(RuntimeError, match="val: 0 images"):
+        for i in range(3262 + 3210 - 1):  # one image short
+            writer.writerow({"isic_id": f"ISIC_{i}", "split": "test" if i < 3262 else "val"})
+    with pytest.raises(RuntimeError, match="not the spec's pool"):
         script.check_pool(tmp_path / "manifest.csv")
+
+
+def test_without_the_id_list_the_fetch_says_how_to_export_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    script = _script()
+    monkeypatch.setattr(script, "IDS", script.REPO / "config" / "no_such_file.csv")
+    with pytest.raises(SystemExit, match="silver_images"):
+        script.wanted_ids()
 
 
 def test_the_kept_input_gives_exactly_what_eval_transform_gives() -> None:
