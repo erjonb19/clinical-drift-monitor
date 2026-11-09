@@ -1,0 +1,51 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-11-09",
+  "status": "Code and spec only. No month after replay month 12 has been scored with it; the notebook wiring and the first run come later (the owner deploys).",
+  "plan": "docs/BACKLOG.md item 1, 'After replay month 12'",
+  "owner_rules_2026_11_06": "score whatever new ISIC images arrive; report drift signals that need no labels (input or embedding drift, prediction mix, confidence); a month with no new images records 'no new data' as an explicit status, never a silent green run; add labelled metrics later, when labels exist",
+  "confirmed_proposals_2026_11_06": [
+    "new images are public ISIC IDs the job has not seen before, kept in a table of seen IDs (no upload date is relied on)",
+    "they are scored with the model under the champion alias; each image's license and attribution is recorded",
+    "each signal is compared with the validation baseline",
+    "the status is one of scored, no_new_data or failed"
+  ],
+  "thresholds_chosen_by": "Claude, 2026-11-09, before any such run; listed for the owner to confirm or change before the first one",
+  "baseline": "the clients' validation split (3,210 images), scored once on CPU with the same bundle, as for the existing OOD baseline: OOD scores, penultimate-layer features, predicted classes and top softmax probabilities",
+  "signals": {
+    "ood": {
+      "test": "two-sample KS on the ensemble OOD score, and PSI over 10 baseline-decile bins (cdm.monitor.drift_test)",
+      "alert": "KS p < 0.01 and PSI >= 0.2",
+      "why": "the rule the replay already used (results/phase3/monthly/spec.json), so months before and after month 12 are judged alike"
+    },
+    "embedding": {
+      "test": "features projected onto the baseline's top principal components (fitted on the baseline only); per component, a KS test and PSI",
+      "components": 5,
+      "alert": "any component with KS p < 0.01 / 5 (Bonferroni) and PSI >= 0.2",
+      "psi": 0.2,
+      "why": "input drift that the single OOD score can miss; 5 components and Bonferroni keep the false-alarm rate near the OOD test's"
+    },
+    "prediction_mix": {
+      "test": "chi-square goodness of fit of the month's predicted classes against the baseline's predicted-class shares (classes expected below 5 images pooled), and the total variation distance",
+      "alert": "chi-square p < 0.01 and total variation distance >= 0.1",
+      "tvd": 0.1,
+      "why": "a shift in what the model says, without labels; the distance floor stops a large month from alarming on a trivial change"
+    },
+    "confidence": {
+      "test": "two-sample KS on the top softmax probability, and the change in its median",
+      "alert": "KS p < 0.01 and |median change| >= 0.05",
+      "median_change": 0.05,
+      "why": "falling confidence is the earliest label-free sign of trouble; the floor stops trivial changes alarming"
+    }
+  },
+  "month_alert": "any of the four signals alerts",
+  "min_images": 30,
+  "below_min_images": "signals reported as counts only; none alerts",
+  "statuses": ["scored", "no_new_data", "failed"],
+  "no_new_data": "written as an explicit row and results file with status no_new_data; the run is green but the status says nothing was scored",
+  "labels": "not used; labelled metrics are added when labels exist for new images",
+  "limits": [
+    "one image download was tested from Databricks Free Edition (2026-11-07); a month's batch was not",
+    "listing every public ISIC ID each month means paging through about 553,000 records; its cost is not measured"
+  ]
+}

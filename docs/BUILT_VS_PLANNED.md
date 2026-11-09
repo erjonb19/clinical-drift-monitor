@@ -315,6 +315,13 @@ Known limits:
   committed metrics (`tests/test_eval_gate.py`), and a Docker build and smoke test with an
   untrained test bundle.
 
+### Backlog item 1: scoring after replay month 12 (2026-11-09)
+
+- `cdm.post_replay` and `results/phase3/monthly/post_replay_spec.json`: label-free signals (OOD
+  score, embedding drift on the baseline's top 5 components, predicted-class mix, top softmax
+  probability), a 30-image minimum and an explicit `scored` / `no_new_data` / `failed` status.
+  Tested on synthetic data only; not wired into the monthly notebook; nothing scored with it.
+
 ## Not started
 
 - Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged

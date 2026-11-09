@@ -132,6 +132,12 @@ gets a **Blocked:** line with the reason.
         7 classes, and the confidence (top softmax probability). Each signal's test and
         threshold go in a spec committed before the first such run.
      3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
+     - **Built 2026-11-09 (code and spec, not run):** `cdm.post_replay` (new-ID diff; OOD,
+       embedding, prediction-mix and confidence signals against the validation baseline; a
+       30-image minimum; the explicit status) and `results/phase3/monthly/post_replay_spec.json`
+       (each test and threshold, chosen by Claude before any such run, for the owner to confirm).
+       Tested on synthetic data in `tests/test_post_replay.py`. Not yet wired into
+       `databricks/notebooks/monthly_drift.py`, and no month has been scored with it.
      4. **Limit checked (2026-11-07, the probe's manual run):** Free Edition restricts outbound
         internet to a set of trusted domains, but a serverless job reached both hosts it needs.
         For `ISIC_6589782` it read the metadata from `api.isic-archive.com` (license CC-BY,
