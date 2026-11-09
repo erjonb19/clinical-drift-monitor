@@ -1,6 +1,7 @@
 # Spec: an automated retraining pipeline (backlog item 17)
 
-Written by Claude on 2026-11-09 for the owner to approve. Nothing is built or run. Any GPU run
+Written by Claude on 2026-11-09; the separate `promote_challenger` job was approved by the
+owner the same day. Nothing is built or run. Any GPU run
 needs the owner's approval of its estimate first.
 
 ## Today
@@ -32,8 +33,8 @@ Item 3 decided that every challenger is registered, whether or not it is promote
    SHA-256 of the decision file just written and the run ID as tags, then ends the run. It
    never moves the `champion` alias.
 
-**Proposed change to item 17's wording (owner to approve):** the item asks for one job that
-"stops for a human approval". This spec proposes a separate job, `promote_challenger`, run by
+**Change to item 17's wording (approved by the owner, 2026-11-09; BACKLOG item 17 is updated):**
+the item asked for one job that "stops for a human approval". This spec uses a separate job, `promote_challenger`, run by
 hand by the owner, because this repo knows of no approval step inside a Lakeflow job on Free
 Edition (not checked against the docs). The human approval is the act of running it with two
 inputs:

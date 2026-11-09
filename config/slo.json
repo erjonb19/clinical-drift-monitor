@@ -1,5 +1,5 @@
 {
-  "what": "Model targets (SLOs) for backlog item 4, checked by cdm.slo each month. Values and how each is judged were set by Claude on 2026-11-09, before any month was judged with them, and are listed for the owner to confirm or change.",
+  "what": "Model targets (SLOs) for backlog item 4, checked by cdm.slo each month. Values and how each is judged were set by Claude on 2026-11-09, before any month was judged with them, and accepted by the owner on 2026-11-09 as provisional until replay months 1 to 12 are backfilled with their melanoma referral counts.",
   "targets": {
     "melanoma_referral_sensitivity": {
       "value": 0.9,
@@ -22,5 +22,6 @@
       "why": "the threshold is the validation 95th percentile, so about 5% abstain in distribution (5.7% to 7.3% in replay months 1 to 4); 15% means the review workload has about tripled"
     }
   },
-  "alert_path": "after every month of a run is saved, the monthly job fails the run with a message starting 'ALERT (not a job error)' that names each month's breaches (a broken target, an overall drift alert, a skin-type drift alert); Databricks emails the owner on a failed run. Wired into databricks/notebooks/monthly_drift.py; not yet deployed"
+  "alert_path": "after every month of a run is saved, the monthly job fails the run with a message starting 'ALERT (not a job error)' that names each month's breaches (a broken target, an overall drift alert, a skin-type drift alert); Databricks emails the owner on a failed run. Wired into databricks/notebooks/monthly_drift.py; not yet deployed",
+  "status": "provisional (owner, 2026-11-09): accepted values, to be revisited once the months 1 to 12 backfill exists"
 }

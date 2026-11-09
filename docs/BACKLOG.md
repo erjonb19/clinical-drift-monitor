@@ -99,6 +99,10 @@ gets a **Blocked:** line with the reason.
        its file recorded `run_utc` 2026-11-07T13:57:24+00:00 and `trigger_type` `one_time`. The
        success email arrived (started 2026-11-07 13:57:17 UTC, "Launched: Manually"). This tests
        the notebook and the email, not the scheduler: the scheduled fires are on 8 to 10 November.
+     - **Scheduled fires, 8 and 9 November: not reported.** The owner's answers for both days
+       (2026-11-09) arrived as unfilled placeholders ("[scheduled email arrived / no email]"), so
+       neither fire is recorded either way. To settle it: the run timeline for job
+       325029901767432 and the files in `/Volumes/workspace/cdm/raw/results/scheduler_probe/`.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
@@ -149,9 +153,10 @@ gets a **Blocked:** line with the reason.
      - **Built 2026-11-09 (code and spec, not run):** `cdm.post_replay` (new-ID diff; OOD,
        embedding, prediction-mix and confidence signals against the validation baseline; a
        100-image minimum; the explicit status) and `results/phase3/monthly/post_replay_spec.json`
-       (each test and threshold, chosen by Claude before any such run, for the owner to confirm).
+       (each test and threshold, chosen by Claude before any such run, accepted by the       owner on 2026-11-09).
        Tested on synthetic data in `tests/test_post_replay.py`. Not yet wired into
        `databricks/notebooks/monthly_drift.py`, and no month has been scored with it.
+       **Owner decision, 2026-11-09:** the signal thresholds are accepted as specced.
      4. **Limit checked (2026-11-07, the probe's manual run):** Free Edition restricts outbound
         internet to a set of trusted domains, but a serverless job reached both hosts it needs.
         For `ISIC_6589782` it read the metadata from `api.isic-archive.com` (license CC-BY,
@@ -209,13 +214,17 @@ gets a **Blocked:** line with the reason.
      the point estimate; delayed balanced accuracy 0.55, from 100 labelled images; abstain share
      0.15), `delayed_accuracy` now counts melanomas referred, and the monthly notebook checks the
      targets after saving each month. Checked on the committed replay
-     (`results/phase3/monthly/slo_replay.json`); the README has the table. **Waits on:** the
-     owner's confirmation of the three values, and a redeploy (the job pins the notebook's hash
+     (`results/phase3/monthly/slo_replay.json`); the README has the table. **Waits on:** a
+     redeploy (the values were accepted on 2026-11-09, below) (the job pins the notebook's hash
      and needs `config/slo.json` staged). **Melanoma sensitivity cannot be judged yet:** the
      replay records (months 1 to 12) have no referral count, and after the replay no labelled
      months arrive, so it stays "insufficient data" until months 1 to 12 are backfilled from
      `gold_prediction_audit.refer_melanoma` and their labels (a Databricks run for the owner;
      the backfill code is not written).
+   - **Owner decision, 2026-11-09:** the three values are accepted (melanoma referral
+     sensitivity 0.90 on the point estimate, delayed balanced accuracy 0.55, abstain share
+     0.15) and are **provisional until the months 1 to 12 backfill exists**; Claude writes the
+     backfill code, and the owner runs it on Databricks with the redeploy.
 
 5. [ ] **Alerts** when drift, or equity drift by Fitzpatrick skin type, crosses a threshold,
    with the thresholds and why.
@@ -316,7 +325,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       Pillow 12.3.0 findings in the API image** (CVE-2026-112393, -112398, -112403, -112900,
       -96639; fixed in 13.0.0), including a heap overflow in JPEG decoding, which the API does
       on every upload; `docker/constraints.txt` now pins Pillow 13.0.0 (the full test suite
-      passes with it). **Accepted, for the owner to confirm:** four
+      passes with it). **Accepted (confirmed by the owner, 2026-11-09):** four
       `cryptography` 46.0.7 findings and one `uv` 0.11.33 finding, both held back by `flwr`
       1.39.0 (`federated` extra, training only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
       committed federated results. **Owner:** turn on branch protection for `main` (Settings,
@@ -397,18 +406,20 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
 
 17. [ ] **An automated retraining pipeline.** One multi-task Databricks job: a drift alert
     with labels available starts it; train the challenger, evaluate it against the
-    pre-committed targets, register it (always, with its `model_gen` tag), then stop for a
-    human approval before the `champion` alias moves. **(ask)** before any GPU run.
-    - **Done when:** the job definition is committed and tested; one run (approved) goes from
-      trigger to a registered version and a decision file, with the alias moved only after
-      approval.
+    pre-committed targets, register it (always, with its `model_gen` tag), and end. The
+    `champion` alias moves only through a separate `promote_challenger` job that the owner runs
+    by hand with the registry version and the decision file's SHA-256 (the human approval;
+    wording changed by the owner on 2026-11-09, from "stop for a human approval" inside the one
+    job). **(ask)** before any GPU run.
+    - **Done when:** both job definitions are committed and tested; one run (approved) goes from
+      trigger to a registered version and a decision file, and the alias moves only when the
+      owner runs `promote_challenger`.
     - **Today:** the retraining loop ran once by hand (2026-10-23).
     - **Spec written 2026-11-09 (not built):** `docs/specs/item17-retraining-pipeline.md`: one
       job (trigger check, challenger training, evaluation, decision, then registration of every
-      challenger) and, as a **proposed change** to this
-      item's wording for the owner to approve, a separate `promote_challenger` job the owner
-      runs by hand with the decision file's hash. About 3 to 4 GPU DBUs a run (an
-      estimate); (ask) before any.
+      challenger) and a separate `promote_challenger` job the owner runs by hand with the
+      decision file's hash (**approved by the owner, 2026-11-09**; the item's wording above is
+      updated). About 3 to 4 GPU DBUs a run (an estimate); (ask) before any.
 
 18. [ ] **An input contract for images.** Before scoring, each image is checked: format,
     resolution, aspect ratio, blur, exposure, and duplicates (perceptual hash); failures are
@@ -427,10 +438,12 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       `/health`, and returns `input_flags`; tested in `tests/test_contract.py` and
       `tests/test_api.py` on synthetic images. **Not done:** the monthly job does not run the
       contract yet (it belongs with the post-month-12 scoring wiring), so no monthly counts
-      exist; thresholds for the owner to confirm; blur and exposure need calibrating (16-bit
+      exist; blur and exposure need calibrating (16-bit
       PNGs, for one, read as heavily clipped). Decompression bombs (over the 50M-pixel limit)
       are unreadable (400), as before; the check runs off the event loop and computes no hash
       in the API; flat images hash to zero and are never matched as duplicates.
+    - **Owner decision, 2026-11-09:** the contract's thresholds are accepted; blur and exposure
+      stay report-only until calibrated on real images.
 
 19. [ ] **Least-privilege access.** The watchdog's service principal (item 1) can view one job
     and nothing else, with the `users` group's default grants checked and removed; the
