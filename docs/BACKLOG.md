@@ -285,8 +285,8 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       -96639; fixed in 13.0.0), including a heap overflow in JPEG decoding, which the API does
       on every upload; `docker/constraints.txt` now pins Pillow 13.0.0 (the full test suite
       passes with it). **Accepted, for the owner to confirm:** four
-      `cryptography` 46.0.7 findings, held back by `flwr` 1.39.0 (`federated` extra, training
-      only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
+      `cryptography` 46.0.7 findings and one `uv` 0.11.33 finding, both held back by `flwr`
+      1.39.0 (`federated` extra, training only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
       committed federated results. **Owner:** turn on branch protection for `main` (Settings,
       Branches) requiring the `quality`, `image` and CodeQL `analyze` checks; the first
       Dependabot PR appears on its weekly run. **Gap:** Dependabot's Docker updates cover the
