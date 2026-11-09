@@ -849,6 +849,23 @@ above came from code `2ccda00`, which seeded after building the model. Current c
 first and runs deterministically, so a rerun is exactly repeatable but gives numbers within
 the variation shown in caveat 3, not these exact numbers.
 
+## Production readiness
+
+Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to check each is in
+[docs/PROGRESS.md](docs/PROGRESS.md). Items that are built but not done are not listed.
+
+- [x] Item 10: a reviewer feedback section with a fixed format (below).
+
+## Reviewer feedback
+
+What outside reviewers said and what changed because of it. Real entries only, added when a
+review happens; a test checks every row has all five fields.
+
+| Date | Reviewer role | Comment | What changed | Link |
+| --- | --- | --- | --- | --- |
+
+No entries yet.
+
 ## Honesty docs
 
 - [docs/BUILT_VS_PLANNED.md](docs/BUILT_VS_PLANNED.md): built, scaffolded, not started.
