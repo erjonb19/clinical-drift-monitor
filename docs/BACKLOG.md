@@ -397,6 +397,17 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       interval; the months reuse one pool, so it is not a population interval), with a no-shift
       control, and the post-replay rule's false-alarm rate. Needs a Databricks run: about 2.5
       CPU hours by Phase 3's batch-1 timing (an estimate), or less batched or on GPU.
+    - **Owner decision, 2026-11-09:** approved, to run on a GitHub Actions runner (dispatch
+      only), not on Databricks.
+    - **Built 2026-11-09 (not run):** `cdm.detector_quality` (the shifts, applied to the exact
+      224 px input the model sees; month draws; time to detect; false-alarm rates with Wilson
+      intervals; the post-replay rule's false-alarm rate), `scripts/detector_quality.py` (fetch
+      from the ISIC Archive, score with the champion bundle on CPU, simulate) and
+      `.github/workflows/detector-quality.yml`. The spec's pool is amended before any run: the
+      runner fetches every dermoscopic image of the split's lesions, which can differ from
+      silver's labelled 3,262 and 3,210; it fails beyond 10% and records the counts. Tested on
+      synthetic scores (`tests/test_detector_quality.py`). **Waits on:** the champion bundle as
+      a release asset (as item 6 does); the workflow fails, saying so, until it exists.
 
 16. [ ] **Shadow scoring.** The challenger scores the same monthly images as the champion
     without serving them; both scores land in the audit table with the model version, and a
