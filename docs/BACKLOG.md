@@ -305,6 +305,26 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       `gh api repos/erjonb19/clinical-drift-monitor/branches/main --jq .protected` is `true`.
     - **Today:** none of these; `main` is unprotected; CI runs on pushes to `main` and on pull
       requests only.
+    - **Built 2026-11-09 (repo side), waiting on the owner:** `.github/dependabot.yml` (pip,
+      Docker, Actions; weekly, grouped); `.github/workflows/codeql.yml` (Python and Actions);
+      in `ci.yml`, `pip-audit` 2.10.1 audits a freeze of the installed packages from its own
+      environment (torch's `+cpu` labels stripped so it is audited, and any package it cannot audit
+      fails the step) and fails on any finding not accepted in `config/pip_audit_ignore.json`; a
+      second step shows it reports a known-vulnerable pin by name (`tests/fixtures/`); in `docker.yml`,
+      Trivy (pinned to a commit) fails on fixable CRITICAL findings in the API image, with
+      accepted ones in `.trivyignore` (none). **Its first run found five fixable CRITICAL
+      Pillow 12.3.0 findings in the API image** (CVE-2026-112393, -112398, -112403, -112900,
+      -96639; fixed in 13.0.0), including a heap overflow in JPEG decoding, which the API does
+      on every upload; `docker/constraints.txt` now pins Pillow 13.0.0 (the full test suite
+      passes with it). **Accepted, for the owner to confirm:** four
+      `cryptography` 46.0.7 findings and one `uv` 0.11.33 finding, both held back by `flwr`
+      1.39.0 (`federated` extra, training only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
+      committed federated results. **Owner:** turn on branch protection for `main` (Settings,
+      Branches) requiring the `quality`, `image` and CodeQL `analyze` checks; the first
+      Dependabot PR appears on its weekly run. **Gap:** Dependabot's Docker updates cover the
+      `FROM` image only, not the torch pin in the Dockerfile's `RUN` line or
+      `docker/constraints.txt`; those still need a manual bump (the Trivy scan reports their
+      vulnerabilities).
 
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each

@@ -40,3 +40,28 @@ jobs:
 
       - name: Test
         run: pytest
+
+      # Backlog item 11: audit the installed dependencies from a separate tool environment, so
+      # pip-audit's own packages are not in the audit. pip-audit fails on every finding except
+      # the accepted ones in config/pip_audit_ignore.json (each with its reason). Local version
+      # labels (torch's "+cpu") are stripped, because pip-audit cannot look them up on PyPI and
+      # would otherwise skip them silently; any package it still could not audit fails the step.
+      - name: Dependency audit
+        run: |
+          set -o pipefail
+          python -m venv /tmp/audit
+          /tmp/audit/bin/pip install -q pip-audit==2.10.1
+          pip freeze --exclude-editable | sed -E 's/\+[A-Za-z0-9.]+$//' > /tmp/requirements-frozen.txt
+          ignores=$(python -c "import json; d = json.load(open('config/pip_audit_ignore.json')); print(' '.join('--ignore-vuln ' + i for a in d['accepted'] for i in a['ids']))")
+          /tmp/audit/bin/pip-audit --disable-pip --no-deps --progress-spinner off -r /tmp/requirements-frozen.txt $ignores 2>&1 | tee /tmp/audit.txt
+          if grep -q "could not be audited" /tmp/audit.txt; then echo "::error::pip-audit skipped packages it could not audit"; exit 1; fi
+
+      # The audit must catch a known-vulnerable pin by name, not merely exit non-zero (a network
+      # error would do that too).
+      - name: The audit catches a known-vulnerable pin
+        run: |
+          /tmp/audit/bin/pip-audit --disable-pip --no-deps --progress-spinner off -r tests/fixtures/vulnerable_requirements.txt > /tmp/vulnerable.txt 2>&1 && status=0 || status=$?
+          cat /tmp/vulnerable.txt
+          if [ "$status" -ne 1 ] || ! grep -qE "^requests +2\.19\.0 " /tmp/vulnerable.txt; then
+            echo "::error::pip-audit did not report the known-vulnerable pin requests 2.19.0"; exit 1
+          fi
