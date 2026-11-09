@@ -19,18 +19,24 @@ Item 3 decided that every challenger is registered, whether or not it is promote
    status `no_trigger`, written to `gold_model_decisions`.
 2. **train_challenger** (GPU, one A10 task, the deadline from `retrain.py`): fine-tunes a
    challenger per champion seed, as `retrain.py` does today, after the champion check passes.
+   **A change from today:** it always saves the challenger's checkpoints to the volume (today
+   they are saved only on promotion), so every challenger can be registered.
 3. **evaluate** (GPU or CPU): scores champion and challenger on the same held-out images
    (patient-disjoint new-site images and client validation) and applies the pre-committed rule
    (`results/phase3/retrain/spec.json`: gain of at least 2.0 points, paired lower bound above
    0, client validation change of at least -1.0 point), plus the model targets of item 4
-   (`config/slo.json`) on the held-out set.
-4. **register** (CPU): always registers the challenger in Unity Catalog with `model_gen`, the
-   decision file's SHA-256 and the run ID as tags. It never moves the `champion` alias.
-5. **decide** (CPU): writes `decision.json` and a row in `gold_model_decisions` with
-   `promoted_by_rule` true or false, and ends the run.
+   (`config/slo.json`, built 2026-11-09) on the held-out set.
+4. **decide** (CPU): writes `decision.json` and a row in `gold_model_decisions` with
+   `promoted_by_rule` true or false.
+5. **register** (CPU): always registers the challenger in Unity Catalog with `model_gen`, the
+   SHA-256 of the decision file just written and the run ID as tags, then ends the run. It
+   never moves the `champion` alias.
 
-**Promotion is a separate job**, `promote_challenger`, run by hand by the owner. Lakeflow jobs
-have no approval step, so the human approval is the act of running this job with two inputs:
+**Proposed change to item 17's wording (owner to approve):** the item asks for one job that
+"stops for a human approval". This spec proposes a separate job, `promote_challenger`, run by
+hand by the owner, because this repo knows of no approval step inside a Lakeflow job on Free
+Edition (not checked against the docs). The human approval is the act of running it with two
+inputs:
 the registry version to promote and the decision file's SHA-256. It refuses unless that
 decision says `promoted_by_rule: true` and its hash matches; then it moves `champion`, rebuilds
 the serving bundle, and writes the old and new versions to `gold_model_decisions`, so the
@@ -52,7 +58,8 @@ version and a decision file; the alias moves only after the owner runs `promote_
 ## Cost (estimate, not a result)
 
 The 2026-10-23 run used one A10 task under a 45-minute deadline (60-minute hard timeout);
-at about 0.065 GPU DBU a minute that is about 3 to 4 GPU DBUs a run. **(ask)** before any.
+at about 0.065 GPU DBU a minute that is about 3 to 4 GPU DBUs a run, before start-up time and
+any GPU time for the evaluate task. **(ask)** before any.
 
 ## Open for the owner
 
