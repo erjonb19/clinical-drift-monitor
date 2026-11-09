@@ -1,0 +1,354 @@
+{
+  "what": "model targets checked on the committed 12-month replay (real images, order chosen by us)",
+  "built_by": "scripts/slo_report.py",
+  "targets": "config/slo.json",
+  "months": [
+    {
+      "month": 1,
+      "by_source": {
+        "client_test": 300,
+        "buenos_aires": 0,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "months": [],
+          "melanoma_images": 0,
+          "reason": "fewer than 100 melanoma images in the labelled months",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "status": "insufficient_data",
+          "reason": "labels not yet arrived"
+        },
+        "abstain_share": {
+          "value": 0.056666666666666664,
+          "target": 0.15,
+          "status": "met"
+        }
+      },
+      "alerts": []
+    },
+    {
+      "month": 2,
+      "by_source": {
+        "client_test": 300,
+        "buenos_aires": 0,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 1,
+          "value": 0.6429566240846245,
+          "target": 0.55,
+          "status": "met"
+        },
+        "abstain_share": {
+          "value": 0.06333333333333334,
+          "target": 0.15,
+          "status": "met"
+        }
+      },
+      "alerts": []
+    },
+    {
+      "month": 3,
+      "by_source": {
+        "client_test": 300,
+        "buenos_aires": 0,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 2,
+          "value": 0.6840166903407692,
+          "target": 0.55,
+          "status": "met"
+        },
+        "abstain_share": {
+          "value": 0.07333333333333333,
+          "target": 0.15,
+          "status": "met"
+        }
+      },
+      "alerts": []
+    },
+    {
+      "month": 4,
+      "by_source": {
+        "client_test": 300,
+        "buenos_aires": 0,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 3,
+          "value": 0.5910713198670328,
+          "target": 0.55,
+          "status": "met"
+        },
+        "abstain_share": {
+          "value": 0.07333333333333333,
+          "target": 0.15,
+          "status": "met"
+        }
+      },
+      "alerts": []
+    },
+    {
+      "month": 5,
+      "by_source": {
+        "client_test": 240,
+        "buenos_aires": 60,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 4,
+          "value": 0.6579071043909611,
+          "target": 0.55,
+          "status": "met"
+        },
+        "abstain_share": {
+          "value": 0.08666666666666667,
+          "target": 0.15,
+          "status": "met"
+        }
+      },
+      "alerts": []
+    },
+    {
+      "month": 6,
+      "by_source": {
+        "client_test": 240,
+        "buenos_aires": 60,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 5,
+          "value": 0.7024570076477795,
+          "target": 0.55,
+          "status": "met"
+        },
+        "abstain_share": {
+          "value": 0.09333333333333334,
+          "target": 0.15,
+          "status": "met"
+        }
+      },
+      "alerts": []
+    },
+    {
+      "month": 7,
+      "by_source": {
+        "client_test": 150,
+        "buenos_aires": 150,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 6,
+          "value": 0.6164763289036544,
+          "target": 0.55,
+          "status": "met"
+        },
+        "abstain_share": {
+          "value": 0.10333333333333333,
+          "target": 0.15,
+          "status": "met"
+        }
+      },
+      "alerts": [
+        "drift alert (skin type II)"
+      ]
+    },
+    {
+      "month": 8,
+      "by_source": {
+        "client_test": 150,
+        "buenos_aires": 150,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 7,
+          "value": 0.6762823935958838,
+          "target": 0.55,
+          "status": "met"
+        },
+        "abstain_share": {
+          "value": 0.1,
+          "target": 0.15,
+          "status": "met"
+        }
+      },
+      "alerts": [
+        "drift alert (skin type II)"
+      ]
+    },
+    {
+      "month": 9,
+      "by_source": {
+        "client_test": 0,
+        "buenos_aires": 300,
+        "pad_ufes": 0
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 8,
+          "value": 0.5918419212818623,
+          "target": 0.55,
+          "status": "met"
+        },
+        "abstain_share": {
+          "value": 0.20333333333333334,
+          "target": 0.15,
+          "status": "broken"
+        }
+      },
+      "alerts": [
+        "target broken: abstain_share",
+        "drift alert (overall)",
+        "drift alert (skin type II)"
+      ]
+    },
+    {
+      "month": 10,
+      "by_source": {
+        "client_test": 0,
+        "buenos_aires": 0,
+        "pad_ufes": 300
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 9,
+          "value": 0.4474304117224876,
+          "target": 0.55,
+          "status": "broken"
+        },
+        "abstain_share": {
+          "value": 0.2833333333333333,
+          "target": 0.15,
+          "status": "broken"
+        }
+      },
+      "alerts": [
+        "target broken: delayed_balanced_accuracy",
+        "target broken: abstain_share",
+        "drift alert (overall)",
+        "drift alert (skin type II)"
+      ]
+    },
+    {
+      "month": 11,
+      "by_source": {
+        "client_test": 0,
+        "buenos_aires": 0,
+        "pad_ufes": 300
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 10,
+          "value": 0.35071005861694016,
+          "target": 0.55,
+          "status": "broken"
+        },
+        "abstain_share": {
+          "value": 0.2866666666666667,
+          "target": 0.15,
+          "status": "broken"
+        }
+      },
+      "alerts": [
+        "target broken: delayed_balanced_accuracy",
+        "target broken: abstain_share",
+        "drift alert (overall)",
+        "drift alert (skin type II)"
+      ]
+    },
+    {
+      "month": 12,
+      "by_source": {
+        "client_test": 0,
+        "buenos_aires": 0,
+        "pad_ufes": 300
+      },
+      "slo": {
+        "melanoma_referral_sensitivity": {
+          "status": "insufficient_data",
+          "reason": "the latest labelled month has no melanoma_referred count",
+          "target": 0.9
+        },
+        "delayed_balanced_accuracy": {
+          "month": 11,
+          "value": 0.38245916420120973,
+          "target": 0.55,
+          "status": "broken"
+        },
+        "abstain_share": {
+          "value": 0.2866666666666667,
+          "target": 0.15,
+          "status": "broken"
+        }
+      },
+      "alerts": [
+        "target broken: delayed_balanced_accuracy",
+        "target broken: abstain_share",
+        "drift alert (overall)",
+        "drift alert (skin type II)"
+      ]
+    }
+  ]
+}

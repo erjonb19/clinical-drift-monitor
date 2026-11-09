@@ -322,6 +322,14 @@ Known limits:
   probability), a 100-image minimum and an explicit `scored` / `no_new_data` / `failed` status.
   Tested on synthetic data only; not wired into the monthly notebook; nothing scored with it.
 
+### Backlog items 4 and 5: model targets and alerts (2026-11-09)
+
+- `cdm.slo`, `config/slo.json`, `scripts/slo_report.py`: three targets (melanoma referral
+  sensitivity over a pooled window with a Wilson interval, delayed balanced accuracy, abstain
+  share) and the alert path (a failed run with an "ALERT" message, which Databricks emails).
+  Wired into `databricks/notebooks/monthly_drift.py`; not deployed, so no alert has been sent.
+  Checked on the committed replay months only.
+
 ## Not started
 
 - Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
