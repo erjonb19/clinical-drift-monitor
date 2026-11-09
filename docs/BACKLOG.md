@@ -379,13 +379,16 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       of the Python group is merged when its next PR is green. The owner turns on branch
       protection (`quality`, `image`, `analyze`).
     - **Dependabot's next Python group (#74, 2026-11-09): not merged, CI red.** `quality`
-      failed: pip could not resolve the dependencies (`ResolutionImpossible`). It also drops the
-      `+cpu` label from torch 2.14.1 in `docker/constraints.txt` (the new test fails on it) and
-      raises several lower bounds by a major version (`mlflow-skinny` 2.16 to 3.18,
-      `transformers` 4 to 5, `duckdb` 1 to 2), so the patch-only rule did not stop floor raises
-      in `pyproject.toml`. Left open for the owner; a fix is to set the pip entry's
-      `versioning-strategy` (for example `lockfile-only` or `increase-if-necessary`) and to bump
-      torch by hand in both the Dockerfile and the constraints.
+      failed at install: pip could not resolve the dependencies (`ResolutionImpossible`),
+      because the PR pins `uvicorn==0.54.0` and `flwr` 1.39.0 (held on purpose) needs
+      `uvicorn<0.50.0`. It also drops the `+cpu` label from torch 2.14.1 in
+      `docker/constraints.txt` (the new test would fail on it; CI stopped before the tests),
+      raises lower bounds by a major version (`mlflow-skinny` 2.16 to 3.18, `duckdb` 1 to 2) and
+      moves the `transformers` pin from 4 to 5, so the patch-only rule did not stop floor raises
+      in `pyproject.toml`. Left open for the owner. Possible fixes: set the pip entry's
+      `versioning-strategy` to `increase-if-necessary` (keeps `>=` floors; exact pins are still
+      bumped), ignore uvicorn minor updates while flwr is held at 1.39.x, and bump torch by hand
+      in both the Dockerfile and the constraints.
 
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
