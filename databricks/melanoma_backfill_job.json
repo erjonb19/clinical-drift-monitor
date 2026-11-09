@@ -15,7 +15,9 @@
       "spec": {
         "environment_version": "4",
         "dependencies": [
-          "STAGE_FIRST"
+          "STAGE_FIRST",
+          "torch==2.14.0",
+          "torchvision==0.29.0"
         ]
       }
     }

@@ -256,3 +256,12 @@ def test_an_unstaged_job_is_refused_until_its_values_are_filled() -> None:
         deploy_module().render(text, {"DATABRICKS_USER": "u@x.org"})
     staged = text.replace('"STAGE_FIRST"', '"/Volumes/x"')
     assert deploy_module().render(staged, {"DATABRICKS_USER": "u@x.org"})["tasks"]
+
+
+def test_the_backfill_job_installs_torch_like_the_monthly_job() -> None:
+    """cdm.backfill imports cdm.monitor, which imports cdm.serving and so torch."""
+    deps = {}
+    for name in ("melanoma_backfill_job.json", "monthly_drift_job.json"):
+        spec = json.loads((REPO / "databricks" / name).read_text(encoding="utf-8"))
+        deps[name] = {d for d in spec["environments"][0]["spec"]["dependencies"] if "torch" in d}
+    assert deps["melanoma_backfill_job.json"] == deps["monthly_drift_job.json"] != set()
