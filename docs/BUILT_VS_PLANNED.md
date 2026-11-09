@@ -328,7 +328,12 @@ Known limits:
   sensitivity over a pooled window with a Wilson interval, delayed balanced accuracy, abstain
   share) and the alert path (a failed run with an "ALERT" message, which Databricks emails).
   Wired into `databricks/notebooks/monthly_drift.py`; not deployed, so no alert has been sent.
-  Checked on the committed replay months only.
+  Checked on the committed replay months only. Targets accepted by the owner (2026-11-09),
+  provisional until the backfill below has run.
+- `cdm.backfill`, `databricks/notebooks/melanoma_backfill.py` and its job: the melanoma
+  referral count of replay months 1 to 12, rebuilt from the audit table and checked against the
+  committed months. Written and tested on synthetic data; not run (the owner runs it with the
+  redeploy), so the melanoma target still reads "insufficient data".
 
 ### Backlog item 18: input contract (2026-11-09)
 

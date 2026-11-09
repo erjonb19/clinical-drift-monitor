@@ -42,6 +42,7 @@ import torch
 from PIL import Image
 from pyspark.sql import functions as F
 
+from cdm.backfill import merge_history
 from cdm.data import eval_transform
 from cdm.monitor import by_skin_type, delayed_accuracy, draw_schedule, drift_test
 from cdm.serving import Service, mahalanobis
@@ -60,6 +61,7 @@ MONTHLY, AUDIT, BASELINE = (
     for t in ("gold_drift_monthly", "gold_prediction_audit", "gold_drift_baseline")
 )
 INDEX = {c: i for i, c in enumerate(CLASSES)}
+BACKFILL = "workspace.cdm.gold_melanoma_backfill"  # written once by melanoma_backfill.py
 
 WHEEL_SHA = hashlib.sha256(Path(dbutils.widgets.get("wheel")).read_bytes()).hexdigest()
 assert dbutils.widgets.get("wheel_sha256") == WHEEL_SHA, f"wheel sha256 {WHEEL_SHA}"
@@ -301,7 +303,11 @@ def run_month(month: int) -> dict:
         json.loads(r["summary"]).get("delayed_accuracy_of_month")
         for r in spark.table(MONTHLY).orderBy("month").select("summary").collect()
     ]
-    slo = evaluate(row, [h for h in history if h], SLO_CONFIG)
+    # Replay months 1 to 12 get their referral counts from the one-off backfill (item 4).
+    backfill = (
+        [r.asDict() for r in spark.table(BACKFILL).collect()] if table_exists(BACKFILL) else []
+    )
+    slo = evaluate(row, merge_history([h for h in history if h], backfill), SLO_CONFIG)
     (OUT / f"slo_{month:02d}.json").write_text(json.dumps(slo, indent=2) + "\n")
     row["alerts"] = alerts(row, slo)
     return row
