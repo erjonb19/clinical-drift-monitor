@@ -366,8 +366,8 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       approval.
     - **Today:** the retraining loop ran once by hand (2026-10-23).
     - **Spec written 2026-11-09 (not built):** `docs/specs/item17-retraining-pipeline.md`: one
-      job (trigger check, challenger training, evaluation, registration of every challenger,
-      decision, then registration of every challenger) and, as a **proposed change** to this
+      job (trigger check, challenger training, evaluation, decision, then registration of every
+      challenger) and, as a **proposed change** to this
       item's wording for the owner to approve, a separate `promote_challenger` job the owner
       runs by hand with the decision file's hash. About 3 to 4 GPU DBUs a run (an
       estimate); (ask) before any.
