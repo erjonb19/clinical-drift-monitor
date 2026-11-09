@@ -4,7 +4,7 @@
 # MAGIC Moves `workspace.cdm.skin_lesion_classifier@champion` to a registered challenger, and only
 # MAGIC when: the decision file is the one the owner names by SHA-256, its rule promoted, the
 # MAGIC registry version was registered from that decision with a checked serving bundle
-# MAGIC (`cdm.pipeline.verify_promotion`), and the move itself is safe (`cdm.registry.plan_move`:
+# MAGIC (`cdm.promotion.verify_promotion`), and the move itself is safe (`cdm.registry.plan_move`:
 # MAGIC the alias is where the owner expects, the version is tagged and not rejected). It reads the
 # MAGIC alias back and appends the move to `gold_model_decisions`. A rollback is a separate,
 # MAGIC simpler step (`scripts/move_champion.py`, `docs/rollback.md`).
@@ -33,7 +33,7 @@ from pathlib import Path
 import mlflow
 import pandas as pd
 
-from cdm.pipeline import verify_promotion
+from cdm.promotion import verify_promotion
 from cdm.registry import ALIAS, NAME, move_record, plan_move
 
 WHEEL_SHA = hashlib.sha256(Path(dbutils.widgets.get("wheel")).read_bytes()).hexdigest()

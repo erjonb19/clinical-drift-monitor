@@ -48,6 +48,23 @@ rollback in item 2 can move the alias back.
 The job definition is committed and tested; one approved run goes from trigger to a registered
 version and a decision file; the alias moves only after the owner runs `promote_challenger`.
 
+## Changes made while building the promotion half (2026-11-09, for the owner to re-approve)
+
+Found when `promote_challenger` was built (`cdm.promotion`); nothing has run:
+
+1. **The decision key is `promoted`**, the key `retrain.py` already writes
+   (`results/phase3/retrain/decision.json`), not `promoted_by_rule` as written above. The
+   future `decide` task should keep writing `promoted`; if it wrote `promoted_by_rule`, every
+   promotion would be refused (safe, but it would need this check changed).
+2. **The serving bundle is built and checked before registration, not by `promote_challenger`.**
+   The registration step tags the version with `decision_sha256` and
+   `serving_bundle_sha256`; `promote_challenger` refuses a version without both, so the alias
+   can never point at a version whose bundle was not checked. After the move it records the
+   `check_registered_model` run as pending, as the rollback steps do (`docs/rollback.md`).
+3. **The trigger on the committed replay is months 7 to 11**, not "9 to 12" as written below:
+   months 7 and 8 alerted on skin type II, 9 to 12 on the overall test, and month 12's labels
+   arrive only after the replay.
+
 ## Tests before any run
 
 - `trigger_check` logic on committed month records (the replay's months 9 to 12 would trigger
