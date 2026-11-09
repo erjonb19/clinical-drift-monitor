@@ -605,8 +605,10 @@ by us, so the progression is a scenario, not drift observed over time.
 ## Alerts and model targets (backlog items 4 and 5)
 
 Every threshold, and why it was chosen. Drift thresholds were fixed before any month ran; the
-target values were set on 2026-11-09, before any month was judged with them, and wait for the
-owner's confirmation (`config/slo.json`, `results/phase3/monthly/post_replay_spec.json`).
+target values were set on 2026-11-09, before any month was judged with them, and accepted by the
+owner the same day; the model targets are **provisional** until replay months 1 to 12 are
+backfilled with their melanoma referral counts (`config/slo.json`,
+`results/phase3/monthly/post_replay_spec.json`).
 
 | Check | Alerts when | Why |
 |---|---|---|
