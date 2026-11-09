@@ -103,7 +103,13 @@ def test_embedding_statistics_come_from_the_baseline_only() -> None:
 
 def test_a_class_the_baseline_never_predicted_alerts_instead_of_crashing() -> None:
     mix = pr.prediction_mix([0] * 2000 + [1] * 1000, [0] * 50 + [6] * 50, K)
-    assert mix["alert"] and mix["chi2_p"] is not None and mix["chi2_p"] < pr.ALERT_P
+    assert mix["alert"] and mix["unseen_classes"] == [6] and mix["chi2_p"] is None
+
+
+def test_a_new_class_cannot_hide_behind_a_vanished_one() -> None:
+    """A review's repro: class 1 disappears and a never-predicted class 6 takes its share."""
+    mix = pr.prediction_mix([0] * 2000 + [1] * 1000, [0] * 67 + [6] * 33, K)
+    assert mix["alert"] and mix["unseen_classes"] == [6] and mix["tvd"] > 0.3
 
 
 def test_one_cell_means_no_chi_square_and_the_distance_decides() -> None:
@@ -113,9 +119,20 @@ def test_one_cell_means_no_chi_square_and_the_distance_decides() -> None:
 
 
 def test_counts_only_months_clear_the_warning_too() -> None:
+    """A small month whose OOD test is a warning before suppression reports no warning."""
+    from cdm.monitor import drift_test
+
     rng = np.random.default_rng(6)
-    signals = pr.label_free_signals(batch(rng, 3000), batch(rng, 50, shift=0.4), K)
-    assert not any(v.get("warning") for v in signals.values() if isinstance(v, dict))
+    base = batch(rng, 3000)
+    for _ in range(200):
+        month = batch(rng, pr.MIN_IMAGES - 1)
+        month["ood"] = month["ood"] + rng.uniform(0.0, 0.6)
+        if drift_test(np.asarray(base["ood"]), np.asarray(month["ood"]))["warning"]:
+            break
+    else:
+        raise AssertionError("no warning month found to suppress")
+    signals = pr.label_free_signals(base, month, K)
+    assert signals["ood"]["warning"] is False and not pr.month_alert(signals)
 
 
 def test_the_spec_matches_the_code() -> None:

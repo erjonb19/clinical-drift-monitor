@@ -74,6 +74,9 @@ def prediction_mix(
     below MIN_EXPECTED it joins the smallest other cell. A class the baseline never predicted
     stays in the pool, so the strongest shift (a new class) is tested, not dropped. With fewer
     than two cells no chi-square test is possible: ``chi2_p`` is None and the TVD alone decides.
+    The same holds when the month predicts a class the baseline never predicted (expected 0):
+    merged into another cell it could hide behind a class that vanished, so the classes are
+    listed in ``unseen_classes`` and the TVD alone decides.
     """
     p = np.bincount(np.asarray(baseline), minlength=n_classes) / len(baseline)
     obs = np.bincount(np.asarray(current), minlength=n_classes).astype(np.float64)
@@ -90,8 +93,9 @@ def prediction_mix(
             o[j] += po
             e[j] += pe
     tvd = float(0.5 * np.abs(obs / len(current) - p).sum())
+    unseen = [int(i) for i in np.flatnonzero((p == 0) & (obs > 0))]
     chi2_p: float | None = None
-    if len(e) >= 2 and min(e) > 0:
+    if not unseen and len(e) >= 2 and min(e) > 0:
         chi2_p = float(chisquare(o, e).pvalue)
         alert = chi2_p < ALERT_P and tvd >= MIX_TVD
     else:
@@ -101,6 +105,7 @@ def prediction_mix(
         "baseline_share": p.tolist(),
         "chi2_p": chi2_p,
         "tvd": tvd,
+        "unseen_classes": unseen,
         "alert": bool(alert),
     }
 

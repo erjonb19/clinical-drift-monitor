@@ -54,5 +54,5 @@
   ],
   "min_images_why": "the repo's minimum for a reported metric (cdm.eval.MIN_GROUP); below about 100 images PSI over 10 bins is large even with no drift (a review's synthetic check averaged about 0.78 at 30 and 0.10 at 100, not a committed result), so the PSI floors would not mean anything",
   "baseline_note": "the baseline is the clients' validation split, as for the replay's OOD baseline (results/phase3/monthly/spec.json); all statistics are fitted on it only, never on a month",
-  "prediction_mix_pooling": "classes expected below 5 images are pooled; a pooled cell still below 5 joins the smallest other cell; a class the baseline never predicted stays in the test; with fewer than two cells there is no chi-square test and the distance alone decides"
+  "prediction_mix_pooling": "classes expected below 5 images are pooled; a pooled cell still below 5 joins the smallest other cell; a class the baseline never predicted stays in the test; with fewer than two cells there is no chi-square test and the distance alone decides. A class the baseline never predicted is listed in unseen_classes, and then the distance alone decides (merged into another cell it could hide behind a class that vanished)"
 }
