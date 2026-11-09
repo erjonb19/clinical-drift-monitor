@@ -1,0 +1,58 @@
+{
+  "committed_before_running": true,
+  "decided": "2026-11-09",
+  "status": "Spec only, written by Claude for the owner to approve; nothing has run. The run needs Databricks compute (ask): see 'compute'.",
+  "plan": "docs/BACKLOG.md item 15: staged shifts of known size and start month through the monthly drift test; how many months each takes to detect, and how often the test alarms on months with no shift",
+  "staged": "every shift here is staged (synthetic): real in-distribution test images altered in a known way. Results are labelled staged everywhere and never mixed with the replay's or a live month's numbers",
+  "detector": "the shipped serving bundle (registry v1, model_gen v2; three seeds, ensemble Mahalanobis OOD score), scored on CPU like the monthly job, against the same validation baseline (3,210 images); the alert rule unchanged: KS p < 0.01 and PSI >= 0.2 (warning PSI >= 0.1)",
+  "pool": "the clients' test split (3,262 images), lesion-level, never used to fit the detector",
+  "shifts": {
+    "blur": {
+      "what": "Gaussian blur of radius sigma pixels at the model's 224 px input",
+      "sizes": [
+        1.0,
+        2.0,
+        4.0
+      ]
+    },
+    "brightness": {
+      "what": "brightness multiplied by a factor (PIL ImageEnhance.Brightness)",
+      "sizes": [
+        0.7,
+        1.3,
+        1.6
+      ]
+    },
+    "jpeg": {
+      "what": "re-encoded as JPEG at quality q, as a cheaper phone camera or a lossy upload would",
+      "sizes": [
+        50,
+        25,
+        10
+      ]
+    },
+    "age_mix": {
+      "what": "the month's images resampled so the share of patients aged 75 or over (the repo's oldest age band) is p (age_approx from the ISIC metadata; no image is altered). share_shifted does not apply to this shift: p is its size",
+      "sizes": [
+        0.5,
+        0.75,
+        0.9
+      ]
+    }
+  },
+  "share_shifted": [
+    0.1,
+    0.25,
+    0.5,
+    1.0
+  ],
+  "sequence": "12 synthetic months of 300 images each, drawn without replacement within a month; the shift starts in month 4 and stays; months 1 to 3 are unshifted",
+  "repeats": "200 sequences per (shift, size, share), seeded with numpy default_rng(20261109) and the cell's index",
+  "time_to_detect": "the first month at or after month 4 whose test alerts, minus 3 (so detecting in the first shifted month is 1); 'not detected' when no month alerts by month 12; reported as the median and the 10th and 90th percentiles over the repeats, and the share detected",
+  "false_alarm_rate": "the share of unshifted months (months 1 to 3 of every sequence, and all months of the control cell) that alert, with its 95% Wilson interval. Caveat: every month is drawn from the one pool of 3,262 images, and 12 x 300 = 3,600 exceeds it, so images repeat across a sequence's months and across repeats; the months are not independent, and the interval shows only the spread of re-drawing this pool, not of a new population. The same is reported for the warning",
+  "also_measured": "the month-level false-alarm rate of the post-replay rule (any of four signals, results/phase3/monthly/post_replay_spec.json) on the unshifted months, since that rule's rate is not measured yet",
+  "outputs": "results/phase3/detector_quality/results.json (aggregates only), and a README table: shift, size, share, months to detect, share detected, false-alarm rate, each labelled staged",
+  "compute": "the transformed images must be scored: 3,262 images x 9 settings (3 blur, 3 brightness, 3 JPEG) x 3 networks, plus one unshifted pass (the age mix and the control only resample). At Phase 3's batch-1 median of about 93 ms per network per image on Databricks serverless (results/phase3/onnx/results.json) that is about 2.5 CPU hours, before the time to apply the transforms; batched scoring would be faster. docs/plan-2026-11-phases-3-to-5.md estimated 2 to 6 CPU DBUs. Estimates, not results. (ask) before any run, CPU or GPU",
+  "ask": "GPU or CPU run on Databricks, and the owner's OK on the shift sizes and the 12-month design",
+  "control": "a size-0 control cell (the same sequences, no image altered) runs alongside every shift, so a detection is read against how often the unshifted test alerts in months 4 to 12 by chance"
+}
