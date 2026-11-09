@@ -313,8 +313,9 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       API's own app with the rate limiter opened wide) and the dispatch-only
       `.github/workflows/benchmark.yml`. **Measured** in this cloud session on the untrained
       test bundle (one network; the champion runs three), so serving speed only:
-      `results/phase3/serving/benchmark.json`, linked from the README. Bottleneck: one CPU-bound
-      worker (throughput flat at about 43 to 54 images a second, latency growing with users).
+      `results/phase3/serving/benchmark.json`, linked from the README. The machine saturates
+      (throughput flat at about 44 to 53 images a second, latency growing with users); the mechanism and
+      a 5x gap with Phase 3's PyTorch timing are not explained.
       **Not done:** the champion's numbers (needs its bundle), the ONNX export (failed parity in
       Phase 3) and int8 quantization (needs the champion's accuracy on validation). Not ticked.
 

@@ -531,12 +531,15 @@ not the image's CPU build, no container; one uvicorn worker, the rate limiter op
 
 | Concurrent users | p50 ms | p95 ms | p99 ms | Images/s | Server memory peak (MB) |
 |---|---|---|---|---|---|
-| 1 | 16.8 | 25.1 | 50.7 | 54.29 | 874 |
-| 5 | 91.1 | 111.5 | 118.7 | 54.22 | 990 |
-| 20 | 458.8 | 513.3 | 529.1 | 43.47 | 1413 |
+| 1 | 18.4 | 24.0 | 27.0 | 52.54 | 874 |
+| 5 | 94.2 | 111.0 | 116.3 | 52.75 | 990 |
+| 20 | 458.6 | 510.1 | 529.5 | 43.63 | 1435 |
 
-Throughput stays flat while latency grows with the number of users: the single worker is
-CPU-bound and requests queue. The champion's numbers need its bundle (a release asset), and the
+Throughput stays flat while latency grows with the number of users: the machine is saturated
+(concurrent requests compute in parallel threads and compete for the CPUs; CPU use was not
+measured). Phase 3 measured PyTorch at about 93 ms per seed per image on Databricks serverless,
+about 5 times slower than this whole request; the gap is not explained (different hardware,
+torch build and threads). The champion's numbers need its bundle (a release asset), and the
 dispatch-only `benchmark.yml` workflow repeats this on a GitHub runner. ONNX was not
 re-benchmarked (it failed parity, Phase 3), and int8 quantization needs the champion to check
 accuracy.
