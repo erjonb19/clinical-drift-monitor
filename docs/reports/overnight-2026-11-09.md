@@ -27,6 +27,11 @@ CI on `main` after the last merges: green (`quality`, `image`, CodeQL).
 ## Open, and why
 
 - **#50** (item 8 eval scenarios): waits for your pass thresholds, as you said. Not touched.
+- **#66, #67, #68**: Dependabot's first grouped PRs, opened after #61 merged (item 11's "first
+  Dependabot PR appears" is met). Left for you, not merged: they are not mine, and **#66 moves
+  the API image from Python 3.11 to 3.15**, against the repo's Python 3.11 standard. A
+  Dependabot `ignore` rule for Python minor and major versions in the Docker group would stop
+  that; not added without your OK. #67 updates three Actions; #68 updates 33 Python packages.
 
 ## Waits on you
 
@@ -39,7 +44,8 @@ CI on `main` after the last merges: green (`quality`, `image`, CodeQL).
    running `scripts/make_smoke_manifest.py` where the ISIC API is reachable: the smoke test
    (item 6) and the champion's benchmark (item 13) wait on these.
 4. **Branch protection** on `main`: require `quality`, `image` and the CodeQL `analyze` checks.
-5. **Decisions:**
+5. **Dependabot PRs #66 to #68:** review and merge or close; #66 (Python 3.15) is the risky one.
+6. **Decisions:**
    - the targets' values (melanoma referral sensitivity 0.90 on the point estimate, delayed
      balanced accuracy 0.55, abstain share 0.15) and the post-replay signal thresholds;
    - the input contract's thresholds (blur and exposure stay report-only until calibrated);
@@ -49,7 +55,7 @@ CI on `main` after the last merges: green (`quality`, `image`, CodeQL).
      hand-run promotion job is a proposed change to the item's wording);
    - the melanoma target cannot be judged until replay months 1 to 12 are backfilled from the
      audit table (a Databricks run; the code is not written).
-6. **The scheduler probe:** your 8 November answer was a placeholder, so that fire is recorded
+7. **The scheduler probe:** your 8 November answer was a placeholder, so that fire is recorded
    as not reported. A scheduled task reminds you at 08:00 UTC on 10 November to send the run
    timeline and probe files and to delete the probe job.
 
