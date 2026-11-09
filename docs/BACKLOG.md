@@ -204,6 +204,18 @@ gets a **Blocked:** line with the reason.
      melanomas, the month is marked "insufficient data" and the target is neither met nor
      broken. The target's value, and whether it is judged on the point estimate or the
      interval's lower bound, are set in the item's PR before any month is judged.
+   - **Built 2026-11-09 (code, not run):** `cdm.slo` (the window rule above, the Wilson
+     interval, three targets in `config/slo.json`: melanoma referral sensitivity 0.90, judged on
+     the point estimate; delayed balanced accuracy 0.55, from 100 labelled images; abstain share
+     0.15), `delayed_accuracy` now counts melanomas referred, and the monthly notebook checks the
+     targets after saving each month. Checked on the committed replay
+     (`results/phase3/monthly/slo_replay.json`); the README has the table. **Waits on:** the
+     owner's confirmation of the three values, and a redeploy (the job pins the notebook's hash
+     and needs `config/slo.json` staged). **Melanoma sensitivity cannot be judged yet:** the
+     replay records (months 1 to 12) have no referral count, and after the replay no labelled
+     months arrive, so it stays "insufficient data" until months 1 to 12 are backfilled from
+     `gold_prediction_audit.refer_melanoma` and their labels (a Databricks run for the owner;
+     the backfill code is not written).
 
 5. [ ] **Alerts** when drift, or equity drift by Fitzpatrick skin type, crosses a threshold,
    with the thresholds and why.
@@ -215,6 +227,11 @@ gets a **Blocked:** line with the reason.
      `gold_drift_monthly`. The job's email goes out on every success or failure, not on an
      alert. **Limit:** skin type is recorded only at the two new hospitals, so a skin-type alert
      so far detects the site, not anything about skin type.
+   - **Built 2026-11-09 (code, not run):** the alert path in `cdm.slo`: after saving every
+     month of a run the job fails the run with "ALERT (not a job error)" and each reason (a broken
+     target, an overall drift alert, a skin-type drift alert); the failure email reaches the
+     owner. Thresholds and reasons are in the README's "Alerts and model targets" table. Not
+     ticked: no run has sent an alert yet.
 
 6. [ ] **Tests and model evals in CI** on every push, with pass and fail thresholds.
    - **Done when:** CI runs the tests and the eval gate on every push and pull request, the
