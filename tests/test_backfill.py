@@ -123,3 +123,12 @@ def test_the_replay_report_judges_the_melanoma_target_once_backfilled(
     assert mel[1]["status"] == slo.INSUFFICIENT  # no labelled month before month 1
     assert mel[4]["status"] == slo.MET and mel[4]["months"] == [1, 2, 3]
     assert mel[12]["months"] == [9, 10, 11]
+
+
+def test_the_notebook_takes_true_labels_from_silver_not_the_audit_prediction() -> None:
+    """gold_prediction_audit has its own `label` column, the *predicted* class (review of PR
+    #72): the notebook must rename silver's label, join inner and count the joined rows."""
+    text = (REPO / "databricks/notebooks/melanoma_backfill.py").read_text(encoding="utf-8")
+    assert 'F.col("label").alias("true_label")' in text and 'part["true_label"]' in text
+    assert '"inner"' in text and '"left"' not in text
+    assert "len(rows) != audit_months.count()" in text

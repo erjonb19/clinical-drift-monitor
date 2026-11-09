@@ -68,21 +68,32 @@ assert not spark.catalog.tableExists(TABLE), f"{TABLE} exists already: the backf
 
 # COMMAND ----------
 
-# The replay's audit rows with their labels; a Spark join, so lineage reaches the new table.
+# The replay's audit rows with their true labels; a Spark join, so lineage reaches the new
+# table. The audit table's own `label` column is the *predicted* class, so silver's label is
+# renamed; the join is inner, and its row count must equal the audit's (a missing silver row
+# would otherwise turn into an unlabelled image, unnoticed in month 12, which has no check).
+audit_months = spark.read.table(AUDIT).where(F.col("month").isin(MONTHS))
 rows = (
-    spark.read.table(AUDIT)
-    .where(F.col("month").isin(MONTHS))
-    .join(
-        spark.read.table("workspace.cdm.silver_images").select("isic_id", "label"),
+    audit_months.join(
+        spark.read.table("workspace.cdm.silver_images").select(
+            "isic_id", F.col("label").alias("true_label")
+        ),
         "isic_id",
-        "left",
+        "inner",
     )
     .select(
-        "month", "isic_id", "model_version", "refer_melanoma", "label", *[f"p_{c}" for c in CLASSES]
+        "month",
+        "isic_id",
+        "model_version",
+        "refer_melanoma",
+        "true_label",
+        *[f"p_{c}" for c in CLASSES],
     )  # fmt: skip
     .orderBy("month", "isic_id")
     .toPandas()
 )
+if len(rows) != audit_months.count():
+    raise RuntimeError("an audit row has no silver row (or several): labels would be wrong")
 if sorted(rows["month"].unique()) != MONTHS:
     raise RuntimeError(f"audit months {sorted(rows['month'].unique())}, expected 1 to 12")
 if rows.duplicated(["month", "isic_id"]).any():
@@ -94,7 +105,7 @@ records = []
 for month in MONTHS:
     part = rows[rows["month"] == month]
     labels = np.array(
-        [INDEX.get(x, -1) if isinstance(x, str) else -1 for x in part["label"]], dtype=np.int64
+        [INDEX.get(x, -1) if isinstance(x, str) else -1 for x in part["true_label"]], dtype=np.int64
     )
     probs = part[[f"p_{c}" for c in CLASSES]].to_numpy(np.float64)
     records.append(
