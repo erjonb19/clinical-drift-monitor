@@ -333,12 +333,14 @@ gets a **Blocked:** line with the reason.
     what changed.
     - **Done when:** the README has the section with a fixed format (date, reviewer role,
       comment, what changed, link), empty or with real entries only.
-    - **Today:** not started.
+    - **Today (2026-11-06):** not started.
     - **Done 2026-11-09:** the README's "Reviewer feedback" section has the five-column table,
       empty ("No entries yet."); `tests/test_readme_feedback.py` fails if the header changes or
-      a row lacks a field. Done ahead of its place: item 8 comes first in the order and waits on
-      PR #50's thresholds, and item 9 was not started in this session; neither is needed for
-      this item.
+      a row lacks a field. Done out of order. Every item before it in the Order of work is
+      unticked: the remaining parts of items 1, 6, 11, 4, 5, 18, 13, 2, 3, 7, 15, 17, 16, 14 and
+      8 wait on the owner (deploys, the bundle asset, approvals, GPU or Databricks runs, PR #50's
+      thresholds), but **item 9 is not blocked** and was skipped in this session; it is the next
+      item to work. Item 10 depends on none of them.
 
 ## Production architecture (owner, 2026-11-08)
 
