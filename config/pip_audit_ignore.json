@@ -1,5 +1,5 @@
 {
-  "what": "Known vulnerabilities pip-audit is told to accept in CI (backlog item 11). Every other finding with a fix fails the build. Each entry gives the reason and when to look again.",
+  "what": "Known vulnerabilities pip-audit is told to accept in CI (backlog item 11). Every other finding fails the build, with or without a fix. Each entry gives the reason and when to look again.",
   "accepted": [
     {
       "ids": [
