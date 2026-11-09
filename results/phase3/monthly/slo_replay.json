@@ -2,6 +2,7 @@
   "what": "model targets checked on the committed 12-month replay (real images, order chosen by us)",
   "built_by": "scripts/slo_report.py",
   "targets": "config/slo.json",
+  "melanoma_backfill": null,
   "months": [
     {
       "month": 1,

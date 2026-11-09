@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 
 from cdm import slo
+from cdm.backfill import merge_history
 from cdm.monitor import delayed_accuracy
 from cdm.splits import CLASSES
 
@@ -113,12 +114,16 @@ def test_the_committed_replay_report_is_current() -> None:
     """scripts/slo_report.py's output matches the committed months and targets."""
     report = json.loads((REPO / "results" / "phase3" / "monthly" / "slo_replay.json").read_text())
     monthly = REPO / "results" / "phase3" / "monthly"
+    backfill_file = monthly / "melanoma_backfill.json"  # the item 4 backfill, once committed
+    backfill = json.loads(backfill_file.read_text())["months"] if backfill_file.exists() else []
+    assert report["melanoma_backfill"] == (backfill_file.name if backfill else None)
     labelled: list[dict[str, object]] = []
     for entry in report["months"]:
         record = json.loads((monthly / f"month_{entry['month']:02d}.json").read_text())
         if record.get("delayed_accuracy_of_month"):
             labelled.append(record["delayed_accuracy_of_month"])
-        assert entry["slo"] == json.loads(json.dumps(slo.evaluate(record, labelled, CONFIG)))
+        history = merge_history(labelled, backfill, before_month=int(record["month"]))
+        assert entry["slo"] == json.loads(json.dumps(slo.evaluate(record, history, CONFIG)))
     in_distribution = [e for e in report["months"] if e["month"] <= 4]
     assert all(not e["alerts"] for e in in_distribution)  # no false alarm on months 1 to 4
 

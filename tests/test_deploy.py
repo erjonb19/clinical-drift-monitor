@@ -117,7 +117,8 @@ def test_no_committed_definition_holds_an_email_address() -> None:
     "path", sorted((REPO / "databricks").glob("*_job.json")), ids=lambda p: p.name
 )
 def test_recorded_jobs_render_with_only_the_user(path: Path) -> None:
-    spec = deploy_module().render(path.read_text(encoding="utf-8"), {"DATABRICKS_USER": "u@x.org"})
+    text = path.read_text(encoding="utf-8").replace('"STAGE_FIRST"', '"/Volumes/x"')
+    spec = deploy_module().render(text, {"DATABRICKS_USER": "u@x.org"})
     paths = [t["notebook_task"]["notebook_path"] for t in spec["tasks"] if "notebook_task" in t]
     assert paths and all(p.startswith("/Users/u@x.org/cdm/") for p in paths)
 
@@ -246,3 +247,12 @@ def test_upsert_reads_back_the_created_job_by_its_new_id() -> None:
     (REPO / "dist").mkdir(exist_ok=True)
     assert module.upsert_job(cli, spec, dry_run=False) == "42"
     assert calls[-1][:3] == ("jobs", "get", "42")
+
+
+def test_an_unstaged_job_is_refused_until_its_values_are_filled() -> None:
+    """The backfill job (item 4) is committed before staging; deploying it as is must fail."""
+    text = (REPO / "databricks" / "melanoma_backfill_job.json").read_text(encoding="utf-8")
+    with pytest.raises(ValueError, match="stage_research_job"):
+        deploy_module().render(text, {"DATABRICKS_USER": "u@x.org"})
+    staged = text.replace('"STAGE_FIRST"', '"/Volumes/x"')
+    assert deploy_module().render(staged, {"DATABRICKS_USER": "u@x.org"})["tasks"]

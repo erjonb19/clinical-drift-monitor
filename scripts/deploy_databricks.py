@@ -59,6 +59,10 @@ def check_resolved(cmap_path: Path, resolved: Path) -> None:
         sys.exit(f"concept map notes quote SNOMED names, which must not be published: {problems}")
 
 
+# A committed job whose files are not staged yet carries this in place of the staged values.
+STAGE_FIRST = "STAGE_FIRST"
+
+
 def render(template: str, values: dict[str, str]) -> dict[str, Any]:
     """Fill ``{{NAME}}`` placeholders; refuse to return a definition with any left over."""
     text = template
@@ -67,6 +71,8 @@ def render(template: str, values: dict[str, str]) -> dict[str, Any]:
     left = sorted(set(re.findall(r"\{\{([A-Z_]+)\}\}", text)))
     if left:
         raise ValueError(f"unfilled placeholders: {left}")
+    if STAGE_FIRST in text:
+        raise ValueError(f"run scripts/stage_research_job.py and replace every {STAGE_FIRST} value")
     rendered: dict[str, Any] = json.loads(text)
     return rendered
 
