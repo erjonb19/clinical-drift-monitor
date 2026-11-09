@@ -280,7 +280,11 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       fails the step) and fails on any finding not accepted in `config/pip_audit_ignore.json`; a
       second step shows it reports a known-vulnerable pin by name (`tests/fixtures/`); in `docker.yml`,
       Trivy (pinned to a commit) fails on fixable CRITICAL findings in the API image, with
-      accepted ones in `.trivyignore` (none). **Accepted, for the owner to confirm:** four
+      accepted ones in `.trivyignore` (none). **Its first run found five fixable CRITICAL
+      Pillow 12.3.0 findings in the API image** (CVE-2026-112393, -112398, -112403, -112900,
+      -96639; fixed in 13.0.0), including a heap overflow in JPEG decoding, which the API does
+      on every upload; `docker/constraints.txt` now pins Pillow 13.0.0 (the full test suite
+      passes with it). **Accepted, for the owner to confirm:** four
       `cryptography` 46.0.7 findings, held back by `flwr` 1.39.0 (`federated` extra, training
       only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
       committed federated results. **Owner:** turn on branch protection for `main` (Settings,
