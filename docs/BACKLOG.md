@@ -114,9 +114,12 @@ gets a **Blocked:** line with the reason.
         Databricks job notifications cover start, success, failure and duration, not a run
         that never starts, so the check has to live outside the job.
      2. A guard, not the likely cause (a redeploy from the repo unpauses):
-        `scripts/deploy_databricks.py --job` reads the job back after `jobs reset`, refuses if
-        the schedule is not `UNPAUSED`, and prints the next run time. A test checks that every
-        committed job with a schedule says `UNPAUSED`.
+        `scripts/deploy_databricks.py --job` reads the job back after `jobs reset` or `jobs
+        create`, refuses if the schedule is missing, different from the committed one or not
+        `UNPAUSED`, and prints the schedule. A test checks that every committed job with a
+        schedule says `UNPAUSED`. **Built 2026-11-09** (`check_deployed_schedule`, tested in
+        `tests/test_deploy.py` with fake CLI replies); not yet used in a real deploy. The
+        next-run time is not printed: `jobs get` does not return one.
      3. Then a scheduled run is shown green once (this item's "Done when").
    - **After replay month 12, written before code.** The owner's rules (2026-11-06): score
      whatever new ISIC images arrive; report drift signals that need no labels (input or

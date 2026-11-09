@@ -120,10 +120,34 @@ def upsert_job(cli: Cli, spec: dict[str, Any], dry_run: bool) -> str:
             json.dumps({"job_id": int(job_id), "new_settings": spec}, indent=2), encoding="utf-8"
         )
         cli("jobs", "reset", "--json", f"@{path}")
-        return job_id
-    path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
-    out = cli("jobs", "create", "--json", f"@{path}")
-    return "DRY-RUN-JOB-ID" if dry_run else str(json.loads(out)["job_id"])
+    else:
+        path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
+        out = cli("jobs", "create", "--json", f"@{path}")
+        job_id = "DRY-RUN-JOB-ID" if dry_run else str(json.loads(out)["job_id"])
+    if not dry_run:
+        check_deployed_schedule(spec, json.loads(cli("jobs", "get", job_id, "--output", "json")))
+    return job_id
+
+
+def check_deployed_schedule(spec: dict[str, Any], deployed: dict[str, Any]) -> None:
+    """Backlog item 1's deploy guard: read the job back and refuse unless its schedule is the
+    committed one and unpaused. The 1 November 2026 run did not start although the schedule was
+    correct; this cannot fix that, but it rules out a deploy leaving a paused or wrong schedule.
+    """
+    want = spec.get("schedule")
+    got = (deployed.get("settings") or {}).get("schedule")
+    if want is None:
+        if got is not None:
+            sys.exit(f"{spec['name']}: deployed with a schedule the committed file does not have")
+        return
+    if got is None:
+        sys.exit(f"{spec['name']}: deployed without its schedule")
+    for key in ("quartz_cron_expression", "timezone_id"):
+        if got.get(key) != want[key]:
+            sys.exit(f"{spec['name']}: deployed {key} {got.get(key)!r}, committed {want[key]!r}")
+    if got.get("pause_status", "UNPAUSED") != "UNPAUSED":
+        sys.exit(f"{spec['name']}: deployed schedule is {got.get('pause_status')}, not UNPAUSED")
+    print(f"schedule ok: {got['quartz_cron_expression']} {got['timezone_id']} UNPAUSED", flush=True)
 
 
 def current_user(cli: Cli, dry_run: bool) -> str:
