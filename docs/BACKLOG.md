@@ -225,6 +225,19 @@ gets a **Blocked:** line with the reason.
      sensitivity 0.90 on the point estimate, delayed balanced accuracy 0.55, abstain share
      0.15) and are **provisional until the months 1 to 12 backfill exists**; Claude writes the
      backfill code, and the owner runs it on Databricks with the redeploy.
+   - **Backfill code written 2026-11-09 (not run):** `cdm.backfill` and
+     `databricks/notebooks/melanoma_backfill.py` rebuild each replay month's delayed-accuracy
+     record, with `melanoma_referred`, from the rows the replay wrote to `gold_prediction_audit`
+     and the labels in silver; nothing is re-scored. The run fails if a stored `refer_melanoma`
+     flag disagrees with the bundle's threshold, or if any rebuilt month's labelled count,
+     melanoma count or balanced accuracy differs from the committed record (months 1 to 11;
+     month 12 has none and is marked unchecked). It writes `gold_melanoma_backfill` once and
+     `melanoma_backfill.json`; the monthly job merges the table into the target's history, and
+     `scripts/slo_report.py` uses the committed file (month m sees only months before m).
+     `databricks/melanoma_backfill_job.json` holds `STAGE_FIRST` values that the deploy refuses
+     until `scripts/stage_research_job.py melanoma_backfill results/phase3/serving/results.json
+     results/phase3/monthly/month_01.json ... month_12.json` has filled them. Tested on
+     synthetic data in `tests/test_backfill.py`.
 
 5. [ ] **Alerts** when drift, or equity drift by Fitzpatrick skin type, crosses a threshold,
    with the thresholds and why.
