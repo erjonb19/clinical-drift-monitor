@@ -365,3 +365,18 @@ any scoring run. Now `MAX_OUTPUT_TOKENS` is 2048; the transport records `stop_re
 (`tests/test_extract.py::test_a_reply_cut_off_at_the_token_limit_fails_and_is_not_cached`); and
 the cache key holds the output limit, so the old cut replies are never reused. No scoring note
 had been run.
+
+## 15. New tests written over an existing test file, and the suite stayed green
+
+**Symptom.** While building backlog item 17 (PR #77, 2026-11-09), the new tests were written to
+`tests/test_pipeline.py` with a shell redirect that replaced the file. That file already held
+the seven end-to-end tests of `cdm.reproduce`, including the regression check for #6. The suite
+passed: the tests that would have mattered were gone, not failing.
+
+**Cause.** A new file's name collided with an existing one, and the write did not check whether
+the file existed. Nothing compared the number of tests before and after.
+
+**Caught by.** A fresh review of the PR's diff, before merge. Now also
+`tests/test_test_counts.py`: `config/test_counts.json` records each test file's number of test
+functions, and CI fails if a file disappears or has fewer; removing a test means editing that
+file in the same change, where it is visible.
