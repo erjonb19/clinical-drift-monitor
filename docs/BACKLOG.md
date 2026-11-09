@@ -146,6 +146,12 @@ gets a **Blocked:** line with the reason.
         7 classes, and the confidence (top softmax probability). Each signal's test and
         threshold go in a spec committed before the first such run.
      3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
+     - **Built 2026-11-09 (code and spec, not run):** `cdm.post_replay` (new-ID diff; OOD,
+       embedding, prediction-mix and confidence signals against the validation baseline; a
+       100-image minimum; the explicit status) and `results/phase3/monthly/post_replay_spec.json`
+       (each test and threshold, chosen by Claude before any such run, for the owner to confirm).
+       Tested on synthetic data in `tests/test_post_replay.py`. Not yet wired into
+       `databricks/notebooks/monthly_drift.py`, and no month has been scored with it.
      4. **Limit checked (2026-11-07, the probe's manual run):** Free Edition restricts outbound
         internet to a set of trusted domains, but a serverless job reached both hosts it needs.
         For `ISIC_6589782` it read the metadata from `api.isic-archive.com` (license CC-BY,
@@ -241,6 +247,15 @@ gets a **Blocked:** line with the reason.
      bundle downloadable in CI (the release asset with a checked SHA-256, decided 2026-11-03)
      and a committed manifest of the images (ISIC IDs, license, attribution, SHA-256), fetched
      at test time and never committed.
+   - **Built 2026-11-09, waiting on the owner:** `ci.yml` and `docker.yml` now run on every
+     push to every branch and on every pull request. `tests/test_champion_smoke.py` loads the
+     bundle with `cdm.serving.Service` (every file's SHA-256 and each seed's weights hash
+     checked), scores the manifest's images, and fails if more than 20% abstain
+     (`config/champion_smoke.json`). It **skips, naming what is missing,** until (1) the owner
+     attaches the champion bundle to a release and fills `bundle_asset` (URL and SHA-256), and
+     (2) `scripts/make_smoke_manifest.py` writes `config/champion_smoke_images.csv` (50 images
+     of the clients' test split; needs the ISIC API, unreachable from cloud sessions; its
+     search query syntax is unverified). Not ticked: the smoke test has not run.
 
 7. [ ] **Observability on Databricks:** a prediction audit table, Unity Catalog lineage, and
    per-run cost tracking.
