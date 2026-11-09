@@ -84,7 +84,8 @@ def test_the_champion_loads_and_scores_fixed_images() -> None:
     assert 30 <= len(rows) <= 60
     for row in rows:  # every image's license is one the repo may use, with attribution kept
         assert row["license"] in {"CC-0", "CC-BY", "CC-BY-NC"}, row["isic_id"]
-        assert row["attribution"].strip(), row["isic_id"]
+        if row["license"] != "CC-0":  # CC-BY licenses require attribution; CC-0 does not
+            assert row["attribution"].strip(), row["isic_id"]
     answers: list[dict[str, Any]] = []
     for row in rows:
         image = fetch(row["url"], row["sha256"], CACHE / "images" / f"{row['isic_id']}.jpg")
