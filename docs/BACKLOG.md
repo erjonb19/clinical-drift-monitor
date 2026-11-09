@@ -1,13 +1,47 @@
 # Backlog
 
 The source of truth for what to work on and in what order (from 2026-11-06). Work the first
-unchecked item. The owner edits this file as plans change. When an item is done it is ticked
+unchecked item **in the "Order of work" below** (from 2026-11-08; item numbers never change,
+the order is set there). The owner edits this file as plans change. When an item is done it is ticked
 here, gets one line in [PROGRESS.md](PROGRESS.md), and goes on the README's "Production
 readiness" checklist.
 
 Each item has a **Done when** line (the check), and a **Today** line: what already exists in
 the repo on 2026-11-06, so no item is ticked for work that only partly exists. A blocked item
 gets a **Blocked:** line with the reason.
+
+## Order of work (owner, 2026-11-08)
+
+1. **Item 1**, the parts that need no workspace access first: the deploy guard (fix 2), the
+   watchdog workflow (written and tested, with no credential stored until the owner creates
+   the service principal), and the post-month-12 scoring code and its spec. The probe's
+   scheduled fires (8 to 10 November) and every Databricks deploy are the owner's.
+2. **Item 6**: CI on every push to every branch. The CPU smoke test waits on the champion
+   bundle as a release asset (the owner uploads it); build the test so it skips with a clear
+   message until the asset exists.
+3. **Item 11** (supply chain and merge rules).
+4. **Items 4 and 5** (SLOs and alerts): the window rule, the targets and the alert path in
+   code, tested on committed results; the live alert is checked on the next scheduled run.
+5. **Items 18 and 13** (an input contract for images; a load test and serving benchmark).
+6. **Items 2 and 3** (registry versions, rollback, champion vs challenger). The challenger's GPU
+   run waits for the owner's approval of its estimate.
+7. **Item 7**, then **items 15, 17, 16, 14** (detector quality, an automated retraining
+   pipeline, shadow scoring, batch scoring at scale).
+8. **Item 8** once the owner sets PR #50's thresholds, then **items 9 and 10**.
+9. **Item 12** (a live endpoint) and **item 19** (least-privilege access) when the owner has
+   made their accounts and decisions; **item 20** after the governed clinical agent's item 22.
+10. **Item 21** (showcase) last.
+
+**Rules for items 11 to 21 (owner, 2026-11-08):**
+- **(ask)** before: a GPU run, a new account or hosted service, anything that could bill,
+  Haiku spend, publishing a release or image, a change to another repo, and any deploy to the
+  Databricks workspace (the owner deploys from the laptop; cloud sessions have no workspace
+  access by design, decided 2026-11-03).
+- **Numbers are measured and labelled:** what ran, on what hardware, with which model (a
+  test bundle's latency is serving speed, never accuracy). Staged drift stays labelled
+  staged, as the honesty rules say.
+- **Unattended runs:** when an item is blocked or needs an (ask), write the reason under it and
+  move to the next item that does not depend on it, instead of stopping.
 
 ## Items, in order
 
@@ -209,6 +243,103 @@ gets a **Blocked:** line with the reason.
     - **Done when:** the README has the section with a fixed format (date, reviewer role,
       comment, what changed, link), empty or with real entries only.
     - **Today:** not started.
+
+## Production architecture (owner, 2026-11-08)
+
+What real ML, data and software engineering teams would add, checked against the repo on
+2026-11-08. Today the repo already has the `src/cdm` package, ruff, mypy, pytest, a Docker
+image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog registry.
+
+11. [ ] **Supply chain and merge rules.** Dependabot for pip, Docker and GitHub Actions
+    (grouped, weekly); CodeQL for Python and the workflows; `pip-audit` and a Trivy scan of
+    the API image in CI, failing on fixable critical findings (accepted ones in an ignore file
+    with the reason); branch protection on `main`, which the **owner turns on** in GitHub
+    settings, requiring the `ci` and `docker` workflows' jobs.
+    - **Done when:** the first Dependabot PR appears; a known-vulnerable pin fails the build;
+      `gh api repos/erjonb19/clinical-drift-monitor/branches/main --jq .protected` is `true`.
+    - **Today:** none of these; `main` is unprotected; CI runs on pushes to `main` and on pull
+      requests only.
+
+12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
+    (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
+    vendor's own pages: Databricks Model Serving on Free Edition (Databricks stays central;
+    CPU only, limits to check), and the ONNX export on a small free host such as Render
+    (512 MB; the ONNX model's memory measured first). Write the choice under this item; the
+    owner creates any account.
+    - **Done when:** a public URL answers `/health` and a scoring request, the README says
+      where it runs and its limits (cold starts, quotas), and every request is logged.
+    - **Today:** the API runs only in the CI smoke test and locally.
+
+13. [ ] **A load test and serving benchmark.** Locust or k6 against the API container at 1, 5
+    and 20 concurrent users, reporting p50, p95 and p99 latency, throughput and memory; the
+    same for the ONNX export, and for dynamic int8 quantization if its accuracy on the
+    validation set stays within the gate. A dispatch-only CI job; numbers in
+    `results/phase3/serving/benchmark.json` with the hardware named.
+    - **Done when:** the committed benchmark shows the numbers and names the bottleneck; the
+      README's serving section links it.
+    - **Today:** an ONNX export exists (`results/phase3/onnx/`), not shipped (PyTorch serves);
+      no load test.
+
+14. [ ] **Batch scoring at scale.** Score a large slice of the public ISIC archive (for example
+    50,000 images) on Databricks serverless as a distributed job (Spark with a pandas UDF, or
+    batch inference over Delta), with throughput, cost from the billing table, and the
+    bottleneck found. **(ask)** before the run, with its estimate; respect each image's
+    license.
+    - **Done when:** the run's results file and cost are committed and the README states
+      images per minute and cost per 1,000 images, measured.
+    - **Today:** the monthly job scores about 300 images a month.
+
+15. [ ] **Detector quality: time to detect and false alarms.** Staged shifts (labelled staged)
+    of known size and start month, run through the monthly drift test; report how many months
+    each shift takes to detect, and how often the test alarms on months with no shift. Ties
+    the thresholds in item 5 to measured error rates.
+    - **Done when:** a spec committed before the run, the results file, and a README table
+      (shift size, months to detect, false-alarm rate).
+    - **Today:** listed as open in PLAN.md Phase 3; PR #50's 30 scenarios are for the incident
+      report evals (item 8), not for this.
+
+16. [ ] **Shadow scoring.** The challenger scores the same monthly images as the champion
+    without serving them; both scores land in the audit table with the model version, and a
+    monthly comparison is written. The ML version of a canary, before item 3's promotion.
+    - **Done when:** one monthly run writes both models' scores and the comparison file.
+    - **Today:** champion vs challenger is an offline comparison only (item 3).
+
+17. [ ] **An automated retraining pipeline.** One multi-task Databricks job: a drift alert
+    with labels available starts it; train the challenger, evaluate it against the
+    pre-committed targets, register it (always, with its `model_gen` tag), then stop for a
+    human approval before the `champion` alias moves. **(ask)** before any GPU run.
+    - **Done when:** the job definition is committed and tested; one run (approved) goes from
+      trigger to a registered version and a decision file, with the alias moved only after
+      approval.
+    - **Today:** the retraining loop ran once by hand (2026-10-23).
+
+18. [ ] **An input contract for images.** Before scoring, each image is checked: format,
+    resolution, aspect ratio, blur, exposure, and duplicates (perceptual hash); failures are
+    quarantined with a reason, counted per month, and alerted on a spike, in the API and in the
+    monthly job alike.
+    - **Done when:** tests with bad images show each one quarantined with its reason; the
+      monthly results carry the counts.
+    - **Today:** no image quality checks before scoring.
+
+19. [ ] **Least-privilege access.** The watchdog's service principal (item 1) can view one job
+    and nothing else, with the `users` group's default grants checked and removed; the
+    scoring job runs as its own principal, not as the owner; the API takes per-client keys
+    with a request log. **(ask)** before creating any principal (the owner creates them).
+    - **Done when:** a committed grants report shows each principal's rights, and a test
+      shows the API refuses a missing or revoked key.
+    - **Today:** jobs run as the owner; the API has no authentication.
+
+20. [ ] **Drift results through the governed clinical agent** **(ask: touches the other
+    repo)**. After that repo's item 22, the monthly drift tables become a read-only data
+    source there, so a person can ask in plain English which month and which site drifted,
+    through its guard.
+    - **Done when:** one question about a drift month answers correctly from the other repo.
+
+21. [ ] **Showcase.** A one-page `docs/ARCHITECTURE.md` (one diagram; how it scales and where
+    it breaks, using items 13 to 15's numbers), the README refreshed results-first (an open
+    Phase 5 item), `docker compose up` as the one-command demo (also open in Phase 5), and a
+    three-minute walkthrough script for the owner to record.
+    - **Done when:** all four exist and the README links them.
 
 ## Later (kept, not started)
 
