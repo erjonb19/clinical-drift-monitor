@@ -1,0 +1,14 @@
+{
+  "what": "Known vulnerabilities pip-audit is told to accept in CI (backlog item 11). Every other finding with a fix fails the build. Each entry gives the reason and when to look again.",
+  "accepted": [
+    {
+      "ids": ["PYSEC-2026-3552", "PYSEC-2026-3553", "PYSEC-2026-3554", "GHSA-537c-gmf6-5ccf"],
+      "package": "cryptography 46.0.7",
+      "fixed_in": "48.0.1 to 50.0.0",
+      "reason": "flwr 1.39.0 (the 'federated' extra, used only to train and rerun the federated research results) requires cryptography>=46.0.7,<47. flwr 1.43.0 allows 50.x, but upgrading flwr changes the stack behind committed federated results, which is the owner's call. cryptography is not installed in the API image (the 'api' extra); the Trivy scan of that image is separate.",
+      "accepted_on": "2026-11-09",
+      "accepted_by": "Claude, overnight run; owner to confirm or upgrade flwr",
+      "review_by": "2026-12-09"
+    }
+  ]
+}

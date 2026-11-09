@@ -1,0 +1,3 @@
+# A deliberately vulnerable pin (CVE-2018-18074, fixed in requests 2.20.0). CI audits this file and
+# expects pip-audit to fail, to show the audit catches a known-vulnerable pin. Never installed.
+requests==2.19.0

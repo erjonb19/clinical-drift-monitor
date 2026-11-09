@@ -40,3 +40,21 @@ jobs:
 
       - name: Test
         run: pytest
+
+      # Backlog item 11: audit the installed dependencies from a separate tool environment, so
+      # pip-audit's own packages are not in the audit. Accepted findings, with their reasons, are
+      # in config/pip_audit_ignore.json; anything else with a fix fails the build.
+      - name: Dependency audit
+        run: |
+          set -o pipefail
+          python -m venv /tmp/audit
+          /tmp/audit/bin/pip install -q pip-audit==2.10.1
+          pip freeze --exclude-editable | grep -v -E '^(cdm|-e) ' > /tmp/requirements-frozen.txt
+          ignores=$(python -c "import json; d = json.load(open('config/pip_audit_ignore.json')); print(' '.join('--ignore-vuln ' + i for a in d['accepted'] for i in a['ids']))")
+          /tmp/audit/bin/pip-audit --disable-pip --no-deps --progress-spinner off -r /tmp/requirements-frozen.txt $ignores
+
+      - name: The audit catches a known-vulnerable pin
+        run: |
+          if /tmp/audit/bin/pip-audit --disable-pip --no-deps --progress-spinner off -r tests/fixtures/vulnerable_requirements.txt; then
+            echo "::error::pip-audit passed a known-vulnerable pin (requests 2.19.0)"; exit 1
+          fi
