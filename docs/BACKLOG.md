@@ -200,6 +200,13 @@ gets a **Blocked:** line with the reason.
      registered in MLflow whether or not it is promoted; only the `champion` alias decides what
      serves. Every registry version carries a `model_gen` tag naming its model generation, so
      registry v1 is tagged `model_gen=v2`.
+   - **(ask), 2026-11-09:** the challenger needs one Databricks serverless GPU run, which waits
+     for the owner's approval. Estimate (not a result): the 2026-10-23 retraining run used one
+     A10 task under a 45-minute deadline, about 3 to 4 GPU DBUs, before start-up time. The
+     decision rule is already committed (`results/phase3/retrain/spec.json`). **Proposed:** make
+     this run the first run of item 17's pipeline once it is built, so one GPU run registers the
+     challenger (item 3), gives item 2 its second version to roll back from, and tests item 17;
+     item 16's shadow scoring then uses the same challenger. Nothing started.
 
 4. [ ] **SLOs as model targets**, such as a minimum melanoma sensitivity, written in the README,
    with an alert when drift breaks a target.
@@ -296,6 +303,13 @@ gets a **Blocked:** line with the reason.
    - **Today:** the audit table is built. Lineage has no edge from the registered model to the
      audit table, and there is no screenshot. Costs are traced for 13 of 31 results files, with
      billing up to 2026-10-22.
+   - **Blocked, 2026-11-09 (needs the workspace):** every remaining part runs in Databricks,
+     which cloud sessions cannot reach: the lineage screenshot, and the billing query that
+     traces the other 18 results files. **Proposed (owner to decide):** the missing edge exists
+     because the monthly job loads the serving bundle from a volume, not the registered model;
+     loading the champion through `models:/workspace.cdm.skin_lesion_classifier@champion` in the
+     scoring job would let Unity Catalog record registered model to audit table. It changes the
+     scoring job (and adds MLflow to its environment), so it waits for the owner's OK.
 
 8. [ ] **8D incident reports as postmortems:** run one real drift incident end to end and write
    it up.
@@ -364,6 +378,14 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       scikit-learn, `flwr` and MLflow patch updates only (a test checks both rules); the rest
       of the Python group is merged when its next PR is green. The owner turns on branch
       protection (`quality`, `image`, `analyze`).
+    - **Dependabot's next Python group (#74, 2026-11-09): not merged, CI red.** `quality`
+      failed: pip could not resolve the dependencies (`ResolutionImpossible`). It also drops the
+      `+cpu` label from torch 2.14.1 in `docker/constraints.txt` (the new test fails on it) and
+      raises several lower bounds by a major version (`mlflow-skinny` 2.16 to 3.18,
+      `transformers` 4 to 5, `duckdb` 1 to 2), so the patch-only rule did not stop floor raises
+      in `pyproject.toml`. Left open for the owner; a fix is to set the pip entry's
+      `versioning-strategy` (for example `lockfile-only` or `increase-if-necessary`) and to bump
+      torch by hand in both the Dockerfile and the constraints.
 
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
@@ -403,6 +425,13 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
     - **Done when:** the run's results file and cost are committed and the README states
       images per minute and cost per 1,000 images, measured.
     - **Today:** the monthly job scores about 300 images a month.
+    - **(ask), 2026-11-09, not started:** no estimate is good enough to ask with yet. At Phase
+      3's batch-1 timing (about 93 ms per network per image on serverless CPU, three networks)
+      50,000 images are roughly 4 CPU hours of scoring before any parallelism, and the images
+      themselves (about 2.6 MB each, from one probe download) are on the order of 130 GB through
+      Free Edition's restricted outbound access, whose limits for that volume are unknown. A
+      smaller first slice (for example 5,000 images) would measure both before the owner is
+      asked for the full run.
 
 15. [ ] **Detector quality: time to detect and false alarms.** Staged shifts (labelled staged)
     of known size and start month, run through the monthly drift test; report how many months
@@ -425,6 +454,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
     monthly comparison is written. The ML version of a canary, before item 3's promotion.
     - **Done when:** one monthly run writes both models' scores and the comparison file.
     - **Today:** champion vs challenger is an offline comparison only (item 3).
+    - **Blocked, 2026-11-09:** needs a registered challenger (item 3's GPU run, an (ask)).
 
 17. [ ] **An automated retraining pipeline.** One multi-task Databricks job: a drift alert
     with labels available starts it; train the challenger, evaluate it against the
