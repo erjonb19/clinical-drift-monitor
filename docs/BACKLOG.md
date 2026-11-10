@@ -44,6 +44,9 @@ gets a **Blocked:** line with the reason.
   staged, as the honesty rules say.
 - **Unattended runs:** when an item is blocked or needs an (ask), write the reason under it and
   move to the next item that does not depend on it, instead of stopping.
+- **Merging (owner, 2026-11-10):** Claude may merge its own PRs once CI is green and a fresh
+  review finds nothing blocking. Never PR #50, the security audit's PR, or anything that
+  spends or deploys to Databricks; the owner merges those.
 
 ## Items, in order
 
@@ -105,6 +108,8 @@ gets a **Blocked:** line with the reason.
        (2026-11-09) arrived as unfilled placeholders ("[scheduled email arrived / no email]"), so
        neither fire is recorded either way. To settle it: the run timeline for job
        325029901767432 and the files in `/Volumes/workspace/cdm/raw/results/scheduler_probe/`.
+       The owner's message of 2026-11-10 again held the unfilled placeholders for both days, so
+       they stay not reported.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
@@ -209,6 +214,17 @@ gets a **Blocked:** line with the reason.
      this run the first run of item 17's pipeline once it is built, so one GPU run registers the
      challenger (item 3), gives item 2 its second version to roll back from, and tests item 17;
      item 16's shadow scoring then uses the same challenger. Nothing started.
+   - **Owner decision, 2026-11-10:** approved as the first run of item 17's pipeline; the owner
+     starts it from the laptop. **It cannot start yet:** the pipeline's training tasks (train with
+     checkpoints kept, evaluate, decide, build and check the serving bundle, register with tags)
+     are not built (item 17). **GPU estimate (from committed records, not a result):** the
+     2026-10-23 retraining notebook ran 366 seconds on one A10 (`results/phase3/retrain/
+     decision.json`); its wall time with start-up is not in the cost table (billing was traced
+     to 2026-10-22). Traced GPU jobs used 0.065 to 0.076 DBU per wall minute
+     (`results/phase3/costs/job_costs.json`), so a 10- to 25-minute GPU task is about 0.7 to 1.9
+     GPU DBUs, and the 60-minute hard timeout caps it near 4.5. Free Edition charges nothing;
+     at the recorded list price (about $0.65 per DBU) that is $0.45 to $1.25, capped near $2.90.
+     Two start-up failures on 2026-10-23 (900 seconds each) may also count; unknown.
 
 4. [ ] **SLOs as model targets**, such as a minimum melanoma sensitivity, written in the README,
    with an alert when drift breaks a target.
@@ -312,6 +328,10 @@ gets a **Blocked:** line with the reason.
      loading the champion through `models:/workspace.cdm.skin_lesion_classifier@champion` in the
      scoring job would let Unity Catalog record registered model to audit table. It changes the
      scoring job (and adds MLflow to its environment), so it waits for the owner's OK.
+   - **Owner decision, 2026-11-10:** load the champion through the registry
+     (`models:/workspace.cdm.skin_lesion_classifier@champion`) in the scoring job, so lineage
+     records the registered model to audit table edge. A change to the monthly job; the owner
+     deploys it.
 
 8. [ ] **8D incident reports as postmortems:** run one real drift incident end to end and write
    it up.
@@ -450,6 +470,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       Free Edition's restricted outbound access, whose limits for that volume are unknown. A
       smaller first slice (for example 5,000 images) would measure both before the owner is
       asked for the full run.
+    - **Owner decision, 2026-11-10:** measure a 5,000-image slice first.
 
 15. [ ] **Detector quality: time to detect and false alarms.** Staged shifts (labelled staged)
     of known size and start month, run through the monthly drift test; report how many months
@@ -518,7 +539,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       the training job's tasks (trigger check, train with checkpoints always kept, evaluate,
       decide, build and check the serving bundle, register with those tags): they change the
       GPU notebook `retrain.py` and can only be tried with a GPU run, an (ask). Two departures from the
-      approved spec, for the owner to re-approve, are listed in the spec's "Changes made while
+      approved spec, re-approved by the owner on 2026-11-10, are listed in the spec's "Changes made while
       building" section: the decision key stays `promoted`, and the serving bundle is checked
       before registration rather than rebuilt by `promote_challenger`.
 
