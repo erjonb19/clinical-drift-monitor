@@ -217,14 +217,18 @@ gets a **Blocked:** line with the reason.
    - **Owner decision, 2026-11-10:** approved as the first run of item 17's pipeline; the owner
      starts it from the laptop. **It cannot start yet:** the pipeline's training tasks (train with
      checkpoints kept, evaluate, decide, build and check the serving bundle, register with tags)
-     are not built (item 17). **GPU estimate (from committed records, not a result):** the
+     are not built (item 17). **GPU estimate (from committed records, not a result; replaces the 2026-11-09
+     figure of 3 to 4 DBUs, which assumed the whole 45-minute deadline was used):** the
      2026-10-23 retraining notebook ran 366 seconds on one A10 (`results/phase3/retrain/
      decision.json`); its wall time with start-up is not in the cost table (billing was traced
-     to 2026-10-22). Traced GPU jobs used 0.065 to 0.076 DBU per wall minute
-     (`results/phase3/costs/job_costs.json`), so a 10- to 25-minute GPU task is about 0.7 to 1.9
-     GPU DBUs, and the 60-minute hard timeout caps it near 4.5. Free Edition charges nothing;
-     at the recorded list price (about $0.65 per DBU) that is $0.45 to $1.25, capped near $2.90.
-     Two start-up failures on 2026-10-23 (900 seconds each) may also count; unknown.
+     to 2026-10-22). 12 of the 16 traced GPU jobs used 0.065 to 0.076 DBU per wall minute
+     (`results/phase3/costs/job_costs.json`; all 16 range from 0.028 to 0.090), so a 10- to
+     25-minute GPU task is about 0.7 to 1.9 GPU DBUs, and the 60-minute hard timeout caps it
+     near 4.6 (5.4 at the highest rate seen). Free Edition charges nothing; at the recorded
+     list price (about $0.65 per DBU) that is $0.45 to $1.25, capped near $3.00 ($3.50 at the
+     highest rate). Two start-up failures on 2026-10-23 (900 seconds each) may also count;
+     unknown. The 10 to 25 minutes assumes the 6-minute notebook plus start-up and the
+     pipeline's extra tasks; that is a guess, not a measurement.
 
 4. [ ] **SLOs as model targets**, such as a minimum melanoma sensitivity, written in the README,
    with an alert when drift breaks a target.
