@@ -61,7 +61,7 @@ def test_dependabot_keeps_python_311_and_the_model_stack_on_patches() -> None:
     docker = text.split("package-ecosystem: docker", 1)[1].split("package-ecosystem:", 1)[0]
     assert sorted(_ignored(docker, "python")) == both
     pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
-    stack = ["torch", "torchvision", "numpy", "scikit-learn", "flwr", "mlflow", "mlflow-skinny"]
+    stack = ["numpy", "scikit-learn", "flwr", "mlflow", "mlflow-skinny"]
     for name in stack:
         assert sorted(_ignored(pip, name)) == both, name
 
@@ -80,3 +80,26 @@ def test_the_image_keeps_the_cpu_torch_wheels() -> None:
     for name, version in pins.items():
         assert version.endswith("+cpu"), f"{name}=={version}"
         assert f"{name}=={version.removesuffix('+cpu')}" in dockerfile, f"{name} differs"
+
+
+def test_dependabot_keeps_floors_and_the_uvicorn_that_flwr_needs() -> None:
+    """Owner, 2026-11-10, after #74: floors stay unless a release needs them raised, and
+    uvicorn gets patches only while flwr is held at 1.39.x (it needs uvicorn < 0.50)."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
+    assert "versioning-strategy: increase-if-necessary" in pip
+    assert sorted(_ignored(pip, "uvicorn")) == [
+        "version-update:semver-major",
+        "version-update:semver-minor",
+    ]
+
+
+def test_dependabot_never_updates_torch() -> None:
+    """Owner, 2026-11-10: torch and torchvision are ignored outright (no update types), since
+    Dependabot's bumps drop +cpu and miss the Dockerfile; a bump is made by hand."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
+    for name in ("torch", "torchvision"):
+        entry = re.search(rf"- dependency-name: {name}\n(\s+)(\S+)", pip)
+        assert entry is not None, name
+        assert not entry.group(2).startswith("update-types"), name
