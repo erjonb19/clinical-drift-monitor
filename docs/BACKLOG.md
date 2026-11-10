@@ -593,7 +593,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
 
 22. [x] **Security audit against `docs/SECURITY_STANDARDS.md`** (owner, 2026-11-09). Plan only, change no code. Audit the repo against Section 19.3 of `docs/SECURITY_STANDARDS.md` and every section that applies to this stack, and report each gap in the file's SEVERITY format. Add one backlog item per gap, numbered after this one, with anything Critical (CVSS 9+) first in the Order of work. Propose a `.claude/settings.json` from Section 17.2, tailored so unattended runs don't stall: keep the deny list, and explain each change to the ask list. Check every vendor-specific setting (npm, uv, GitHub, Claude Code permission syntax) against the vendor's current docs before proposing it. One docs-only PR, which the owner reviews and merges himself (security decisions are his). Include Section 4.5: model checkpoints loaded with pickle (torch.load) should use `weights_only=True` or safetensors.
     - **Done 2026-11-10:** `docs/security-audit-2026-11-10.md`: no Critical or High finding, no
-      secret in the tree or the 414 commits of history; 5 Medium and 26 Low findings, each in
+      secret in the tree or in any commit's history (414 counted); 5 Medium and 27 Low findings, each in
       the SEVERITY format, with items 23 to 47 below; a proposed `.claude/settings.json`
       (not added); the Section 4.5 `torch.load` call sites (item 31). The owner places the new
       items when he merges the audit's PR.

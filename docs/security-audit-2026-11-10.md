@@ -12,7 +12,7 @@ workspace, deployed only from the owner's laptop. One paid key exists (Claude Ha
 $5 in total, about $0.03 spent).
 
 **Summary.** No Critical and no High finding. No secret was found in the working tree or in any
-of the 414 commits on every branch. 5 Medium findings (supply chain and repo settings) and 26
+of the commits on every branch (414 counted on 2026-11-10). 5 Medium findings (supply chain and repo settings) and 27
 Low ones. One Low finding is also a silent failure of the repo's own making (the image
 contract's decompression-bomb limit, built on 2026-11-09), recorded as silent failure #16.
 
@@ -94,6 +94,15 @@ Backlog item 28.
 ## Low
 
 ```
+[SEVERITY: Low] No Claude Code project settings
+Where: .claude/settings.json (missing)
+Risk: Agent sessions on this repo run with no committed deny list, so nothing stops a session from reading a credential file or force-pushing beyond the defaults and the cloud proxy.
+Fix: Commit the settings proposed below after the owner's review.
+Standard: SEC.md §17.2, §19.3
+```
+Backlog item 23.
+
+```
 [SEVERITY: Low] The image contract's decompression-bomb limit is 100 megapixels, not the 50 its comments state (silent failure #16)
 Where: src/cdm/contract.py:26-28, 102-106; src/cdm/serving.py:34-36, 129-130; app/api/main.py:207, 217; tests/test_contract.py (tests 108 MP only)
 Risk: Pillow raises only above twice MAX_IMAGE_PIXELS and merely warns between 50 and 100 MP, so a 58 KB PNG of 60 MP is accepted and decoded twice per request; checked live on 2026-11-10: contract.check returned unreadable=False, quarantined=[] with a DecompressionBombWarning. The API is not deployed; on a 512 MB host this would be Medium.
@@ -113,7 +122,7 @@ Backlog item 30.
 
 ```
 [SEVERITY: Low] torch.load without weights_only=True, and a declared floor where the unsafe default applies (Section 4.5)
-Where: src/cdm/serving.py:117; src/cdm/gold.py:45; scripts/phase0_cifar_check.py:74; tests/test_pipeline.py:110; databricks/notebooks/ batch_drift_reference.py:113, final_test.py:155, drift_table.py:210, review_worksheet.py:125, triage.py:83, shipped_features.py:94, onnx_export.py:112, retrain.py:166, ladder_batch.py:178, serving_bundle.py:93, posthoc_ladder.py:58, analysis_look.py:102, ba_recalibration.py:75, evaluate_checkpoint.py:57; pyproject.toml:23 and five job files (torch>=2.4)
+Where: src/cdm/serving.py:117; src/cdm/gold.py:45; scripts/phase0_cifar_check.py:74; tests/test_pipeline.py:110; databricks/notebooks/ batch_drift_reference.py:113, final_test.py:155, drift_table.py:210, review_worksheet.py:125, triage.py:83, shipped_features.py:94, onnx_export.py:112, retrain.py:166, ladder_batch.py:178, serving_bundle.py:93, posthoc_ladder.py:58, analysis_look.py:102, ba_recalibration.py:75, evaluate_checkpoint.py:57; pyproject.toml:23 and seven Databricks job files (torch>=2.4: triage, batch_drift_reference, overnight, analysis_look, ba_recalibration, v2_test, job.json)
 Risk: Before torch 2.6 torch.load unpickles by default, which runs code; every environment in use resolves to 2.14 (safe default) but nothing enforces it. Checkpoints come from the owner's own volumes and bundles; none are committed.
 Fix: weights_only=True at every call; floor torch>=2.6 in pyproject and the job files; a test that fails on torch.load without weights_only=True; later, safetensors for the bundle.
 Standard: CWE-502, OWASP A08:2025, LLM04:2026, SEC.md §4.5
@@ -295,7 +304,7 @@ Backlog item 46.
 
 ```
 [SEVERITY: Low] The public demo's DuckDB connection keeps file and network access
-Where: src/cdm/cohort.py:657-668 (used by the deployed demo through src/cdm/demo.py:210)
+Where: src/cdm/cohort.py:657-668 (used by the deployed demo through src/cdm/demo.py:104)
 Risk: The SQL is built only from allowlisted integers and identifiers, so injection is not reachable today; a future bug would have file and network access.
 Fix: After registering the tables: SET enable_external_access = false; SET lock_configuration = true.
 Standard: CWE-89 (defence in depth), SEC.md §7.2, §14.2
@@ -313,7 +322,7 @@ Backlog item 47.
 
 ```
 [SEVERITY: Low] The demo's resources grow with each visitor
-Where: src/cdm/demo.py:207 (tempfile.mkdtemp never removed); src/cdm/cohort.py:619-639 (re-runs every earlier definition on each Run)
+Where: src/cdm/demo.py:101 (tempfile.mkdtemp in a default_factory, never removed); src/cdm/cohort.py:619-639 (re-runs every earlier definition on each Run)
 Risk: Temporary folders pile up, and one visitor making many distinct definitions costs more CPU per Run; availability only.
 Fix: TemporaryDirectory or cleanup at session end; a cap on distinct definitions per session.
 Standard: OWASP API4:2023, SEC.md §8
@@ -403,7 +412,10 @@ dropdown and read the repo's `.claude/settings.json`.
       "Bash(gh api * --method *)",
       "Bash(gh api * -f *)",
       "Bash(gh api * -F *)",
-      "Bash(gh api * --input *)"
+      "Bash(gh api * --input *)",
+      "Bash(gh api * --field *)",
+      "Bash(gh api * --raw-field *)",
+      "Bash(curl * --json *)"
     ],
     "ask": [
       "Bash(pip install *)",
@@ -463,11 +475,11 @@ dropdown and read the repo's `.claude/settings.json`.
 | `git push *` moved from ask to a narrow allow (`claude/*` branches) | Ask beats allow, so an ask on every push would block the allowed ones. This repo's working branches are `claude/...`. |
 | npm, pnpm, npx, uv, terraform, kubectl, helm, supabase, vercel removed | Not used in this repo (checked by grep); an unmatched command already prompts (or is denied under `dontAsk`). They come back if a tool is adopted (uv, item 26). |
 | `pip install` stays in **ask** | Directive 11: no installs without asking. Under `dontAsk` it is denied, so an unattended run cannot install anything; it writes the need down and moves on (CLAUDE.md note 1). If the owner wants unattended runs to install the repo's own pinned dependencies, that needs a SECURITY-EXCEPTION entry, his decision. |
-| `curl`: ask removed; read-only GETs to `api.github.com` allowed; write flags denied | Used to read CI status. The deny patterns are spaced (`curl * -d *`) on purpose: an unspaced `curl *-d*` would match the "-d" in "clinical-drift" and block every call to this repo's API. Combined flags (`-sSd`) can still slip past: not a boundary. |
+| `curl`: ask removed; read-only GETs to `api.github.com` allowed; write flags denied in short and long forms (`-X`/`--request`, `-d`/`--data*`, `--json`, `-F`/`--form`, `-T`/`--upload-file`; for `gh api`, `-X`/`--method`, `-f`/`--raw-field`, `-F`/`--field`, `--input`) | Used to read CI status. The deny patterns are spaced (`curl * -d *`) on purpose: an unspaced `curl *-d*` would match the "-d" in "clinical-drift" and block every call to this repo's API. Combined flags (`-sSd`) can still slip past: not a boundary. |
 | `wget` denied (was ask) | Not used; nothing needs it unattended. |
 | Deploy, registry, Haiku and Databricks commands in ask | They write outside the repo or spend (directive 13); under `dontAsk` they are denied, which matches the rule that the owner deploys. |
 | `Edit(./.github/**)` in ask | §17.3: read every CI diff. Under `dontAsk` CI changes are denied in unattended runs; the owner may prefer to allow them, since every workflow change still goes through a reviewed PR. |
-| GitHub MCP: reads, PR create/update and merge allowed | The owner's standing merge OK (2026-11-10, BACKLOG rules). Branch protection with required checks (item 24) is what makes an agent merge safe; without it, move merge to ask. |
+| GitHub MCP: reads, PR create/update and merge allowed | The owner's standing merge OK (2026-11-10, BACKLOG "Merging" rule). Branch protection with required checks (item 24) is what makes an agent merge safe; without it, move merge to ask. |
 | No `sandbox` block | Whether the sandbox runs in the cloud VM is not documented; a sandbox that fails to start would stop every session. Turn it on with `/sandbox` on the laptop instead (user settings). |
 
 Not verified (docs silent or not reachable): whether a committed `defaultMode` sets the cloud
