@@ -380,3 +380,18 @@ the file existed. Nothing compared the number of tests before and after.
 `tests/test_test_counts.py`: `config/test_counts.json` records each test file's number of test
 functions, and CI fails if a file disappears or has fewer; removing a test means editing that
 file in the same change, where it is visible.
+
+## 16. A decompression-bomb limit that refuses at 100 megapixels, not the 50 it states
+
+**Symptom.** `src/cdm/contract.py` and `src/cdm/serving.py` set `Image.MAX_IMAGE_PIXELS =
+50_000_000` with comments saying larger images are refused, and the test passed. Found by the
+security audit on 2026-11-10: a 58 KB PNG of 60 megapixels passed `contract.check` with
+`unreadable=False` and nothing quarantined, only a `DecompressionBombWarning`.
+
+**Cause.** Pillow raises `DecompressionBombError` only above twice `MAX_IMAGE_PIXELS`; between
+one and two times the limit it only warns. The test used 108 megapixels, above both limits, so
+it could not see the gap.
+
+**Caught by.** Not yet fixed (backlog item 29, planned): the fix treats the warning as
+unreadable, or checks the size before decoding, with a 60-megapixel test.
+

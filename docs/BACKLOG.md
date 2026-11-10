@@ -591,7 +591,88 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
     three-minute walkthrough script for the owner to record.
     - **Done when:** all four exist and the README links them.
 
-22. [ ] **Security audit against `docs/SECURITY_STANDARDS.md`** (owner, 2026-11-09). Plan only, change no code. Audit the repo against Section 19.3 of `docs/SECURITY_STANDARDS.md` and every section that applies to this stack, and report each gap in the file's SEVERITY format. Add one backlog item per gap, numbered after this one, with anything Critical (CVSS 9+) first in the Order of work. Propose a `.claude/settings.json` from Section 17.2, tailored so unattended runs don't stall: keep the deny list, and explain each change to the ask list. Check every vendor-specific setting (npm, uv, GitHub, Claude Code permission syntax) against the vendor's current docs before proposing it. One docs-only PR, which the owner reviews and merges himself (security decisions are his). Include Section 4.5: model checkpoints loaded with pickle (torch.load) should use `weights_only=True` or safetensors.
+22. [x] **Security audit against `docs/SECURITY_STANDARDS.md`** (owner, 2026-11-09). Plan only, change no code. Audit the repo against Section 19.3 of `docs/SECURITY_STANDARDS.md` and every section that applies to this stack, and report each gap in the file's SEVERITY format. Add one backlog item per gap, numbered after this one, with anything Critical (CVSS 9+) first in the Order of work. Propose a `.claude/settings.json` from Section 17.2, tailored so unattended runs don't stall: keep the deny list, and explain each change to the ask list. Check every vendor-specific setting (npm, uv, GitHub, Claude Code permission syntax) against the vendor's current docs before proposing it. One docs-only PR, which the owner reviews and merges himself (security decisions are his). Include Section 4.5: model checkpoints loaded with pickle (torch.load) should use `weights_only=True` or safetensors.
+    - **Done 2026-11-10:** `docs/security-audit-2026-11-10.md`: no Critical or High finding, no
+      secret in the tree or the 414 commits of history; 5 Medium and 26 Low findings, each in
+      the SEVERITY format, with items 23 to 47 below; a proposed `.claude/settings.json`
+      (not added); the Section 4.5 `torch.load` call sites (item 31). The owner places the new
+      items when he merges the audit's PR.
+
+**Items from the security audit (2026-11-10).** None is Critical, so none goes first; the owner
+places them. Each names its finding in `docs/security-audit-2026-11-10.md`. "(owner)" marks a
+change only the owner can make (repository settings, accounts, consoles).
+
+23. [ ] **Add `.claude/settings.json`** from the audit's proposal, after the owner's review.
+    - **Done when:** the file is committed and a cloud session's `/permissions` lists its rules;
+      `ruff check .` runs without a prompt, `curl -X POST` and a push to `main` are denied.
+24. [ ] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
+    `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
+    - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
+      `"protected": true` (as item 11 already asks).
+25. [ ] **Secret scanning before commit and in CI** (Medium): `.pre-commit-config.yaml` with
+    gitleaks pinned; a CI job scanning full history (action pinned by SHA, `contents: read`).
+    - **Done when:** a planted fake key fails the CI job, and the job is green on the real repo.
+26. [ ] **Locked, hashed, cooled-down Python installs** (Medium; a new tool, uv, needs the
+    owner's OK first): `uv.lock`, `exclude-newer = "7 days"`, `uv sync --locked` in every
+    workflow, hashed exports for Docker and the Streamlit app.
+    - **Done when:** CI and the app install only from the lock or hashes, and a test fails if a
+      workflow installs without them.
+27. [ ] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
+    torch wheels), `--require-hashes --no-deps`, pinned build backend.
+    - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.
+28. [ ] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
+    `persist-credentials: false`; the repository default set to read-only (owner).
+    - **Done when:** every workflow declares its permissions, checked by a test.
+29. [ ] **Refuse 50 to 100 megapixel images** (silent failure #16): treat Pillow's
+    `DecompressionBombWarning` as unreadable, or cap `img.size` before decoding.
+    - **Done when:** a 60-megapixel PNG gets a 400 from the API and `unreadable` from the
+      contract, in tests.
+30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
+    - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
+      runs, in tests.
+31. [ ] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
+    the call sites are listed in the audit).
+    - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
+32. [ ] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
+    - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
+33. [ ] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
+    - **Done when:** a changed CIFAR file is refused before `pickle.load`.
+34. [ ] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
+    - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
+35. [ ] **Pin the Docker base image by digest.**
+    - **Done when:** the `FROM` line carries `@sha256:` and Dependabot updates it.
+36. [ ] **Turn on ruff's `S` rules**, fixing or justifying each hit.
+    - **Done when:** `ruff check .` passes with `S` selected.
+37. [ ] **zizmor on workflow changes.**
+    - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
+38. [ ] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
+    - **Done when:** each ecosystem has a cooldown, checked by a test.
+39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
+    - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
+      `.trivyignore` with reasons).
+40. [ ] **`.gitignore` covers Section 3.1's secret and state files.**
+    - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
+      `secrets/a` and `.databrickscfg`, checked by a test.
+41. [ ] **`.env.example`** with variable names and placeholders only.
+    - **Done when:** it exists and lists every environment variable the code reads.
+42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
+    it, with no personal email.
+    - **Done when:** both exist.
+43. [ ] **Dependabot alerts and security updates on** (owner).
+    - **Done when:** the repository's security settings show both enabled.
+44. [ ] **API hardening before any deploy:** security headers, `openapi_url=None`, response
+    models, and structured security-event logging with no address or body.
+    - **Done when:** tests check the headers, the absent schema, the response models and one
+      logged rejection.
+45. [ ] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
+    the spend log is missing after spending began; date the price constant.
+    - **Done when:** a test shows a missing log refuses a call, and the Console limit is noted.
+46. [ ] **Neutralise formulas in the G5 CSV error sheets.**
+    - **Done when:** a cell starting with `=` is written with a leading `'`, in tests.
+47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
+    temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
+    to its own host with a byte cap.
+    - **Done when:** tests cover each, and the deployed demo is redeployed (owner).
 
 ## Later (kept, not started)
 
