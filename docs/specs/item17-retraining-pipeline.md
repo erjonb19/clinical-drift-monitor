@@ -48,7 +48,7 @@ rollback in item 2 can move the alias back.
 The job definition is committed and tested; one approved run goes from trigger to a registered
 version and a decision file; the alias moves only after the owner runs `promote_challenger`.
 
-## Changes made while building the promotion half (2026-11-09, for the owner to re-approve)
+## Changes made while building the promotion half (2026-11-09; approved by the owner, 2026-11-10)
 
 Found when `promote_challenger` was built (`cdm.promotion`); nothing has run:
 
