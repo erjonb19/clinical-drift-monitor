@@ -9,7 +9,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # No lockfile: leave a ">=" floor alone when the new release already satisfies it (#74 raised
+    # floors such as mlflow-skinny 2.16 to 3.18); exact pins are still bumped.
+    versioning-strategy: increase-if-necessary
     ignore:
+      # flwr 1.39.x (held on purpose) needs uvicorn < 0.50; #74's uvicorn 0.54.0 broke the install.
+      - dependency-name: uvicorn
+        update-types: [version-update:semver-major, version-update:semver-minor]
       - dependency-name: torch
         update-types: [version-update:semver-major, version-update:semver-minor]
       - dependency-name: torchvision

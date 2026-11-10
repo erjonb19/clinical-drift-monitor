@@ -396,6 +396,10 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       `versioning-strategy` to `increase-if-necessary` (keeps `>=` floors; exact pins are still
       bumped), ignore uvicorn minor updates while flwr is held at 1.39.x, and bump torch by hand
       in both the Dockerfile and the constraints.
+    - **Owner decision, 2026-11-10:** #74 closed; both suggested fixes applied in
+      `dependabot.yml` (`versioning-strategy: increase-if-necessary` for pip, and uvicorn patch
+      updates only while flwr is held), with a test. A torch bump stays a hand change to the
+      Dockerfile and the constraints together (the `+cpu` test checks both).
 
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
