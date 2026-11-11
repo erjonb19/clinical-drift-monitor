@@ -674,15 +674,17 @@ change only the owner can make (repository settings, accounts, consoles).
     models, and structured security-event logging with no address or body.
     - **Done when:** tests check the headers, the absent schema, the response models and one
       logged rejection.
-    - **Done 2026-11-11:** `app/api/main.py` adds a middleware that puts a CSP on every
-      response: no default sources, scripts only by the page script's hash, no framing, plus
-      `nosniff`, `X-Frame-Options: DENY` and a Referrer-Policy. The OpenAPI schema is off.
-      `/predict` and `/health` have Pydantic response models, so extra fields are dropped. Each
-      refusal logs one JSON line (`cdm.api.security`) with a UTC time, a fresh request id,
-      outcome and reason code. Three new tests in `tests/test_api.py` cover the headers on the page, JSON,
-      refusals and 404s; the hash matching the page; the missing schema and dropped fields; and
-      two logged refusals with no address or body in the log. HSTS is left to the host at
-      deploy. The API is still not deployed, and the deployed Streamlit demo is untouched.
+    - **Done 2026-11-11:** `app/api/main.py` adds a middleware that puts security headers on
+      every response the app builds (Starlette's plain-text 500 page is outside it): a CSP with
+      no default sources, scripts only by the page script's hash and no framing, plus
+      `nosniff`, `X-Frame-Options: DENY`, a Referrer-Policy and a Permissions-Policy. The
+      OpenAPI schema is off. `/predict` and `/health` have Pydantic response models, so extra
+      fields are dropped. Each refusal logs one JSON line (`cdm.api.security`) with a UTC time,
+      a fresh request id, the outcome and a reason code. Three new tests in `tests/test_api.py`
+      cover the headers on the page, JSON, refusals and 404s; the hash matching the page; the
+      missing schema and dropped fields; and two logged refusals with no address or body in the
+      log. HSTS is left to the host at deploy. The API is still not deployed, and the deployed
+      Streamlit demo is untouched.
 45. [ ] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
     the spend log is missing after spending began; date the price constant.
     - **Done when:** a test shows a missing log refuses a call, and the Console limit is noted.

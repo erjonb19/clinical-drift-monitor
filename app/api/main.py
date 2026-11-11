@@ -134,8 +134,8 @@ class Health(BaseModel):
 
 
 def security_event(outcome: str, reason: str) -> None:
-    """One structured line per refusal: a fresh request id, the outcome and a reason code. No
-    address, header, filename or body is logged (the privacy conditions above)."""
+    """One structured line per refusal: UTC time, a fresh request id, the outcome and a reason
+    code. No address, header, filename or body is logged (the privacy conditions above)."""
     event = {"event": "api_refusal", "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
              "request_id": uuid.uuid4().hex, "outcome": outcome, "reason": reason}  # fmt: skip
     SECURITY_LOG.warning(json.dumps(event, sort_keys=True))
