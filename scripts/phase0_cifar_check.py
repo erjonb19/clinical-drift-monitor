@@ -42,7 +42,8 @@ DEFAULT_PCA = 256
 
 
 def nearest_class(det: MahalanobisDetector, feats: np.ndarray) -> np.ndarray:
-    assert det.pca is not None and det.means is not None and det.precision is not None
+    if det.pca is None or det.means is None or det.precision is None:
+        raise RuntimeError("the detector is not fitted")
     z = det.pca.transform(feats)
     dists = np.stack(
         [np.einsum("ij,jk,ik->i", z - mu, det.precision, z - mu) for mu in det.means], axis=1
