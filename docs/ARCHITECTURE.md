@@ -35,7 +35,7 @@ flowchart LR
 
 ## How it scales
 
-- **Data:** 27,656 images, five datasets from six hospitals
+- **Data:** 27,656 images, five datasets from six sites
   (`results/phase2/v2/data_checks.json`). The monthly job replays 300 images a month
   (`results/phase3/monthly/spec.json`).
 - **Serving (item 13, `results/phase3/serving/benchmark.json`):** with an untrained one-network
