@@ -1,0 +1,5 @@
+# Streamlit settings for the public cohort demo (app/cohort_demo.py). Community Cloud runs
+# `streamlit run` from the repository root and reads this file from there.
+[client]
+# No tracebacks, exception types or messages in the browser (security audit, item 47).
+showErrorDetails = "none"

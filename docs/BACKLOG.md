@@ -739,6 +739,15 @@ change only the owner can make (repository settings, accounts, consoles).
     temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
     to its own host with a byte cap.
     - **Done when:** tests cover each, and the deployed demo is redeployed (owner).
+    - **Built 2026-11-11, waiting on the owner's redeploy:** the demo's DuckDB connection has
+      external access off and its configuration locked (`read_csv`, `ATTACH`, `COPY` and
+      re-enabling all fail, in tests); `.streamlit/config.toml` hides error details and the
+      page shows a generic message for fetch and load errors; a session's scratch folder is a
+      temporary directory removed with the session, and a session may hold at most 50
+      definitions; the ISIC client follows `next` only on https to its own host and caps
+      response bodies (20 MB for JSON, 100 MB for images). Tests in `tests/test_cohort.py`,
+      `tests/test_demo.py` and `tests/test_sources.py`. **Owner:** redeploy the Streamlit app
+      (Community Cloud picks up `main` on reboot), then tick this item.
 
 ## Later (kept, not started)
 
