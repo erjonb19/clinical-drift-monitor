@@ -653,8 +653,13 @@ change only the owner can make (repository settings, accounts, consoles).
 40. [ ] **`.gitignore` covers Section 3.1's secret and state files.**
     - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
       `secrets/a` and `.databrickscfg`, checked by a test.
-41. [ ] **`.env.example`** with variable names and placeholders only.
+41. [x] **`.env.example`** with variable names and placeholders only.
     - **Done when:** it exists and lists every environment variable the code reads.
+    - **Done 2026-11-11:** `.env.example` names the nine variables the code reads (the Haiku key,
+      the watchdog's three Databricks values, the data and notes folders, the tier-2 switch,
+      the API's bundle folder and proxy hops), with no values. `tests/test_env_example.py` scans
+      `src`, `scripts` and `app` for `os.environ` reads and fails on any unlisted name or any
+      filled-in value.
 42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
     it, with no personal email.
     - **Done when:** both exist.
