@@ -1,0 +1,49 @@
+# Backlog item 6: writes the champion smoke test's image manifest where the ISIC API is reachable
+# (cloud sessions cannot reach it). Runs scripts/make_smoke_manifest.py and prints the CSV between
+# markers in the log; the CSV is then committed by hand. It only reads public ISIC metadata and
+# images, keeps nothing and pushes nothing. The smoke test re-checks every image's SHA-256.
+name: Smoke manifest
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/smoke-manifest.yml"
+      - "scripts/make_smoke_manifest.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  manifest:
+    name: Write the smoke manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      - name: Write config/champion_smoke_images.csv
+        run: python scripts/make_smoke_manifest.py --n 50
+      - name: Check and print the manifest
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv
+          rows = list(csv.DictReader(open("config/champion_smoke_images.csv", encoding="utf-8")))
+          assert len(rows) == 50, f"{len(rows)} rows, expected 50"
+          assert {r["license"] for r in rows} <= {"CC-0", "CC-BY", "CC-BY-NC"}
+          assert all(len(r["sha256"]) == 64 for r in rows)
+          assert len({r["isic_id"] for r in rows}) == 50 and len({r["lesion_id"] for r in rows}) == 50
+          print("checked:", len(rows), "rows,", sorted({r["license"] for r in rows}))
+          PY
+          echo "----- BEGIN champion_smoke_images.csv -----"
+          cat config/champion_smoke_images.csv
+          echo "----- END champion_smoke_images.csv -----"

@@ -26,6 +26,8 @@ REPO = Path(__file__).resolve().parents[1]
 SEARCH = "https://api.isic-archive.com/api/v2/images/search/?"
 OUT = REPO / "config" / "champion_smoke_images.csv"
 FIELDS = ["isic_id", "lesion_id", "diagnosis", "license", "attribution", "url", "sha256"]
+# The licences this project may use (CLAUDE.md); an image under any other is skipped.
+ALLOWED_LICENSES = {"CC-0", "CC-BY", "CC-BY-NC"}
 
 
 def get(url: str) -> bytes:
@@ -52,7 +54,7 @@ def main() -> None:
             break
         image = first_image(lesion)
         url = ((image or {}).get("files") or {}).get("full", {}).get("url")
-        if image is None or not url:
+        if image is None or not url or image.get("copyright_license") not in ALLOWED_LICENSES:
             continue
         meta = image.get("metadata", {}).get("clinical", {})
         rows.append(
