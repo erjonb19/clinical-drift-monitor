@@ -665,8 +665,17 @@ change only the owner can make (repository settings, accounts, consoles).
     - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
 35. [ ] **Pin the Docker base image by digest.**
     - **Done when:** the `FROM` line carries `@sha256:` and Dependabot updates it.
-36. [ ] **Turn on ruff's `S` rules**, fixing or justifying each hit.
+36. [x] **Turn on ruff's `S` rules**, fixing or justifying each hit.
     - **Done when:** `ruff check .` passes with `S` selected.
+    - **Done 2026-11-11:** `S` is selected in `pyproject.toml`; `ruff check .` passes. Fixed: 16
+      `assert`s outside tests and notebooks became explicit `raise`s (several were data
+      integrity checks that `python -O` would have skipped), and the three MD5 checksums of
+      published files say `usedforsecurity=False`. Accepted, each with its reason in
+      `pyproject.toml`: argument-list subprocess calls (S603, S607; `shell=True` stays
+      flagged); asserts in tests and in Databricks notebooks (never run under `-O`); SQL built
+      from repository constants or the owner's own CLI arguments in eight named files; `urlopen` on fixed hosts in six named
+      files, and on URLs returned by the ISIC API in four (restricting those to the ISIC host is
+      item 47).
 37. [ ] **zizmor on workflow changes.**
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
 38. [ ] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
