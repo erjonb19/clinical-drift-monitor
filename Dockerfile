@@ -6,6 +6,9 @@ FROM python:3.11.17-slim
 # TRUSTED_PROXY_HOPS=1: Hugging Face Spaces puts one proxy in front (see app/api/main.py).
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 BUNDLE_DIR=/app/bundle \
     TRUSTED_PROXY_HOPS=1
+# Debian security fixes released after the base image was built (Trivy, item 39: apt and zlib1g
+# had fixable HIGH findings); the package lists are removed again.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
 RUN pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.0 torchvision==0.29.0
 
 WORKDIR /app

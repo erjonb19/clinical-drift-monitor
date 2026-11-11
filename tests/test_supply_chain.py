@@ -124,8 +124,12 @@ def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
 
 def test_the_api_image_drops_setuptools_after_installing() -> None:
     """Item 39: the base image's setuptools carries old jaraco.context and wheel copies with
-    fixable HIGH CVEs; the API never imports it, so the image removes it after the installs."""
+    fixable HIGH CVEs; the API never imports it, so the image removes it after the installs. The
+    image also applies Debian's security updates while still root."""
     lines = (REPO / "Dockerfile").read_text("utf-8").splitlines()
     installs = [i for i, line in enumerate(lines) if line.startswith("RUN pip install")]
     drop = lines.index("RUN pip uninstall -y setuptools wheel")
     assert installs and drop > max(installs)
+    # Debian's security fixes since the base image was built (apt, zlib1g had fixable HIGHs).
+    upgrade = next(i for i, line in enumerate(lines) if "apt-get upgrade -y" in line)
+    assert upgrade < lines.index("USER demo")
