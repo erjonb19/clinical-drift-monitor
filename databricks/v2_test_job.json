@@ -16,7 +16,7 @@
         "environment_version": "4",
         "dependencies": [
           "/Volumes/workspace/cdm/raw/deploy/ceb83b0/cdm-0.1.0-py3-none-any.whl",
-          "torch>=2.4",
+          "torch>=2.6",
           "torchvision>=0.19"
         ]
       }

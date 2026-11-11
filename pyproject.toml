@@ -20,7 +20,7 @@ dependencies = [
 # Training, OOD scoring and the gold embeddings task.
 train = [
     # CI and local dev install the CPU wheels from download.pytorch.org.
-    "torch>=2.4",
+    "torch>=2.6",
     "torchvision>=0.19",
     # 3.x is the release that serves the native 224px MedMNIST+ files.
     "medmnist>=3.0",

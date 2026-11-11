@@ -72,7 +72,9 @@ def main() -> None:
     else:
         model = build_model(pretrained=True)
         if args.checkpoint is not None:
-            model.load_state_dict(torch.load(args.checkpoint, map_location="cpu"))
+            model.load_state_dict(
+                torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+            )
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
         ham = prepare_ham(root)

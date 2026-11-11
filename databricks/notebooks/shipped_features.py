@@ -91,7 +91,9 @@ features: dict[str, np.ndarray] = {}
 gaps: dict[str, float] = {}
 for seed in SEEDS:
     model = build_model(pretrained=False, arch="b0")
-    model.load_state_dict(torch.load(manifest[seed]["checkpoint"], map_location="cpu"))
+    model.load_state_dict(
+        torch.load(manifest[seed]["checkpoint"], map_location="cpu", weights_only=True)
+    )
     assert weights_hash(model) == manifest[seed]["weights_sha256"], (
         f"seed {seed} checkpoint mismatch"
     )
