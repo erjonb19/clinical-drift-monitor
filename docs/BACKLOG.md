@@ -649,8 +649,9 @@ change only the owner can make (repository settings, accounts, consoles).
       published files say `usedforsecurity=False`. Accepted, each with its reason in
       `pyproject.toml`: argument-list subprocess calls (S603, S607; `shell=True` stays
       flagged); asserts in tests and in Databricks notebooks (never run under `-O`); SQL built
-      from repository constants or the owner's own CLI arguments in eight named files; `urlopen` on fixed hosts in seven named files, and on URLs returned by the ISIC API in
-      three (restricting those to the ISIC host is item 47).
+      from repository constants or the owner's own CLI arguments in eight named files; `urlopen` on fixed hosts in six named
+      files, and on URLs returned by the ISIC API in four (restricting those to the ISIC host is
+      item 47).
 37. [ ] **zizmor on workflow changes.**
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
 38. [ ] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
