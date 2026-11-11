@@ -82,3 +82,93 @@ def test_service_refuses_a_60_megapixel_image_before_decoding() -> None:
     svc = Service([], [], 0.0, 1.0, "test")
     with pytest.raises(Image.DecompressionBombError):
         svc.predict(buf.getvalue())
+
+
+def _bundle(folder: Path) -> dict[str, object]:
+    """A one-seed bundle from an untrained model, and its manifest (written)."""
+    torch.manual_seed(0)
+    model = build_model(pretrained=False, arch="b0").eval()
+    torch.save(model.state_dict(), folder / "seed0.pt")
+    rng = np.random.default_rng(0)
+    det = MahalanobisDetector(4).fit(rng.normal(size=(70, 1280)), np.repeat(np.arange(7), 10))
+    np.savez(folder / "seed0_detector.npz", **detector_arrays(det))  # type: ignore[arg-type]
+    files = ("seed0.pt", "seed0_detector.npz")
+    manifest: dict[str, object] = {
+        "version": "test",
+        "abstain_threshold": 1e9,
+        "refer_threshold": 0.0638,
+        "seeds": [
+            {
+                "checkpoint": "seed0.pt",
+                "detector": "seed0_detector.npz",
+                "weights_sha256": weights_hash(model),
+            }
+        ],  # fmt: skip
+        "sha256": {f: hashlib.sha256((folder / f).read_bytes()).hexdigest() for f in files},
+    }
+    (folder / "manifest.json").write_text(json.dumps(manifest))
+    return manifest
+
+
+@pytest.mark.parametrize("missing", ["seed0.pt", "seed0_detector.npz"])
+def test_a_manifest_that_omits_a_bundle_file_fails_to_load(tmp_path: Path, missing: str) -> None:
+    """Backlog item 32: a sha256 map without a seed's checkpoint or detector cannot let that
+    file load unhashed."""
+    manifest = _bundle(tmp_path)
+    hashes = manifest["sha256"]
+    assert isinstance(hashes, dict)
+    del hashes[missing]
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="not listed"):
+        Service.load(tmp_path)
+
+
+@pytest.mark.parametrize("name", ["../seed0.pt", "sub/seed0.pt", "..", ".", "", "a\\b.pt"])
+def test_path_like_bundle_names_are_refused(tmp_path: Path, name: str) -> None:
+    manifest = _bundle(tmp_path)
+    seeds = manifest["seeds"]
+    assert isinstance(seeds, list)
+    seeds[0]["checkpoint"] = name
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="plain file name"):
+        Service.load(tmp_path)
+    manifest = _bundle(tmp_path)
+    hashes = manifest["sha256"]
+    assert isinstance(hashes, dict)
+    hashes[name] = "0" * 64
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="plain file name"):
+        Service.load(tmp_path)
+
+
+def test_a_complete_manifest_still_loads(tmp_path: Path) -> None:
+    _bundle(tmp_path)
+    assert len(Service.load(tmp_path).models) == 1
+
+
+def test_a_manifest_with_no_seeds_fails_to_load(tmp_path: Path) -> None:
+    manifest = _bundle(tmp_path)
+    manifest["seeds"] = []
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="no seeds"):
+        Service.load(tmp_path)
+
+
+def test_the_deploy_check_refuses_what_the_space_would_refuse(tmp_path: Path) -> None:
+    """scripts/deploy_space.py's pre-upload check applies the same manifest rules."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "deploy_space", Path(__file__).resolve().parents[1] / "scripts" / "deploy_space.py"
+    )
+    assert spec and spec.loader
+    deploy = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(deploy)
+    manifest = _bundle(tmp_path)
+    assert deploy.check_bundle(tmp_path)["version"] == "test"
+    hashes = manifest["sha256"]
+    assert isinstance(hashes, dict)
+    del hashes["seed0.pt"]
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(SystemExit, match="not listed"):
+        deploy.check_bundle(tmp_path)
