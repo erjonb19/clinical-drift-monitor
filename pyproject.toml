@@ -120,8 +120,9 @@ ignore = ["S603", "S607"]
 "scripts/watchdog.py" = ["S310"]
 "scripts/load_test.py" = ["S310"]
 "scripts/api_local_check.py" = ["S310"]
-# urlopen on URLs returned by the ISIC API (the pagination `next` link, image file URLs); not
-# yet restricted to the ISIC host: that check is backlog item 47.
+# urlopen on URLs returned by the ISIC API (the pagination `next` link, image file URLs); since
+# item 47, `next` is followed only over https to the same host and reads are size-capped; image
+# file URLs are still fetched from whatever host the API returns.
 "src/cdm/sources.py" = ["S310"]
 "scripts/detector_quality.py" = ["S310"]
 "scripts/make_smoke_manifest.py" = ["S310"]

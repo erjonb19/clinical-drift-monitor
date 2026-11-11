@@ -660,9 +660,17 @@ change only the owner can make (repository settings, accounts, consoles).
     workflow, hashed exports for Docker and the Streamlit app.
     - **Done when:** CI and the app install only from the lock or hashes, and a test fails if a
       workflow installs without them.
+    - **Blocked (2026-11-11):** uv is approved (owner, 2026-11-11), but the lock cannot be
+      built from this cloud session: its network proxy returns 403 for `download.pytorch.org`,
+      where the CPU torch and torchvision wheels come from, so `uv lock` cannot resolve them.
+      Unblock: allow that host in the cloud environment's network settings, or run `uv lock` on
+      the laptop and commit `uv.lock`.
 27. [ ] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
     torch wheels), `--require-hashes --no-deps`, pinned build backend.
     - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.
+    - **Blocked (2026-11-11):** the hashed requirements need the `+cpu` torch wheels' hashes
+      from `download.pytorch.org`, which this session's proxy refuses (403); same unblock as
+      item 26, which it follows.
 28. [x] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
     `persist-credentials: false`; the repository default set to read-only (owner).
     - **Done when:** every workflow declares its permissions, checked by a test.
@@ -721,7 +729,10 @@ change only the owner can make (repository settings, accounts, consoles).
       manifest hash from configuration is not done.
 33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
     - **Done when:** a changed CIFAR file is refused before `pickle.load`.
-    - Done 2026-11-11: each batch file's MD5 is checked against torchvision's published list before `pickle.loads`; `tests/test_build_benchmarks.py` shows a planted pickle is refused without running and an unknown file name is refused. The benchmark build itself was not rerun here.
+    - **Done 2026-11-11:** each batch file's MD5 is checked against torchvision's published
+      list before `pickle.loads`; `tests/test_build_benchmarks.py` shows a planted pickle is
+      refused without running and an unknown file name is refused. The benchmark build itself
+      was not rerun here.
 34. [x] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
     - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
     - **Done 2026-11-11:** every `actions/checkout`, `actions/setup-python` and
@@ -750,6 +761,9 @@ change only the owner can make (repository settings, accounts, consoles).
       item 47).
 37. [ ] **zizmor on workflow changes.**
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
+    - **Waiting on the owner (2026-11-11):** zizmor is a new tool (a PyPI package run in CI),
+      so directive 11 needs the owner's OK before it is added. Proposed: `zizmor==<pinned>`
+      installed in its own job on changes to `.github/workflows/**`, failing on any finding.
 38. [x] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
     - **Done when:** each ecosystem has a cooldown, checked by a test.
     - **Done 2026-11-11:** pip, docker and github-actions each have `cooldown: default-days: 7`
