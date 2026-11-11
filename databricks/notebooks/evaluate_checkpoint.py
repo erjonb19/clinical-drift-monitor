@@ -54,7 +54,9 @@ SIZE = int(dbutils.widgets.get("image_size"))
 TTA = dbutils.widgets.get("tta").lower() == "true"
 SPLITS = [s.strip() for s in dbutils.widgets.get("splits").split(",")]
 model = build_model(pretrained=False, arch=dbutils.widgets.get("arch"))
-model.load_state_dict(torch.load(dbutils.widgets.get("checkpoint"), map_location="cpu"))
+model.load_state_dict(
+    torch.load(dbutils.widgets.get("checkpoint"), map_location="cpu", weights_only=True)
+)
 model.to(device).eval()
 got, expected = weights_hash(model), dbutils.widgets.get("expected_weights")
 assert got == expected, f"checkpoint weights {got}, expected {expected}"

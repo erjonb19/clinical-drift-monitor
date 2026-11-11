@@ -660,23 +660,46 @@ change only the owner can make (repository settings, accounts, consoles).
 30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
     - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
       runs, in tests.
-31. [ ] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
+31. [x] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
     the call sites are listed in the audit).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
+    - **Done 2026-11-11:** all 18 calls pass `weights_only=True` (each loads a plain
+      `state_dict`; 15 are in notebooks or a script that only run on Databricks or the owner's
+      laptop, converted by their call shape and not run here, and the other 3 run in the test
+      suite); the floor is
+      `torch>=2.6` in `pyproject.toml` and the seven job files. `tests/test_weights_only.py`
+      parses `src`, `scripts`, `tests`, `app` and the notebooks and fails on any `torch.load`
+      without a literal `weights_only=True` (aliases included), with a planted-call self-test.
+      Safetensors for the bundle stays a later option.
 32. [ ] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
     - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
-33. [ ] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
+33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
     - **Done when:** a changed CIFAR file is refused before `pickle.load`.
+    - Done 2026-11-11: each batch file's MD5 is checked against torchvision's published list before `pickle.loads`; `tests/test_build_benchmarks.py` shows a planted pickle is refused without running and an unknown file name is refused. The benchmark build itself was not rerun here.
 34. [ ] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
     - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
 35. [ ] **Pin the Docker base image by digest.**
     - **Done when:** the `FROM` line carries `@sha256:` and Dependabot updates it.
-36. [ ] **Turn on ruff's `S` rules**, fixing or justifying each hit.
+36. [x] **Turn on ruff's `S` rules**, fixing or justifying each hit.
     - **Done when:** `ruff check .` passes with `S` selected.
+    - **Done 2026-11-11:** `S` is selected in `pyproject.toml`; `ruff check .` passes. Fixed: 16
+      `assert`s outside tests and notebooks became explicit `raise`s (several were data
+      integrity checks that `python -O` would have skipped), and the three MD5 checksums of
+      published files say `usedforsecurity=False`. Accepted, each with its reason in
+      `pyproject.toml`: argument-list subprocess calls (S603, S607; `shell=True` stays
+      flagged); asserts in tests and in Databricks notebooks (never run under `-O`); SQL built
+      from repository constants or the owner's own CLI arguments in eight named files; `urlopen` on fixed hosts in six named
+      files, and on URLs returned by the ISIC API in four (restricting those to the ISIC host is
+      item 47).
 37. [ ] **zizmor on workflow changes.**
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
-38. [ ] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
+38. [x] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
     - **Done when:** each ecosystem has a cooldown, checked by a test.
+    - **Done 2026-11-11:** pip, docker and github-actions each have `cooldown: default-days: 7`
+      in `.github/dependabot.yml`; `tests/test_supply_chain.py` fails if an ecosystem loses it or
+      goes under 7 days. GitHub applies a cooldown to version updates only, so security updates
+      still open at once. GitHub's default is a 3-day cooldown, so this raises it to 7. The file
+      parses with `yaml.safe_load`; Dependabot validates it again once it is on main.
 39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
     - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
       `.trivyignore` with reasons).
@@ -704,9 +727,18 @@ change only the owner can make (repository settings, accounts, consoles).
     models, and structured security-event logging with no address or body.
     - **Done when:** tests check the headers, the absent schema, the response models and one
       logged rejection.
-45. [ ] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
+45. [x] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
     the spend log is missing after spending began; date the price constant.
     - **Done when:** a test shows a missing log refuses a call, and the Console limit is noted.
+    - **Done 2026-11-11:** `SpendLog` keeps a high-water mark beside the log
+      (`~/.cdm/llm_spend.jsonl.high_water.json`), raised on every recorded call; once spending
+      has begun, a missing log or one recording less than the mark refuses every call
+      (`tests/test_extract.py`). The price constant carries the date it was last matched
+      (`PRICE_CHECKED`, 2026-11-11: $0.10 and $0.50 per million tokens for `claude-haiku-5-5`,
+      from the Claude API reference's model table). **Owner:** a spend limit on this key in the
+      Anthropic Console is the real backstop; whether one is set cannot be checked from here.
+      Limits: deleting the log and its mark together still resets the client-side count, and a
+      log that predates this change has no mark until its next call.
 46. [ ] **Neutralise formulas in the G5 CSV error sheets.**
     - **Done when:** a cell starting with `=` is written with a leading `'`, in tests.
 47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,

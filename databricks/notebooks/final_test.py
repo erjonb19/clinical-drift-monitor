@@ -152,7 +152,7 @@ def logits_for(model: torch.nn.Module, split: str) -> tuple[np.ndarray, np.ndarr
 # before the first test image is scored.
 def load(m: dict[str, object]) -> torch.nn.Module:
     model = build_model(pretrained=False, arch=CONFIG.get("arch", "b0"))
-    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu"))
+    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu", weights_only=True))
     assert weights_hash(model) == m["weights_sha256"], f"{m} checkpoint mismatch"
     return model.to(device).eval()
 
