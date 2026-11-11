@@ -11,12 +11,15 @@ import pandas as pd
 import pytest
 
 from cdm.sources import (
+    API,
     Cap,
     Site,
     collection_records,
     fingerprint,
     flatten,
     ham_rows,
+    http_bytes,
+    http_json,
     land,
     load_sites,
     map_diagnosis,
@@ -191,3 +194,65 @@ def test_land_reuses_a_known_manifest_row_without_reading_the_file(tmp_path: Pat
     assert reused["sha256"] == first["sha256"] and not reused["downloaded"]
     rehashed = land(row, tmp_path / "vol", tmp_path / "tmp", opener=lambda url: b"")
     assert rehashed["sha256"] == hashlib.sha256(b"changed after landing").hexdigest()
+
+
+@pytest.mark.parametrize(
+    "next_url",
+    [
+        "https://evil.example/api/v2/images/search/?cursor=2",
+        "http://api.isic-archive.com/api/v2/images/search/?cursor=2",  # not https
+        "https://api.isic-archive.com.evil.example/api/v2/images/search/",
+        "https://user@api.isic-archive.com/api/v2/images/search/",
+        "file:///etc/passwd",
+    ],
+)
+def test_collection_records_follows_next_only_on_the_api_host(next_url: str) -> None:
+    """A spoofed page cannot send the client to another host (security audit, item 47)."""
+    seen: list[str] = []
+
+    def fetch(url: str) -> dict[str, Any]:
+        seen.append(url)
+        return {"results": [record(f"ISIC_{len(seen)}")], "next": next_url}
+
+    with pytest.raises(DataError, match="refusing to follow"):
+        collection_records(7, fetch)
+    assert len(seen) == 1 and seen[0].startswith(API)
+
+
+class FakeResponse:
+    """Stands in for urlopen's response: serves a body at most 1000 bytes a read, no network."""
+
+    def __init__(self, body: bytes) -> None:
+        self.body, self.read_so_far = body, 0
+
+    def __enter__(self) -> FakeResponse:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+    def read(self, amount: int = -1) -> bytes:
+        amount = len(self.body) if amount < 0 else min(amount, 1000)
+        chunk = self.body[self.read_so_far : self.read_so_far + amount]
+        self.read_so_far += len(chunk)
+        return chunk
+
+
+def test_http_reads_are_capped_in_bytes(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A body over the cap is refused, without being read whole and without a retry."""
+    served: list[FakeResponse] = []
+    body = json.dumps({"results": [], "pad": "x" * 5000}).encode()
+
+    def urlopen(url: str, timeout: float) -> FakeResponse:
+        served.append(FakeResponse(body))
+        return served[-1]
+
+    monkeypatch.setattr("urllib.request.urlopen", urlopen)
+    assert http_json(API, limit=len(body))["results"] == []
+    assert http_bytes(API, limit=len(body)) == body
+    with pytest.raises(DataError, match="larger than"):
+        http_json(API, limit=len(body) - 1)
+    with pytest.raises(DataError, match="larger than"):
+        http_bytes(API, limit=100)
+    assert len(served) == 4  # a refused body is not retried
+    assert served[-1].read_so_far <= 101  # and is not read past the cap
