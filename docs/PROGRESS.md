@@ -5,7 +5,7 @@ Nothing goes here until the item's "Done when" is met.
 
 | Date | Item | What changed | How to check |
 | --- | --- | --- | --- |
-| 2026-11-11 | 11 | Supply chain and merge rules: Dependabot, CodeQL, pip-audit with a known-bad self-test, Trivy, and branch protection on `main` (owner) | `curl -s https://api.github.com/repos/erjonb19/clinical-drift-monitor/branches/main` shows `"protected": true`; read `.github/dependabot.yml` and `ci.yml` |
+| 2026-11-11 | 40 | `.gitignore` covers the standard's secret and state files | `pytest tests/test_gitignore.py` |
 | 2026-11-10 | 22 | Security audit against `docs/SECURITY_STANDARDS.md` (plan only): 0 Critical, 0 High, 5 Medium, 27 Low; items 23 to 47; a proposed `.claude/settings.json` | Read `docs/security-audit-2026-11-10.md` |
 | 2026-11-09 | 10 | README "Reviewer feedback" section (date, reviewer role, comment, what changed, link), empty until a real review | Read the README section; `pytest tests/test_readme_feedback.py` |
 

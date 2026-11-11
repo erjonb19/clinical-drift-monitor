@@ -439,6 +439,12 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       with required checks `quality`, `image`, `analyze (actions)` and `analyze (python)`
       (checked 2026-11-11). **Note:** enforcement is `non_admins`, so the owner's admin account
       can bypass the checks; including administrators is the owner's setting.
+    - **Dependabot's next Python group (#83, 2026-11-11): held, closed.** `quality` failed at
+      install: it moved fastapi to 0.162.0, and `flwr` 1.39.0 needs fastapi `>=0.138,<0.139`. It
+      also moved the research Phase B stack a major version (`open_clip_torch` 3 to 4,
+      `transformers` 4 to 5). `dependabot.yml` now gives fastapi, `open_clip_torch` and
+      `transformers` patch updates only (a test checks it); the rest of the group comes back on
+      Dependabot's next run.
 
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
@@ -663,9 +669,13 @@ change only the owner can make (repository settings, accounts, consoles).
 39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
     - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
       `.trivyignore` with reasons).
-40. [ ] **`.gitignore` covers Section 3.1's secret and state files.**
+40. [x] **`.gitignore` covers Section 3.1's secret and state files.**
     - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
       `secrets/a` and `.databrickscfg`, checked by a test.
+    - **Done 2026-11-11:** `.gitignore` adds `.env.*` (except `.env.example`), `*.pem`, `*.key`,
+      `*.p12`, `*.pfx`, Terraform state, `secrets/`, credential and service-account JSON and
+      `.databrickscfg`; no tracked file matches them. `tests/test_gitignore.py` checks each with
+      `git check-ignore`, and that `.env.example` stays committable.
 41. [ ] **`.env.example`** with variable names and placeholders only.
     - **Done when:** it exists and lists every environment variable the code reads.
 42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
