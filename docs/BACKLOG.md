@@ -630,9 +630,16 @@ change only the owner can make (repository settings, accounts, consoles).
 30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
     - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
       runs, in tests.
-31. [ ] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
+31. [x] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
     the call sites are listed in the audit).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
+    - **Done 2026-11-11:** all 18 calls pass `weights_only=True` (each loads a plain
+      `state_dict`; 17 are in notebooks or scripts that only run on Databricks or the owner's
+      laptop, so they were converted by their call shape, not run here); the floor is
+      `torch>=2.6` in `pyproject.toml` and the seven job files. `tests/test_weights_only.py`
+      parses `src`, `scripts`, `tests`, `app` and the notebooks and fails on any `torch.load`
+      without a literal `weights_only=True` (aliases included), with a planted-call self-test.
+      Safetensors for the bundle stays a later option.
 32. [ ] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
     - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
 33. [ ] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
