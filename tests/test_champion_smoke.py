@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import re
 import shutil
 import tarfile
 import urllib.request
@@ -96,3 +97,23 @@ def test_the_champion_loads_and_scores_fixed_images() -> None:
         assert np.isfinite(a["ood_score"])
     abstain = np.mean([a["abstain"] for a in answers])
     assert abstain <= CONFIG["max_abstain_share"], f"{abstain:.0%} abstained on test-split images"
+
+
+def test_the_committed_manifest_is_test_split_licensed_and_unique() -> None:
+    """Runs always: the committed manifest (written by the Smoke manifest workflow) holds 50
+    images of 50 different lesions, every lesion in the clients' test split, each with an
+    allowed licence and a SHA-256, so a bad hand edit fails before the bundle arrives."""
+    path = REPO / CONFIG["images_manifest"]
+    if not path.exists():
+        pytest.skip("no manifest committed yet")
+    with path.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    with (REPO / "config" / "splits_v1.csv").open(encoding="utf-8") as f:
+        split = {r["lesion_id"]: r["split"] for r in csv.DictReader(f)}
+    assert len(rows) == 50
+    assert len({r["isic_id"] for r in rows}) == 50 and len({r["lesion_id"] for r in rows}) == 50
+    assert all(split.get(r["lesion_id"]) == "test" for r in rows)
+    assert {r["license"] for r in rows} <= {"CC-0", "CC-BY", "CC-BY-NC"}
+    assert all(r["license"] == "CC-0" or r["attribution"] for r in rows)
+    assert all(re.fullmatch(r"[0-9a-f]{64}", r["sha256"]) for r in rows)
+    assert all(r["url"].startswith("https://isic-archive.s3.amazonaws.com/") for r in rows)
