@@ -4,7 +4,8 @@
 # and the model and training stack gets patch releases only, since a minor release can change
 # the numbers behind committed results (flwr is held at 1.39.x on purpose: config/pip_audit_ignore.json).
 # Cooldown (item 38): a version update waits 7 days after its release, so a hijacked release is
-# more likely to be found and pulled before it reaches a PR here. Security updates do not wait.
+# more likely to be found and pulled before it reaches a PR here (GitHub's default is 3 days).
+# Security updates do not wait.
 version: 2
 updates:
   - package-ecosystem: pip

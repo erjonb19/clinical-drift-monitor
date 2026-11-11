@@ -656,7 +656,8 @@ change only the owner can make (repository settings, accounts, consoles).
     - **Done 2026-11-11:** pip, docker and github-actions each have `cooldown: default-days: 7`
       in `.github/dependabot.yml`; `tests/test_supply_chain.py` fails if an ecosystem loses it or
       goes under 7 days. GitHub applies a cooldown to version updates only, so security updates
-      still open at once. Dependabot's own check on this PR is the proof the file still parses.
+      still open at once. GitHub's default is a 3-day cooldown, so this raises it to 7. The file
+      parses with `yaml.safe_load`; Dependabot validates it again once it is on main.
 39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
     - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
       `.trivyignore` with reasons).
