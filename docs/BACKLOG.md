@@ -667,8 +667,13 @@ change only the owner can make (repository settings, accounts, consoles).
 45. [ ] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
     the spend log is missing after spending began; date the price constant.
     - **Done when:** a test shows a missing log refuses a call, and the Console limit is noted.
-46. [ ] **Neutralise formulas in the G5 CSV error sheets.**
+46. [x] **Neutralise formulas in the G5 CSV error sheets.**
     - **Done when:** a cell starting with `=` is written with a leading `'`, in tests.
+    - **Done 2026-11-11:** `cdm.extract.spreadsheet_safe_frame` prefixes `'` to any text cell
+      starting with `=`, `+`, `-`, `@`, a tab or a carriage return, leaving numeric columns
+      unchanged; `scripts/extraction.py` writes the predictions CSV and `errors.csv` through it.
+      Tests in `tests/test_extract.py`, including an end-to-end run with no network or model
+      call.
 47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
     temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
     to its own host with a byte cap.
