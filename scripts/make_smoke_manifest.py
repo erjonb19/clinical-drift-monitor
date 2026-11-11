@@ -57,7 +57,8 @@ def first_image(lesion_id: str) -> dict[str, Any] | None:
             f"{lesion_id}: the API returned {results[0].get('isic_id')} of lesion "
             f"{image_lesion(results[0])}; the query syntax is not doing what we expect"
         )
-    return results[0]
+    image: dict[str, Any] = results[0]
+    return image
 
 
 def main() -> None:
