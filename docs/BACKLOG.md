@@ -664,9 +664,18 @@ change only the owner can make (repository settings, accounts, consoles).
     models, and structured security-event logging with no address or body.
     - **Done when:** tests check the headers, the absent schema, the response models and one
       logged rejection.
-45. [ ] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
+45. [x] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
     the spend log is missing after spending began; date the price constant.
     - **Done when:** a test shows a missing log refuses a call, and the Console limit is noted.
+    - **Done 2026-11-11:** `SpendLog` keeps a high-water mark beside the log
+      (`~/.cdm/llm_spend.jsonl.high_water.json`), raised on every recorded call; once spending
+      has begun, a missing log or one recording less than the mark refuses every call
+      (`tests/test_extract.py`). The price constant carries the date it was last matched
+      (`PRICE_CHECKED`, 2026-11-11: $0.10 and $0.50 per million tokens for `claude-haiku-5-5`,
+      from the Claude API reference's model table). **Owner:** a spend limit on this key in the
+      Anthropic Console is the real backstop; whether one is set cannot be checked from here.
+      Limits: deleting the log and its mark together still resets the client-side count, and a
+      log that predates this change has no mark until its next call.
 46. [ ] **Neutralise formulas in the G5 CSV error sheets.**
     - **Done when:** a cell starting with `=` is written with a leading `'`, in tests.
 47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
