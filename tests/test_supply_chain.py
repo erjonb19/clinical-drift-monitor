@@ -184,3 +184,21 @@ def test_zizmor_audits_workflow_changes_pinned_with_a_self_test() -> None:
     assert "${{" not in self_test and "set +e" in self_test
     assert '"$status" -lt 10' in self_test and "template-injection" in self_test
     assert "zizmor --offline .github/workflows/" in text
+
+
+def test_onnxruntime_matches_the_databricks_job_and_its_results() -> None:
+    """Owner, 2026-11-11: the serve extra pins the onnxruntime the Databricks ONNX job ran and
+    the committed results record; a bump changes all three together, at a Databricks deploy."""
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    pin = re.search(r'"onnxruntime==([\d.]+)"', pyproject)
+    job = re.search(
+        r'"onnxruntime==([\d.]+)"',
+        (REPO / "databricks" / "onnx_export_job.json").read_text("utf-8"),
+    )
+    assert pin and job and pin.group(1) == job.group(1), (pin, job)
+    for name in ("results.json", "noise.json"):
+        recorded = json.loads((REPO / "results" / "phase3" / "onnx" / name).read_text("utf-8"))
+        assert recorded["versions"]["onnxruntime"] == pin.group(1), name
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    entry = re.search(r"- dependency-name: onnxruntime\n(\s+)(\S+)", text)
+    assert entry is not None and not entry.group(2).startswith("update-types")
