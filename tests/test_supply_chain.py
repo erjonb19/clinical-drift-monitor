@@ -88,7 +88,8 @@ def test_dependabot_keeps_floors_and_the_uvicorn_that_flwr_needs() -> None:
     text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
     pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
     assert "versioning-strategy: increase-if-necessary" in pip
-    for held in ("fastapi", "open_clip_torch", "transformers"):  # #83 (2026-11-11)
+    # #83 (2026-11-11): fastapi, open_clip_torch, transformers; #108: mpmath (sympy needs < 1.4)
+    for held in ("fastapi", "open_clip_torch", "transformers", "mpmath"):
         assert sorted(_ignored(pip, held)) == [
             "version-update:semver-major",
             "version-update:semver-minor",
