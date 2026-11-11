@@ -16,20 +16,33 @@ Privacy and limits (owner's conditions, 2026-10-22):
 Run: BUNDLE_DIR=<serving bundle> uvicorn app.api.main:app --host 0.0.0.0 --port 7860
 Behind a proxy (Hugging Face Spaces), set TRUSTED_PROXY_HOPS=1 so the client address for the
 rate limit is the entry that proxy appended to X-Forwarded-For.
+
+Hardening (backlog item 44): every response carries security headers (a CSP that allows only the
+page's own inline script, by hash, and no framing), the OpenAPI schema is not served, both routes
+have response models so no extra field can leak, and refusals are logged as structured events
+with a request id, outcome and reason code, never an address or a body. HSTS is set by the host
+at deploy, not here.
 """
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import json
+import logging
 import os
+import re
 import threading
 import time
+import uuid
 from collections import OrderedDict, deque
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
+from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from cdm import contract
@@ -88,6 +101,43 @@ class RateLimiter:
 
 
 CONTRACT = contract.load_config()
+SECURITY_LOG = logging.getLogger("cdm.api.security")
+
+
+class Prediction(BaseModel):
+    """The only fields /predict returns."""
+
+    label: str
+    probabilities: dict[str, float]
+    ood_score: float
+    abstain: bool
+    refer_melanoma: bool
+    model_version: str
+    notice: str
+    input_flags: list[str]
+    license: str
+
+
+class Health(BaseModel):
+    """The only fields /health returns: status, version and counts."""
+
+    status: str
+    model_version: str
+    notice: str
+    predictions: int
+    rejected: int
+    quarantined: int
+    rate_limited: int
+    latency_ms_p50: float | None
+    latency_ms_p95: float | None
+
+
+def security_event(outcome: str, reason: str) -> None:
+    """One structured line per refusal: a fresh request id, the outcome and a reason code. No
+    address, header, filename or body is logged (the privacy conditions above)."""
+    event = {"event": "api_refusal", "request_id": uuid.uuid4().hex, "outcome": outcome,
+             "reason": reason}  # fmt: skip
+    SECURITY_LOG.warning(json.dumps(event, sort_keys=True))
 
 
 class Stats:
@@ -169,10 +219,53 @@ document.getElementById("b").onclick = async () => {{
 </body></html>"""
 
 
+def script_hash(html: str) -> str:
+    """The CSP source for the page's one inline script: sha256 of its exact text."""
+    scripts = re.findall(r"<script>(.*?)</script>", html, flags=re.S)
+    if len(scripts) != 1:
+        raise ValueError("the page must have exactly one inline script")
+    digest = hashlib.sha256(scripts[0].encode("utf-8")).digest()
+    return "'sha256-" + base64.b64encode(digest).decode("ascii") + "'"
+
+
+def security_headers(html: str) -> dict[str, str]:
+    """Headers for every response. The page uses inline style attributes, so styles stay
+    'unsafe-inline'; scripts run only if they match the hash, and the page cannot be framed."""
+    csp = (
+        "default-src 'none'; "
+        f"script-src {script_hash(html)}; "
+        "style-src 'unsafe-inline'; "
+        "connect-src 'self'; "
+        "img-src 'self'; "
+        "base-uri 'none'; "
+        "form-action 'none'; "
+        "frame-ancestors 'none'"
+    )
+    return {
+        "Content-Security-Policy": csp,
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+    }
+
+
 def create_app(
     load: Callable[[], Service], limiter: RateLimiter | None = None, trusted_hops: int = 0
 ) -> FastAPI:
-    app = FastAPI(title="Skin lesion classifier (research demo)", docs_url=None, redoc_url=None)
+    app = FastAPI(
+        title="Skin lesion classifier (research demo)",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
+    headers = security_headers(page())
+
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next: Callable[..., Any]) -> Response:
+        response: Response = await call_next(request)
+        response.headers.update(headers)
+        return response
+
     limits = limiter or RateLimiter()
     stats = Stats()
     state: dict[str, Service] = {}
@@ -186,20 +279,22 @@ def create_app(
     def index() -> str:
         return page()
 
-    @app.get("/health")
+    @app.get("/health", response_model=Health)
     def health() -> dict[str, Any]:
         return {"status": "ok", "model_version": service().version, "notice": NOTICE,
                 **stats.snapshot()}  # fmt: skip
 
-    @app.post("/predict")
+    @app.post("/predict", response_model=Prediction)
     async def predict(request: Request) -> dict[str, Any]:
         if not limits.allow(client_address(request, trusted_hops)):
             stats.add("rate_limited")
+            security_event("rate_limited", "rate_limit")
             raise HTTPException(429, "rate limit: try again in a minute")
         try:
             data = await read_capped(request, MAX_BYTES)
         except HTTPException:
             stats.add("rejected")
+            security_event("rejected", "too_large")
             raise
         # The input contract (backlog item 18): an unreadable body is the client's error (400);
         # a readable image that breaks an enforced rule is quarantined with its reason (422).
@@ -207,9 +302,11 @@ def create_app(
         verdict = await run_in_threadpool(contract.check, data, CONTRACT, (), False)
         if verdict.unreadable:
             stats.add("rejected")
+            security_event("rejected", "unreadable")
             raise HTTPException(400, "could not read that body as an image")
         if not verdict.ok:
             stats.add("quarantined")
+            security_event("quarantined", "input_contract")
             raise HTTPException(422, "; ".join(verdict.quarantined))
         model = service()  # a bundle problem is a server error, not the client's file
         start = time.perf_counter()
@@ -217,6 +314,7 @@ def create_app(
             out = await run_in_threadpool(model.predict, data)
         except Exception:  # noqa: BLE001 - any undecodable upload is the client's error
             stats.add("rejected")
+            security_event("rejected", "undecodable")
             raise HTTPException(400, "could not read that body as an image") from None
         finally:
             del data
