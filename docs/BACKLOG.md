@@ -650,9 +650,13 @@ change only the owner can make (repository settings, accounts, consoles).
 39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
     - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
       `.trivyignore` with reasons).
-40. [ ] **`.gitignore` covers Section 3.1's secret and state files.**
+40. [x] **`.gitignore` covers Section 3.1's secret and state files.**
     - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
       `secrets/a` and `.databrickscfg`, checked by a test.
+    - **Done 2026-11-11:** `.gitignore` adds `.env.*` (except `.env.example`), `*.pem`, `*.key`,
+      `*.p12`, `*.pfx`, Terraform state, `secrets/`, credential and service-account JSON and
+      `.databrickscfg`; no tracked file matches them. `tests/test_gitignore.py` checks each with
+      `git check-ignore`, and that `.env.example` stays committable.
 41. [ ] **`.env.example`** with variable names and placeholders only.
     - **Done when:** it exists and lists every environment variable the code reads.
 42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
