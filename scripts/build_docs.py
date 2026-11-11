@@ -442,11 +442,17 @@ aggregation weight.
 - **Bias mitigation approaches:** lesion-level splits (no lesion in two splits, gated); class-
   weighted loss; per-site, bordered/non-bordered, skin-type, age, sex and body-site reporting
   (research Phase C). No mitigation beyond reporting.
-- **Serving and abstention:** {serving_text()}.
+- **Serving and abstention:** {serving_text()}. Every upload first passes an input contract
+  ({" or ".join(contract.CONTRACT["enforced"]["formats"])}, shorter side at least {contract.CONTRACT["enforced"]["min_side_px"]} px, aspect ratio at most {contract.CONTRACT["enforced"]["max_aspect_ratio"]:g}:1, at most
+  {contract.MAX_PIXELS // 1_000_000} megapixels; `cdm.contract`); a readable image that breaks it is refused with its reason.
 - **Ongoing maintenance:** {monthly_text()}. Retraining: {retrain_text()}. The registered model
   `workspace.cdm.skin_lesion_classifier` v{REGISTRY["version"]} (alias champion) reloads through
   the registry and matches the bundle's answers on 3 made-up images (`results/phase3/lineage/registered_model_check.json`).
   A CI test holds the shipped model's committed metrics above floors (`config/eval_gate.json`).
+  Provisional targets (`config/slo.json`): melanoma referral sensitivity at least
+  {SLO["targets"]["melanoma_referral_sensitivity"]["value"]}, delayed balanced accuracy at least {SLO["targets"]["delayed_balanced_accuracy"]["value"]}, abstain share at most
+  {SLO["targets"]["abstain_share"]["value"]}; a breach or a drift alert fails the monthly run with an ALERT message (wired, not yet
+  deployed). Rollback moves the registry alias back to the previous version (`docs/rollback.md`).
 - **Security and privacy of the API:** uploads are read as a capped stream (10 MB) and never
   stored or logged; the access log is off and only counts and timing are logged; requests are
   rate-limited; the container runs as a non-root user. The Docker CI job checks that no image
@@ -585,7 +591,14 @@ def change_control() -> str:
     c1, c2 = V1TEST["single_model_over_seeds"], V1VIEW["single_model_over_seeds"]
     f1 = V1TEST["federated"]["fedavg"]["over_seeds"]
     f2 = V1VIEW["federated"]["fedavg"]["over_seeds"]
-    alerts = ", ".join(str(i + 1) for i, m in enumerate(MONTHS) if m["drift"]["alert"])
+    alerts = spans([i + 1 for i, m in enumerate(MONTHS) if m["drift"]["alert"]])
+    skin = spans(
+        [
+            i + 1
+            for i, m in enumerate(MONTHS)
+            if any(v.get("alert") for v in m["by_skin_type"].values())
+        ]
+    )
     targets = SLO["targets"]
     floors = GATE["floors"]
     rules = contract.CONTRACT["enforced"]
@@ -594,50 +607,56 @@ def change_control() -> str:
 
 {notice}
 
-A portfolio exercise, not a regulatory submission, in the guidance's three parts.
-
 ## 1. Modifications allowed
-1. Retraining with more data from existing sites (done once: v2 raised Barcelona's cap from
-   5,000 to 10,000 images), or with a new site's data once its labels are released.
-2. Fine-tuning a challenger after a drift alert, from each champion seed.
-3. Refitting the Mahalanobis drift detector after either.
-
-Not allowed without a new plan: another architecture, image size, class set or imaging
+Each only through section 2: retraining with more data from existing sites (done once: v2 raised
+Barcelona's cap from 5,000 to 10,000 images) or a new site's released labels; fine-tuning a
+challenger from each champion seed after a drift alert; refitting the drift detector after
+either. Not allowed without a new plan: another architecture, image size, class set or imaging
 modality, or a change to the rules below. **Triggers:** a monthly drift alert (KS p < 0.01 and
-PSI at least 0.2 against validation; in the 12-month replay, months {alerts}), a broken target
-in `config/slo.json` (melanoma referral sensitivity {targets["melanoma_referral_sensitivity"]["value"]}, delayed balanced accuracy
-{targets["delayed_balanced_accuracy"]["value"]}, abstain share at most {targets["abstain_share"]["value"]}; provisional), or newly released labels.
+PSI at least 0.2 against validation, overall or for a skin type with at least 100 images; in
+the replay, overall in months {alerts}, by skin type in {skin}, none in months 1 to 4), a
+broken target in `config/slo.json` (melanoma referral sensitivity at least
+{targets["melanoma_referral_sensitivity"]["value"]}, delayed balanced accuracy at least {targets["delayed_balanced_accuracy"]["value"]}, abstain share at most
+{targets["abstain_share"]["value"]}; provisional), or newly released labels.
 
 ## 2. Modification protocol
-- **Data.** Splits by lesion; earlier lesions keep their split (`config/splits_v1.csv`, gate
-  `frozen_splits_kept`); each image's licence is recorded.
+- **Data.** Splits by lesion; earlier lesions keep theirs (gate `frozen_splits_kept`); licences
+  recorded per image.
 - **Decided on validation first.** A retrained model replaces the current one only if pooled
   validation balanced accuracy rises at least 1 point and no client's falls more than 3 (applied
   once: {d["change_points"]["pooled"]:+.2f} and worst client {d["worst_client_change_points"]:+.2f}; `results/phase2/v2/decision.json`). A challenger after drift
   needs a gain of at least 2.0 points on held-out patients of the drifted site, a paired
   bootstrap lower bound above zero, and at most a 1.0-point fall on client validation
   (`results/phase3/retrain/spec.json`, committed before the run).
-- **Test.** One locked look per model, on the current model's exact test images.
-- **CI gate.** `tests/test_eval_gate.py` fails the build below `config/eval_gate.json`'s floors
-  (client macro AUROC {floors["client_test_macro_auroc"]}, balanced accuracy {floors["client_test_balanced_accuracy"]}; Buenos Aires {floors["buenos_aires_balanced_accuracy"]}; PAD-UFES-20 {floors["pad_ufes_balanced_accuracy"]}).
-- **Serving.** A promoted model is rebuilt into a serving bundle whose manifest hashes every
-  checkpoint and detector, re-evaluated, and registered in Unity Catalog
-  (`workspace.cdm.skin_lesion_classifier`, now v{REGISTRY["version"]}, alias `champion`). The API keeps its input
-  contract ({" or ".join(rules["formats"])}, shorter side at least {rules["min_side_px"]} px, aspect ratio at most
+- **Test and CI gate.** One locked test look per model, on the current model's exact test
+  images; `tests/test_eval_gate.py` fails the build below `config/eval_gate.json` (client AUROC {floors["client_test_macro_auroc"]}, balanced accuracy {floors["client_test_balanced_accuracy"]}; Buenos Aires {floors["buenos_aires_balanced_accuracy"]}; PAD-UFES-20 {floors["pad_ufes_balanced_accuracy"]}).
+- **Serving.** A promoted model becomes a serving bundle whose manifest hashes every file, is
+  re-evaluated and registered (`workspace.cdm.skin_lesion_classifier`, now v{REGISTRY["version"]}, alias `champion`;
+  rollback moves the alias back). The API keeps its input contract ({" or ".join(rules["formats"])}, shorter side at least {rules["min_side_px"]} px, aspect ratio at most
   {rules["max_aspect_ratio"]:g}:1, at most {contract.MAX_PIXELS // 1_000_000} megapixels; `cdm.contract`) and abstains above the
-  validation 95th-percentile drift score. Rollback moves the alias back.
+  validation 95th-percentile drift score.
 - **Monitoring.** The monthly job scores every image into `gold_prediction_audit` with the
   bundle's manifest hash, runs the drift test and the targets, and fails with an ALERT message
   on a breach (`config/slo.json` records the alert path as wired, not yet deployed).
 
 ## 3. Impact so far
-- **v2** on v1's exact test images (`results/phase2/overnight/final_test.json`,
-  `results/phase2/v2/test/final_test.json`): centralized balanced accuracy {rng(c1["balanced_accuracy"])} to
-  {rng(c2["balanced_accuracy"])}; FedAvg {rng(f1["balanced_accuracy"])} to {rng(f2["balanced_accuracy"])}.
+- **v2**, balanced accuracy on v1's exact test images (`results/phase2/v2/test/`): centralized
+  {rng(c1["balanced_accuracy"])} to {rng(c2["balanced_accuracy"])}; FedAvg {rng(f1["balanced_accuracy"])} to
+  {rng(f2["balanced_accuracy"])}.
 - **Retraining after drift:** {retrain_short()}.
-- Not removed by the protocol: lower sensitivity at new sites, labels without biopsy,
-  acquisition differences, hardware-dependent drift scores (`docs/model-card.md`, section 5).
+- Risks the protocol does not remove are in `docs/model-card.md`, section 5.
 """
+
+
+def spans(months: list[int]) -> str:
+    """Months as ranges: [7, 8, 9, 11] -> '7 to 9, 11'."""
+    runs: list[list[int]] = []
+    for m in months:
+        if runs and runs[-1][1] == m - 1:
+            runs[-1][1] = m
+        else:
+            runs.append([m, m])
+    return ", ".join(str(a) if a == b else f"{a} to {b}" for a, b in runs)
 
 
 def retrain_short() -> str:
@@ -648,8 +667,8 @@ def retrain_short() -> str:
     verdict = "promoted" if d["promoted"] else "not promoted, champion kept"
     return (
         f"one run (months {d['trigger_months'][0]} to {d['trigger_months'][-1]}): held-out gain "
-        f"{d['held_out_gain_points']:+.1f} points (paired lower bound {100 * low:+.1f}), client "
-        f"validation {d['client_val_change_points']:+.1f} (limit -1.0); {verdict} "
+        f"{d['held_out_gain_points']:+.1f} points (paired lower\n  bound {100 * low:+.1f}), client "
+        f"validation {d['client_val_change_points']:+.1f} (limit -1.0); {verdict}\n  "
         f"(`results/phase3/retrain/decision.json`)"
     )
 

@@ -5,13 +5,37 @@ change-control plan fits on one page."""
 from __future__ import annotations
 
 import importlib.util
+import re
+import textwrap
 from pathlib import Path
 
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-# One page: a US Letter or A4 page at 11 pt holds about 550 words of prose, or 50 lines.
-ONE_PAGE_WORDS, ONE_PAGE_LINES = 550, 50
+# One page: a US Letter or A4 page at 11 pt with 1 inch margins holds about 550 words, or 48
+# lines of about 100 characters (blank lines included).
+ONE_PAGE_WORDS, ONE_PAGE_LINES, WIDTH = 550, 48, 100
+
+
+def rendered_lines(text: str) -> int:
+    """Lines as printed: each paragraph, bullet, heading or quote is joined and wrapped at
+    WIDTH characters (a source line, however long, is not one printed line); blank lines count."""
+    blocks: list[list[str] | None] = []
+    current: list[str] = []
+    for line in text.splitlines():
+        if not line.strip():
+            if current:
+                blocks.append(current)
+                current = []
+            blocks.append(None)
+            continue
+        if current and re.match(r"(#|- |\d+\. |> )", line):
+            blocks.append(current)
+            current = []
+        current.append(line.strip())
+    if current:
+        blocks.append(current)
+    return sum(1 if b is None else max(1, len(textwrap.wrap(" ".join(b), WIDTH))) for b in blocks)
 
 
 @pytest.fixture(scope="module")
@@ -46,7 +70,7 @@ def test_committed_docs_match_what_the_evidence_generates(
 def test_the_change_control_plan_fits_on_one_page(generated: dict[str, str]) -> None:
     text = generated["change-control-plan.md"]
     assert len(text.split()) <= ONE_PAGE_WORDS, len(text.split())
-    assert len(text.splitlines()) <= ONE_PAGE_LINES, len(text.splitlines())
+    assert rendered_lines(text) <= ONE_PAGE_LINES, rendered_lines(text)
 
 
 def test_the_change_control_plan_covers_serving_monitoring_and_retraining(
@@ -54,5 +78,5 @@ def test_the_change_control_plan_covers_serving_monitoring_and_retraining(
 ) -> None:
     text = generated["change-control-plan.md"]
     for part in ("**Serving.**", "**Monitoring.**", "Retraining after drift", "config/slo.json",
-                 "rollback", "manifest"):  # fmt: skip
+                 "rollback", "manifest", "skin type", "cdm.contract"):  # fmt: skip
         assert part.lower() in text.lower(), part
