@@ -667,13 +667,16 @@ change only the owner can make (repository settings, accounts, consoles).
       Safetensors for the bundle stays a later option.
 32. [x] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
     - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
-    - **Done 2026-11-11:** `Service.load` refuses a seed whose checkpoint or detector is not a
-      key of the manifest's `sha256` map, and any bundle name that is not a plain file name
-      (`/`, `\`, `.`, `..` or empty), before reading any file. `tests/test_serving.py` covers
-      a map missing the checkpoint or the detector, five path-like names (in a seed and in the
-      map), and a complete bundle still loading. The real builder
-      (`databricks/notebooks/serving_bundle.py`) and `scripts/make_test_bundle.py` already list
-      every file with plain names, so existing bundles load unchanged. The optional pinned
+    - **Done 2026-11-11:** `cdm.bundle.check_manifest` refuses a seed whose checkpoint or
+      detector is not a key of the manifest's `sha256` map, any bundle name that is not a plain
+      file name (`/`, `\`, `.`, `..` or empty), and a manifest with no seeds. `Service.load`
+      runs it before reading any bundle file other than `manifest.json`, and
+      `scripts/deploy_space.py` runs it before upload, so the deploy check and the Space agree.
+      `tests/test_serving.py` covers a map missing the checkpoint or the detector, six
+      path-like names (in a seed and in the map), no seeds, the deploy check, and a complete
+      bundle still loading. The real builder (`databricks/notebooks/serving_bundle.py`) and
+      `scripts/make_test_bundle.py` already list every file with plain names, so existing
+      bundles load unchanged. `manifest.json` itself is not hashed: the optional pinned
       manifest hash from configuration is not done.
 33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
     - **Done when:** a changed CIFAR file is refused before `pickle.load`.

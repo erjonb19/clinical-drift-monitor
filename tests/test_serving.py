@@ -123,7 +123,7 @@ def test_a_manifest_that_omits_a_bundle_file_fails_to_load(tmp_path: Path, missi
         Service.load(tmp_path)
 
 
-@pytest.mark.parametrize("name", ["../seed0.pt", "sub/seed0.pt", "..", "", "a\\b.pt"])
+@pytest.mark.parametrize("name", ["../seed0.pt", "sub/seed0.pt", "..", ".", "", "a\\b.pt"])
 def test_path_like_bundle_names_are_refused(tmp_path: Path, name: str) -> None:
     manifest = _bundle(tmp_path)
     seeds = manifest["seeds"]
@@ -144,3 +144,31 @@ def test_path_like_bundle_names_are_refused(tmp_path: Path, name: str) -> None:
 def test_a_complete_manifest_still_loads(tmp_path: Path) -> None:
     _bundle(tmp_path)
     assert len(Service.load(tmp_path).models) == 1
+
+
+def test_a_manifest_with_no_seeds_fails_to_load(tmp_path: Path) -> None:
+    manifest = _bundle(tmp_path)
+    manifest["seeds"] = []
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="no seeds"):
+        Service.load(tmp_path)
+
+
+def test_the_deploy_check_refuses_what_the_space_would_refuse(tmp_path: Path) -> None:
+    """scripts/deploy_space.py's pre-upload check applies the same manifest rules."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "deploy_space", Path(__file__).resolve().parents[1] / "scripts" / "deploy_space.py"
+    )
+    assert spec and spec.loader
+    deploy = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(deploy)
+    manifest = _bundle(tmp_path)
+    assert deploy.check_bundle(tmp_path)["version"] == "test"
+    hashes = manifest["sha256"]
+    assert isinstance(hashes, dict)
+    del hashes["seed0.pt"]
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(SystemExit, match="not listed"):
+        deploy.check_bundle(tmp_path)

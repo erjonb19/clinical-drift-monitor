@@ -25,6 +25,7 @@ from numpy.typing import NDArray
 from PIL import Image
 
 from cdm import contract
+from cdm.bundle import check_manifest
 from cdm.data import eval_transform
 from cdm.ood import MahalanobisDetector
 from cdm.splits import CLASSES
@@ -96,13 +97,6 @@ def risk_coverage(
     return out
 
 
-def plain_name(name: str) -> str:
-    """A bundle file name: one path part, no separators, not '.' or '..'."""
-    if not name or name in (".", "..") or "/" in name or "\\" in name or Path(name).name != name:
-        raise ValueError(f"{name!r} is not a plain file name in the bundle")
-    return name
-
-
 @dataclass
 class Service:
     """The loaded bundle: three networks, their detectors and the two thresholds."""
@@ -115,17 +109,11 @@ class Service:
 
     @classmethod
     def load(cls, folder: Path) -> Service:
-        """Load a bundle. Every checkpoint and detector a seed names must be a plain file name
-        listed in the manifest's sha256 map and match its hash before anything is read
-        (backlog item 32), so a partial map cannot let an unhashed file through."""
+        """Load a bundle. cdm.bundle.check_manifest runs first (plain names, every checkpoint
+        and detector in the sha256 map, at least one seed), then every listed file is hashed,
+        all before any checkpoint or detector is read (backlog item 32)."""
         manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
-        hashes: dict[str, str] = manifest["sha256"]
-        for name in hashes:
-            plain_name(name)
-        for seed in manifest["seeds"]:
-            for key in ("checkpoint", "detector"):
-                if plain_name(seed[key]) not in hashes:
-                    raise ValueError(f"{seed[key]} is not listed in the bundle manifest's sha256")
+        hashes = check_manifest(manifest)
         for name, digest in hashes.items():
             if hashlib.sha256((folder / name).read_bytes()).hexdigest() != digest:
                 raise ValueError(f"{name} does not match the bundle manifest")
