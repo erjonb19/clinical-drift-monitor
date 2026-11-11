@@ -31,11 +31,29 @@ Fetch = Callable[[str], dict[str, Any]]
 Opener = Callable[[str], bytes]
 
 
-def http_json(url: str, attempts: int = 4) -> dict[str, Any]:
+# Response size caps (security audit, item 47): an API page is well under 1 MB and an ISIC
+# image a few MB, so a larger body is refused rather than read into memory.
+MAX_JSON_BYTES = 20 * 1024 * 1024
+MAX_IMAGE_BYTES = 100 * 1024 * 1024
+
+
+def read_capped(response: Any, limit: int) -> bytes:
+    """The whole body of ``response``, refusing one larger than ``limit`` bytes."""
+    chunks: list[bytes] = []
+    size = 0
+    while chunk := response.read(min(1024 * 1024, limit + 1 - size)):
+        chunks.append(chunk)
+        size += len(chunk)
+        if size > limit:
+            raise DataError(f"response is larger than {limit} bytes; refusing to read it")
+    return b"".join(chunks)
+
+
+def http_json(url: str, attempts: int = 4, limit: int = MAX_JSON_BYTES) -> dict[str, Any]:
     for attempt in range(attempts):
         try:
             with urllib.request.urlopen(url, timeout=60) as response:
-                data: dict[str, Any] = json.load(response)
+                data: dict[str, Any] = json.loads(read_capped(response, limit))
                 return data
         except OSError:
             if attempt == attempts - 1:
@@ -44,12 +62,11 @@ def http_json(url: str, attempts: int = 4) -> dict[str, Any]:
     raise AssertionError("unreachable")
 
 
-def http_bytes(url: str, attempts: int = 4) -> bytes:
+def http_bytes(url: str, attempts: int = 4, limit: int = MAX_IMAGE_BYTES) -> bytes:
     for attempt in range(attempts):
         try:
             with urllib.request.urlopen(url, timeout=120) as response:
-                body: bytes = response.read()
-                return body
+                return read_capped(response, limit)
         except OSError:
             if attempt == attempts - 1:
                 raise
@@ -58,13 +75,20 @@ def http_bytes(url: str, attempts: int = 4) -> bytes:
 
 
 def collection_records(collection: int, fetch: Fetch = http_json) -> list[Record]:
-    """Every public image record in one ISIC collection, following the API's pagination."""
+    """Every public image record in one ISIC collection, following the API's pagination.
+    A ``next`` link is followed only over https to the API's own host; any other link is
+    refused, so a spoofed page cannot send the client elsewhere."""
     url: str | None = API + "?" + urllib.parse.urlencode({"collections": collection, "limit": 100})
+    host = urllib.parse.urlsplit(API).netloc
     records: list[Record] = []
     while url:
         page = fetch(url)
         records.extend(page["results"])
         url = page.get("next")
+        if url:
+            parts = urllib.parse.urlsplit(str(url))
+            if parts.scheme != "https" or parts.netloc != host:
+                raise DataError(f"refusing to follow a pagination link off {host}: {url!s:.200}")
     return records
 
 

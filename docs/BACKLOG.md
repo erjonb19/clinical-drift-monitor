@@ -714,8 +714,14 @@ change only the owner can make (repository settings, accounts, consoles).
       `*.p12`, `*.pfx`, Terraform state, `secrets/`, credential and service-account JSON and
       `.databrickscfg`; no tracked file matches them. `tests/test_gitignore.py` checks each with
       `git check-ignore`, and that `.env.example` stays committable.
-41. [ ] **`.env.example`** with variable names and placeholders only.
+41. [x] **`.env.example`** with variable names and placeholders only.
     - **Done when:** it exists and lists every environment variable the code reads.
+    - **Done 2026-11-11:** `.env.example` names the nine variables the code reads: the Haiku
+      key and the watchdog's three Databricks values as empty names, and the data and notes
+      folders, the tier-2 switch, and the API's bundle folder and proxy hops commented out with
+      their defaults (an empty value would override a default; an empty `TRUSTED_PROXY_HOPS`
+      would stop the API). `tests/test_env_example.py` scans `src`, `scripts` and `app` for
+      `os.environ` reads and fails on any unlisted name or any filled-in value.
 42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
     it, with no personal email.
     - **Done when:** both exist.
@@ -749,6 +755,15 @@ change only the owner can make (repository settings, accounts, consoles).
     temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
     to its own host with a byte cap.
     - **Done when:** tests cover each, and the deployed demo is redeployed (owner).
+    - **Built 2026-11-11, waiting on the owner's redeploy:** the demo's DuckDB connection has
+      external access off and its configuration locked (`read_csv`, `ATTACH`, `COPY` and
+      re-enabling all fail, in tests); `.streamlit/config.toml` hides error details and the
+      page shows a generic message for fetch and load errors; a session's scratch folder is a
+      temporary directory removed with the session, and a session may hold at most 50
+      definitions; the ISIC client follows `next` only on https to its own host and caps
+      response bodies (20 MB for JSON, 100 MB for images). Tests in `tests/test_cohort.py`,
+      `tests/test_demo.py` and `tests/test_sources.py`. **Owner:** redeploy the Streamlit app
+      (Community Cloud picks up `main` on reboot), then tick this item.
 
 ## Later (kept, not started)
 
