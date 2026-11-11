@@ -736,9 +736,21 @@ change only the owner can make (repository settings, accounts, consoles).
       goes under 7 days. GitHub applies a cooldown to version updates only, so security updates
       still open at once. GitHub's default is a 3-day cooldown, so this raises it to 7. The file
       parses with `yaml.safe_load`; Dependabot validates it again once it is on main.
-39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
+39. [x] **Trivy fails on fixable HIGH as well as CRITICAL.**
     - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
       `.trivyignore` with reasons).
+    - **Done 2026-11-11:** `docker.yml` scans with `severity: CRITICAL,HIGH` (still
+      `ignore-unfixed`), and `tests/test_supply_chain.py` checks it. The first HIGH scan found
+      two fixable findings, jaraco.context 5.3.0 (CVE-2026-23949) and wheel 0.45.1
+      (CVE-2026-24049), read from package METADATA. They match the copies the base image's
+      setuptools vendors (not checked inside the image here). Nothing in the API imports
+      setuptools at run time, so the Dockerfile uninstalls setuptools and wheel after the
+      installs; the image's smoke test still calls `/predict`. The next scan found three more
+      fixable HIGHs in the Debian layer (apt and libapt-pkg CVE-2026-109518, zlib1g
+      CVE-2026-76844 and CVE-2026-85091), so the Dockerfile now runs `apt-get upgrade` before
+      the installs. That fetches Debian's current security packages at build time, so two
+      builds from the same pinned base (item 35) can differ in those packages. The CI run's
+      Trivy result is the check. `.trivyignore` stays empty.
 40. [x] **`.gitignore` covers Section 3.1's secret and state files.**
     - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
       `secrets/a` and `.databrickscfg`, checked by a test.

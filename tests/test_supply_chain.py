@@ -36,7 +36,7 @@ def test_the_audit_and_scan_run_in_ci() -> None:
     ci = (WORKFLOWS / "ci.yml").read_text("utf-8")
     docker = (WORKFLOWS / "docker.yml").read_text("utf-8")
     assert "pip-audit" in ci and "vulnerable_requirements.txt" in ci
-    assert "trivy-action" in docker and "severity: CRITICAL" in docker
+    assert "trivy-action" in docker and "severity: CRITICAL,HIGH" in docker  # item 39
     assert (REPO / ".github" / "dependabot.yml").exists() and (WORKFLOWS / "codeql.yml").exists()
 
 
@@ -155,3 +155,16 @@ def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
         days = re.search(r"\n    cooldown:\n      default-days: (\d+)\n", block)
         assert days, f"{name}: no cooldown"
         assert int(days.group(1)) >= 7, f"{name}: cooldown under 7 days"
+
+
+def test_the_api_image_drops_setuptools_after_installing() -> None:
+    """Item 39: the base image's setuptools carries old jaraco.context and wheel copies with
+    fixable HIGH CVEs; the API never imports it, so the image removes it after the installs. The
+    image also applies Debian's security updates while still root."""
+    lines = (REPO / "Dockerfile").read_text("utf-8").splitlines()
+    installs = [i for i, line in enumerate(lines) if line.startswith("RUN pip install")]
+    drop = lines.index("RUN pip uninstall -y setuptools wheel")
+    assert installs and drop > max(installs)
+    # Debian's security fixes since the base image was built (apt, zlib1g had fixable HIGHs).
+    upgrade = next(i for i, line in enumerate(lines) if "apt-get upgrade -y" in line)
+    assert upgrade < lines.index("USER demo")
