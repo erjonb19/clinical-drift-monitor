@@ -605,6 +605,12 @@ change only the owner can make (repository settings, accounts, consoles).
 23. [ ] **Add `.claude/settings.json`** from the audit's proposal, after the owner's review.
     - **Done when:** the file is committed and a cloud session's `/permissions` lists its rules;
       `ruff check .` runs without a prompt, `curl -X POST` and a push to `main` are denied.
+    - **2026-11-11: PR opened, not merged** (a permission-settings change: the owner decides,
+      CLAUDE.md). `.claude/settings.json` is the audit's proposal plus the `-q` push forms and
+      a small read-only set (`ls`, `cat`, `grep`, `sed -n` and similar); a test keeps the
+      standard's deny list. **Known limit:** under `dontAsk` it still denies much of what an
+      unattended session does (tests run through a venv path or with `PYTHONPATH=...`,
+      `python3` one-liners, `cd`), so the owner should try it in a watched session first.
 24. [ ] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
     - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
