@@ -98,8 +98,10 @@ ignore = ["S603", "S607"]
 "databricks/notebooks/*" = ["F821", "E501", "E402", "S101", "S108"]
 # Document templates: long lines are the documents' own prose and tables.
 "scripts/build_docs.py" = ["E501"]
-# Tests assert by design and write to pytest's own temporary folders.
-"tests/*" = ["S101", "S108", "S310", "S324"]
+# Tests assert by design and write to pytest's own temporary folders. S608: tests build SQL
+# from fixture table names and temporary paths, some of them on purpose as the attacks a
+# locked-down engine must refuse (tests/test_cohort.py, item 47); no outside input.
+"tests/*" = ["S101", "S108", "S310", "S324", "S608"]
 # SQL built only from repository constants (table and column names, allowlisted cohort
 # definitions; src/cdm/cohort.py compiles validated integers and identifiers, audited
 # 2026-11-10); no outside input reaches these strings.
