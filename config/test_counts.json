@@ -3,6 +3,7 @@
   "counts": {
     "test_api.py": 12,
     "test_backfill.py": 8,
+    "test_backlog.py": 1,
     "test_batch_drift.py": 2,
     "test_benchmark.py": 2,
     "test_build_docs.py": 3,

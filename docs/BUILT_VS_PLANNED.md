@@ -7,7 +7,7 @@ runs and is reproducible from the repository.
 **This is a personal portfolio project.** No patients, clinicians or business decisions
 depend on it.
 
-Last updated: 2026-10-20.
+Last updated: 2026-11-11.
 
 ## Built
 
@@ -270,6 +270,23 @@ Known limits:
   one, with a refusal record. `databricks/retrain_job.json` must be regenerated before a rerun.
 - `tests/test_eval_gate.py` with `config/eval_gate.json`: floors on the committed serving
   metrics and on any promoted challenger, with a self-test that a regression fails.
+
+### Security hardening (security audit items, 2026-11-11)
+
+Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (items 23 to 47).
+- Supply chain: every action pinned to a commit; the API image's base pinned by digest, with
+  Debian security updates and no setuptools; Trivy fails on fixable HIGH and CRITICAL;
+  Dependabot with a 7-day cooldown; gitleaks over the full history with a planted-key self-test;
+  read-only workflow tokens; ruff's security rules.
+- Code: uploads decoded only by JPEG and PNG, refused above 50 megapixels from the header;
+  `torch.load(weights_only=True)` everywhere; the serving bundle's manifest must hash every
+  checkpoint and detector; CIFAR-10 files checksummed before unpickling; spreadsheet formulas
+  neutralised in the G5 CSVs; the $5 Haiku cap fails closed without its spend log.
+- API (`app/api`, not deployed): security headers, no public schema, response models, refusal
+  events logged without an address or body.
+- Not done: locked and hashed installs (items 26 and 27, blocked on network access), zizmor
+  (item 37, waits for the owner's OK), the demo hardening's redeploy (item 47), and the
+  owner's `.claude/settings.json` decision (item 23).
 
 ## Scaffolded
 
