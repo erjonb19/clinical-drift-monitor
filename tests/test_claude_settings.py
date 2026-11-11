@@ -32,7 +32,8 @@ def test_bypass_mode_is_disabled_and_settings_are_protected() -> None:
 
 def _denied(command: str) -> bool:
     """Whether a Bash deny rule matches, with `*` as a wildcard over the whole command text
-    (Claude Code's Bash rule matching; deny wins over allow)."""
+    (Claude Code's Bash rule matching; deny wins over allow). Claude Code also splits compound
+    commands and denies if any part matches; this emulation does not split, so it is stricter."""
     rules = [r[5:-1] for r in SETTINGS["permissions"]["deny"] if r.startswith("Bash(")]
     return any(fnmatch.fnmatchcase(command, rule) for rule in rules)
 
@@ -52,6 +53,12 @@ def test_shell_reads_of_env_files_and_find_deletes_are_denied() -> None:
         "find . -name '*.pyc' -delete",
         "find . -exec rm {} ;",
         "find . -type f -execdir cat {} ;",
+        "cat '.env'",
+        'grep KEY ".env"',
+        "find -delete",
+        "find -exec rm {} +",
+        "find . -okdir rm {} ;",
+        "find . -fprint out.txt",
     ):
         assert _denied(command), command
     for command in ("cat README.md", "grep -n env src/cdm/extract.py"):
