@@ -708,8 +708,15 @@ change only the owner can make (repository settings, accounts, consoles).
 33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
     - **Done when:** a changed CIFAR file is refused before `pickle.load`.
     - Done 2026-11-11: each batch file's MD5 is checked against torchvision's published list before `pickle.loads`; `tests/test_build_benchmarks.py` shows a planted pickle is refused without running and an unknown file name is refused. The benchmark build itself was not rerun here.
-34. [ ] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
+34. [x] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
     - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
+    - **Done 2026-11-11:** every `actions/checkout`, `actions/setup-python` and
+      `actions/upload-artifact` in the seven workflows is pinned to the commit its `v7` tag
+      pointed to on 2026-11-11 (read with `git ls-remote`: checkout v7.0.1, setup-python
+      v7.1.0, upload-artifact v7.0.2), with the release in a comment for Dependabot.
+      `test_every_action_is_pinned_to_a_commit` replaces the test that let `actions/*` and
+      `github/*` use tags; it requires a 40-character SHA and a `# v...` comment on every
+      `uses:` (checked by putting a tag back).
 35. [ ] **Pin the Docker base image by digest.**
     - **Done when:** the `FROM` line carries `@sha256:` and Dependabot updates it.
 36. [x] **Turn on ruff's `S` rules**, fixing or justifying each hit.
