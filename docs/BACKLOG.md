@@ -787,9 +787,10 @@ change only the owner can make (repository settings, accounts, consoles).
       builds from the same pinned base (item 35) can differ in those packages. The CI run's
       Trivy result is the check. `.trivyignore` stays empty.
     - **2026-11-11 (owner: keep builds reproducible):** the `apt-get upgrade` now reads from
-      `snapshot.debian.org` at a fixed timestamp (`ARG DEBIAN_SNAPSHOT=20261111T120000Z`)
-      instead of the moving mirror, so every build of the same Dockerfile installs the same
-      Debian packages; the build stops if any source still points at `deb.debian.org`. A newer
+      `snapshot.debian.org` at fixed imports (`debian` 20261111T083534Z, `debian-security`
+      20261111T085431Z, over https) instead of the moving mirror, so every build of the same
+      Dockerfile installs the same Debian packages (the pip layers are item 27); the build
+      stops if any apt source still points at `deb.debian.org`. A newer
       base alone was not enough: `python:3.11.18-slim` has the fixed apt but not the fixed
       zlib1g (read from its registry layers). Raise the timestamp and the base digest together.
 40. [x] **`.gitignore` covers Section 3.1's secret and state files.**

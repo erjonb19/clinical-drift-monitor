@@ -9,20 +9,22 @@ FROM python:3.11.17-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 BUNDLE_DIR=/app/bundle \
     TRUSTED_PROXY_HOPS=1
 # Debian security fixes released after the base image was built (Trivy, item 39: apt and zlib1g
-# had fixable HIGH findings), taken from a fixed snapshot.debian.org timestamp instead of the
-# moving mirror, so every build of this file installs the same package versions. Packages are
-# still signature-checked with the image's Debian keyring. Raise DEBIAN_SNAPSHOT (and the base
-# digest) together, then rebuild and re-run Trivy.
-ARG DEBIAN_SNAPSHOT=20261111T120000Z
+# had fixable HIGH findings), taken from fixed snapshot.debian.org imports instead of the moving
+# mirror, so every build of this file installs the same Debian package versions (the pip layers
+# are item 27). Release files are still signature-checked with the image's Debian keyring. Raise
+# both timestamps (existing imports, listed on snapshot.debian.org) and the base digest together,
+# then rebuild and re-run Trivy.
+ARG DEBIAN_SNAPSHOT=20261111T083534Z
+ARG DEBIAN_SECURITY_SNAPSHOT=20261111T085431Z
 RUN sed -i \
-      -e "s|^URIs: http://deb.debian.org/debian-security$|URIs: http://snapshot.debian.org/archive/debian-security/${DEBIAN_SNAPSHOT}|" \
-      -e "s|^URIs: http://deb.debian.org/debian$|URIs: http://snapshot.debian.org/archive/debian/${DEBIAN_SNAPSHOT}|" \
+      -e "s|^URIs: http://deb.debian.org/debian-security$|URIs: https://snapshot.debian.org/archive/debian-security/${DEBIAN_SECURITY_SNAPSHOT}|" \
+      -e "s|^URIs: http://deb.debian.org/debian$|URIs: https://snapshot.debian.org/archive/debian/${DEBIAN_SNAPSHOT}|" \
       /etc/apt/sources.list.d/debian.sources \
     && grep -q "snapshot.debian.org/archive/debian/${DEBIAN_SNAPSHOT}" /etc/apt/sources.list.d/debian.sources \
-    && grep -q "snapshot.debian.org/archive/debian-security/${DEBIAN_SNAPSHOT}" /etc/apt/sources.list.d/debian.sources \
-    && ! grep -q "deb.debian.org" /etc/apt/sources.list.d/debian.sources \
-    && apt-get -o Acquire::Check-Valid-Until=false update \
-    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --no-install-recommends \
+    && grep -q "snapshot.debian.org/archive/debian-security/${DEBIAN_SECURITY_SNAPSHOT}" /etc/apt/sources.list.d/debian.sources \
+    && ! grep -rqs "deb.debian.org" /etc/apt/sources.list /etc/apt/sources.list.d/ \
+    && apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=3 update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 upgrade -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.0 torchvision==0.29.0
 
