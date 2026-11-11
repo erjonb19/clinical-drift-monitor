@@ -856,6 +856,7 @@ Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to 
 
 - [x] Item 10: a reviewer feedback section with a fixed format (below).
 - [x] Item 45: the $5 Haiku cap fails closed when its spend log is missing or shrinks.
+- [x] Item 40: `.gitignore` covers secret and state files.
 - [x] Item 22: a security audit against the owner's standard, findings and a plan ([docs/security-audit-2026-11-10.md](docs/security-audit-2026-11-10.md)).
 
 ## Reviewer feedback
