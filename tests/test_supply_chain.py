@@ -169,3 +169,17 @@ def test_the_api_image_drops_setuptools_after_installing() -> None:
     # Debian's security fixes since the base image was built (apt, zlib1g had fixable HIGHs).
     upgrade = next(i for i, line in enumerate(lines) if "apt-get upgrade -y" in line)
     assert upgrade < lines.index("USER demo")
+
+
+def test_zizmor_audits_workflow_changes_pinned_with_a_self_test() -> None:
+    """Backlog item 37: zizmor runs on every workflow change, installed by version and wheel hash,
+    and must flag a planted template injection before it audits the real workflows. The planted
+    expression is built at run time, so the workflow file holds no expression for Actions to
+    expand into the shell."""
+    text = (WORKFLOWS / "zizmor.yml").read_text("utf-8")
+    assert '".github/workflows/**"' in text
+    assert re.search(r"zizmor==[\d.]+ --hash=sha256:[0-9a-f]{64}", text)
+    assert "--require-hashes" in text and "self-test" in text
+    self_test = text.split("self-test)", 1)[1].split("- name:", 1)[0]
+    assert "${{" not in self_test and "set +e" in self_test
+    assert "zizmor --offline .github/workflows/" in text
