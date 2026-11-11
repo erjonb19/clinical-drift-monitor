@@ -877,6 +877,7 @@ Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to 
 - [x] Item 34: every GitHub Action is pinned to a commit.
 - [x] Item 35: the Docker base image is pinned by digest.
 - [x] Item 36: ruff's security rules on, with each exception's reason recorded.
+- [x] Item 37: zizmor audits every workflow change, with a planted-injection self-test.
 - [x] Item 38: Dependabot waits 7 days after a release before proposing it.
 - [x] Item 39: the image scan fails on fixable HIGH and CRITICAL findings, and passes.
 - [x] Item 40: `.gitignore` covers secret and state files.
