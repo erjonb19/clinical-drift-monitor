@@ -44,9 +44,12 @@ gets a **Blocked:** line with the reason.
   staged, as the honesty rules say.
 - **Unattended runs:** when an item is blocked or needs an (ask), write the reason under it and
   move to the next item that does not depend on it, instead of stopping.
-- **Merging (owner, 2026-11-10):** Claude may merge its own PRs once CI is green and a fresh
-  review finds nothing blocking. Never PR #50, the security audit's PR, or anything that
-  spends or deploys to Databricks; the owner merges those.
+- **Merging (owner, 2026-11-11, replacing 2026-11-10's rule):** Claude merges PRs itself,
+  including ones marked "owner merges", once CI is green on the final commit and a fresh review
+  by a separate agent that did not write the change finds nothing blocking. The owner is asked
+  first, in chat, for spending, GPU runs, release tags, Databricks deploys, deleting data and any
+  permission-settings change (those PRs are opened and left). PR #50 stays with the owner (his
+  threshold decisions).
 
 ## Items, in order
 
@@ -374,7 +377,7 @@ What real ML, data and software engineering teams would add, checked against the
 2026-11-08. Today the repo already has the `src/cdm` package, ruff, mypy, pytest, a Docker
 image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog registry.
 
-11. [ ] **Supply chain and merge rules.** Dependabot for pip, Docker and GitHub Actions
+11. [x] **Supply chain and merge rules.** Dependabot for pip, Docker and GitHub Actions
     (grouped, weekly); CodeQL for Python and the workflows; `pip-audit` and a Trivy scan of
     the API image in CI, failing on fixable critical findings (accepted ones in an ignore file
     with the reason); branch protection on `main`, which the **owner turns on** in GitHub
@@ -428,6 +431,14 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       2026-11-09 patch-only rule for those two, since even a patch bump drops `+cpu`). A torch
       bump is a hand change to the Dockerfile and `docker/constraints.txt` together, checked by
       the `+cpu` test. Tests check all three.
+    - **Done 2026-11-11:** all three checks met. The first Dependabot PR appeared (#66,
+      2026-11-09); CI's self-test step shows pip-audit exits 1 and names the known-vulnerable pin
+      (`requests 2.19.0`, a test fixture), and the main audit step fails the build on any finding
+      not accepted in `config/pip_audit_ignore.json`; and
+      `GET /repos/erjonb19/clinical-drift-monitor/branches/main` returns `"protected": true`
+      with required checks `quality`, `image`, `analyze (actions)` and `analyze (python)`
+      (checked 2026-11-11). **Note:** enforcement is `non_admins`, so the owner's admin account
+      can bypass the checks; including administrators is the owner's setting.
     - **Dependabot's next Python group (#83, 2026-11-11): held, closed.** `quality` failed at
       install: it moved fastapi to 0.162.0, and `flwr` 1.39.0 needs fastapi `>=0.138,<0.139`. It
       also moved the research Phase B stack a major version (`open_clip_torch` 3 to 4,
@@ -611,10 +622,12 @@ change only the owner can make (repository settings, accounts, consoles).
 23. [ ] **Add `.claude/settings.json`** from the audit's proposal, after the owner's review.
     - **Done when:** the file is committed and a cloud session's `/permissions` lists its rules;
       `ruff check .` runs without a prompt, `curl -X POST` and a push to `main` are denied.
-24. [ ] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
+24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
     - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
       `"protected": true` (as item 11 already asks).
+    - **Done 2026-11-11 (owner):** turned on, requiring `quality`, `image` and both CodeQL
+      `analyze` checks.
 25. [x] **Secret scanning before commit and in CI** (Medium): `.pre-commit-config.yaml` with
     gitleaks pinned; a CI job scanning full history (action pinned by SHA, `contents: read`).
     - **Done when:** a planted fake key fails the CI job, and the job is green on the real repo.
@@ -678,8 +691,14 @@ change only the owner can make (repository settings, accounts, consoles).
 42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
     it, with no personal email.
     - **Done when:** both exist.
-43. [ ] **Dependabot alerts and security updates on** (owner).
+    - **2026-11-11:** private vulnerability reporting turned on by the owner; `SECURITY.md` to
+      come.
+43. [x] **Dependabot alerts and security updates on** (owner).
     - **Done when:** the repository's security settings show both enabled.
+    - **Done 2026-11-11 (owner):** Dependabot security updates (grouped) and malware alerts on
+      (`security_and_analysis.dependabot_security_updates: enabled`, checked through the API).
+      Dependabot (vulnerability) alerts are on because GitHub enables security updates only
+      when alerts are on; the owner named security updates and malware alerts, not alerts.
 44. [ ] **API hardening before any deploy:** security headers, `openapi_url=None`, response
     models, and structured security-event logging with no address or body.
     - **Done when:** tests check the headers, the absent schema, the response models and one
