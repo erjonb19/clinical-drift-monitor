@@ -659,12 +659,11 @@ change only the owner can make (repository settings, accounts, consoles).
 40. [x] **`.gitignore` covers Section 3.1's secret and state files.**
     - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
       `secrets/a` and `.databrickscfg`, checked by a test.
-41. [x] **`.env.example`** with variable names and placeholders only.
     - **Done 2026-11-11:** `.gitignore` adds `.env.*` (except `.env.example`), `*.pem`, `*.key`,
       `*.p12`, `*.pfx`, Terraform state, `secrets/`, credential and service-account JSON and
       `.databrickscfg`; no tracked file matches them. `tests/test_gitignore.py` checks each with
       `git check-ignore`, and that `.env.example` stays committable.
-41. [ ] **`.env.example`** with variable names and placeholders only.
+41. [x] **`.env.example`** with variable names and placeholders only.
     - **Done when:** it exists and lists every environment variable the code reads.
     - **Done 2026-11-11:** `.env.example` names the nine variables the code reads: the Haiku
       key and the watchdog's three Databricks values as empty names, and the data and notes
