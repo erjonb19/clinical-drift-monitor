@@ -30,6 +30,10 @@ updates:
         update-types: [version-update:semver-major, version-update:semver-minor]
       - dependency-name: transformers
         update-types: [version-update:semver-major, version-update:semver-minor]
+      # sympy 1.14 (torch's dependency, pinned in docker/constraints.txt) needs mpmath < 1.4;
+      # #108's mpmath 1.4.1 made the constraints file impossible to install. Patches only.
+      - dependency-name: mpmath
+        update-types: [version-update:semver-major, version-update:semver-minor]
       # torch and torchvision: no updates at all (owner, 2026-11-10). Dependabot drops the
       # +cpu label in docker/constraints.txt and cannot see the Dockerfile's RUN line (#74), so a
       # bump is a hand change to both, checked by test_the_image_keeps_the_cpu_torch_wheels.
