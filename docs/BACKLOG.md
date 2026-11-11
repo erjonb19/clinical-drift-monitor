@@ -44,9 +44,12 @@ gets a **Blocked:** line with the reason.
   staged, as the honesty rules say.
 - **Unattended runs:** when an item is blocked or needs an (ask), write the reason under it and
   move to the next item that does not depend on it, instead of stopping.
-- **Merging (owner, 2026-11-10):** Claude may merge its own PRs once CI is green and a fresh
-  review finds nothing blocking. Never PR #50, the security audit's PR, or anything that
-  spends or deploys to Databricks; the owner merges those.
+- **Merging (owner, 2026-11-11, replacing 2026-11-10's rule):** Claude merges PRs itself,
+  including ones marked "owner merges", once CI is green on the final commit and a fresh review
+  by a separate agent that did not write the change finds nothing blocking. The owner is asked
+  first, in chat, for spending, GPU runs, release tags, Databricks deploys, deleting data and any
+  permission-settings change (those PRs are opened and left). PR #50 stays with the owner (his
+  threshold decisions).
 
 ## Items, in order
 
@@ -374,7 +377,7 @@ What real ML, data and software engineering teams would add, checked against the
 2026-11-08. Today the repo already has the `src/cdm` package, ruff, mypy, pytest, a Docker
 image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog registry.
 
-11. [ ] **Supply chain and merge rules.** Dependabot for pip, Docker and GitHub Actions
+11. [x] **Supply chain and merge rules.** Dependabot for pip, Docker and GitHub Actions
     (grouped, weekly); CodeQL for Python and the workflows; `pip-audit` and a Trivy scan of
     the API image in CI, failing on fixable critical findings (accepted ones in an ignore file
     with the reason); branch protection on `main`, which the **owner turns on** in GitHub
@@ -428,6 +431,14 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       2026-11-09 patch-only rule for those two, since even a patch bump drops `+cpu`). A torch
       bump is a hand change to the Dockerfile and `docker/constraints.txt` together, checked by
       the `+cpu` test. Tests check all three.
+    - **Done 2026-11-11:** all three checks met. The first Dependabot PR appeared (#66,
+      2026-11-09); CI's self-test step shows pip-audit exits 1 and names the known-vulnerable pin
+      (`requests 2.19.0`, a test fixture), and the main audit step fails the build on any finding
+      not accepted in `config/pip_audit_ignore.json`; and
+      `GET /repos/erjonb19/clinical-drift-monitor/branches/main` returns `"protected": true`
+      with required checks `quality`, `image`, `analyze (actions)` and `analyze (python)`
+      (checked 2026-11-11). **Note:** enforcement is `non_admins`, so the owner's admin account
+      can bypass the checks; including administrators is the owner's setting.
     - **Dependabot's next Python group (#83, 2026-11-11): held, closed.** `quality` failed at
       install: it moved fastapi to 0.162.0, and `flwr` 1.39.0 needs fastapi `>=0.138,<0.139`. It
       also moved the research Phase B stack a major version (`open_clip_torch` 3 to 4,
@@ -611,10 +622,12 @@ change only the owner can make (repository settings, accounts, consoles).
 23. [ ] **Add `.claude/settings.json`** from the audit's proposal, after the owner's review.
     - **Done when:** the file is committed and a cloud session's `/permissions` lists its rules;
       `ruff check .` runs without a prompt, `curl -X POST` and a push to `main` are denied.
-24. [ ] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
+24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
     - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
       `"protected": true` (as item 11 already asks).
+    - **Done 2026-11-11 (owner):** turned on, requiring `quality`, `image` and both CodeQL
+      `analyze` checks.
 25. [ ] **Secret scanning before commit and in CI** (Medium): `.pre-commit-config.yaml` with
     gitleaks pinned; a CI job scanning full history (action pinned by SHA, `contents: read`).
     - **Done when:** a planted fake key fails the CI job, and the job is green on the real repo.
@@ -629,10 +642,15 @@ change only the owner can make (repository settings, accounts, consoles).
 28. [ ] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
     `persist-credentials: false`; the repository default set to read-only (owner).
     - **Done when:** every workflow declares its permissions, checked by a test.
-29. [ ] **Refuse 50 to 100 megapixel images** (silent failure #16): treat Pillow's
+29. [x] **Refuse 50 to 100 megapixel images** (silent failure #16): treat Pillow's
     `DecompressionBombWarning` as unreadable, or cap `img.size` before decoding.
     - **Done when:** a 60-megapixel PNG gets a 400 from the API and `unreadable` from the
       contract, in tests.
+    - **Done 2026-11-11:** `cdm.contract.open_image` refuses any image over 50 megapixels from
+      its header, before decoding; the contract check and `Service.predict` both use it (a size
+      check rather than a warnings filter, which would be process-wide and not thread-safe in
+      the API's thread pool). Tests in `tests/test_contract.py`, `tests/test_api.py` and
+      `tests/test_serving.py`; silent failure #16 now names this check.
 30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
     - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
       runs, in tests.
@@ -641,8 +659,9 @@ change only the owner can make (repository settings, accounts, consoles).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
 32. [ ] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
     - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
-33. [ ] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
+33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
     - **Done when:** a changed CIFAR file is refused before `pickle.load`.
+    - Done 2026-11-11: each batch file's MD5 is checked against torchvision's published list before `pickle.loads`; `tests/test_build_benchmarks.py` shows a planted pickle is refused without running and an unknown file name is refused. The benchmark build itself was not rerun here.
 34. [ ] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
     - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
 35. [x] **Pin the Docker base image by digest.**
@@ -651,8 +670,17 @@ change only the owner can make (repository settings, accounts, consoles).
       index digest, read from Docker Hub's registry on 2026-11-11); `.github/dependabot.yml`'s
       docker entry updates digests along with tags (its Python minor and major ignore stays),
       and `tests/test_supply_chain.py` fails if any `FROM` lacks a digest.
-36. [ ] **Turn on ruff's `S` rules**, fixing or justifying each hit.
+36. [x] **Turn on ruff's `S` rules**, fixing or justifying each hit.
     - **Done when:** `ruff check .` passes with `S` selected.
+    - **Done 2026-11-11:** `S` is selected in `pyproject.toml`; `ruff check .` passes. Fixed: 16
+      `assert`s outside tests and notebooks became explicit `raise`s (several were data
+      integrity checks that `python -O` would have skipped), and the three MD5 checksums of
+      published files say `usedforsecurity=False`. Accepted, each with its reason in
+      `pyproject.toml`: argument-list subprocess calls (S603, S607; `shell=True` stays
+      flagged); asserts in tests and in Databricks notebooks (never run under `-O`); SQL built
+      from repository constants or the owner's own CLI arguments in eight named files; `urlopen` on fixed hosts in six named
+      files, and on URLs returned by the ISIC API in four (restricting those to the ISIC host is
+      item 47).
 37. [ ] **zizmor on workflow changes.**
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
 38. [ ] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
@@ -672,15 +700,30 @@ change only the owner can make (repository settings, accounts, consoles).
 42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
     it, with no personal email.
     - **Done when:** both exist.
-43. [ ] **Dependabot alerts and security updates on** (owner).
+    - **2026-11-11:** private vulnerability reporting turned on by the owner; `SECURITY.md` to
+      come.
+43. [x] **Dependabot alerts and security updates on** (owner).
     - **Done when:** the repository's security settings show both enabled.
+    - **Done 2026-11-11 (owner):** Dependabot security updates (grouped) and malware alerts on
+      (`security_and_analysis.dependabot_security_updates: enabled`, checked through the API).
+      Dependabot (vulnerability) alerts are on because GitHub enables security updates only
+      when alerts are on; the owner named security updates and malware alerts, not alerts.
 44. [ ] **API hardening before any deploy:** security headers, `openapi_url=None`, response
     models, and structured security-event logging with no address or body.
     - **Done when:** tests check the headers, the absent schema, the response models and one
       logged rejection.
-45. [ ] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
+45. [x] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
     the spend log is missing after spending began; date the price constant.
     - **Done when:** a test shows a missing log refuses a call, and the Console limit is noted.
+    - **Done 2026-11-11:** `SpendLog` keeps a high-water mark beside the log
+      (`~/.cdm/llm_spend.jsonl.high_water.json`), raised on every recorded call; once spending
+      has begun, a missing log or one recording less than the mark refuses every call
+      (`tests/test_extract.py`). The price constant carries the date it was last matched
+      (`PRICE_CHECKED`, 2026-11-11: $0.10 and $0.50 per million tokens for `claude-haiku-5-5`,
+      from the Claude API reference's model table). **Owner:** a spend limit on this key in the
+      Anthropic Console is the real backstop; whether one is set cannot be checked from here.
+      Limits: deleting the log and its mark together still resets the client-side count, and a
+      log that predates this change has no mark until its next call.
 46. [ ] **Neutralise formulas in the G5 CSV error sheets.**
     - **Done when:** a cell starting with `=` is written with a leading `'`, in tests.
 47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,

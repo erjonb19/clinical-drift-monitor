@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 from PIL import Image
 
@@ -72,3 +73,12 @@ def test_service_answers_from_a_bundle_and_refuses_a_changed_file(tmp_path: Path
         assert "manifest" in str(err)
     else:
         raise AssertionError("a changed bundle file was accepted")
+
+
+def test_service_refuses_a_60_megapixel_image_before_decoding() -> None:
+    """Service.predict opens through contract.open_image, so the size cap holds without the API."""
+    buf = io.BytesIO()
+    Image.new("L", (10000, 6000)).save(buf, format="PNG")
+    svc = Service([], [], 0.0, 1.0, "test")
+    with pytest.raises(Image.DecompressionBombError):
+        svc.predict(buf.getvalue())

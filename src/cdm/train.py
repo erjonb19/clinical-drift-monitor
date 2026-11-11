@@ -62,7 +62,8 @@ def build_model(pretrained: bool = True, arch: str = "b0") -> nn.Module:
         raise ValueError(f"unknown arch {arch!r}: use 'b0' or 'b3'")
     classifier = cast(nn.Sequential, model.classifier)
     head = classifier[1]
-    assert isinstance(head, nn.Linear)
+    if not isinstance(head, nn.Linear):
+        raise TypeError(f"expected a Linear head, got {type(head).__name__}")
     classifier[1] = nn.Linear(head.in_features, len(CLASSES))
     return model
 
