@@ -655,9 +655,14 @@ change only the owner can make (repository settings, accounts, consoles).
       `secrets/a` and `.databrickscfg`, checked by a test.
 41. [ ] **`.env.example`** with variable names and placeholders only.
     - **Done when:** it exists and lists every environment variable the code reads.
-42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
+42. [x] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
     it, with no personal email.
     - **Done when:** both exist.
+    - **Done 2026-11-11:** private vulnerability reporting is on (owner; `GET
+      /repos/erjonb19/clinical-drift-monitor/private-vulnerability-reporting` returns
+      `"enabled": true`), and `SECURITY.md` points to it, states the scope (the demo is the only
+      deployed part; public data only) and publishes no email address, which
+      `tests/test_security_md.py` checks.
 43. [ ] **Dependabot alerts and security updates on** (owner).
     - **Done when:** the repository's security settings show both enabled.
 44. [ ] **API hardening before any deploy:** security headers, `openapi_url=None`, response
