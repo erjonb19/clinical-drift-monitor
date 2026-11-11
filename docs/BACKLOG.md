@@ -748,8 +748,15 @@ change only the owner can make (repository settings, accounts, consoles).
       Anthropic Console is the real backstop; whether one is set cannot be checked from here.
       Limits: deleting the log and its mark together still resets the client-side count, and a
       log that predates this change has no mark until its next call.
-46. [ ] **Neutralise formulas in the G5 CSV error sheets.**
+46. [x] **Neutralise formulas in the G5 CSV error sheets.**
     - **Done when:** a cell starting with `=` is written with a leading `'`, in tests.
+    - **Done 2026-11-11:** `cdm.extract.spreadsheet_safe_frame` prefixes `'` to any text cell
+      starting with `=`, `+`, `-`, `@`, a tab or a carriage return, leaving numeric columns
+      unchanged; `scripts/extraction.py` writes `errors.csv` through it. The predictions CSV
+      stays raw, because scoring reads it back and a prefix would turn a valid reply with
+      leading whitespace into an invalid one (a test checks it still scores).
+      Tests in `tests/test_extract.py`, including an end-to-end run with no network or model
+      call.
 47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
     temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
     to its own host with a byte cap.
