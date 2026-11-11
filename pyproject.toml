@@ -46,7 +46,7 @@ vlm = [
 # Phase 3 serving (cdm.serve_onnx): ONNX export and ONNX Runtime on CPU. In CI.
 serve = [
     "onnx==1.23.2",
-    "onnxruntime==1.31.1",
+    "onnxruntime==1.31.0",
     "onnxscript==0.7.2",
 ]
 # The public research API (app/api): FastAPI on CPU. In CI.
