@@ -652,7 +652,7 @@ change only the owner can make (repository settings, accounts, consoles).
       `.trivyignore` with reasons).
     - **Done 2026-11-11:** `docker.yml` scans with `severity: CRITICAL,HIGH` (still
       `ignore-unfixed`), and `tests/test_supply_chain.py` checks it. The image passed with no
-      accepted finding (`.trivyignore` stays empty) on this PR's `image` run.
+      accepted finding (`.trivyignore` stays empty) on PR #93's `image` run.
 40. [ ] **`.gitignore` covers Section 3.1's secret and state files.**
     - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
       `secrets/a` and `.databrickscfg`, checked by a test.
