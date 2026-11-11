@@ -5,6 +5,7 @@ Nothing goes here until the item's "Done when" is met.
 
 | Date | Item | What changed | How to check |
 | --- | --- | --- | --- |
+| 2026-11-11 | 37 | zizmor (pinned by hash) audits every workflow change and must first catch a planted template injection | The "Workflow audit" job on any PR that touches `.github/workflows/`; `pytest tests/test_supply_chain.py` |
 | 2026-11-11 | 46 | The G5 CSV error sheets write formula-like text as text | `pytest tests/test_extract.py -k "spreadsheet or formulas or whitespace"` |
 | 2026-11-11 | 45 | The $5 Haiku cap fails closed: a missing or shrunken spend log refuses calls once spending has begun | `pytest tests/test_extract.py -k spend_log` |
 | 2026-11-11 | 44 | The API sends security headers, serves no OpenAPI schema, returns only its response models' fields, and logs refusals without an address or body | `pytest tests/test_api.py` |
