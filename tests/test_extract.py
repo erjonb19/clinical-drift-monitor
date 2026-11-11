@@ -371,7 +371,7 @@ def test_the_csv_sheets_write_formulas_as_text(
         "diagnosis": formula, "body_site": NOT_STATED, "confirmation": NOT_STATED})  # fmt: skip
     module.run("scoring", "keyword", None)
     preds = pd.read_csv(work / "predictions_keyword_scoring.csv", dtype=str)
-    assert set(preds["diagnosis"]) == {"'" + formula}
+    assert set(preds["diagnosis"]) == {formula}  # raw: score_all reads it back
     # The error sheet: the predicted value and the note text both start with "'".
     module.score_all()
     errors = pd.read_csv(work / "errors.csv", dtype=str)
@@ -379,6 +379,27 @@ def test_the_csv_sheets_write_formulas_as_text(
     assert all(t.startswith("'-") for t in errors["text"])
     result = json.loads((tmp_path / "score.json").read_text())
     assert result["methods"]["keyword"]["diagnosis"]["accuracy"] == 0.0  # still invalid
+
+
+def test_a_valid_reply_with_leading_whitespace_still_scores(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The predictions CSV is not prefixed, so a reply such as "\\tnot stated" is stripped and
+    scored as before (review of PR #99)."""
+    module = cli(tmp_path, monkeypatch)
+    work = tmp_path / "work"
+    write_sheet([BIOPSY, NO_DX, PSORIASIS], work, ALLOWED, n=3)
+    sheet = pd.read_csv(work / "labelling_sheet.csv", dtype=str, keep_default_na=False)
+    for field in ("label_diagnosis", "label_body_site", "label_confirmation"):
+        sheet[field] = NOT_STATED
+    sheet.to_csv(work / "labelling_sheet.csv", index=False)
+    monkeypatch.setattr(module, "keyword_extract", lambda note, allowed: {
+        "diagnosis": "\t" + NOT_STATED, "body_site": NOT_STATED,
+        "confirmation": NOT_STATED})  # fmt: skip
+    module.run("scoring", "keyword", None)
+    module.score_all()
+    result = json.loads((tmp_path / "score.json").read_text())
+    assert result["methods"]["keyword"]["diagnosis"]["accuracy"] == 1.0
 
 
 def test_lesion_rules_take_lesion_notes_and_leave_incidental_skin() -> None:

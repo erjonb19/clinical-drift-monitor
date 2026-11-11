@@ -106,10 +106,11 @@ def run(split: str, method: str, limit: int | None) -> None:
         else:
             got = llm_extract(note, allowed, send, spend, WORK / "llm_cache.jsonl")
         out.append({"note_id": note.note_id, **got, "prompt_sha": sha})
-    # Model replies are untrusted: a cell starting with "=" etc. is written with a leading "'"
-    # (still invalid when scored, as the raw reply was).
-    frame = pd.DataFrame(out, columns=["note_id", *FIELDS, "prompt_sha"])
-    spreadsheet_safe_frame(frame).to_csv(predictions_path(method, split), index=False)
+    # Kept raw: score_all reads this file back, and a prefix would change what is scored
+    # (review of PR #99). Only the sheet a person opens, errors.csv, is made spreadsheet-safe.
+    pd.DataFrame(out, columns=["note_id", *FIELDS, "prompt_sha"]).to_csv(
+        predictions_path(method, split), index=False
+    )
     print(f"{len(out)} notes; LLM spend so far ${spend.total():.4f}")
 
 
