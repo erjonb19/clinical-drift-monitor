@@ -54,7 +54,8 @@ def grad_cam(
         model.zero_grad(set_to_none=True)
         logits.gather(1, classes.view(-1, 1)).sum().backward()
         maps = saved["maps"]
-        assert maps.grad is not None
+        if maps.grad is None:
+            raise RuntimeError("no gradient reached the feature maps")
         weights = maps.grad.mean(dim=(2, 3), keepdim=True)
         cam = F.relu((weights * maps).sum(dim=1, keepdim=True)).detach()
     finally:

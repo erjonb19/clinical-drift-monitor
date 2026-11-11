@@ -87,6 +87,17 @@ def test_a_decompression_bomb_is_unreadable_not_a_crash() -> None:
     assert v.unreadable and not v.ok
 
 
+def test_an_image_between_one_and_two_times_the_limit_is_unreadable() -> None:
+    """Pillow only warns between 50M and 100M pixels; the contract refuses before decoding."""
+    bomb = encode(Image.new("L", (10000, 6000)), "PNG")  # 60M pixels, about 58 KB
+    assert len(bomb) < 100_000
+    v = contract.check(bomb, CONFIG)
+    assert v.unreadable and not v.ok
+    at_limit = Image.new("L", (10000, 5000))  # exactly 50M pixels is allowed
+    with contract.open_image(encode(at_limit, "PNG")) as img:
+        assert img.size == (10000, 5000)
+
+
 def test_the_api_mode_computes_no_hash() -> None:
     assert contract.check(encode(textured()), CONFIG, hash_image=False).dhash is None
 

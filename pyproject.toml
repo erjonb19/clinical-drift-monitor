@@ -85,14 +85,45 @@ target-version = "py311"
 extend-exclude = ["reference"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
+select = ["E", "F", "I", "B", "UP", "SIM", "NPY", "S"]
+# Security rules (S, backlog item 36), each exception with its reason:
+# S603/S607: every subprocess call is an argument list (no shell) to git, databricks, docker or
+# pip found on PATH; S602 (shell=True) stays on.
+ignore = ["S603", "S607"]
 
 [tool.ruff.lint.per-file-ignores]
 # Databricks notebooks get `spark` and `dbutils` from the runtime, and import after
-# their widget and %pip cells.
-"databricks/notebooks/*" = ["F821", "E501", "E402"]
+# their widget and %pip cells. S101: they run on Databricks, never under python -O, and their
+# asserts are integrity checks that stop the job; S108: /tmp is the job's own ephemeral disk.
+"databricks/notebooks/*" = ["F821", "E501", "E402", "S101", "S108"]
 # Document templates: long lines are the documents' own prose and tables.
 "scripts/build_docs.py" = ["E501"]
+# Tests assert by design and write to pytest's own temporary folders.
+"tests/*" = ["S101", "S108", "S310", "S324"]
+# SQL built only from repository constants (table and column names, allowlisted cohort
+# definitions; src/cdm/cohort.py compiles validated integers and identifiers, audited
+# 2026-11-10); no outside input reaches these strings.
+"src/cdm/cohort.py" = ["S608"]
+"scripts/omop_build_report.py" = ["S608"]
+"scripts/phase1_export_evidence.py" = ["S608", "S310"]
+"scripts/phase2_stage1_evidence.py" = ["S608"]
+"scripts/cost_table.py" = ["S608"]
+"scripts/lineage_edges.py" = ["S608"]
+"scripts/v2_data_checks.py" = ["S608"]  # pipeline id, flow names and a run time from the owner's own workspace
+"databricks/notebooks/lineage_rewrite.py" = ["F821", "E501", "E402", "S101", "S108", "S608"]
+# urlopen on fixed https hosts named in the code (ISIC, Dataverse, Anthropic, the owner's
+# Databricks host from its own secret) or the local test server; no user-supplied scheme.
+"src/cdm/data.py" = ["S310"]
+"src/cdm/extract.py" = ["S310"]
+"scripts/watchdog.py" = ["S310"]
+"scripts/load_test.py" = ["S310"]
+"scripts/api_local_check.py" = ["S310"]
+# urlopen on URLs returned by the ISIC API (the pagination `next` link, image file URLs); not
+# yet restricted to the ISIC host: that check is backlog item 47.
+"src/cdm/sources.py" = ["S310"]
+"scripts/detector_quality.py" = ["S310"]
+"scripts/make_smoke_manifest.py" = ["S310"]
+"databricks/notebooks/scheduler_probe.py" = ["F821", "E501", "E402", "S101", "S108", "S310"]
 
 [tool.mypy]
 files = ["src", "tests", "scripts", "pipelines"]
