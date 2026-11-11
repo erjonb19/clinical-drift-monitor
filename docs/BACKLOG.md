@@ -687,8 +687,13 @@ change only the owner can make (repository settings, accounts, consoles).
       item 47).
 37. [ ] **zizmor on workflow changes.**
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
-38. [ ] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
+38. [x] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
     - **Done when:** each ecosystem has a cooldown, checked by a test.
+    - **Done 2026-11-11:** pip, docker and github-actions each have `cooldown: default-days: 7`
+      in `.github/dependabot.yml`; `tests/test_supply_chain.py` fails if an ecosystem loses it or
+      goes under 7 days. GitHub applies a cooldown to version updates only, so security updates
+      still open at once. GitHub's default is a 3-day cooldown, so this raises it to 7. The file
+      parses with `yaml.safe_load`; Dependabot validates it again once it is on main.
 39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
     - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
       `.trivyignore` with reasons).
