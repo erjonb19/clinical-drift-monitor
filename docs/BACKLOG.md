@@ -718,11 +718,14 @@ change only the owner can make (repository settings, accounts, consoles).
       their defaults (an empty value would override a default; an empty `TRUSTED_PROXY_HOPS`
       would stop the API). `tests/test_env_example.py` scans `src`, `scripts` and `app` for
       `os.environ` reads and fails on any unlisted name or any filled-in value.
-42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
+42. [x] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
     it, with no personal email.
     - **Done when:** both exist.
-    - **2026-11-11:** private vulnerability reporting turned on by the owner; `SECURITY.md` to
-      come.
+    - **Done 2026-11-11:** private vulnerability reporting is on (owner; `GET
+      /repos/erjonb19/clinical-drift-monitor/private-vulnerability-reporting` returns
+      `"enabled": true`), and `SECURITY.md` points to it, states the scope (the Streamlit demo
+      is the only public deployment; the API is not deployed; public data only) and publishes
+      no email address, which `tests/test_security_md.py` checks.
 43. [x] **Dependabot alerts and security updates on** (owner).
     - **Done when:** the repository's security settings show both enabled.
     - **Done 2026-11-11 (owner):** Dependabot security updates (grouped) and malware alerts on
