@@ -855,7 +855,7 @@ Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to 
 [docs/PROGRESS.md](docs/PROGRESS.md). Items that are built but not done are not listed.
 
 - [x] Item 10: a reviewer feedback section with a fixed format (below).
-- [x] Item 25: secret scanning of the full history on every push, with a planted-key self-test.
+- [x] Item 40: `.gitignore` covers secret and state files.
 - [x] Item 22: a security audit against the owner's standard, findings and a plan ([docs/security-audit-2026-11-10.md](docs/security-audit-2026-11-10.md)).
 
 ## Reviewer feedback
