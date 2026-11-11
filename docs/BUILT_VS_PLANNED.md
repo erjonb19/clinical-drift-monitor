@@ -285,7 +285,8 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 - API (`app/api`, not deployed): security headers, no public schema, response models, refusal
   events logged without an address or body.
 - Not done: locked and hashed installs (items 26 and 27, blocked on network access), zizmor
-  (item 37, waits for the owner's OK), the demo hardening's redeploy (item 47), and the
+  (item 37, waits for the owner's OK), the demo hardening (item 47: built and merged, not yet
+  redeployed), and the
   owner's `.claude/settings.json` decision (item 23).
 
 ## Scaffolded

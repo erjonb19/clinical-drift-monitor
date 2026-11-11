@@ -44,8 +44,9 @@ The merge order differed slightly from the work order: each PR merged when its C
 ## Closed, held or open
 
 - **#83** (Dependabot): closed. Its fastapi 0.162 conflicts with flwr 1.39's `fastapi<0.139`. #89 holds fastapi to patches.
+- **#104** (Dependabot, 18 updates): opened 06:09 UTC and closed by Dependabot itself at 07:33 ("updatable in another way"). I did not review it; #108 replaced it.
 - **#108** (Dependabot, 14 updates): reviewed and held. Its mpmath 1.4.1 cannot be installed with sympy 1.14.0, which is pinned in the same constraints file. CI was green only because the Dockerfile installs torch, with sympy and mpmath, before the constraints apply. After #110 merged, Dependabot closed #108 itself.
-- **#112** (Dependabot, 13 updates): merged. It is #108 without mpmath, plus filelock 4.2.8. A dry run shows the constraints resolve, and all of CI passed. Points for you:
+- **#112** (Dependabot, 13 updates): merged. It is #108 without mpmath, with filelock at 4.2.8 instead of 4.2.7. A dry run shows the constraints resolve, and all of CI passed. Points for you:
   - `pyproject.toml` now has onnxruntime 1.31.1, while `databricks/onnx_export_job.json` and the committed ONNX results use 1.31.0;
   - the image runs starlette 1.10.0, while CI's API tests run 1.3.1 (flwr's cap);
   - the constraints file's header still says it passed the local Docker test on 2026-10-23.
@@ -84,7 +85,7 @@ Everything else in the Order of work also waits on you: GPU or Databricks runs, 
 - **Main's lint was red for about 54 minutes** (06:39 to 07:33 UTC). #94 turned on ruff's `S` rules, and #98 added test SQL that `S608` flags. Each PR passed alone. Before merging #98, I checked lint on the merged tree, but my script read ruff's last output line, which is blank, so it reported "ok". #107 fixed main. Every later merged-tree check used exit codes, and before the last batch of merges I merged all the remaining PRs together locally and ran lint, mypy and the affected tests.
 - **My automatic conflict resolver duplicated BACKLOG lines** in #91 and #93: an item listed twice, once ticked. Review caught it before merge, and I resolved later conflicts by hand. `tests/test_backlog.py` (this PR) now fails on any duplicated or missing item number.
 - **Two text edits silently failed to apply** in #103: a test assertion and a BACKLOG note, because my script replaced a string without asserting it was found. Review caught both, and every later edit asserted its match.
-- **CI queue:** I cancelled 67 queued runs for superseded commits (21, then 46) to unblock the queue. That was runs only; no code or history was touched.
+- **CI queue:** I cancelled 67 queued runs for superseded commits (21, then 46) to unblock the queue. That was runs only; no code or history was touched. (The Actions page shows more cancellations, because the workflows also cancel a branch's older run on every push.)
 - **Rate limit:** a review agent hit the 5-hour usage limit, and reviews paused until the reset at 09:20 UTC.
 - **Two final commits applied only a reviewer's own wording nits** and merged without another pass: #102's note and #109's manifest wording.
 
