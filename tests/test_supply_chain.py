@@ -114,3 +114,15 @@ def test_the_base_image_is_pinned_by_digest() -> None:
     """Backlog item 35: a re-pushed tag cannot change the image's base layers unseen."""
     froms = re.findall(r"^FROM\s+(\S+)", (REPO / "Dockerfile").read_text("utf-8"), re.M)
     assert froms and all(re.search(r"@sha256:[0-9a-f]{64}$", f) for f in froms), froms
+
+
+def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
+    """Backlog item 38: each ecosystem waits at least 7 days after a release before proposing it."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    blocks = re.split(r"\n  - package-ecosystem: ", text)[1:]
+    assert len(blocks) == 3, "expected the pip, docker and github-actions ecosystems"
+    for block in blocks:
+        name = block.split("\n", 1)[0]
+        days = re.search(r"\n    cooldown:\n      default-days: (\d+)\n", block)
+        assert days, f"{name}: no cooldown"
+        assert int(days.group(1)) >= 7, f"{name}: cooldown under 7 days"
