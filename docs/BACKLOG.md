@@ -620,9 +620,15 @@ change only the owner can make (repository settings, accounts, consoles).
 27. [ ] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
     torch wheels), `--require-hashes --no-deps`, pinned build backend.
     - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.
-28. [ ] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
+28. [x] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
     `persist-credentials: false`; the repository default set to read-only (owner).
     - **Done when:** every workflow declares its permissions, checked by a test.
+    - **Done 2026-11-11:** `ci.yml` now sets `permissions: contents: read` like the other five
+      workflows, every checkout sets `persist-credentials: false`, and
+      `tests/test_supply_chain.py` fails if a workflow lacks a top-level `contents: read` block or
+      a checkout keeps its credentials (checked by removing the block from `ci.yml`). **Owner:**
+      the repository's default workflow permission (Settings, Actions, General) should be
+      read-only; it cannot be read without admin access.
 29. [ ] **Refuse 50 to 100 megapixel images** (silent failure #16): treat Pillow's
     `DecompressionBombWarning` as unreadable, or cap `img.size` before decoding.
     - **Done when:** a 60-megapixel PNG gets a 400 from the API and `unreadable` from the

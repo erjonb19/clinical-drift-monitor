@@ -103,3 +103,15 @@ def test_dependabot_never_updates_torch() -> None:
         entry = re.search(rf"- dependency-name: {name}\n(\s+)(\S+)", pip)
         assert entry is not None, name
         assert not entry.group(2).startswith("update-types"), name
+
+
+def test_every_workflow_reads_only_unless_it_says_why() -> None:
+    """Backlog item 28: each workflow sets a top-level permissions block, the default is
+    contents: read, and no checkout leaves the token in .git/config."""
+    for path in WORKFLOWS.glob("*.yml"):
+        text = path.read_text("utf-8")
+        top = re.search(r"^permissions:\n((?:  .*\n)+)", text, re.MULTILINE)
+        assert top is not None, f"{path.name}: no top-level permissions"
+        assert top.group(1).strip() == "contents: read", f"{path.name}: {top.group(1)!r}"
+        checkouts = text.count("uses: actions/checkout@")
+        assert text.count("persist-credentials: false") == checkouts, path.name
