@@ -21,8 +21,8 @@ themselves don't say so. That silent drop is why the project has a drift monitor
 
 **0:50 – 1:20. How the numbers were protected**
 [Open `docs/EVAL_PLAN.md`, then any `results/**/spec.json`.]
-"Each test look is fixed in advance and locked against a second run; since the evaluation
-plan, every new result also has a specification committed before it ran.
+"Since Phase 2, each test look is fixed in advance and locked against a second run, and since
+the evaluation plan every new evaluation has a specification committed before it ran.
 Splits are by lesion, never by image, and a test enforces it. A file of silent failures lists
 every bug that reported success while being wrong, and the check that now catches it."
 [Show `docs/silent-failures.md` for two seconds.]
