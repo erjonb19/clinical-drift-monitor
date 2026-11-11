@@ -678,8 +678,8 @@ change only the owner can make (repository settings, accounts, consoles).
       response: no default sources, scripts only by the page script's hash, no framing, plus
       `nosniff`, `X-Frame-Options: DENY` and a Referrer-Policy. The OpenAPI schema is off.
       `/predict` and `/health` have Pydantic response models, so extra fields are dropped. Each
-      refusal logs one JSON line (`cdm.api.security`) with a fresh request id, outcome and
-      reason code. Three new tests in `tests/test_api.py` cover the headers on the page, JSON,
+      refusal logs one JSON line (`cdm.api.security`) with a UTC time, a fresh request id,
+      outcome and reason code. Three new tests in `tests/test_api.py` cover the headers on the page, JSON,
       refusals and 404s; the hash matching the page; the missing schema and dropped fields; and
       two logged refusals with no address or body in the log. HSTS is left to the host at
       deploy. The API is still not deployed, and the deployed Streamlit demo is untouched.

@@ -17,11 +17,12 @@ Run: BUNDLE_DIR=<serving bundle> uvicorn app.api.main:app --host 0.0.0.0 --port 
 Behind a proxy (Hugging Face Spaces), set TRUSTED_PROXY_HOPS=1 so the client address for the
 rate limit is the entry that proxy appended to X-Forwarded-For.
 
-Hardening (backlog item 44): every response carries security headers (a CSP that allows only the
-page's own inline script, by hash, and no framing), the OpenAPI schema is not served, both routes
-have response models so no extra field can leak, and refusals are logged as structured events
-with a request id, outcome and reason code, never an address or a body. HSTS is set by the host
-at deploy, not here.
+Hardening (backlog item 44): every response the app builds carries security headers (a CSP
+that allows only the page's own inline script, by hash, and no framing), the OpenAPI schema is
+not served, both routes have response models so no extra field can leak, and refusals are
+logged as structured events with a time, request id, outcome and reason code, never an address
+or a body. HSTS is set by the host at deploy, not here. Starlette's own plain-text 500 page sits
+outside the middleware and has no headers.
 """
 
 from __future__ import annotations
@@ -135,8 +136,8 @@ class Health(BaseModel):
 def security_event(outcome: str, reason: str) -> None:
     """One structured line per refusal: a fresh request id, the outcome and a reason code. No
     address, header, filename or body is logged (the privacy conditions above)."""
-    event = {"event": "api_refusal", "request_id": uuid.uuid4().hex, "outcome": outcome,
-             "reason": reason}  # fmt: skip
+    event = {"event": "api_refusal", "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+             "request_id": uuid.uuid4().hex, "outcome": outcome, "reason": reason}  # fmt: skip
     SECURITY_LOG.warning(json.dumps(event, sort_keys=True))
 
 
@@ -236,7 +237,6 @@ def security_headers(html: str) -> dict[str, str]:
         f"script-src {script_hash(html)}; "
         "style-src 'unsafe-inline'; "
         "connect-src 'self'; "
-        "img-src 'self'; "
         "base-uri 'none'; "
         "form-action 'none'; "
         "frame-ancestors 'none'"
@@ -246,6 +246,7 @@ def security_headers(html: str) -> dict[str, str]:
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
         "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     }
 
 

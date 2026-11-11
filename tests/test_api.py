@@ -138,12 +138,11 @@ def test_every_response_carries_the_security_headers() -> None:
         assert r.headers["x-content-type-options"] == "nosniff"
         assert r.headers["x-frame-options"] == "DENY"
         assert r.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+        assert r.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
         csp = r.headers["content-security-policy"]
         assert "frame-ancestors 'none'" in csp and "default-src 'none'" in csp
-        assert (
-            f"script-src 'sha256-{want}'" in csp
-            and "unsafe-inline'; connect" not in csp.split("script-src")[1][:20]
-        )
+        script_src = next(d for d in csp.split("; ") if d.startswith("script-src"))
+        assert script_src == f"script-src 'sha256-{want}'"  # no 'unsafe-inline' for scripts
 
 
 def test_the_schema_is_not_served_and_responses_keep_only_their_fields() -> None:
@@ -173,7 +172,7 @@ def test_a_refusal_is_logged_without_address_or_body(caplog: pytest.LogCaptureFi
         ("rejected", "unreadable"),
         ("rate_limited", "rate_limit"),
     ]
-    assert all(set(e) == {"event", "request_id", "outcome", "reason"} for e in events)
+    assert all(set(e) == {"event", "time", "request_id", "outcome", "reason"} for e in events)
     assert events[0]["request_id"] != events[1]["request_id"]
     text = caplog.text
     assert "203.0.113.7" not in text and "SECRET-BODY" not in text and "testclient" not in text
