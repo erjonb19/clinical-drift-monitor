@@ -111,3 +111,12 @@ def test_a_decompression_bomb_gets_400_not_a_server_error() -> None:
     c = client()
     r = c.post("/predict", content=buf.getvalue(), headers={"content-type": "image/png"})
     assert r.status_code == 400 and c.get("/health").json()["rejected"] == 1
+
+
+def test_a_60_megapixel_image_gets_400() -> None:
+    """Pillow only warns between 50M and 100M pixels; the contract refuses (silent failure #16)."""
+    buf = io.BytesIO()
+    Image.new("L", (10000, 6000)).save(buf, format="PNG")
+    c = client()
+    r = c.post("/predict", content=buf.getvalue(), headers={"content-type": "image/png"})
+    assert r.status_code == 400 and c.get("/health").json()["rejected"] == 1
