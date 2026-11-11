@@ -645,8 +645,12 @@ change only the owner can make (repository settings, accounts, consoles).
     - **Done when:** a changed CIFAR file is refused before `pickle.load`.
 34. [ ] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
     - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
-35. [ ] **Pin the Docker base image by digest.**
+35. [x] **Pin the Docker base image by digest.**
     - **Done when:** the `FROM` line carries `@sha256:` and Dependabot updates it.
+    - **Done 2026-11-11:** `FROM python:3.11.17-slim@sha256:b7a9e5f6…` (the multi-platform
+      index digest, read from Docker Hub's registry on 2026-11-11); `.github/dependabot.yml`'s
+      docker entry updates digests along with tags (its Python minor and major ignore stays),
+      and `tests/test_supply_chain.py` fails if any `FROM` lacks a digest.
 36. [ ] **Turn on ruff's `S` rules**, fixing or justifying each hit.
     - **Done when:** `ruff check .` passes with `S` selected.
 37. [ ] **zizmor on workflow changes.**

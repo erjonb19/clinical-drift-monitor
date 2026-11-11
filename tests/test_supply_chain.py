@@ -108,3 +108,9 @@ def test_dependabot_never_updates_torch() -> None:
         entry = re.search(rf"- dependency-name: {name}\n(\s+)(\S+)", pip)
         assert entry is not None, name
         assert not entry.group(2).startswith("update-types"), name
+
+
+def test_the_base_image_is_pinned_by_digest() -> None:
+    """Backlog item 35: a re-pushed tag cannot change the image's base layers unseen."""
+    froms = re.findall(r"^FROM\s+(\S+)", (REPO / "Dockerfile").read_text("utf-8"), re.M)
+    assert froms and all(re.search(r"@sha256:[0-9a-f]{64}$", f) for f in froms), froms
