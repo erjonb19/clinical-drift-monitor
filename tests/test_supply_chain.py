@@ -20,23 +20,24 @@ def test_every_accepted_vulnerability_has_a_reason_and_a_review_date() -> None:
         date.fromisoformat(entry["review_by"])
 
 
-def test_third_party_actions_are_pinned_to_a_commit() -> None:
-    """GitHub's own actions (actions/*, github/*) may use tags; anyone else's must be a SHA."""
+def test_every_action_is_pinned_to_a_commit() -> None:
+    """Backlog item 34: every action, GitHub's own included, is pinned to a full commit SHA
+    (a tag can be moved to other code), with the release it was taken from in a comment."""
     for path in WORKFLOWS.glob("*.yml"):
-        for ref in re.findall(r"uses:\s*([^\s#]+)", path.read_text("utf-8")):
-            if ref.startswith(("./", "docker://")):
+        for line in path.read_text("utf-8").splitlines():
+            found = re.search(r"uses:\s*([^\s#]+)(.*)", line)
+            if found is None or found.group(1).startswith(("./", "docker://")):
                 continue  # local actions and container images are not pinned this way
-            owner, _, version = ref.partition("@")
-            owner = owner.split("/")[0]
-            if owner not in {"actions", "github"}:
-                assert re.fullmatch(r"[0-9a-f]{40}", version), f"{path.name}: {ref}"
+            ref, comment = found.groups()
+            assert re.fullmatch(r"[^@]+@[0-9a-f]{40}", ref), f"{path.name}: {ref}"
+            assert re.match(r"\s*# v\d", comment), f"{path.name}: {ref} names no release"
 
 
 def test_the_audit_and_scan_run_in_ci() -> None:
     ci = (WORKFLOWS / "ci.yml").read_text("utf-8")
     docker = (WORKFLOWS / "docker.yml").read_text("utf-8")
     assert "pip-audit" in ci and "vulnerable_requirements.txt" in ci
-    assert "trivy-action" in docker and "severity: CRITICAL" in docker
+    assert "trivy-action" in docker and "severity: CRITICAL,HIGH" in docker  # item 39
     assert (REPO / ".github" / "dependabot.yml").exists() and (WORKFLOWS / "codeql.yml").exists()
 
 
@@ -88,6 +89,12 @@ def test_dependabot_keeps_floors_and_the_uvicorn_that_flwr_needs() -> None:
     text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
     pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
     assert "versioning-strategy: increase-if-necessary" in pip
+    # #83 (2026-11-11): fastapi, open_clip_torch, transformers; #108: mpmath (sympy needs < 1.4)
+    for held in ("fastapi", "open_clip_torch", "transformers", "mpmath"):
+        assert sorted(_ignored(pip, held)) == [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+        ], held
     assert sorted(_ignored(pip, "uvicorn")) == [
         "version-update:semver-major",
         "version-update:semver-minor",
@@ -103,3 +110,62 @@ def test_dependabot_never_updates_torch() -> None:
         entry = re.search(rf"- dependency-name: {name}\n(\s+)(\S+)", pip)
         assert entry is not None, name
         assert not entry.group(2).startswith("update-types"), name
+
+
+def test_the_base_image_is_pinned_by_digest() -> None:
+    """Backlog item 35: a re-pushed tag cannot change the image's base layers unseen."""
+    froms = re.findall(r"^FROM\s+(\S+)", (REPO / "Dockerfile").read_text("utf-8"), re.M)
+    assert froms and all(re.search(r"@sha256:[0-9a-f]{64}$", f) for f in froms), froms
+
+
+def test_secret_scanning_runs_pinned_with_a_self_test() -> None:
+    """Backlog item 25: gitleaks in CI is a checksummed pinned release that must catch a
+    planted key, and the pre-commit hook pins the same version by commit."""
+    text = (WORKFLOWS / "secrets.yml").read_text("utf-8")
+    version = re.search(r'GITLEAKS_VERSION: "([\d.]+)"', text)
+    assert version and re.search(r'GITLEAKS_SHA256: "[0-9a-f]{64}"', text)
+    assert "sha256sum -c" in text and "planted key" in text and "fetch-depth: 0" in text
+    # Steps run under bash -e: without set +e the self-test stops at gitleaks' exit 1 and
+    # always fails (review of #88).
+    assert "set +e" in text.split("planted key", 1)[1].split("- name:", 1)[0]
+    hook = (REPO / ".pre-commit-config.yaml").read_text("utf-8")
+    assert re.search(rf"rev: [0-9a-f]{{40}} # v{re.escape(version.group(1))}", hook)
+    config = (REPO / ".gitleaks.toml").read_text("utf-8")
+    assert "useDefault = true" in config and 'condition = "AND"' in config
+
+
+def test_every_workflow_reads_only_unless_it_says_why() -> None:
+    """Backlog item 28: each workflow sets a top-level permissions block, the default is
+    contents: read, and no checkout leaves the token in .git/config."""
+    for path in WORKFLOWS.glob("*.yml"):
+        text = path.read_text("utf-8")
+        top = re.search(r"^permissions:\n((?:  .*\n)+)", text, re.MULTILINE)
+        assert top is not None, f"{path.name}: no top-level permissions"
+        assert top.group(1).strip() == "contents: read", f"{path.name}: {top.group(1)!r}"
+        checkouts = text.count("uses: actions/checkout@")
+        assert text.count("persist-credentials: false") == checkouts, path.name
+
+
+def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
+    """Backlog item 38: each ecosystem waits at least 7 days after a release before proposing it."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    blocks = re.split(r"\n  - package-ecosystem: ", text)[1:]
+    assert len(blocks) == 3, "expected the pip, docker and github-actions ecosystems"
+    for block in blocks:
+        name = block.split("\n", 1)[0]
+        days = re.search(r"\n    cooldown:\n      default-days: (\d+)\n", block)
+        assert days, f"{name}: no cooldown"
+        assert int(days.group(1)) >= 7, f"{name}: cooldown under 7 days"
+
+
+def test_the_api_image_drops_setuptools_after_installing() -> None:
+    """Item 39: the base image's setuptools carries old jaraco.context and wheel copies with
+    fixable HIGH CVEs; the API never imports it, so the image removes it after the installs. The
+    image also applies Debian's security updates while still root."""
+    lines = (REPO / "Dockerfile").read_text("utf-8").splitlines()
+    installs = [i for i, line in enumerate(lines) if line.startswith("RUN pip install")]
+    drop = lines.index("RUN pip uninstall -y setuptools wheel")
+    assert installs and drop > max(installs)
+    # Debian's security fixes since the base image was built (apt, zlib1g had fixable HIGHs).
+    upgrade = next(i for i, line in enumerate(lines) if "apt-get upgrade -y" in line)
+    assert upgrade < lines.index("USER demo")

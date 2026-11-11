@@ -19,8 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
       - name: Test bundle (untrained, CI only)
@@ -60,14 +62,14 @@ jobs:
           docker diff api | tee changes.txt
           # Allowed: /tmp itself and the empty cache directory torch creates at start-up.
           if grep -v -E " /(tmp|home/demo|tmp/torchinductor_demo)$" changes.txt | grep -q .; then echo "unexpected files written"; exit 1; fi
-      # Backlog item 11: scan the built image; fixable CRITICAL findings fail the build. Accepted
-      # ones go in .trivyignore with their reason. The action is pinned to a commit.
+      # Backlog items 11 and 39: scan the built image; fixable CRITICAL and HIGH findings fail the
+      # build. Accepted ones go in .trivyignore with their reason. The action is pinned to a commit.
       - name: Image scan (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: cdm-api:ci
           scanners: vuln
-          severity: CRITICAL
+          severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
           trivyignores: .trivyignore

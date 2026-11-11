@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import io
+from typing import Any
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from cdm import contract
@@ -87,6 +89,17 @@ def test_a_decompression_bomb_is_unreadable_not_a_crash() -> None:
     assert v.unreadable and not v.ok
 
 
+def test_an_image_between_one_and_two_times_the_limit_is_unreadable() -> None:
+    """Pillow only warns between 50M and 100M pixels; the contract refuses before decoding."""
+    bomb = encode(Image.new("L", (10000, 6000)), "PNG")  # 60M pixels, about 58 KB
+    assert len(bomb) < 100_000
+    v = contract.check(bomb, CONFIG)
+    assert v.unreadable and not v.ok
+    at_limit = Image.new("L", (10000, 5000))  # exactly 50M pixels is allowed
+    with contract.open_image(encode(at_limit, "PNG")) as img:
+        assert img.size == (10000, 5000)
+
+
 def test_the_api_mode_computes_no_hash() -> None:
     assert contract.check(encode(textured()), CONFIG, hash_image=False).dhash is None
 
@@ -96,3 +109,52 @@ def test_flat_images_are_never_duplicates_of_each_other() -> None:
     first = contract.check(flat, CONFIG)
     assert first.dhash == 0
     assert contract.check(flat, CONFIG, seen=[0]).ok
+
+
+@pytest.mark.parametrize("fmt", ["TIFF", "ICO", "BMP", "GIF"])
+def test_only_the_jpeg_and_png_decoders_ever_run(fmt: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Backlog item 30: a TIFF, ICO, BMP or GIF upload is refused with its format named, and its
+    own decoder is never called, in the contract check and in open_image (which serving uses;
+    item 29's test checks that serving goes through it)."""
+    Image.init()
+    called: list[str] = []
+    factory, accept = Image.OPEN[fmt]
+
+    def spy(*args: Any, **kwargs: Any) -> Any:
+        called.append(fmt)
+        return factory(*args, **kwargs)
+
+    monkeypatch.setitem(Image.OPEN, fmt, (spy, accept))
+    image = textured(256, 256).convert("P") if fmt == "GIF" else textured(256, 256)
+    data = encode(image, fmt)
+    v = contract.check(data, CONFIG)
+    assert v.quarantined == [f"format: {fmt} (allowed: JPEG, PNG)"] and not v.unreadable
+    with pytest.raises(contract.RefusedFormat):
+        contract.open_image(data)
+    assert called == []
+
+
+def test_jpeg_and_png_still_open() -> None:
+    for fmt in ("JPEG", "PNG"):
+        with contract.open_image(encode(textured(), fmt)) as img:
+            assert img.format == fmt
+
+
+def test_an_mpo_is_refused_before_its_pixels_are_decoded(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A multi-picture JPEG opens through the JPEG plugin as MPO; it is quarantined from the
+    header, and load() never runs."""
+    buf = io.BytesIO()
+    textured(256, 256).save(buf, format="MPO", save_all=True, append_images=[textured(256, 256)])
+    loads: list[str] = []
+    real = Image.Image.load
+
+    def spy(self: Image.Image) -> Any:
+        loads.append(str(self.format))
+        return real(self)
+
+    monkeypatch.setattr(Image.Image, "load", spy)
+    from PIL import ImageFile
+
+    monkeypatch.setattr(ImageFile.ImageFile, "load", spy)
+    v = contract.check(buf.getvalue(), CONFIG)
+    assert v.quarantined == ["format: MPO (allowed: JPEG, PNG)"] and "MPO" not in loads

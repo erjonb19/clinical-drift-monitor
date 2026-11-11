@@ -3,18 +3,36 @@
 # Ignore rules (owner, 2026-11-09): the API image stays on Python 3.11 (the repo's standard),
 # and the model and training stack gets patch releases only, since a minor release can change
 # the numbers behind committed results (flwr is held at 1.39.x on purpose: config/pip_audit_ignore.json).
+# Cooldown (item 38): a version update waits 7 days after its release, so a hijacked release is
+# more likely to be found and pulled before it reaches a PR here (GitHub's default is 3 days).
+# Security updates do not wait.
 version: 2
 updates:
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     # No lockfile: leave a ">=" floor alone when the new release already satisfies it (#74 raised
     # floors such as mlflow-skinny 2.16 to 3.18); exact pins are still bumped.
     versioning-strategy: increase-if-necessary
     ignore:
       # flwr 1.39.x (held on purpose) needs uvicorn < 0.50; #74's uvicorn 0.54.0 broke the install.
       - dependency-name: uvicorn
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      # flwr 1.39.x also needs fastapi >= 0.138, < 0.139; #83's fastapi 0.162.0 broke the install.
+      - dependency-name: fastapi
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      # The BiomedCLIP stack behind the committed research Phase B results (vlm extra): patches
+      # only. #83 moved open_clip_torch 3 -> 4 and transformers 4 -> 5.
+      - dependency-name: open_clip_torch
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: transformers
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      # sympy 1.14 (torch's dependency, pinned in docker/constraints.txt) needs mpmath < 1.4;
+      # #108's mpmath 1.4.1 made the constraints file impossible to install. Patches only.
+      - dependency-name: mpmath
         update-types: [version-update:semver-major, version-update:semver-minor]
       # torch and torchvision: no updates at all (owner, 2026-11-10). Dependabot drops the
       # +cpu label in docker/constraints.txt and cannot see the Dockerfile's RUN line (#74), so a
@@ -38,6 +56,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: python
         update-types: [version-update:semver-major, version-update:semver-minor]
@@ -48,6 +68,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]

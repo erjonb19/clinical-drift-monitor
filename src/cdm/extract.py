@@ -42,8 +42,11 @@ OTHER, NOT_STATED, INVALID = "other", "not stated", "invalid"
 HISTOPATHOLOGY = "histopathology"
 MODEL = "claude-haiku-5-5"
 # US dollars per million tokens, prompts up to 100k tokens (Anthropic pricing page, read
-# 2026-10-21). Used for the spend log and the budget guard.
+# 2026-10-21; matched again on 2026-11-11 against the Claude API reference's model table, cached
+# 2026-11-03). Used for the spend log and the budget guard. The real backstop is a spend limit
+# on the key in the Anthropic Console (the owner's setting, backlog item 45).
 PRICE_PER_MTOK = {MODEL: (0.10, 0.50)}
+PRICE_CHECKED = "2026-11-11"
 # Room for the model's own thinking as well as the short JSON answer: at 200 tokens, 6 of the 8
 # dev notes were cut off and parsed as "invalid" (docs/silent-failures.md #14).
 MAX_OUTPUT_TOKENS = 2048
@@ -237,10 +240,32 @@ class ReplyCutOff(RuntimeError):
 @dataclass
 class SpendLog:
     """One JSON line per LLM call, with tokens and cost. Lives outside the repository (it
-    names notes by ID only, but it is a working log, not a result)."""
+    names notes by ID only, but it is a working log, not a result).
+
+    Fails closed (backlog item 45): every recorded call also raises a high-water mark kept
+    beside the log (``<log>.high_water.json``). If the log goes missing or shrinks below that
+    mark, the guard refuses every call instead of starting again from $0."""
 
     path: Path
     cap_usd: float = 5.0
+
+    @property
+    def high_water_path(self) -> Path:
+        return self.path.with_name(self.path.name + ".high_water.json")
+
+    def high_water(self) -> float | None:
+        """The most this log has ever recorded, or None before the first recorded call."""
+        if not self.high_water_path.exists():
+            return None
+        return float(json.loads(self.high_water_path.read_text("utf-8"))["high_water_usd"])
+
+    def _raise_high_water(self) -> None:
+        mark = max(self.total(), self.high_water() or 0.0)
+        self.high_water_path.write_text(
+            json.dumps({"high_water_usd": mark,
+                        "updated": datetime.now(UTC).isoformat(timespec="seconds")}),
+            "utf-8",
+        )  # fmt: skip
 
     def entries(self) -> list[dict[str, Any]]:
         if not self.path.exists():
@@ -255,6 +280,17 @@ class SpendLog:
         pass the cap."""
         price_in, price_out = PRICE_PER_MTOK[model]
         worst = (prompt_chars / 3 * price_in + MAX_OUTPUT_TOKENS * price_out) / 1e6
+        mark = self.high_water()
+        if mark is not None and not self.path.exists():
+            raise BudgetExceeded(
+                f"the spend log {self.path} is missing but ${mark:.4f} was spent: refusing "
+                "until it is restored"
+            )
+        if mark is not None and self.total() < mark - 1e-9:
+            raise BudgetExceeded(
+                f"the spend log records ${self.total():.4f}, less than the ${mark:.4f} already "
+                "spent: refusing until it is restored"
+            )
         if self.total() + worst > self.cap_usd:
             raise BudgetExceeded(f"spent ${self.total():.4f} of ${self.cap_usd:.2f}")
 
@@ -269,6 +305,7 @@ class SpendLog:
                  "cost_usd": worst}  # fmt: skip
         with self.path.open("ab") as f:
             f.write((json.dumps(entry) + "\n").encode())
+        self._raise_high_water()
 
     def record(self, model: str, note: str, prompt_sha: str, usage: dict[str, int]) -> float:
         price_in, price_out = PRICE_PER_MTOK[model]
@@ -278,6 +315,7 @@ class SpendLog:
                  "note_id": note, "prompt_sha": prompt_sha, **usage, "cost_usd": cost}  # fmt: skip
         with self.path.open("ab") as f:
             f.write((json.dumps(entry) + "\n").encode())
+        self._raise_high_water()
         return cost
 
 
@@ -559,6 +597,32 @@ def score(
             "errors": dict(sorted(Counter(
                 k for t, p in rows if (k := error_kind(field, t, p, allowed))).items())),
         }  # fmt: skip
+    return out
+
+
+# ---- sheets the owner opens in a spreadsheet ------------------------------------------------
+
+# A cell starting with one of these becomes a formula in Excel, LibreOffice or Google Sheets
+# (CWE-1236). Model replies and note text are untrusted, so CSV sheets prefix them with "'".
+# The workbook (write_workbook) guards differently: its locked cells are typed as text.
+FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+
+
+def spreadsheet_safe(value: object) -> object:
+    """A text cell that would start a formula gets a leading "'"; anything else (numbers
+    included) is returned unchanged."""
+    if isinstance(value, str) and value.startswith(FORMULA_START):
+        return "'" + value
+    return value
+
+
+def spreadsheet_safe_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """A copy with every text cell passed through spreadsheet_safe; numeric columns keep
+    their dtype and values."""
+    out = frame.copy()
+    for column in out.columns:
+        if not pd.api.types.is_numeric_dtype(out[column]):
+            out[column] = out[column].map(spreadsheet_safe)
     return out
 
 

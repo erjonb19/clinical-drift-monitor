@@ -1,17 +1,25 @@
 # Public research demo of the classifier (Phase 3): FastAPI on CPU. Not for medical use.
 # Build context: the repository, with the serving bundle copied to dist/bundle beforehand
 # (never committed). Runs as user 1000 on port 7860, as Hugging Face Spaces expects.
-FROM python:3.11.17-slim
+# Pinned by digest (backlog item 35): the multi-platform index digest of python:3.11.17-slim,
+# read from Docker Hub on 2026-11-11. Dependabot's docker updates keep it current.
+FROM python:3.11.17-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377
 
 # TRUSTED_PROXY_HOPS=1: Hugging Face Spaces puts one proxy in front (see app/api/main.py).
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 BUNDLE_DIR=/app/bundle \
     TRUSTED_PROXY_HOPS=1
+# Debian security fixes released after the base image was built (Trivy, item 39: apt and zlib1g
+# had fixable HIGH findings); the package lists are removed again.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
 RUN pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.0 torchvision==0.29.0
 
 WORKDIR /app
 COPY pyproject.toml README.md docker/constraints.txt ./
 COPY src ./src
 RUN pip install -c constraints.txt ".[api]" scikit-learn
+# The base image's setuptools carries old jaraco.context and wheel copies with fixable HIGH CVEs
+# (Trivy, item 39). Nothing in the API imports setuptools at run time, so it is removed.
+RUN pip uninstall -y setuptools wheel
 COPY app/api ./app/api
 COPY dist/bundle ./bundle
 

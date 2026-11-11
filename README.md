@@ -854,8 +854,30 @@ the variation shown in caveat 3, not these exact numbers.
 Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to check each is in
 [docs/PROGRESS.md](docs/PROGRESS.md). Items that are built but not done are not listed.
 
+- [x] Item 9: a CHAI-format model card and a one-page change-control plan, regenerated from committed evidence and checked in CI.
 - [x] Item 10: a reviewer feedback section with a fixed format (below).
+- [x] Item 11: supply chain and merge rules (Dependabot, CodeQL, pip-audit, Trivy, branch protection on `main`).
 - [x] Item 22: a security audit against the owner's standard, findings and a plan ([docs/security-audit-2026-11-10.md](docs/security-audit-2026-11-10.md)).
+- [x] Item 24: branch protection on `main` requires the `quality`, `image` and CodeQL `analyze` checks (owner).
+- [x] Item 25: secret scanning of the full history on every push, with a planted-key self-test.
+- [x] Item 28: every CI workflow runs with a read-only token.
+- [x] Item 29: images over 50 megapixels are refused before decoding.
+- [x] Item 30: uploads are opened with the JPEG and PNG decoders only.
+- [x] Item 31: every checkpoint load uses `weights_only=True`.
+- [x] Item 32: the serving bundle's manifest must hash every checkpoint and detector.
+- [x] Item 33: CIFAR-10 files are checksummed before they are unpickled.
+- [x] Item 34: every GitHub Action is pinned to a commit.
+- [x] Item 35: the Docker base image is pinned by digest.
+- [x] Item 36: ruff's security rules on, with each exception's reason recorded.
+- [x] Item 38: Dependabot waits 7 days after a release before proposing it.
+- [x] Item 39: the image scan fails on fixable HIGH and CRITICAL findings, and passes.
+- [x] Item 40: `.gitignore` covers secret and state files.
+- [x] Item 41: `.env.example` names every environment variable the code reads.
+- [x] Item 42: private vulnerability reporting, described in `SECURITY.md`.
+- [x] Item 43: Dependabot alerts, grouped security updates and malware alerts on (owner).
+- [x] Item 44: API hardening: security headers, no public schema, response models, refusal events.
+- [x] Item 45: the $5 Haiku cap fails closed when its spend log is missing or shrinks.
+- [x] Item 46: spreadsheet formulas in the G5 CSV sheets are neutralised.
 
 ## Reviewer feedback
 

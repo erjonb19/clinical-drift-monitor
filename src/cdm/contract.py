@@ -23,9 +23,63 @@ from typing import Any
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 
-# The same pixel limit as the serving code (cdm.serving), set here too so a caller that never
-# imports cdm.serving (the monthly job) refuses decompression bombs alike.
-Image.MAX_IMAGE_PIXELS = 50_000_000
+# The pixel limit for every decoded image (the monthly job and the API alike). Pillow raises
+# DecompressionBombError only above twice MAX_IMAGE_PIXELS and merely warns between one and two
+# times it, so open_image checks the header's size against MAX_PIXELS itself, before any decode
+# (silent failure #16).
+MAX_PIXELS = 50_000_000
+Image.MAX_IMAGE_PIXELS = MAX_PIXELS
+
+
+# Only these decoders see bytes passed to open_image (backlog item 30): Image.open tries no
+# other plugin, so a TIFF, PSD or ICO parser bug cannot be reached through the API's uploads.
+# (A multi-picture JPEG is opened by the JPEG plugin as MPO, and refused before decoding.) The
+# ISIC ingestion paths (cdm.images, silver, gold) still use plain Image.open.
+DECODERS = ("JPEG", "PNG")
+
+
+class RefusedFormat(UnidentifiedImageError):
+    """The bytes look like an image in a format whose decoder is not allowed to run."""
+
+    def __init__(self, fmt: str) -> None:
+        super().__init__(f"{fmt} images are not decoded here")
+        self.format = fmt
+
+
+def sniff_format(data: bytes) -> str | None:
+    """The format named by the first bytes, from each Pillow plugin's prefix check (``accept``).
+    Those checks compare a few magic bytes and decode nothing; they only name what was refused."""
+    Image.init()
+    prefix = data[:16]
+    for fmt, (_, accept) in Image.OPEN.items():
+        try:
+            if accept is not None and accept(prefix):
+                return fmt
+        except Exception:  # noqa: BLE001, S112 - a prefix check that fails just doesn't match
+            continue
+    return None
+
+
+def open_image(data: bytes, formats: Iterable[str] = DECODERS) -> Image.Image:
+    """Open image bytes lazily, with only the ``formats`` decoders, and refuse one over
+    MAX_PIXELS before its pixels are decoded. Image.open reads only the header, so the size is
+    known before ``load()``. Raises RefusedFormat for an image in another format,
+    UnidentifiedImageError for bytes no check recognises, and Image.DecompressionBombError for
+    an oversized image."""
+    allowed = list(formats)
+    try:
+        img = Image.open(io.BytesIO(data), formats=allowed)
+    except UnidentifiedImageError:
+        fmt = sniff_format(data)
+        if fmt is not None and fmt not in allowed:
+            raise RefusedFormat(fmt) from None
+        raise
+    w, h = img.size
+    if w * h > MAX_PIXELS:
+        img.close()
+        raise Image.DecompressionBombError(f"{w}x{h} is over the {MAX_PIXELS} pixel limit")
+    return img
+
 
 CONTRACT: dict[str, Any] = {
     "enforced": {
@@ -95,20 +149,25 @@ def check(
 ) -> Verdict:
     """Check one image's bytes. ``seen`` holds earlier images' difference hashes (the monthly
     job passes them). The API passes ``hash_image=False``: it computes no hash of any upload.
-    An image over the pixel limit (a decompression bomb) is unreadable, like a non-image."""
+    An image over the pixel limit (a decompression bomb) is unreadable, like a non-image. An
+    image in a format outside the contract is quarantined with that reason alone, before its
+    pixels are decoded."""
     v = Verdict()
     rules = config["enforced"]
     try:
-        with Image.open(io.BytesIO(data)) as img:
+        with open_image(data, rules["formats"]) as img:
             fmt = img.format
+            if fmt not in rules["formats"]:  # e.g. MPO, opened by the JPEG plugin
+                raise RefusedFormat(str(fmt))
             img.load()
             rgb = img.convert("RGB")
+    except RefusedFormat as refused:
+        v.quarantined.append(f"format: {refused.format} (allowed: {', '.join(rules['formats'])})")
+        return v
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
         v.quarantined.append("format: not a readable image")
         v.unreadable = True
         return v
-    if fmt not in rules["formats"]:
-        v.quarantined.append(f"format: {fmt} (allowed: {', '.join(rules['formats'])})")
     w, h = rgb.size
     if min(w, h) < rules["min_side_px"]:
         v.quarantined.append(f"resolution: {w}x{h}, shorter side under {rules['min_side_px']} px")

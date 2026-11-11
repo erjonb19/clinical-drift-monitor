@@ -61,7 +61,7 @@ def main() -> None:
         }
         print(site.name, report["sites"][site.name]["images"], flush=True)
 
-    rng = random.Random(0)
+    rng = random.Random(0)  # noqa: S311 - a reproducible sample, not a secret
     comparisons = []
     for _, row in ham.sample(n=SAMPLE, random_state=rng.randint(0, 2**31)).iterrows():
         remote = http_bytes(row["url"])

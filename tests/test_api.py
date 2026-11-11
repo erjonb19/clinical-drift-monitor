@@ -4,11 +4,16 @@ bodies are refused, and nothing but counts is kept."""
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import io
+import json
+import logging
 import tempfile
 from pathlib import Path
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
@@ -21,7 +26,16 @@ class FakeService:
 
     def predict(self, image: bytes) -> dict[str, Any]:
         Image.open(io.BytesIO(image)).verify()
-        return {"label": "nv", "abstain": False, "notice": NOTICE}
+        return {
+            "label": "nv",
+            "probabilities": {"nv": 0.9, "mel": 0.1},
+            "ood_score": 1.0,
+            "abstain": False,
+            "refer_melanoma": False,
+            "model_version": self.version,
+            "notice": NOTICE,
+            "debug_path": "/secret/internal",  # a field the response model must drop
+        }
 
 
 def jpeg(size: tuple[int, int] = (256, 256)) -> bytes:
@@ -108,6 +122,66 @@ def test_the_input_contract_quarantines_with_a_reason_and_counts_it() -> None:
 def test_a_decompression_bomb_gets_400_not_a_server_error() -> None:
     buf = io.BytesIO()
     Image.new("L", (12000, 9000)).save(buf, format="PNG")
+    c = client()
+    r = c.post("/predict", content=buf.getvalue(), headers={"content-type": "image/png"})
+    assert r.status_code == 400 and c.get("/health").json()["rejected"] == 1
+
+
+def test_every_response_carries_the_security_headers() -> None:
+    """Backlog item 44: the page, JSON answers, refusals and unknown paths all get the headers,
+    and the CSP's script hash matches the page's inline script, so the page still works."""
+    c = client()
+    page = c.get("/")
+    script = page.text.split("<script>")[1].split("</script>")[0]
+    want = base64.b64encode(hashlib.sha256(script.encode()).digest()).decode()
+    for r in (page, c.get("/health"), c.post("/predict", content=b"x"), c.get("/nope")):
+        assert r.headers["x-content-type-options"] == "nosniff"
+        assert r.headers["x-frame-options"] == "DENY"
+        assert r.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+        assert r.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+        csp = r.headers["content-security-policy"]
+        assert "frame-ancestors 'none'" in csp and "default-src 'none'" in csp
+        script_src = next(d for d in csp.split("; ") if d.startswith("script-src"))
+        assert script_src == f"script-src 'sha256-{want}'"  # no 'unsafe-inline' for scripts
+
+
+def test_the_schema_is_not_served_and_responses_keep_only_their_fields() -> None:
+    c = client()
+    for path in ("/openapi.json", "/docs", "/redoc"):
+        assert c.get(path).status_code == 404
+    out = c.post("/predict", content=jpeg(), headers={"content-type": "image/jpeg"}).json()
+    assert "debug_path" not in out
+    assert set(out) == {
+        "label", "probabilities", "ood_score", "abstain", "refer_melanoma", "model_version",
+        "notice", "input_flags", "license",
+    }  # fmt: skip
+    assert set(c.get("/health").json()) == {
+        "status", "model_version", "notice", "predictions", "rejected", "quarantined",
+        "rate_limited", "latency_ms_p50", "latency_ms_p95",
+    }  # fmt: skip
+
+
+def test_a_refusal_is_logged_without_address_or_body(caplog: pytest.LogCaptureFixture) -> None:
+    c = client(RateLimiter(per_client=1, total=100), hops=1)
+    secret = b"SECRET-BODY-BYTES"
+    with caplog.at_level(logging.WARNING, logger="cdm.api.security"):
+        assert post(c, b"not an image " + secret, **{"x-forwarded-for": "203.0.113.7"}) == 400
+        assert post(c, jpeg(), **{"x-forwarded-for": "203.0.113.7"}) == 429
+    events = [json.loads(r.getMessage()) for r in caplog.records if r.name == "cdm.api.security"]
+    assert [(e["outcome"], e["reason"]) for e in events] == [
+        ("rejected", "unreadable"),
+        ("rate_limited", "rate_limit"),
+    ]
+    assert all(set(e) == {"event", "time", "request_id", "outcome", "reason"} for e in events)
+    assert events[0]["request_id"] != events[1]["request_id"]
+    text = caplog.text
+    assert "203.0.113.7" not in text and "SECRET-BODY" not in text and "testclient" not in text
+
+
+def test_a_60_megapixel_image_gets_400() -> None:
+    """Pillow only warns between 50M and 100M pixels; the contract refuses (silent failure #16)."""
+    buf = io.BytesIO()
+    Image.new("L", (10000, 6000)).save(buf, format="PNG")
     c = client()
     r = c.post("/predict", content=buf.getvalue(), headers={"content-type": "image/png"})
     assert r.status_code == 400 and c.get("/health").json()["rejected"] == 1
