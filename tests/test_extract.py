@@ -340,6 +340,47 @@ def test_labels_outside_the_choices_stop_scoring(
         module.score_all()
 
 
+def test_spreadsheet_safe_prefixes_formula_starts_and_keeps_numbers() -> None:
+    from cdm.extract import spreadsheet_safe, spreadsheet_safe_frame
+
+    for risky in ("=1+1", "+1", "-1", "@SUM(A1)", "\tx", "\rx"):
+        assert spreadsheet_safe(risky) == "'" + risky
+    assert spreadsheet_safe("Melanoma, NOS") == "Melanoma, NOS"
+    assert spreadsheet_safe(-3) == -3
+    frame = pd.DataFrame({"text": ["=HYPERLINK(1)", "ok"], "n": [-1, 2]})
+    safe = spreadsheet_safe_frame(frame)
+    assert list(safe["text"]) == ["'=HYPERLINK(1)", "ok"]
+    assert safe["n"].tolist() == [-1, 2] and pd.api.types.is_integer_dtype(safe["n"])
+    assert frame["text"][0] == "=HYPERLINK(1)"  # the input is not changed
+
+
+def test_the_csv_sheets_write_formulas_as_text(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = cli(tmp_path, monkeypatch)
+    work = tmp_path / "work"
+    formula = '=HYPERLINK("http://example.invalid","x")'
+    write_sheet([BIOPSY, NO_DX, PSORIASIS], work, ALLOWED, n=3)
+    sheet = pd.read_csv(work / "labelling_sheet.csv", dtype=str, keep_default_na=False)
+    sheet["label_diagnosis"], sheet["label_body_site"] = NOT_STATED, NOT_STATED
+    sheet["label_confirmation"] = NOT_STATED
+    sheet["text"] = "-" + sheet["text"]  # note text starting with a formula character
+    sheet.to_csv(work / "labelling_sheet.csv", index=False)
+    # The predictions CSV: a model reply that is a formula (no network: keyword path patched).
+    monkeypatch.setattr(module, "keyword_extract", lambda note, allowed: {
+        "diagnosis": formula, "body_site": NOT_STATED, "confirmation": NOT_STATED})  # fmt: skip
+    module.run("scoring", "keyword", None)
+    preds = pd.read_csv(work / "predictions_keyword_scoring.csv", dtype=str)
+    assert set(preds["diagnosis"]) == {"'" + formula}
+    # The error sheet: the predicted value and the note text both start with "'".
+    module.score_all()
+    errors = pd.read_csv(work / "errors.csv", dtype=str)
+    assert len(errors) > 0 and set(errors["predicted"]) == {"'" + formula}
+    assert all(t.startswith("'-") for t in errors["text"])
+    result = json.loads((tmp_path / "score.json").read_text())
+    assert result["methods"]["keyword"]["diagnosis"]["accuracy"] == 0.0  # still invalid
+
+
 def test_lesion_rules_take_lesion_notes_and_leave_incidental_skin() -> None:
     from cdm.extract import GENERIC, SPECIFIC
 

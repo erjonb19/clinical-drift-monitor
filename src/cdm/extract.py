@@ -562,6 +562,32 @@ def score(
     return out
 
 
+# ---- sheets the owner opens in a spreadsheet ------------------------------------------------
+
+# A cell starting with one of these becomes a formula in Excel, LibreOffice or Google Sheets
+# (CWE-1236). Model replies and note text are untrusted, so CSV sheets prefix them with "'".
+# The workbook (write_workbook) guards differently: its locked cells are typed as text.
+FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+
+
+def spreadsheet_safe(value: object) -> object:
+    """A text cell that would start a formula gets a leading "'"; anything else (numbers
+    included) is returned unchanged."""
+    if isinstance(value, str) and value.startswith(FORMULA_START):
+        return "'" + value
+    return value
+
+
+def spreadsheet_safe_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """A copy with every text cell passed through spreadsheet_safe; numeric columns keep
+    their dtype and values."""
+    out = frame.copy()
+    for column in out.columns:
+        if not pd.api.types.is_numeric_dtype(out[column]):
+            out[column] = out[column].map(spreadsheet_safe)
+    return out
+
+
 def write_workbook(folder: Path) -> Path:
     """The labelling sheet as an Excel workbook beside the CSV (outside the repository): one
     dropdown per label column from ``labelling_choices.csv``, wrapped note text, and sheet
