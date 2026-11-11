@@ -7,7 +7,7 @@ scheduler probe (item 1) was left for you. Under the new merge rule (#85), every
 was merged only with CI green on its final commit and after a fresh review by a separate
 agent that found nothing blocking.
 
-## Merged (25 PRs, in merge order)
+## Merged (26 PRs, in merge order)
 
 | PR | Item | What |
 |---|---|---|
@@ -36,6 +36,7 @@ agent that found nothing blocking.
 | #93 | 39 | Trivy fails on fixable HIGH. Passing needed two image changes: setuptools removed (old vendored jaraco.context and wheel), and Debian security updates applied (apt, zlib1g). |
 | #109 | 9 | One-page change-control plan; a test regenerates the model card, plan and standards doc and fails if any is stale. |
 | #111 | 34 | Every GitHub Action pinned to a commit. |
+| #112 | (Dependabot) | 13 Python updates (see below). |
 
 Order: item 45 first, then the Mediums, 29 and 31, then the Lows, then item 9, as you asked.
 The merge order differed slightly from the work order: each PR merged when its CI went green.
@@ -43,7 +44,11 @@ The merge order differed slightly from the work order: each PR merged when its C
 ## Closed, held or open
 
 - **#83** (Dependabot): closed. Its fastapi 0.162 conflicts with flwr 1.39's `fastapi<0.139`. #89 holds fastapi to patches.
-- **#108** (Dependabot, 14 updates): reviewed and held. Its mpmath 1.4.1 cannot be installed with sympy 1.14.0, which is pinned in the same constraints file. CI was green only because the Dockerfile installs torch, with sympy and mpmath, before the constraints apply. After #110 merged, Dependabot closed #108 itself. Its next weekly run should propose the other 13 updates without mpmath.
+- **#108** (Dependabot, 14 updates): reviewed and held. Its mpmath 1.4.1 cannot be installed with sympy 1.14.0, which is pinned in the same constraints file. CI was green only because the Dockerfile installs torch, with sympy and mpmath, before the constraints apply. After #110 merged, Dependabot closed #108 itself.
+- **#112** (Dependabot, 13 updates): merged. It is #108 without mpmath, plus filelock 4.2.8. A dry run shows the constraints resolve, and all of CI passed. Points for you:
+  - `pyproject.toml` now has onnxruntime 1.31.1, while `databricks/onnx_export_job.json` and the committed ONNX results use 1.31.0;
+  - the image runs starlette 1.10.0, while CI's API tests run 1.3.1 (flwr's cap);
+  - the constraints file's header still says it passed the local Docker test on 2026-10-23.
 - **#97** (item 23, `.claude/settings.json`): open, for you. I will not merge it.
 - **#50**: not touched; it waits for your threshold decisions.
 - **This PR**: the README and PROGRESS lines for every item above, the blocked notes, a BACKLOG guard test, and this report.
