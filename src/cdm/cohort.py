@@ -655,12 +655,16 @@ class CohortService:
 
 
 def duckdb_engine(tables: Mapping[str, pd.DataFrame]) -> tuple[Engine, dict[str, str]]:
-    """An in-process engine over OMOP tables held as pandas frames (tests, local runs)."""
+    """An in-process engine over OMOP tables held as pandas frames (tests, local runs, the
+    public demo). Once the frames are registered, the connection can read no file, network
+    location or extension, and that setting is locked so SQL cannot turn it back on."""
     import duckdb
 
     con = duckdb.connect()
     for name, frame in tables.items():
         con.register(name, frame)
+    con.execute("SET enable_external_access = false")
+    con.execute("SET lock_configuration = true")
 
     def run(sql: str) -> pd.DataFrame:
         return con.execute(sql).df()
