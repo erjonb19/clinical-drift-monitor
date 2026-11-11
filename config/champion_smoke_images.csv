@@ -1,0 +1,51 @@
+isic_id,lesion_id,diagnosis,license,attribution,url,sha256
+ISIC_0061284,IL_0016184,Malignant,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0061284.jpg,8223c545df8c4a89de2ad5b77ebb5506ae5f3f745a123c1e44b967f0442af13f
+ISIC_0014961,IL_0019781,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014961.jpg,7e77d34e94ed87440899f23c9e7c24cc26be28592be11fb997e7de3219c5284b
+ISIC_0064487,IL_0060377,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0064487.jpg,8fbcf68d6975560820dc9c0fe52a0c5e9aba1cf2351eb48686371eb1e952bef7
+ISIC_0014487,IL_0060446,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014487.jpg,d043cf9b09891e02db00e935bbab2dc06b04406960ffd06f8f2cde60f111936a
+ISIC_0054017,IL_0087361,Malignant,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0054017.jpg,f20404b2032dd2fe0717040818057fc7632bae5c1aa3a80433b309f8f3b35de9
+ISIC_0013724,IL_0149087,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013724.jpg,60422d7997784768ba521c70cb784398f2391e51c0c7731ac7e9627e866a9aa8
+ISIC_0069876,IL_0193324,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0069876.jpg,bd902fb0701ad748470443b55e6b718ce4b3df18659ac15f7e1c681320146f60
+ISIC_0014903,IL_0226666,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014903.jpg,c48c3fcecea6045de4e1796539e55de5f6dbaf47f2891cd7ef67678dfd1db430
+ISIC_0014359,IL_0240316,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014359.jpg,d47c932747b8c7377af7c98c6bceba127d15ebcf7aff428ce9a417d70e0a76c8
+ISIC_0013377,IL_0242075,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013377.jpg,aca9ad9f6f82a2acbd054664fa4397603df44cec4b0fb6c351b8f4b2c94e8bbd
+ISIC_0011503,IL_0297208,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0011503.jpg,62c9bf7d6ee78e2346517ffa3d94c787924597bd419971521632e3d280905a5a
+ISIC_0012705,IL_0321967,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0012705.jpg,0a12cacc29d413e62f46c4c7b3ecf3aeefdbf0fbb56e89dca4dcc6e497d6bb3a
+ISIC_0014969,IL_0336950,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014969.jpg,0a87d3459912ea8d65ff0c01f3d93a131869d8452b2b7cafdc62ee381898399f
+ISIC_0058254,IL_0361017,Malignant,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0058254.jpg,9020c788d9851474c5ab3a27b9c126ef3a35b0296ff35c0fb441435ab3731149
+ISIC_0063929,IL_0386519,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0063929.jpg,ca6eeca229211bf65ed1664a37bafcacb7cc216f4ae568956dc6799ade97bbf9
+ISIC_0013433,IL_0404349,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013433.jpg,9a1f60369654b7e27e396a5bfd28ee653255099bfaf600d7118a9a0734b3c551
+ISIC_0055584,IL_0448028,Malignant,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0055584.jpg,0c8f74de2d50203117c795d3439a9f6eea0c789dfd1f3610078279040fa0a78e
+ISIC_0013588,IL_0482527,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013588.jpg,9daf8e9504fbc070f94650695701be2cf099d769e9b37299e786ad0d34af75bf
+ISIC_0056146,IL_0498050,Malignant,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0056146.jpg,52386f270ddfc067a50f6cb14de16a8335227f37542571511a6a74f0783f0e04
+ISIC_0013027,IL_0511233,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013027.jpg,27b149bd6fd5fb46e7fb41a606cb3b80df240433c39efd7c6d5b42b308c50e8d
+ISIC_0012677,IL_0515095,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0012677.jpg,00c14ffa73e1d9b7955459a212f262aada84b9de62aea2b9cb40eccc2c419e69
+ISIC_0061692,IL_0519637,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0061692.jpg,b5a59943725b0be4fe3ef23404ca6cbcfe527c4ec417ce99357b5d9419c64637
+ISIC_0055442,IL_0528390,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0055442.jpg,8aa77d466f2080dfcea53a60a3f8bb22599e45583b6424d2cf14b4b55afca9a0
+ISIC_0013698,IL_0557276,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013698.jpg,7901ee0be2f06897c00817363f3cd06fad51362d596c5169b466220589f62d4b
+ISIC_0012049,IL_0559360,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0012049.jpg,45a3b94d13dd97393f0056e5d6ac509ab6b399de147dbb38b948da15b18d0549
+ISIC_0014486,IL_0610334,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014486.jpg,f76f58c6a4380761821a75f30bb364185ea9088c2fde0fe9cb67842fb998f747
+ISIC_0012790,IL_0621981,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0012790.jpg,c852b6e23b4b53bfea194c99048541681d16680f251948183605913a3796148d
+ISIC_0058400,IL_0629972,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0058400.jpg,49c91a5a8676b59ff7179bd9b3876aad21c7266e0eba1a847d8108efc2826adb
+ISIC_0014908,IL_0650148,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014908.jpg,2db085829f8bd7d49130774c9c9b3a757392464a88f1c019a1ab746c6e0205f4
+ISIC_0014227,IL_0694947,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014227.jpg,a8fc293d8663ff616d97a58121b8d6047323aac3a3a0585076f6a8e64dc43483
+ISIC_0014151,IL_0762948,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014151.jpg,b1efad773064a1911b9a0b35b0c10c97975c495454052ec62ada2a78db6be47d
+ISIC_0014131,IL_0768449,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014131.jpg,254e61200851c64ab07938ce5195cd03c30f518e084c8955027e2b542d5d7185
+ISIC_0013898,IL_0779158,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013898.jpg,ee6e3e4b1f7f0aec702c310dff8815870d2f8a1a662dccbfb1663d68dbeeac85
+ISIC_0014056,IL_0797681,Indeterminate,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014056.jpg,266092e34cb3b8ed637c1b45ac41fe682355af9480fd097a5eed017c3e2e6ff6
+ISIC_0013499,IL_0828700,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013499.jpg,9298c29cbf18c133fd3d699a4cbee0226a79ba16b79ee05b09297fe780cf4f08
+ISIC_0012679,IL_0836337,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0012679.jpg,89cc16de97b2938f8ce6fd70575489ab601d6c00fab74593664b07b237f1718b
+ISIC_0013047,IL_0891632,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013047.jpg,7fe58df3b2834da5b9fa41d90785fdf3030b3549a94b042e6e37f239188c5f81
+ISIC_0063435,IL_0936762,Indeterminate,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0063435.jpg,3ee90f8c9d473ff80dd8ca8ad954c8f7fd6aa11a3cf745490e1bdd796ffd6adc
+ISIC_0060430,IL_0957844,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0060430.jpg,3a6c275973eb36649464deaf4c4556f0fae93793eeb8626b019e0be5caaa5ade
+ISIC_0015016,IL_0998820,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0015016.jpg,3a18686f62ccdb4025e487e3558d53854562312212d69ce4df43a067b86239aa
+ISIC_0014078,IL_1016572,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014078.jpg,e814636d5c7761f00da106ca70cdb1c6c7f556b6f30e5ef76bacda3767eaf549
+ISIC_0067370,IL_1023989,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0067370.jpg,3bf2defe59e7194514f31e2856c7f23c5765c3289e12569b2e470a111b06f29e
+ISIC_0054352,IL_1024470,Benign,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0054352.jpg,5acf9640cc2dc2cafde42ec58f09ddb9d64051c94901e6e955bc0472efa02615
+ISIC_0014792,IL_1051025,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014792.jpg,cd940e849abf300828dac61789ecf4f9e9021ee5f1096f973d689b3d8b574a31
+ISIC_0057870,IL_1058395,Malignant,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0057870.jpg,6caf0e02fa672b77ebb72120a3335319af933216c2cc778e1cc84eb2dab54c88
+ISIC_0013558,IL_1080179,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013558.jpg,b4bcafd49d0221b0df2e3a318a8995ef121e0355f3eb6d8be0e8caf18e896ecb
+ISIC_0053764,IL_1093275,Indeterminate,CC-BY-NC,Hospital Clínic de Barcelona,https://isic-archive.s3.amazonaws.com/images/ISIC_0053764.jpg,490e08198dbe4318b73d3a6372720c918ed4266bec051a6253b7079b8b0f40e8
+ISIC_0014326,IL_1116747,Malignant,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0014326.jpg,7197b65b5dba4e2366de05b940fe4b03db05914930b15137428720b8c5855545
+ISIC_0011800,IL_1124427,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0011800.jpg,1e65bb67186da9087752907cb0e492d8aee1b5bbc4892b5ade0911908ea57379
+ISIC_0013417,IL_1127114,Benign,CC-0,Anonymous,https://isic-archive.s3.amazonaws.com/images/ISIC_0013417.jpg,1c8c44637cb2df6f4a734f98af63c36b3760d716f910b4f9628bc8920dbd1d2a

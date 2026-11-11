@@ -319,6 +319,13 @@ gets a **Blocked:** line with the reason.
      (2) `scripts/make_smoke_manifest.py` writes `config/champion_smoke_images.csv` (50 images
      of the clients' test split; needs the ISIC API, unreachable from cloud sessions; its
      search query syntax is unverified). Not ticked: the smoke test has not run.
+   - **2026-11-11: the image manifest exists.** `.github/workflows/smoke-manifest.yml` runs
+     `scripts/make_smoke_manifest.py` on a GitHub runner (the ISIC API is reachable there, not
+     from cloud sessions) and prints the CSV; `config/champion_smoke_images.csv` is that run's
+     output: 50 images, one per lesion, all in the clients' test split by `config/splits_v1.csv`,
+     licences CC-0 and CC-BY-NC only (the script now skips any other), each image's own lesion
+     ID checked against the one asked for (so the query syntax is now checked). The smoke test
+     now skips naming only the champion bundle release asset (owner).
 
 7. [ ] **Observability on Databricks:** a prediction audit table, Unity Catalog lineage, and
    per-run cost tracking.
