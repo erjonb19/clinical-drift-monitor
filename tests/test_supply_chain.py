@@ -166,6 +166,11 @@ def test_the_api_image_drops_setuptools_after_installing() -> None:
     installs = [i for i, line in enumerate(lines) if line.startswith("RUN pip install")]
     drop = lines.index("RUN pip uninstall -y setuptools wheel")
     assert installs and drop > max(installs)
-    # Debian's security fixes since the base image was built (apt, zlib1g had fixable HIGHs).
+    # Debian's security fixes since the base image was built (apt, zlib1g had fixable HIGHs),
+    # from a fixed snapshot.debian.org timestamp, so the build is reproducible (owner, 2026-11-11).
     upgrade = next(i for i, line in enumerate(lines) if "apt-get upgrade -y" in line)
     assert upgrade < lines.index("USER demo")
+    text = "\n".join(lines)
+    assert re.search(r"^ARG DEBIAN_SNAPSHOT=\d{8}T\d{6}Z$", text, re.M)
+    assert "snapshot.debian.org/archive/debian-security/${DEBIAN_SNAPSHOT}" in text
+    assert '! grep -q "deb.debian.org"' in text  # the build stops if the moving mirror remains

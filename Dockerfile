@@ -9,8 +9,21 @@ FROM python:3.11.17-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 BUNDLE_DIR=/app/bundle \
     TRUSTED_PROXY_HOPS=1
 # Debian security fixes released after the base image was built (Trivy, item 39: apt and zlib1g
-# had fixable HIGH findings); the package lists are removed again.
-RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
+# had fixable HIGH findings), taken from a fixed snapshot.debian.org timestamp instead of the
+# moving mirror, so every build of this file installs the same package versions. Packages are
+# still signature-checked with the image's Debian keyring. Raise DEBIAN_SNAPSHOT (and the base
+# digest) together, then rebuild and re-run Trivy.
+ARG DEBIAN_SNAPSHOT=20261111T120000Z
+RUN sed -i \
+      -e "s|^URIs: http://deb.debian.org/debian-security$|URIs: http://snapshot.debian.org/archive/debian-security/${DEBIAN_SNAPSHOT}|" \
+      -e "s|^URIs: http://deb.debian.org/debian$|URIs: http://snapshot.debian.org/archive/debian/${DEBIAN_SNAPSHOT}|" \
+      /etc/apt/sources.list.d/debian.sources \
+    && grep -q "snapshot.debian.org/archive/debian/${DEBIAN_SNAPSHOT}" /etc/apt/sources.list.d/debian.sources \
+    && grep -q "snapshot.debian.org/archive/debian-security/${DEBIAN_SNAPSHOT}" /etc/apt/sources.list.d/debian.sources \
+    && ! grep -q "deb.debian.org" /etc/apt/sources.list.d/debian.sources \
+    && apt-get -o Acquire::Check-Valid-Until=false update \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 RUN pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.0 torchvision==0.29.0
 
 WORKDIR /app
