@@ -16,10 +16,18 @@ EXTRA = {"DATABRICKS_HOST", "DATABRICKS_CLIENT_ID", "DATABRICKS_CLIENT_SECRET"}
 SET_ONLY = {"HF_HOME", "HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"}
 
 
-def _example() -> dict[str, str]:
-    lines = (REPO / ".env.example").read_text("utf-8").splitlines()
-    pairs = [line.split("=", 1) for line in lines if line.strip() and not line.startswith("#")]
-    return {name.strip(): value.strip() for name, value in pairs}
+VARIABLE = re.compile(r"^(#\s)?([A-Z][A-Z0-9_]*)=(.*)$")
+
+
+def _example(commented: bool = True) -> dict[str, str]:
+    """Names and values in .env.example; ``commented`` includes the optional variables that
+    are shown commented out with their defaults."""
+    out = {}
+    for line in (REPO / ".env.example").read_text("utf-8").splitlines():
+        match = VARIABLE.match(line)
+        if match and (commented or not match.group(1)):
+            out[match.group(2)] = match.group(3).strip()
+    return out
 
 
 def test_every_variable_the_code_reads_is_listed() -> None:
@@ -31,5 +39,13 @@ def test_every_variable_the_code_reads_is_listed() -> None:
 
 
 def test_no_value_is_filled_in() -> None:
-    filled = {name: value for name, value in _example().items() if value}
-    assert not filled, sorted(filled)
+    """Live lines carry names only; the optional ones are commented out, so an env file built
+    from this one cannot override a default with an empty value (review of PR #91)."""
+    live = _example(commented=False)
+    assert set(live) == {
+        "ANTHROPIC_API_KEY",
+        "DATABRICKS_HOST",
+        "DATABRICKS_CLIENT_ID",
+        "DATABRICKS_CLIENT_SECRET",
+    }
+    assert not any(live.values()), sorted(k for k, v in live.items() if v)
