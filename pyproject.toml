@@ -109,18 +109,20 @@ ignore = ["S603", "S607"]
 "scripts/phase2_stage1_evidence.py" = ["S608"]
 "scripts/cost_table.py" = ["S608"]
 "scripts/lineage_edges.py" = ["S608"]
-"scripts/v2_data_checks.py" = ["S608"]  # pipeline id and flow names from the owner's own CLI run
+"scripts/v2_data_checks.py" = ["S608"]  # pipeline id, flow names and a run time from the owner's own workspace
 "databricks/notebooks/lineage_rewrite.py" = ["F821", "E501", "E402", "S101", "S108", "S608"]
 # urlopen on fixed https hosts named in the code (ISIC, Dataverse, Anthropic, the owner's
 # Databricks host from its own secret) or the local test server; no user-supplied scheme.
-"src/cdm/sources.py" = ["S310"]
 "src/cdm/data.py" = ["S310"]
 "src/cdm/extract.py" = ["S310"]
 "scripts/watchdog.py" = ["S310"]
 "scripts/load_test.py" = ["S310"]
-"scripts/api_local_check.py" = ["S310"]
+# urlopen on URLs returned by the ISIC API (the pagination `next` link, image file URLs); not
+# yet restricted to the ISIC host: that check is backlog item 47.
+"src/cdm/sources.py" = ["S310"]
 "scripts/detector_quality.py" = ["S310"]
 "scripts/make_smoke_manifest.py" = ["S310"]
+"scripts/api_local_check.py" = ["S310"]
 "databricks/notebooks/scheduler_probe.py" = ["F821", "E501", "E402", "S101", "S108", "S310"]
 
 [tool.mypy]
