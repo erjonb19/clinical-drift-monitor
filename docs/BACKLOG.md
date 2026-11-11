@@ -628,9 +628,19 @@ change only the owner can make (repository settings, accounts, consoles).
       `"protected": true` (as item 11 already asks).
     - **Done 2026-11-11 (owner):** turned on, requiring `quality`, `image` and both CodeQL
       `analyze` checks.
-25. [ ] **Secret scanning before commit and in CI** (Medium): `.pre-commit-config.yaml` with
+25. [x] **Secret scanning before commit and in CI** (Medium): `.pre-commit-config.yaml` with
     gitleaks pinned; a CI job scanning full history (action pinned by SHA, `contents: read`).
     - **Done when:** a planted fake key fails the CI job, and the job is green on the real repo.
+    - **Done 2026-11-11:** `.github/workflows/secrets.yml` runs gitleaks 8.30.1 (a release from
+      2026-03-12, its tarball checked against the published SHA-256; no third-party action) over
+      the full history on every push and pull request. A self-test step commits a fake AWS key,
+      made at run time, to a scratch repo and fails unless gitleaks exits 1. The real scan uses
+      gitleaks' default rules plus one allowlist (`.gitleaks.toml`): the `run_key` UUIDs in
+      `results/phase3/costs/job_costs.json`, Databricks pipeline-update IDs that the generic
+      rule flagged 24 times, matched by path and line together. Locally: no leaks in 354
+      commits. `.pre-commit-config.yaml` pins the same version by commit for the owner's
+      laptop (`pre-commit install`). **Owner:** add the `gitleaks` check to the required checks
+      on `main`.
 26. [ ] **Locked, hashed, cooled-down Python installs** (Medium; a new tool, uv, needs the
     owner's OK first): `uv.lock`, `exclude-newer = "7 days"`, `uv sync --locked` in every
     workflow, hashed exports for Docker and the Streamlit app.
