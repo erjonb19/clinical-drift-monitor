@@ -60,11 +60,35 @@ def npz_rows(npz: Path, member: str, wanted: set[int]) -> dict[int, np.ndarray]:
         return out
 
 
+# MD5s of the official cifar-10-batches-py files, as torchvision's CIFAR10 dataset lists them
+# (torchvision.datasets.CIFAR10.train_list and test_list). Pickle runs code on load, so a file
+# is unpickled only after its checksum matches (backlog item 33).
+CIFAR_MD5 = {
+    "data_batch_1": "c99cafc152244af753f735de768cd75f",
+    "data_batch_2": "d4bba439e000b95fd0a9bffe97cbabec",
+    "data_batch_3": "54ebc095f3ab1f0389bbae665268c751",
+    "data_batch_4": "634d18415352ddfa80567beed471001a",
+    "data_batch_5": "482c414d41f54cd18b22e5b47cb7c3cb",
+    "test_batch": "40351d587109b95175f43aff81a1287e",
+}
+
+
+def checked_cifar_bytes(path: Path) -> bytes:
+    """The file's bytes, refused unless they match the published MD5 for its name."""
+    expected = CIFAR_MD5.get(path.name)
+    if expected is None:
+        raise ValueError(f"{path.name}: not an official CIFAR-10 batch file")
+    data = path.read_bytes()
+    if hashlib.md5(data, usedforsecurity=False).hexdigest() != expected:
+        raise ValueError(f"{path}: MD5 does not match the published CIFAR-10 file; not unpickled")
+    return data
+
+
 def cifar_rows(folder: Path, files: list[str], wanted: set[int]) -> dict[int, np.ndarray]:
     out, offset = {}, 0
     for name in files:
-        with (folder / name).open("rb") as f:
-            batch = pickle.load(f, encoding="bytes")  # noqa: S301 - the official CIFAR files
+        data = checked_cifar_bytes(folder / name)
+        batch = pickle.loads(data, encoding="bytes")  # noqa: S301 - checksum checked above
         data = batch[b"data"].reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)
         for i in range(len(data)):
             if offset + i in wanted:
