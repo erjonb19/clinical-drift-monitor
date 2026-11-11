@@ -8,7 +8,7 @@ commit the CSV.
 
 Usage: python scripts/make_smoke_manifest.py [--n 50]
 
-Unverified: the ISIC search query syntax used here (``lesion_id:<id>``); check the output.
+Every returned image's own lesion ID must equal the one asked for, or the run stops.
 """
 
 from __future__ import annotations
@@ -36,10 +36,28 @@ def get(url: str) -> bytes:
     return data
 
 
+def image_lesion(image: dict[str, Any]) -> str | None:
+    """The lesion an ISIC image belongs to, wherever the API puts it."""
+    meta = image.get("metadata") or {}
+    for place in (image, meta, meta.get("clinical") or {}, meta.get("patient") or {}):
+        if place.get("lesion_id"):
+            return str(place["lesion_id"])
+    return None
+
+
 def first_image(lesion_id: str) -> dict[str, Any] | None:
+    """The first image of the lesion, refused unless the API says it belongs to that lesion
+    (so a query the API reads differently cannot slip in an image from another split)."""
     query = urllib.parse.urlencode({"query": f"lesion_id:{lesion_id}", "limit": 1})
     results = json.loads(get(SEARCH + query)).get("results", [])
-    return results[0] if results else None
+    if not results:
+        return None
+    if image_lesion(results[0]) != lesion_id:
+        raise SystemExit(
+            f"{lesion_id}: the API returned {results[0].get('isic_id')} of lesion "
+            f"{image_lesion(results[0])}; the query syntax is not doing what we expect"
+        )
+    return results[0]
 
 
 def main() -> None:
