@@ -392,6 +392,9 @@ security audit on 2026-11-10: a 58 KB PNG of 60 megapixels passed `contract.chec
 one and two times the limit it only warns. The test used 108 megapixels, above both limits, so
 it could not see the gap.
 
-**Caught by.** Not yet fixed (backlog item 29, planned): the fix treats the warning as
-unreadable, or checks the size before decoding, with a 60-megapixel test.
+**Caught by.** `cdm.contract.open_image` (backlog item 29, 2026-11-11) checks width times
+height against `MAX_PIXELS` right after `Image.open` reads the header and before any pixel is
+decoded, and refuses with `DecompressionBombError`; the contract check and `Service.predict`
+both open uploads through it. Tests: a 60-megapixel PNG is unreadable in the contract, gets a
+400 from the API and is refused by the service; all three failed on the old code.
 

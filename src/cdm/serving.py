@@ -13,7 +13,6 @@ and never written or logged.
 from __future__ import annotations
 
 import hashlib
-import io
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -25,6 +24,7 @@ import torch
 from numpy.typing import NDArray
 from PIL import Image
 
+from cdm import contract
 from cdm.data import eval_transform
 from cdm.ood import MahalanobisDetector
 from cdm.splits import CLASSES
@@ -33,7 +33,8 @@ from cdm.train import build_model, features_and_logits, weights_hash
 Array = NDArray[np.float64]
 NOTICE = "Research demo, not for medical use."
 # A decompression bomb under the 10 MB upload cap could need gigabytes; 50 megapixels is ample.
-Image.MAX_IMAGE_PIXELS = 50_000_000
+# cdm.contract sets the limit and open_image enforces it before decoding.
+Image.MAX_IMAGE_PIXELS = contract.MAX_PIXELS
 
 
 def detector_arrays(detector: MahalanobisDetector) -> dict[str, Array]:
@@ -114,7 +115,9 @@ class Service:
         models, detectors = [], []
         for seed in manifest["seeds"]:
             model = build_model(pretrained=False, arch="b0")
-            model.load_state_dict(torch.load(folder / seed["checkpoint"], map_location="cpu"))
+            model.load_state_dict(
+                torch.load(folder / seed["checkpoint"], map_location="cpu", weights_only=True)
+            )
             if weights_hash(model) != seed["weights_sha256"]:
                 raise ValueError(f"{seed['checkpoint']}: weights hash mismatch")
             models.append(model.eval())
@@ -126,7 +129,7 @@ class Service:
     @torch.no_grad()
     def predict(self, image: bytes) -> dict[str, Any]:
         """One image in, the ensemble's answer out. The bytes are decoded in memory only."""
-        with Image.open(io.BytesIO(image)) as img:
+        with contract.open_image(image) as img:
             x = eval_transform(224)(img.convert("RGB")).unsqueeze(0)
         probs, scores = [], []
         for model, arrays in zip(self.models, self.detectors, strict=True):
