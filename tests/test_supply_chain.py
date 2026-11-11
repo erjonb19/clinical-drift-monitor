@@ -111,6 +111,22 @@ def test_dependabot_never_updates_torch() -> None:
         assert not entry.group(2).startswith("update-types"), name
 
 
+def test_secret_scanning_runs_pinned_with_a_self_test() -> None:
+    """Backlog item 25: gitleaks in CI is a checksummed pinned release that must catch a
+    planted key, and the pre-commit hook pins the same version by commit."""
+    text = (WORKFLOWS / "secrets.yml").read_text("utf-8")
+    version = re.search(r'GITLEAKS_VERSION: "([\d.]+)"', text)
+    assert version and re.search(r'GITLEAKS_SHA256: "[0-9a-f]{64}"', text)
+    assert "sha256sum -c" in text and "planted key" in text and "fetch-depth: 0" in text
+    # Steps run under bash -e: without set +e the self-test stops at gitleaks' exit 1 and
+    # always fails (review of #88).
+    assert "set +e" in text.split("planted key", 1)[1].split("- name:", 1)[0]
+    hook = (REPO / ".pre-commit-config.yaml").read_text("utf-8")
+    assert re.search(rf"rev: [0-9a-f]{{40}} # v{re.escape(version.group(1))}", hook)
+    config = (REPO / ".gitleaks.toml").read_text("utf-8")
+    assert "useDefault = true" in config and 'condition = "AND"' in config
+
+
 def test_every_workflow_reads_only_unless_it_says_why() -> None:
     """Backlog item 28: each workflow sets a top-level permissions block, the default is
     contents: read, and no checkout leaves the token in .git/config."""

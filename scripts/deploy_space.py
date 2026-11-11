@@ -61,8 +61,16 @@ def git(*args: str) -> str:
 
 
 def check_bundle(bundle: Path) -> dict[str, Any]:
+    """The same manifest rules the Space applies when it boots (cdm.bundle, item 32), then the
+    hashes, so a bundle that would fail there is refused before upload."""
+    from cdm.bundle import check_manifest
+
     manifest: dict[str, Any] = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
-    for name, digest in manifest["sha256"].items():
+    try:
+        hashes = check_manifest(manifest)
+    except ValueError as err:
+        sys.exit(f"{bundle / 'manifest.json'}: {err}")
+    for name, digest in hashes.items():
         if hashlib.sha256((bundle / name).read_bytes()).hexdigest() != digest:
             sys.exit(f"{bundle / name} does not match the bundle manifest")
     return manifest
