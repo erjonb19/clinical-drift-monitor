@@ -111,6 +111,12 @@ def test_dependabot_never_updates_torch() -> None:
         assert not entry.group(2).startswith("update-types"), name
 
 
+def test_the_base_image_is_pinned_by_digest() -> None:
+    """Backlog item 35: a re-pushed tag cannot change the image's base layers unseen."""
+    froms = re.findall(r"^FROM\s+(\S+)", (REPO / "Dockerfile").read_text("utf-8"), re.M)
+    assert froms and all(re.search(r"@sha256:[0-9a-f]{64}$", f) for f in froms), froms
+
+
 def test_secret_scanning_runs_pinned_with_a_self_test() -> None:
     """Backlog item 25: gitleaks in CI is a checksummed pinned release that must catch a
     planted key, and the pre-commit hook pins the same version by commit."""

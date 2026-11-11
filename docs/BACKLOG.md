@@ -717,8 +717,12 @@ change only the owner can make (repository settings, accounts, consoles).
       `test_every_action_is_pinned_to_a_commit` replaces the test that let `actions/*` and
       `github/*` use tags; it requires a 40-character SHA and a `# v...` comment on every
       `uses:` (checked by putting a tag back).
-35. [ ] **Pin the Docker base image by digest.**
+35. [x] **Pin the Docker base image by digest.**
     - **Done when:** the `FROM` line carries `@sha256:` and Dependabot updates it.
+    - **Done 2026-11-11:** `FROM python:3.11.17-slim@sha256:b7a9e5f6…` (the multi-platform
+      index digest, read from Docker Hub's registry on 2026-11-11); `.github/dependabot.yml`'s
+      docker entry updates digests along with tags (its Python minor and major ignore stays),
+      and `tests/test_supply_chain.py` fails if any `FROM` lacks a digest.
 36. [x] **Turn on ruff's `S` rules**, fixing or justifying each hit.
     - **Done when:** `ruff check .` passes with `S` selected.
     - **Done 2026-11-11:** `S` is selected in `pyproject.toml`; `ruff check .` passes. Fixed: 16
