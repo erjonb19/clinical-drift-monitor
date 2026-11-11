@@ -634,8 +634,9 @@ change only the owner can make (repository settings, accounts, consoles).
     the call sites are listed in the audit).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
     - **Done 2026-11-11:** all 18 calls pass `weights_only=True` (each loads a plain
-      `state_dict`; 17 are in notebooks or scripts that only run on Databricks or the owner's
-      laptop, so they were converted by their call shape, not run here); the floor is
+      `state_dict`; 15 are in notebooks or a script that only run on Databricks or the owner's
+      laptop, converted by their call shape and not run here, and the other 3 run in the test
+      suite); the floor is
       `torch>=2.6` in `pyproject.toml` and the seven job files. `tests/test_weights_only.py`
       parses `src`, `scripts`, `tests`, `app` and the notebooks and fails on any `torch.load`
       without a literal `weights_only=True` (aliases included), with a planted-call self-test.

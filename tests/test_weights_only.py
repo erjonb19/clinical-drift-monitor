@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-SCANNED = ("src", "scripts", "tests", "app", "databricks/notebooks")
+SCANNED = ("src", "scripts", "tests", "app", "pipelines", "databricks/notebooks")
 CALL = re.compile(r"\btorch\.load\(")
 
 
