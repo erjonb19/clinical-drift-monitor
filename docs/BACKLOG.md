@@ -657,9 +657,20 @@ change only the owner can make (repository settings, accounts, consoles).
       check rather than a warnings filter, which would be process-wide and not thread-safe in
       the API's thread pool). Tests in `tests/test_contract.py`, `tests/test_api.py` and
       `tests/test_serving.py`; silent failure #16 now names this check.
-30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
+30. [x] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
     - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
       runs, in tests.
+    - **Done 2026-11-11:** `contract.open_image` passes `formats=` to `Image.open` (the
+      contract's `formats` in the check; JPEG and PNG in serving), so no other plugin parses an
+      upload. A refused image's format is named from Pillow's prefix checks, which compare magic
+      bytes and decode nothing, so a GIF, TIFF or ICO still gets `format: <name>` and a 422.
+      Changes from before: a refused image now gets the format reason only (no resolution
+      reason), a multi-picture JPEG (MPO) is refused from its header before any pixel is
+      decoded, and a non-image whose first bytes happen to match another format's magic (for
+      example text starting `P5`) is named as that format (422) instead of unreadable (400).
+      `tests/test_contract.py` spies on the TIFF, ICO, BMP and GIF decoders (none is called)
+      and on `load()` for an MPO. The ISIC ingestion paths (`cdm.images`, silver, gold) still
+      open files with every plugin; they read the archive's files, not uploads.
 31. [x] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
     the call sites are listed in the audit).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.

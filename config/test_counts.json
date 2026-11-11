@@ -8,7 +8,7 @@
     "test_champion.py": 10,
     "test_champion_smoke.py": 2,
     "test_cohort.py": 20,
-    "test_contract.py": 9,
+    "test_contract.py": 13,
     "test_cost_table.py": 3,
     "test_demo.py": 8,
     "test_deploy.py": 19,
