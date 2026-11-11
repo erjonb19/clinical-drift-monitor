@@ -346,6 +346,18 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-11-11: decided by the owner** (overnight instructions)
+  - **Merging:** Claude merges PRs itself, including ones marked "owner merges", once CI is green
+    on the final commit and a fresh review by a separate agent that did not write the change finds
+    nothing blocking. The owner is still asked first, in chat, for anything that spends money, GPU
+    runs, release tags, Databricks deploys, deleting data, and any change to
+    `.claude/settings.json` or other permission settings (those PRs are opened and left).
+    Replaces the 2026-11-10 rule in `docs/BACKLOG.md`. CLAUDE.md records the same rule.
+  - **uv approved** for backlog item 26 (locked, hashed Python installs).
+  - **Repository security settings on (owner):** branch protection on `main` (required checks
+    `quality`, `image` and both CodeQL `analyze` jobs), private vulnerability reporting,
+    Dependabot security updates (grouped) and malware alerts.
+
 - **2026-11-03: decided by the owner** (on the cloud-session plan,
   `docs/plan-2026-11-phases-3-to-5.md`, PR #47)
   - **Phase 3 "Done when" amended:** the API is built and smoke-tested in Docker CI, and the
