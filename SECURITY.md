@@ -23,9 +23,13 @@ Community Cloud, the ISIC Archive, Anthropic), which have their own reporting ch
 
 ## Data
 
-The repository holds code, configuration and aggregate results only, no patient data. The
-data it works on are public: ISIC images and metadata under their own licenses, and public
-MTSamples note text. If you believe a file in this
+The repository holds code, configuration and results, no patient data. Some committed files
+list public ISIC Archive identifiers (image, lesion and patient IDs) for splits and per-image
+results; no images and no note text are committed. The data the project has run on are public:
+ISIC images and metadata under their own licenses, and public MTSamples note text.
+`cdm.extract` also has a loader for MIMIC-IV-Note (PhysioNet, credentialed access) that stays
+off unless `CDM_TIER2=1` is set and never sends notes to an outside API; no committed result
+uses it, and no MIMIC data is in the repository. If you believe a file in this
 repository contains personal or protected health information, report it as above.
 
 ## How this repository is checked
