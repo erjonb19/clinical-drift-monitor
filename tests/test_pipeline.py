@@ -107,7 +107,9 @@ def test_checkpoint_is_saved_and_reloads(result_and_sets: tuple[Result, int]) ->
     result, _ = result_and_sets
     path = Path(result["checkpoint"]["path"])
     assert md5sum(path) == result["checkpoint"]["md5"]
-    build_model(pretrained=False).load_state_dict(torch.load(path, map_location="cpu"))
+    build_model(pretrained=False).load_state_dict(
+        torch.load(path, map_location="cpu", weights_only=True)
+    )
 
 
 def test_same_seed_gives_identical_model_whatever_ran_before(tmp_path: Path) -> None:

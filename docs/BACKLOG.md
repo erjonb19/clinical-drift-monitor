@@ -654,9 +654,17 @@ change only the owner can make (repository settings, accounts, consoles).
 30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
     - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
       runs, in tests.
-31. [ ] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
+31. [x] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
     the call sites are listed in the audit).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
+    - **Done 2026-11-11:** all 18 calls pass `weights_only=True` (each loads a plain
+      `state_dict`; 15 are in notebooks or a script that only run on Databricks or the owner's
+      laptop, converted by their call shape and not run here, and the other 3 run in the test
+      suite); the floor is
+      `torch>=2.6` in `pyproject.toml` and the seven job files. `tests/test_weights_only.py`
+      parses `src`, `scripts`, `tests`, `app` and the notebooks and fails on any `torch.load`
+      without a literal `weights_only=True` (aliases included), with a planted-call self-test.
+      Safetensors for the bundle stays a later option.
 32. [ ] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
     - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
 33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
@@ -679,8 +687,13 @@ change only the owner can make (repository settings, accounts, consoles).
       item 47).
 37. [ ] **zizmor on workflow changes.**
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
-38. [ ] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
+38. [x] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
     - **Done when:** each ecosystem has a cooldown, checked by a test.
+    - **Done 2026-11-11:** pip, docker and github-actions each have `cooldown: default-days: 7`
+      in `.github/dependabot.yml`; `tests/test_supply_chain.py` fails if an ecosystem loses it or
+      goes under 7 days. GitHub applies a cooldown to version updates only, so security updates
+      still open at once. GitHub's default is a 3-day cooldown, so this raises it to 7. The file
+      parses with `yaml.safe_load`; Dependabot validates it again once it is on main.
 39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
     - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
       `.trivyignore` with reasons).
@@ -691,8 +704,14 @@ change only the owner can make (repository settings, accounts, consoles).
       `*.p12`, `*.pfx`, Terraform state, `secrets/`, credential and service-account JSON and
       `.databrickscfg`; no tracked file matches them. `tests/test_gitignore.py` checks each with
       `git check-ignore`, and that `.env.example` stays committable.
-41. [ ] **`.env.example`** with variable names and placeholders only.
+41. [x] **`.env.example`** with variable names and placeholders only.
     - **Done when:** it exists and lists every environment variable the code reads.
+    - **Done 2026-11-11:** `.env.example` names the nine variables the code reads: the Haiku
+      key and the watchdog's three Databricks values as empty names, and the data and notes
+      folders, the tier-2 switch, and the API's bundle folder and proxy hops commented out with
+      their defaults (an empty value would override a default; an empty `TRUSTED_PROXY_HOPS`
+      would stop the API). `tests/test_env_example.py` scans `src`, `scripts` and `app` for
+      `os.environ` reads and fails on any unlisted name or any filled-in value.
 42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
     it, with no personal email.
     - **Done when:** both exist.
@@ -737,6 +756,15 @@ change only the owner can make (repository settings, accounts, consoles).
     temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
     to its own host with a byte cap.
     - **Done when:** tests cover each, and the deployed demo is redeployed (owner).
+    - **Built 2026-11-11, waiting on the owner's redeploy:** the demo's DuckDB connection has
+      external access off and its configuration locked (`read_csv`, `ATTACH`, `COPY` and
+      re-enabling all fail, in tests); `.streamlit/config.toml` hides error details and the
+      page shows a generic message for fetch and load errors; a session's scratch folder is a
+      temporary directory removed with the session, and a session may hold at most 50
+      definitions; the ISIC client follows `next` only on https to its own host and caps
+      response bodies (20 MB for JSON, 100 MB for images). Tests in `tests/test_cohort.py`,
+      `tests/test_demo.py` and `tests/test_sources.py`. **Owner:** redeploy the Streamlit app
+      (Community Cloud picks up `main` on reboot), then tick this item.
 
 ## Later (kept, not started)
 
