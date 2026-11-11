@@ -207,7 +207,7 @@ def run(m: dict[str, object]) -> None:
         raise RuntimeError(f"{key} has a detection look with status {status!r}: {lock.read_text()}")
     t0 = time.perf_counter()
     model = build_model(pretrained=False, arch=CONFIG.get("arch", "b0"))
-    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu"))
+    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu", weights_only=True))
     assert weights_hash(model) == m["weights_sha256"], f"{key} checkpoint mismatch"
     model.to(device).eval()
     gram = GramDetector(len(CLASSES))

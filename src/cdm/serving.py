@@ -114,7 +114,9 @@ class Service:
         models, detectors = [], []
         for seed in manifest["seeds"]:
             model = build_model(pretrained=False, arch="b0")
-            model.load_state_dict(torch.load(folder / seed["checkpoint"], map_location="cpu"))
+            model.load_state_dict(
+                torch.load(folder / seed["checkpoint"], map_location="cpu", weights_only=True)
+            )
             if weights_hash(model) != seed["weights_sha256"]:
                 raise ValueError(f"{seed['checkpoint']}: weights hash mismatch")
             models.append(model.eval())

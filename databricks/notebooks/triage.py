@@ -80,7 +80,7 @@ rows["lesion"] = rows["lesion_id"].fillna(rows["isic_id"])
 models = []
 for m in MODELS:
     model = build_model(pretrained=False, arch=CONFIG.get("arch", "b0"))
-    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu"))
+    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu", weights_only=True))
     assert weights_hash(model) == m["weights_sha256"], f"{m} checkpoint mismatch"
     models.append(model.eval())
 
