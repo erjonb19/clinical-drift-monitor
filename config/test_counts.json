@@ -42,7 +42,7 @@
     "test_review.py": 4,
     "test_serve_onnx.py": 7,
     "test_service_metrics.py": 6,
-    "test_serving.py": 3,
+    "test_serving.py": 7,
     "test_silver.py": 5,
     "test_slo.py": 11,
     "test_sources.py": 12,
