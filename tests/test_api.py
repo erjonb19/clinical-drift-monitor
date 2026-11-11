@@ -176,3 +176,12 @@ def test_a_refusal_is_logged_without_address_or_body(caplog: pytest.LogCaptureFi
     assert events[0]["request_id"] != events[1]["request_id"]
     text = caplog.text
     assert "203.0.113.7" not in text and "SECRET-BODY" not in text and "testclient" not in text
+
+
+def test_a_60_megapixel_image_gets_400() -> None:
+    """Pillow only warns between 50M and 100M pixels; the contract refuses (silent failure #16)."""
+    buf = io.BytesIO()
+    Image.new("L", (10000, 6000)).save(buf, format="PNG")
+    c = client()
+    r = c.post("/predict", content=buf.getvalue(), headers={"content-type": "image/png"})
+    assert r.status_code == 400 and c.get("/health").json()["rejected"] == 1
