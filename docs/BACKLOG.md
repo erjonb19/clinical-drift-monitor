@@ -623,10 +623,15 @@ change only the owner can make (repository settings, accounts, consoles).
 28. [ ] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
     `persist-credentials: false`; the repository default set to read-only (owner).
     - **Done when:** every workflow declares its permissions, checked by a test.
-29. [ ] **Refuse 50 to 100 megapixel images** (silent failure #16): treat Pillow's
+29. [x] **Refuse 50 to 100 megapixel images** (silent failure #16): treat Pillow's
     `DecompressionBombWarning` as unreadable, or cap `img.size` before decoding.
     - **Done when:** a 60-megapixel PNG gets a 400 from the API and `unreadable` from the
       contract, in tests.
+    - **Done 2026-11-11:** `cdm.contract.open_image` refuses any image over 50 megapixels from
+      its header, before decoding; the contract check and `Service.predict` both use it (a size
+      check rather than a warnings filter, which would be process-wide and not thread-safe in
+      the API's thread pool). Tests in `tests/test_contract.py`, `tests/test_api.py` and
+      `tests/test_serving.py`; silent failure #16 now names this check.
 30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
     - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
       runs, in tests.
