@@ -5,6 +5,7 @@
     "test_backfill.py": 8,
     "test_batch_drift.py": 2,
     "test_benchmark.py": 2,
+    "test_build_docs.py": 3,
     "test_champion.py": 10,
     "test_champion_smoke.py": 2,
     "test_cohort.py": 20,
