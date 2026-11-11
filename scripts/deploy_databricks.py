@@ -192,7 +192,10 @@ def main() -> int:
     deploy = f"{raw}/deploy/{sha}"
 
     ham_csv = data_root() / "ham10000" / config["ham10000"]["metadata_file"]
-    if hashlib.md5(ham_csv.read_bytes()).hexdigest() != config["ham10000"]["metadata_md5"]:
+    if (
+        hashlib.md5(ham_csv.read_bytes(), usedforsecurity=False).hexdigest()
+        != config["ham10000"]["metadata_md5"]
+    ):
         sys.exit(f"{ham_csv} does not match the MD5 in config/sites.json")
     check_resolved(REPO / "config" / "omop_concepts.csv", RESOLVED_CONCEPTS)
     weights = Path.home() / ".cache" / "torch" / "hub" / "checkpoints" / WEIGHTS_FILE

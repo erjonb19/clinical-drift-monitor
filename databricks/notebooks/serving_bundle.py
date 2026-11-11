@@ -90,7 +90,7 @@ manifest_models = sorted(
 feats, probs, scores, detectors, checks = {}, {}, {}, [], {}
 for m in manifest_models:
     model = build_model(pretrained=False, arch="b0")
-    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu"))
+    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu", weights_only=True))
     assert weights_hash(model) == m["weights_sha256"], f"seed {m['seed']} checkpoint mismatch"
     model.eval()
     per_set = {}

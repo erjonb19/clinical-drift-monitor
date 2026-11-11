@@ -91,7 +91,7 @@ def data_root() -> Path:
 
 
 def md5sum(path: Path) -> str:
-    digest = hashlib.md5()
+    digest = hashlib.md5(usedforsecurity=False)  # the publisher's checksum, not a security use
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             digest.update(chunk)
@@ -294,7 +294,8 @@ class OODImages(Dataset[tuple[torch.Tensor, int]]):
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
         x, _ = self.base[self.indices[idx]]
-        assert isinstance(x, torch.Tensor)
+        if not isinstance(x, torch.Tensor):
+            raise TypeError(f"expected a tensor, got {type(x).__name__}")
         return x, -1
 
 

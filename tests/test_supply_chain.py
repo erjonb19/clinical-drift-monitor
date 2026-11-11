@@ -108,3 +108,24 @@ def test_dependabot_never_updates_torch() -> None:
         entry = re.search(rf"- dependency-name: {name}\n(\s+)(\S+)", pip)
         assert entry is not None, name
         assert not entry.group(2).startswith("update-types"), name
+
+
+def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
+    """Backlog item 38: each ecosystem waits at least 7 days after a release before proposing it."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    blocks = re.split(r"\n  - package-ecosystem: ", text)[1:]
+    assert len(blocks) == 3, "expected the pip, docker and github-actions ecosystems"
+    for block in blocks:
+        name = block.split("\n", 1)[0]
+        days = re.search(r"\n    cooldown:\n      default-days: (\d+)\n", block)
+        assert days, f"{name}: no cooldown"
+        assert int(days.group(1)) >= 7, f"{name}: cooldown under 7 days"
+
+
+def test_the_api_image_drops_setuptools_after_installing() -> None:
+    """Item 39: the base image's setuptools carries old jaraco.context and wheel copies with
+    fixable HIGH CVEs; the API never imports it, so the image removes it after the installs."""
+    lines = (REPO / "Dockerfile").read_text("utf-8").splitlines()
+    installs = [i for i, line in enumerate(lines) if line.startswith("RUN pip install")]
+    drop = lines.index("RUN pip uninstall -y setuptools wheel")
+    assert installs and drop > max(installs)

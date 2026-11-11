@@ -4,7 +4,7 @@
   "tags": {"code_version": "{{SHA}}"},
   "environments": [
     {"environment_key": "core", "spec": {"environment_version": "4", "dependencies": ["{{WHEEL}}"]}},
-    {"environment_key": "torch", "spec": {"environment_version": "4", "dependencies": ["{{WHEEL}}", "torch>=2.4", "torchvision>=0.19"]}}
+    {"environment_key": "torch", "spec": {"environment_version": "4", "dependencies": ["{{WHEEL}}", "torch>=2.6", "torchvision>=0.19"]}}
   ],
   "tasks": [
     {

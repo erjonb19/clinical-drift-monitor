@@ -12,6 +12,9 @@ WORKDIR /app
 COPY pyproject.toml README.md docker/constraints.txt ./
 COPY src ./src
 RUN pip install -c constraints.txt ".[api]" scikit-learn
+# The base image's setuptools carries old jaraco.context and wheel copies with fixable HIGH CVEs
+# (Trivy, item 39). Nothing in the API imports setuptools at run time, so it is removed.
+RUN pip uninstall -y setuptools wheel
 COPY app/api ./app/api
 COPY dist/bundle ./bundle
 
