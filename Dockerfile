@@ -1,7 +1,9 @@
 # Public research demo of the classifier (Phase 3): FastAPI on CPU. Not for medical use.
 # Build context: the repository, with the serving bundle copied to dist/bundle beforehand
 # (never committed). Runs as user 1000 on port 7860, as Hugging Face Spaces expects.
-FROM python:3.11.17-slim
+# Pinned by digest (backlog item 35): the multi-platform index digest of python:3.11.17-slim,
+# read from Docker Hub on 2026-11-11. Dependabot's docker updates keep it current.
+FROM python:3.11.17-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377
 
 # TRUSTED_PROXY_HOPS=1: Hugging Face Spaces puts one proxy in front (see app/api/main.py).
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 BUNDLE_DIR=/app/bundle \
