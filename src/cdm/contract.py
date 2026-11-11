@@ -31,8 +31,10 @@ MAX_PIXELS = 50_000_000
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 
 
-# Only these decoders ever see upload bytes (backlog item 30): Image.open tries no other
-# plugin, so a TIFF, PSD or ICO parser bug cannot be reached through the API or the monthly job.
+# Only these decoders see bytes passed to open_image (backlog item 30): Image.open tries no
+# other plugin, so a TIFF, PSD or ICO parser bug cannot be reached through the API's uploads.
+# (A multi-picture JPEG is opened by the JPEG plugin as MPO, and refused before decoding.) The
+# ISIC ingestion paths (cdm.images, silver, gold) still use plain Image.open.
 DECODERS = ("JPEG", "PNG")
 
 
@@ -147,12 +149,16 @@ def check(
 ) -> Verdict:
     """Check one image's bytes. ``seen`` holds earlier images' difference hashes (the monthly
     job passes them). The API passes ``hash_image=False``: it computes no hash of any upload.
-    An image over the pixel limit (a decompression bomb) is unreadable, like a non-image."""
+    An image over the pixel limit (a decompression bomb) is unreadable, like a non-image. An
+    image in a format outside the contract is quarantined with that reason alone, before its
+    pixels are decoded."""
     v = Verdict()
     rules = config["enforced"]
     try:
         with open_image(data, rules["formats"]) as img:
             fmt = img.format
+            if fmt not in rules["formats"]:  # e.g. MPO, opened by the JPEG plugin
+                raise RefusedFormat(str(fmt))
             img.load()
             rgb = img.convert("RGB")
     except RefusedFormat as refused:
@@ -162,8 +168,6 @@ def check(
         v.quarantined.append("format: not a readable image")
         v.unreadable = True
         return v
-    if fmt not in rules["formats"]:
-        v.quarantined.append(f"format: {fmt} (allowed: {', '.join(rules['formats'])})")
     w, h = rgb.size
     if min(w, h) < rules["min_side_px"]:
         v.quarantined.append(f"resolution: {w}x{h}, shorter side under {rules['min_side_px']} px")

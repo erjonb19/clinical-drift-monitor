@@ -114,7 +114,8 @@ def test_flat_images_are_never_duplicates_of_each_other() -> None:
 @pytest.mark.parametrize("fmt", ["TIFF", "ICO", "BMP", "GIF"])
 def test_only_the_jpeg_and_png_decoders_ever_run(fmt: str, monkeypatch: pytest.MonkeyPatch) -> None:
     """Backlog item 30: a TIFF, ICO, BMP or GIF upload is refused with its format named, and its
-    own decoder is never called, in the contract check and in serving's open alike."""
+    own decoder is never called, in the contract check and in open_image (which serving uses;
+    item 29's test checks that serving goes through it)."""
     Image.init()
     called: list[str] = []
     factory, accept = Image.OPEN[fmt]
@@ -137,3 +138,23 @@ def test_jpeg_and_png_still_open() -> None:
     for fmt in ("JPEG", "PNG"):
         with contract.open_image(encode(textured(), fmt)) as img:
             assert img.format == fmt
+
+
+def test_an_mpo_is_refused_before_its_pixels_are_decoded(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A multi-picture JPEG opens through the JPEG plugin as MPO; it is quarantined from the
+    header, and load() never runs."""
+    buf = io.BytesIO()
+    textured(256, 256).save(buf, format="MPO", save_all=True, append_images=[textured(256, 256)])
+    loads: list[str] = []
+    real = Image.Image.load
+
+    def spy(self: Image.Image) -> Any:
+        loads.append(str(self.format))
+        return real(self)
+
+    monkeypatch.setattr(Image.Image, "load", spy)
+    from PIL import ImageFile
+
+    monkeypatch.setattr(ImageFile.ImageFile, "load", spy)
+    v = contract.check(buf.getvalue(), CONFIG)
+    assert v.quarantined == ["format: MPO (allowed: JPEG, PNG)"] and "MPO" not in loads
