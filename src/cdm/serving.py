@@ -25,6 +25,7 @@ from numpy.typing import NDArray
 from PIL import Image
 
 from cdm import contract
+from cdm.bundle import check_manifest
 from cdm.data import eval_transform
 from cdm.ood import MahalanobisDetector
 from cdm.splits import CLASSES
@@ -108,8 +109,12 @@ class Service:
 
     @classmethod
     def load(cls, folder: Path) -> Service:
+        """Load a bundle. cdm.bundle.check_manifest runs first (plain names, every checkpoint
+        and detector in the sha256 map, at least one seed), then every listed file is hashed,
+        all before any checkpoint or detector is read (backlog item 32)."""
         manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
-        for name, digest in manifest["sha256"].items():
+        hashes = check_manifest(manifest)
+        for name, digest in hashes.items():
             if hashlib.sha256((folder / name).read_bytes()).hexdigest() != digest:
                 raise ValueError(f"{name} does not match the bundle manifest")
         models, detectors = [], []

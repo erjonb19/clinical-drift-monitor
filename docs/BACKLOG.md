@@ -628,9 +628,19 @@ change only the owner can make (repository settings, accounts, consoles).
       `"protected": true` (as item 11 already asks).
     - **Done 2026-11-11 (owner):** turned on, requiring `quality`, `image` and both CodeQL
       `analyze` checks.
-25. [ ] **Secret scanning before commit and in CI** (Medium): `.pre-commit-config.yaml` with
+25. [x] **Secret scanning before commit and in CI** (Medium): `.pre-commit-config.yaml` with
     gitleaks pinned; a CI job scanning full history (action pinned by SHA, `contents: read`).
     - **Done when:** a planted fake key fails the CI job, and the job is green on the real repo.
+    - **Done 2026-11-11:** `.github/workflows/secrets.yml` runs gitleaks 8.30.1 (a release from
+      2026-03-12, its tarball checked against the published SHA-256; no third-party action) over
+      the full history on every push and pull request. A self-test step commits a fake AWS key,
+      made at run time, to a scratch repo and fails unless gitleaks exits 1. The real scan uses
+      gitleaks' default rules plus one allowlist (`.gitleaks.toml`): the `run_key` UUIDs in
+      `results/phase3/costs/job_costs.json`, Databricks pipeline-update IDs that the generic
+      rule flagged 24 times, matched by path and line together. Locally: no leaks in 354
+      commits. `.pre-commit-config.yaml` pins the same version by commit for the owner's
+      laptop (`pre-commit install`). **Owner:** add the `gitleaks` check to the required checks
+      on `main`.
 26. [ ] **Locked, hashed, cooled-down Python installs** (Medium; a new tool, uv, needs the
     owner's OK first): `uv.lock`, `exclude-newer = "7 days"`, `uv sync --locked` in every
     workflow, hashed exports for Docker and the Streamlit app.
@@ -657,9 +667,20 @@ change only the owner can make (repository settings, accounts, consoles).
       check rather than a warnings filter, which would be process-wide and not thread-safe in
       the API's thread pool). Tests in `tests/test_contract.py`, `tests/test_api.py` and
       `tests/test_serving.py`; silent failure #16 now names this check.
-30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
+30. [x] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
     - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
       runs, in tests.
+    - **Done 2026-11-11:** `contract.open_image` passes `formats=` to `Image.open` (the
+      contract's `formats` in the check; JPEG and PNG in serving), so no other plugin parses an
+      upload. A refused image's format is named from Pillow's prefix checks, which compare magic
+      bytes and decode nothing, so a GIF, TIFF or ICO still gets `format: <name>` and a 422.
+      Changes from before: a refused image now gets the format reason only (no resolution
+      reason), a multi-picture JPEG (MPO) is refused from its header before any pixel is
+      decoded, and a non-image whose first bytes happen to match another format's magic (for
+      example text starting `P5`) is named as that format (422) instead of unreadable (400).
+      `tests/test_contract.py` spies on the TIFF, ICO, BMP and GIF decoders (none is called)
+      and on `load()` for an MPO. The ISIC ingestion paths (`cdm.images`, silver, gold) still
+      open files with every plugin; they read the archive's files, not uploads.
 31. [x] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
     the call sites are listed in the audit).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
@@ -671,8 +692,19 @@ change only the owner can make (repository settings, accounts, consoles).
       parses `src`, `scripts`, `tests`, `app` and the notebooks and fails on any `torch.load`
       without a literal `weights_only=True` (aliases included), with a planted-call self-test.
       Safetensors for the bundle stays a later option.
-32. [ ] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
+32. [x] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
     - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
+    - **Done 2026-11-11:** `cdm.bundle.check_manifest` refuses a seed whose checkpoint or
+      detector is not a key of the manifest's `sha256` map, any bundle name that is not a plain
+      file name (`/`, `\`, `.`, `..` or empty), and a manifest with no seeds. `Service.load`
+      runs it before reading any bundle file other than `manifest.json`, and
+      `scripts/deploy_space.py` runs it before upload, so the deploy check and the Space agree.
+      `tests/test_serving.py` covers a map missing the checkpoint or the detector, six
+      path-like names (in a seed and in the map), no seeds, the deploy check, and a complete
+      bundle still loading. The real builder (`databricks/notebooks/serving_bundle.py`) and
+      `scripts/make_test_bundle.py` already list every file with plain names, so existing
+      bundles load unchanged. `manifest.json` itself is not hashed: the optional pinned
+      manifest hash from configuration is not done.
 33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
     - **Done when:** a changed CIFAR file is refused before `pickle.load`.
     - Done 2026-11-11: each batch file's MD5 is checked against torchvision's published list before `pickle.loads`; `tests/test_build_benchmarks.py` shows a planted pickle is refused without running and an unknown file name is refused. The benchmark build itself was not rerun here.
@@ -722,21 +754,35 @@ change only the owner can make (repository settings, accounts, consoles).
       their defaults (an empty value would override a default; an empty `TRUSTED_PROXY_HOPS`
       would stop the API). `tests/test_env_example.py` scans `src`, `scripts` and `app` for
       `os.environ` reads and fails on any unlisted name or any filled-in value.
-42. [ ] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
+42. [x] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
     it, with no personal email.
     - **Done when:** both exist.
-    - **2026-11-11:** private vulnerability reporting turned on by the owner; `SECURITY.md` to
-      come.
+    - **Done 2026-11-11:** private vulnerability reporting is on (owner; `GET
+      /repos/erjonb19/clinical-drift-monitor/private-vulnerability-reporting` returns
+      `"enabled": true`), and `SECURITY.md` points to it, states the scope (the Streamlit demo
+      is the only public deployment; the API is not deployed; public data only) and publishes
+      no email address, which `tests/test_security_md.py` checks.
 43. [x] **Dependabot alerts and security updates on** (owner).
     - **Done when:** the repository's security settings show both enabled.
     - **Done 2026-11-11 (owner):** Dependabot security updates (grouped) and malware alerts on
       (`security_and_analysis.dependabot_security_updates: enabled`, checked through the API).
       Dependabot (vulnerability) alerts are on because GitHub enables security updates only
       when alerts are on; the owner named security updates and malware alerts, not alerts.
-44. [ ] **API hardening before any deploy:** security headers, `openapi_url=None`, response
+44. [x] **API hardening before any deploy:** security headers, `openapi_url=None`, response
     models, and structured security-event logging with no address or body.
     - **Done when:** tests check the headers, the absent schema, the response models and one
       logged rejection.
+    - **Done 2026-11-11:** `app/api/main.py` adds a middleware that puts security headers on
+      every response the app builds (Starlette's plain-text 500 page is outside it): a CSP with
+      no default sources, scripts only by the page script's hash and no framing, plus
+      `nosniff`, `X-Frame-Options: DENY`, a Referrer-Policy and a Permissions-Policy. The
+      OpenAPI schema is off. `/predict` and `/health` have Pydantic response models, so extra
+      fields are dropped. Each refusal logs one JSON line (`cdm.api.security`) with a UTC time,
+      a fresh request id, the outcome and a reason code. Three new tests in `tests/test_api.py`
+      cover the headers on the page, JSON, refusals and 404s; the hash matching the page; the
+      missing schema and dropped fields; and two logged refusals with no address or body in the
+      log. HSTS is left to the host at deploy. The API is still not deployed, and the deployed
+      Streamlit demo is untouched.
 45. [x] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
     the spend log is missing after spending began; date the price constant.
     - **Done when:** a test shows a missing log refuses a call, and the Console limit is noted.
@@ -749,8 +795,15 @@ change only the owner can make (repository settings, accounts, consoles).
       Anthropic Console is the real backstop; whether one is set cannot be checked from here.
       Limits: deleting the log and its mark together still resets the client-side count, and a
       log that predates this change has no mark until its next call.
-46. [ ] **Neutralise formulas in the G5 CSV error sheets.**
+46. [x] **Neutralise formulas in the G5 CSV error sheets.**
     - **Done when:** a cell starting with `=` is written with a leading `'`, in tests.
+    - **Done 2026-11-11:** `cdm.extract.spreadsheet_safe_frame` prefixes `'` to any text cell
+      starting with `=`, `+`, `-`, `@`, a tab or a carriage return, leaving numeric columns
+      unchanged; `scripts/extraction.py` writes `errors.csv` through it. The predictions CSV
+      stays raw, because scoring reads it back and a prefix would turn a valid reply with
+      leading whitespace into an invalid one (a test checks it still scores).
+      Tests in `tests/test_extract.py`, including an end-to-end run with no network or model
+      call.
 47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
     temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
     to its own host with a byte cap.
