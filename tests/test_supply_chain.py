@@ -36,7 +36,7 @@ def test_the_audit_and_scan_run_in_ci() -> None:
     ci = (WORKFLOWS / "ci.yml").read_text("utf-8")
     docker = (WORKFLOWS / "docker.yml").read_text("utf-8")
     assert "pip-audit" in ci and "vulnerable_requirements.txt" in ci
-    assert "trivy-action" in docker and "severity: CRITICAL" in docker
+    assert "trivy-action" in docker and "severity: CRITICAL,HIGH" in docker  # item 39
     assert (REPO / ".github" / "dependabot.yml").exists() and (WORKFLOWS / "codeql.yml").exists()
 
 

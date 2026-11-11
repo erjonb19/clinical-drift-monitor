@@ -647,9 +647,12 @@ change only the owner can make (repository settings, accounts, consoles).
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
 38. [ ] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
     - **Done when:** each ecosystem has a cooldown, checked by a test.
-39. [ ] **Trivy fails on fixable HIGH as well as CRITICAL.**
+39. [x] **Trivy fails on fixable HIGH as well as CRITICAL.**
     - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
       `.trivyignore` with reasons).
+    - **Done 2026-11-11:** `docker.yml` scans with `severity: CRITICAL,HIGH` (still
+      `ignore-unfixed`), and `tests/test_supply_chain.py` checks it. The image passed with no
+      accepted finding (`.trivyignore` stays empty) on this PR's `image` run.
 40. [ ] **`.gitignore` covers Section 3.1's secret and state files.**
     - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
       `secrets/a` and `.databrickscfg`, checked by a test.

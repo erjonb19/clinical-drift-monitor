@@ -60,14 +60,15 @@ jobs:
           docker diff api | tee changes.txt
           # Allowed: /tmp itself and the empty cache directory torch creates at start-up.
           if grep -v -E " /(tmp|home/demo|tmp/torchinductor_demo)$" changes.txt | grep -q .; then echo "unexpected files written"; exit 1; fi
-      # Backlog item 11: scan the built image; fixable CRITICAL findings fail the build. Accepted
+      # Backlog items 11 and 39: scan the built image; fixable CRITICAL and HIGH findings fail the
+      # build. Accepted
       # ones go in .trivyignore with their reason. The action is pinned to a commit.
       - name: Image scan (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: cdm-api:ci
           scanners: vuln
-          severity: CRITICAL
+          severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
           trivyignores: .trivyignore
