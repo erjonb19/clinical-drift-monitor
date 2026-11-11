@@ -182,4 +182,5 @@ def test_zizmor_audits_workflow_changes_pinned_with_a_self_test() -> None:
     assert "--require-hashes" in text and "self-test" in text
     self_test = text.split("self-test)", 1)[1].split("- name:", 1)[0]
     assert "${{" not in self_test and "set +e" in self_test
+    assert '"$status" -lt 10' in self_test and "template-injection" in self_test
     assert "zizmor --offline .github/workflows/" in text

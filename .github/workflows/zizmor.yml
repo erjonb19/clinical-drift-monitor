@@ -44,9 +44,14 @@ jobs:
             echo "    steps:"
             printf '      - run: echo "%s{{ github.event.pull_request.title }}"\n' '$'
           } > /tmp/planted/bad.yml
-          /tmp/zizmor/bin/zizmor --offline /tmp/planted/bad.yml > /dev/null
+          /tmp/zizmor/bin/zizmor --offline /tmp/planted/bad.yml > /tmp/planted/out.txt 2>&1
           status=$?
-          if [ "$status" -eq 0 ]; then echo "zizmor missed a planted template injection"; exit 1; fi
-          echo "self-test passed: zizmor flagged the planted workflow (exit $status)"
+          # Exit codes 10 to 14 mean findings; 1 would be zizmor's own error, not a detection.
+          if [ "$status" -lt 10 ] || ! grep -q "template-injection" /tmp/planted/out.txt; then
+            cat /tmp/planted/out.txt
+            echo "zizmor did not report the planted template injection (exit $status)"
+            exit 1
+          fi
+          echo "self-test passed: zizmor reported template-injection (exit $status)"
       - name: Audit this repository's workflows
         run: /tmp/zizmor/bin/zizmor --offline .github/workflows/
