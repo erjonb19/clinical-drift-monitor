@@ -6,7 +6,7 @@
     "note": "the evaluated serving bundle (registry v1, model_gen v2) as a tar.gz attached to a GitHub release; the owner uploads it (decided 2026-11-03). Fill url and sha256 then."
   },
   "images_manifest": "config/champion_smoke_images.csv",
-  "images_note": "written by scripts/make_smoke_manifest.py (needs the ISIC API, which this repo's cloud sessions cannot reach): isic_id, diagnosis, license, attribution, url, sha256. Images are fetched at test time and never committed.",
+  "images_note": "written by scripts/make_smoke_manifest.py in the 'Smoke manifest' workflow (.github/workflows/smoke-manifest.yml), where the ISIC API is reachable; committed 2026-11-11 from that run's log: 50 images of 50 different test-split lesions, licences CC-0 and CC-BY-NC, each with attribution, URL and SHA-256. Images are fetched at test time and never committed.",
   "max_abstain_share": 0.2,
   "max_abstain_share_why": "the abstain threshold is the 95th percentile of the validation OOD score, so on in-distribution test images about 5% should abstain; 20% leaves room for 50 images and still fails a bundle whose detector is broken"
 }
