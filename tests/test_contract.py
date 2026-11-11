@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import io
+from typing import Any
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from cdm import contract
@@ -107,3 +109,31 @@ def test_flat_images_are_never_duplicates_of_each_other() -> None:
     first = contract.check(flat, CONFIG)
     assert first.dhash == 0
     assert contract.check(flat, CONFIG, seen=[0]).ok
+
+
+@pytest.mark.parametrize("fmt", ["TIFF", "ICO", "BMP", "GIF"])
+def test_only_the_jpeg_and_png_decoders_ever_run(fmt: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Backlog item 30: a TIFF, ICO, BMP or GIF upload is refused with its format named, and its
+    own decoder is never called, in the contract check and in serving's open alike."""
+    Image.init()
+    called: list[str] = []
+    factory, accept = Image.OPEN[fmt]
+
+    def spy(*args: Any, **kwargs: Any) -> Any:
+        called.append(fmt)
+        return factory(*args, **kwargs)
+
+    monkeypatch.setitem(Image.OPEN, fmt, (spy, accept))
+    image = textured(256, 256).convert("P") if fmt == "GIF" else textured(256, 256)
+    data = encode(image, fmt)
+    v = contract.check(data, CONFIG)
+    assert v.quarantined == [f"format: {fmt} (allowed: JPEG, PNG)"] and not v.unreadable
+    with pytest.raises(contract.RefusedFormat):
+        contract.open_image(data)
+    assert called == []
+
+
+def test_jpeg_and_png_still_open() -> None:
+    for fmt in ("JPEG", "PNG"):
+        with contract.open_image(encode(textured(), fmt)) as img:
+            assert img.format == fmt

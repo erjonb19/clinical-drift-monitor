@@ -651,9 +651,15 @@ change only the owner can make (repository settings, accounts, consoles).
       check rather than a warnings filter, which would be process-wide and not thread-safe in
       the API's thread pool). Tests in `tests/test_contract.py`, `tests/test_api.py` and
       `tests/test_serving.py`; silent failure #16 now names this check.
-30. [ ] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
+30. [x] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
     - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
       runs, in tests.
+    - **Done 2026-11-11:** `contract.open_image` passes `formats=` to `Image.open` (the
+      contract's `formats` in the check; JPEG and PNG in serving), so no other decoder runs. A
+      refused image's format is named from Pillow's prefix checks, which compare magic bytes and
+      decode nothing, so the quarantine reason (`format: TIFF (allowed: JPEG, PNG)`) and the
+      API's 422 are unchanged. `tests/test_contract.py` spies on the TIFF, ICO, BMP and GIF
+      decoders and shows none is called, in the check and in serving's open.
 31. [ ] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
     the call sites are listed in the audit).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.

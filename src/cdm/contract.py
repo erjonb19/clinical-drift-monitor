@@ -31,11 +31,47 @@ MAX_PIXELS = 50_000_000
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 
 
-def open_image(data: bytes) -> Image.Image:
-    """Open image bytes lazily and refuse one over MAX_PIXELS before its pixels are decoded.
-    Image.open reads only the header, so the size is known before ``load()``. Raises
-    Image.DecompressionBombError for an oversized image; the caller treats it as unreadable."""
-    img = Image.open(io.BytesIO(data))
+# Only these decoders ever see upload bytes (backlog item 30): Image.open tries no other
+# plugin, so a TIFF, PSD or ICO parser bug cannot be reached through the API or the monthly job.
+DECODERS = ("JPEG", "PNG")
+
+
+class RefusedFormat(UnidentifiedImageError):
+    """The bytes look like an image in a format whose decoder is not allowed to run."""
+
+    def __init__(self, fmt: str) -> None:
+        super().__init__(f"{fmt} images are not decoded here")
+        self.format = fmt
+
+
+def sniff_format(data: bytes) -> str | None:
+    """The format named by the first bytes, from each Pillow plugin's prefix check (``accept``).
+    Those checks compare a few magic bytes and decode nothing; they only name what was refused."""
+    Image.init()
+    prefix = data[:16]
+    for fmt, (_, accept) in Image.OPEN.items():
+        try:
+            if accept is not None and accept(prefix):
+                return fmt
+        except Exception:  # noqa: BLE001, S112 - a prefix check that fails just doesn't match
+            continue
+    return None
+
+
+def open_image(data: bytes, formats: Iterable[str] = DECODERS) -> Image.Image:
+    """Open image bytes lazily, with only the ``formats`` decoders, and refuse one over
+    MAX_PIXELS before its pixels are decoded. Image.open reads only the header, so the size is
+    known before ``load()``. Raises RefusedFormat for an image in another format,
+    UnidentifiedImageError for bytes no check recognises, and Image.DecompressionBombError for
+    an oversized image."""
+    allowed = list(formats)
+    try:
+        img = Image.open(io.BytesIO(data), formats=allowed)
+    except UnidentifiedImageError:
+        fmt = sniff_format(data)
+        if fmt is not None and fmt not in allowed:
+            raise RefusedFormat(fmt) from None
+        raise
     w, h = img.size
     if w * h > MAX_PIXELS:
         img.close()
@@ -115,10 +151,13 @@ def check(
     v = Verdict()
     rules = config["enforced"]
     try:
-        with open_image(data) as img:
+        with open_image(data, rules["formats"]) as img:
             fmt = img.format
             img.load()
             rgb = img.convert("RGB")
+    except RefusedFormat as refused:
+        v.quarantined.append(f"format: {refused.format} (allowed: {', '.join(rules['formats'])})")
+        return v
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
         v.quarantined.append("format: not a readable image")
         v.unreadable = True
