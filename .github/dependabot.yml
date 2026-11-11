@@ -16,6 +16,15 @@ updates:
       # flwr 1.39.x (held on purpose) needs uvicorn < 0.50; #74's uvicorn 0.54.0 broke the install.
       - dependency-name: uvicorn
         update-types: [version-update:semver-major, version-update:semver-minor]
+      # flwr 1.39.x also needs fastapi >= 0.138, < 0.139; #83's fastapi 0.162.0 broke the install.
+      - dependency-name: fastapi
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      # The BiomedCLIP stack behind the committed research Phase B results (vlm extra): patches
+      # only. #83 moved open_clip_torch 3 -> 4 and transformers 4 -> 5.
+      - dependency-name: open_clip_torch
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: transformers
+        update-types: [version-update:semver-major, version-update:semver-minor]
       # torch and torchvision: no updates at all (owner, 2026-11-10). Dependabot drops the
       # +cpu label in docker/constraints.txt and cannot see the Dockerfile's RUN line (#74), so a
       # bump is a hand change to both, checked by test_the_image_keeps_the_cpu_torch_wheels.
