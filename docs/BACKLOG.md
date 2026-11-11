@@ -643,6 +643,20 @@ change only the owner can make (repository settings, accounts, consoles).
 23. [ ] **Add `.claude/settings.json`** from the audit's proposal, after the owner's review.
     - **Done when:** the file is committed and a cloud session's `/permissions` lists its rules;
       `ruff check .` runs without a prompt, `curl -X POST` and a push to `main` are denied.
+    - **2026-11-11:** the audit's proposal plus the `-q` push forms and a small read-only set
+      (`ls`, `cat`, `grep`, `sed -n` and similar). The owner reviewed it and asked for denies on
+      `cat`, `grep`, `head` and `tail` naming a `.env` file, and on `find` with `-delete` or
+      `-exec`; added (with `-execdir`, `-ok`, `-okdir`, `-fprint` and `-fls`), with a test. **Not
+      ticked:** the "Done when" check (a cloud session's `/permissions` lists the rules, and
+      `ruff check .` runs while `curl -X POST` and a push to `main` are refused) needs a new
+      session started after the merge. **Known limits:** a Bash rule matches the command's
+      text, so a read that never names the file (`grep -r KEY .`, a glob such as `cat .e*`, or
+      a script) is not caught; the `Read(...)` denies also cover `cat`, `head`, `tail`, `sed`
+      and `tee` and `<` redirects naming the file, but not `grep`. The `.env` rules also deny
+      names such as `.envrc` and `.env.example` (fail closed). And under
+      `dontAsk` it still denies much of what an unattended session does (tests through a venv
+      path or with `PYTHONPATH=...`, `python3` one-liners, `cd`), so try it in a watched
+      session first.
 24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
     - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
