@@ -1,0 +1,10 @@
+# Backlog item 25: gitleaks' default rules, plus one narrow allowlist.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Databricks pipeline-update IDs (UUIDs, not secrets) in the committed cost table"
+condition = "AND"
+paths = ['''^results/phase3/costs/job_costs\.json$''']
+regexTarget = "line"
+regexes = ['''^\s*"run_key": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",$''']

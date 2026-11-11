@@ -110,6 +110,34 @@ def test_dependabot_never_updates_torch() -> None:
         assert not entry.group(2).startswith("update-types"), name
 
 
+def test_secret_scanning_runs_pinned_with_a_self_test() -> None:
+    """Backlog item 25: gitleaks in CI is a checksummed pinned release that must catch a
+    planted key, and the pre-commit hook pins the same version by commit."""
+    text = (WORKFLOWS / "secrets.yml").read_text("utf-8")
+    version = re.search(r'GITLEAKS_VERSION: "([\d.]+)"', text)
+    assert version and re.search(r'GITLEAKS_SHA256: "[0-9a-f]{64}"', text)
+    assert "sha256sum -c" in text and "planted key" in text and "fetch-depth: 0" in text
+    # Steps run under bash -e: without set +e the self-test stops at gitleaks' exit 1 and
+    # always fails (review of #88).
+    assert "set +e" in text.split("planted key", 1)[1].split("- name:", 1)[0]
+    hook = (REPO / ".pre-commit-config.yaml").read_text("utf-8")
+    assert re.search(rf"rev: [0-9a-f]{{40}} # v{re.escape(version.group(1))}", hook)
+    config = (REPO / ".gitleaks.toml").read_text("utf-8")
+    assert "useDefault = true" in config and 'condition = "AND"' in config
+
+
+def test_every_workflow_reads_only_unless_it_says_why() -> None:
+    """Backlog item 28: each workflow sets a top-level permissions block, the default is
+    contents: read, and no checkout leaves the token in .git/config."""
+    for path in WORKFLOWS.glob("*.yml"):
+        text = path.read_text("utf-8")
+        top = re.search(r"^permissions:\n((?:  .*\n)+)", text, re.MULTILINE)
+        assert top is not None, f"{path.name}: no top-level permissions"
+        assert top.group(1).strip() == "contents: read", f"{path.name}: {top.group(1)!r}"
+        checkouts = text.count("uses: actions/checkout@")
+        assert text.count("persist-credentials: false") == checkouts, path.name
+
+
 def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
     """Backlog item 38: each ecosystem waits at least 7 days after a release before proposing it."""
     text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
