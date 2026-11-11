@@ -49,7 +49,8 @@ def npz_rows(npz: Path, member: str, wanted: set[int]) -> dict[int, np.ndarray]:
             else npy_format.read_array_header_2_0
         )
         shape, fortran, dtype = read_header(f)
-        assert not fortran and dtype == np.uint8, (shape, fortran, dtype)
+        if fortran or dtype != np.uint8:
+            raise ValueError(f"unexpected array layout: {(shape, fortran, dtype)}")
         row = int(np.prod(shape[1:]))
         out = {}
         for i in range(shape[0]):
@@ -108,7 +109,8 @@ def main() -> None:
         else:
             files = ["test_batch"] if split == "test" else [f"data_batch_{i}" for i in range(1, 6)]
             images = cifar_rows(cifar, files, wanted)
-        assert len(images) == len(wanted), (dataset, split, len(images))
+        if len(images) != len(wanted):
+            raise ValueError(f"missing images: {(dataset, split, len(images))}")
         records += rows(dataset, split, use, images)
         print(dataset, split, use, len(images), flush=True)
     args.out.mkdir(parents=True, exist_ok=True)
