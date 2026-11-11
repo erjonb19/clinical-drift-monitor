@@ -432,7 +432,9 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       bump is a hand change to the Dockerfile and `docker/constraints.txt` together, checked by
       the `+cpu` test. Tests check all three.
     - **Done 2026-11-11:** all three checks met. The first Dependabot PR appeared (#66,
-      2026-11-09); CI's audit step fails on the known-vulnerable pin (`requests 2.19.0`); and
+      2026-11-09); CI's self-test step shows pip-audit exits 1 and names the known-vulnerable pin
+      (`requests 2.19.0`, a test fixture), and the main audit step fails the build on any finding
+      not accepted in `config/pip_audit_ignore.json`; and
       `GET /repos/erjonb19/clinical-drift-monitor/branches/main` returns `"protected": true`
       with required checks `quality`, `image`, `analyze (actions)` and `analyze (python)`
       (checked 2026-11-11). **Note:** enforcement is `non_admins`, so the owner's admin account
@@ -673,7 +675,10 @@ change only the owner can make (repository settings, accounts, consoles).
       come.
 43. [x] **Dependabot alerts and security updates on** (owner).
     - **Done when:** the repository's security settings show both enabled.
-    - **Done 2026-11-11 (owner):** Dependabot security updates (grouped) and malware alerts on.
+    - **Done 2026-11-11 (owner):** Dependabot security updates (grouped) and malware alerts on
+      (`security_and_analysis.dependabot_security_updates: enabled`, checked through the API).
+      Dependabot (vulnerability) alerts are on because GitHub enables security updates only
+      when alerts are on; the owner named security updates and malware alerts, not alerts.
 44. [ ] **API hardening before any deploy:** security headers, `openapi_url=None`, response
     models, and structured security-event logging with no address or body.
     - **Done when:** tests check the headers, the absent schema, the response models and one
