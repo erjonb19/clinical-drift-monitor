@@ -17,7 +17,7 @@
     "test_eval_gate.py": 3,
     "test_evidence.py": 5,
     "test_explain.py": 7,
-    "test_extract.py": 28,
+    "test_extract.py": 31,
     "test_fair.py": 6,
     "test_federated.py": 7,
     "test_final.py": 6,
