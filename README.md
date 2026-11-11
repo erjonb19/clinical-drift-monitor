@@ -9,21 +9,27 @@ A skin lesion classifier trained across hospitals, with an out-of-distribution (
 tested on real new hospitals. Built on Databricks Free Edition at zero cost. A personal
 portfolio project and research prototype: **not for clinical use**.
 
-**Status (2026-11-03):**
-- Phases 0 to 2 are done: fix the science, data engineering, and ML. The one Phase 2 item left,
-  error analysis, moved to research Phase D.
-- The research extension (Phases A to F: OMOP data, a vision-language baseline, subgroups,
-  interpretability, fusion) is planned in
-  [docs/research_extension_plan.md](docs/research_extension_plan.md). Phase A (OMOP tables),
-  Phase B (the BiomedCLIP baseline), C (subgroups and bias), D (Grad-CAM review
-  worksheet) and E (image plus metadata) are built; Phase G
-  (research data services) is in progress.
-- Phase 3 (serving and MLOps) is mostly built: the API with an abstain flag (Docker image built
-  and smoke-tested in CI with a test bundle; the free public deploy is blocked), the monthly drift job with per-skin-type alerts and an
-  audit table, the Unity Catalog model registry, per-run cost tracking, a retraining loop and a
-  CI accuracy gate. On 2026-11-03 the owner amended Phase 3's "Done when" (no live URL needed),
-  closed the serving-setup check as superseded and dropped the Gram backup (PLAN.md decisions
-  log). Phases 4 and 5 have not started; Phase 6 is deferred.
+## Results at a glance
+
+Every number below is from the committed file named beside it; details are in the sections
+further down.
+
+| Question | Result | Source |
+| --- | --- | --- |
+| How good is the shipped model where it was trained? | 66.46% balanced accuracy, melanoma at the triage threshold caught 96.2% of the time (3-seed ensemble, clients' test split) | `results/phase2/v2/test/final_test.json`, `results/phase2/triage/test.json` |
+| What happens at hospitals it never saw? | It falls to 55.91% (Buenos Aires) and 39.40% (PAD-UFES-20, smartphone photos) | `results/phase2/analysis_look/results.json` |
+| Does the drift monitor see it? | In a 12-month replay of real images it alerted on every fully shifted month (9 to 12) and on none of the in-distribution months (1 to 4) | `results/phase3/monthly/` |
+| Does retraining fix it? | A challenger gained 6.2 points at Buenos Aires but lost 1.6 on the original sites (limit 1.0), so the pre-registered rule kept the champion | `results/phase3/retrain/decision.json` |
+| Does a medical vision-language model do better? | No: a BiomedCLIP linear probe trails by 15 to 16 points | `results/research/b_vlm/results.json` |
+
+**Start here:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (one page: what runs where, how it
+scales, where it breaks) and [docs/walkthrough.md](docs/walkthrough.md) (a 3-minute tour).
+
+**Status (2026-11-11):** Phases 0 to 2 are done; research Phases A to E are built and G is in
+progress ([plan](docs/research_extension_plan.md)); Phase 3 (serving and MLOps) is mostly built, with the API built and scanned in CI but
+not deployed. The production backlog (`docs/BACKLOG.md`) is worked one reviewed pull request at
+a time; its finished items are listed under "Production readiness" below. Phases 4 and 5 have not
+started; Phase 6 is deferred.
 
 A short technical report, written for 4 to 6 pages (LaTeX source with standard packages, written to build on Overleaf;
 not yet compiled, since no TeX is installed on the build machine):
