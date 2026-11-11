@@ -126,6 +126,18 @@ def test_secret_scanning_runs_pinned_with_a_self_test() -> None:
     assert "useDefault = true" in config and 'condition = "AND"' in config
 
 
+def test_every_workflow_reads_only_unless_it_says_why() -> None:
+    """Backlog item 28: each workflow sets a top-level permissions block, the default is
+    contents: read, and no checkout leaves the token in .git/config."""
+    for path in WORKFLOWS.glob("*.yml"):
+        text = path.read_text("utf-8")
+        top = re.search(r"^permissions:\n((?:  .*\n)+)", text, re.MULTILINE)
+        assert top is not None, f"{path.name}: no top-level permissions"
+        assert top.group(1).strip() == "contents: read", f"{path.name}: {top.group(1)!r}"
+        checkouts = text.count("uses: actions/checkout@")
+        assert text.count("persist-credentials: false") == checkouts, path.name
+
+
 def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
     """Backlog item 38: each ecosystem waits at least 7 days after a release before proposing it."""
     text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
