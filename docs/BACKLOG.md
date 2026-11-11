@@ -428,6 +428,12 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       2026-11-09 patch-only rule for those two, since even a patch bump drops `+cpu`). A torch
       bump is a hand change to the Dockerfile and `docker/constraints.txt` together, checked by
       the `+cpu` test. Tests check all three.
+    - **Dependabot's next Python group (#83, 2026-11-11): held, closed.** `quality` failed at
+      install: it moved fastapi to 0.162.0, and `flwr` 1.39.0 needs fastapi `>=0.138,<0.139`. It
+      also moved the research Phase B stack a major version (`open_clip_torch` 3 to 4,
+      `transformers` 4 to 5). `dependabot.yml` now gives fastapi, `open_clip_torch` and
+      `transformers` patch updates only (a test checks it); the rest of the group comes back on
+      Dependabot's next run.
 
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
