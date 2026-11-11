@@ -641,8 +641,9 @@ change only the owner can make (repository settings, accounts, consoles).
     - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
 32. [ ] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
     - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
-33. [ ] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
+33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
     - **Done when:** a changed CIFAR file is refused before `pickle.load`.
+    - Done 2026-11-11: each batch file's MD5 is checked against torchvision's published list before `pickle.loads`; `tests/test_build_benchmarks.py` shows a planted pickle is refused without running and an unknown file name is refused. The benchmark build itself was not rerun here.
 34. [ ] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
     - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
 35. [ ] **Pin the Docker base image by digest.**
