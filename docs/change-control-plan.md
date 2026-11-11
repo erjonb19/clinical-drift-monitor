@@ -25,8 +25,8 @@ broken target in `config/slo.json` (melanoma referral sensitivity at least
   (`results/phase3/retrain/spec.json`, committed before the run).
 - **Test and CI gate.** One locked test look per model, on the current model's exact test
   images; `tests/test_eval_gate.py` fails the build below `config/eval_gate.json` (client AUROC 0.88, balanced accuracy 0.62; Buenos Aires 0.5; PAD-UFES-20 0.35).
-- **Serving.** A promoted model becomes a serving bundle whose manifest hashes every file, is
-  re-evaluated and registered (`workspace.cdm.skin_lesion_classifier`, now v1, alias `champion`;
+- **Serving.** A promoted model becomes a serving bundle whose manifest hashes each checkpoint and
+  detector, is re-evaluated and registered (`workspace.cdm.skin_lesion_classifier`, now v1, alias `champion`;
   rollback moves the alias back). The API keeps its input contract (JPEG or PNG, shorter side at least 224 px, aspect ratio at most
   3:1, at most 50 megapixels; `cdm.contract`) and abstains above the
   validation 95th-percentile drift score.

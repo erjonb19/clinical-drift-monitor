@@ -599,6 +599,9 @@ def change_control() -> str:
             if any(v.get("alert") for v in m["by_skin_type"].values())
         ]
     )
+    early = [m["drift"]["alert"] or any(v.get("alert") for v in m["by_skin_type"].values())
+             for m in MONTHS[:4]]  # fmt: skip
+    quiet = "none in months 1 to 4" if not any(early) else "also in some of months 1 to 4"
     targets = SLO["targets"]
     floors = GATE["floors"]
     rules = contract.CONTRACT["enforced"]
@@ -614,7 +617,7 @@ challenger from each champion seed after a drift alert; refitting the drift dete
 either. Not allowed without a new plan: another architecture, image size, class set or imaging
 modality, or a change to the rules below. **Triggers:** a monthly drift alert (KS p < 0.01 and
 PSI at least 0.2 against validation, overall or for a skin type with at least 100 images; in
-the replay, overall in months {alerts}, by skin type in {skin}, none in months 1 to 4), a
+the replay, overall in months {alerts}, by skin type in {skin}, {quiet}), a
 broken target in `config/slo.json` (melanoma referral sensitivity at least
 {targets["melanoma_referral_sensitivity"]["value"]}, delayed balanced accuracy at least {targets["delayed_balanced_accuracy"]["value"]}, abstain share at most
 {targets["abstain_share"]["value"]}; provisional), or newly released labels.
@@ -630,8 +633,8 @@ broken target in `config/slo.json` (melanoma referral sensitivity at least
   (`results/phase3/retrain/spec.json`, committed before the run).
 - **Test and CI gate.** One locked test look per model, on the current model's exact test
   images; `tests/test_eval_gate.py` fails the build below `config/eval_gate.json` (client AUROC {floors["client_test_macro_auroc"]}, balanced accuracy {floors["client_test_balanced_accuracy"]}; Buenos Aires {floors["buenos_aires_balanced_accuracy"]}; PAD-UFES-20 {floors["pad_ufes_balanced_accuracy"]}).
-- **Serving.** A promoted model becomes a serving bundle whose manifest hashes every file, is
-  re-evaluated and registered (`workspace.cdm.skin_lesion_classifier`, now v{REGISTRY["version"]}, alias `champion`;
+- **Serving.** A promoted model becomes a serving bundle whose manifest hashes each checkpoint and
+  detector, is re-evaluated and registered (`workspace.cdm.skin_lesion_classifier`, now v{REGISTRY["version"]}, alias `champion`;
   rollback moves the alias back). The API keeps its input contract ({" or ".join(rules["formats"])}, shorter side at least {rules["min_side_px"]} px, aspect ratio at most
   {rules["max_aspect_ratio"]:g}:1, at most {contract.MAX_PIXELS // 1_000_000} megapixels; `cdm.contract`) and abstains above the
   validation 95th-percentile drift score.

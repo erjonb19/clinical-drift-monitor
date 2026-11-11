@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-# One page: a US Letter or A4 page at 11 pt with 1 inch margins holds about 550 words, or 48
+# One page: a US Letter or A4 page at 10.5 pt with 1 inch margins holds about 550 words, or 48
 # lines of about 100 characters (blank lines included).
 ONE_PAGE_WORDS, ONE_PAGE_LINES, WIDTH = 550, 48, 100
 
