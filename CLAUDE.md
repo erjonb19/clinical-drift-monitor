@@ -17,6 +17,11 @@ PLAN.md is the source of truth for scope and order. Do not add features that are
 
 ## Ground rules (production upgrade, added 2026-11-06)
 - One backlog item per branch and PR. Keep each change small. Tests must stay green.
+- **Merging (owner, 2026-11-11):** Claude merges PRs itself, including ones marked "owner
+  merges", once CI is green on the final commit and a fresh review by a separate agent that did
+  not write the change finds nothing blocking. Still ask the owner first, in chat, for anything
+  that spends money, GPU runs, release tags, Databricks deploys, deleting data, and any change to
+  `.claude/settings.json` or other permission settings: open those PRs and stop.
 - Databricks stays central. Training stays on Databricks, not Colab (this replaces the Colab Pro allowance below for training).
 - Cost stays at $0, except the $5 Claude Haiku cap below (owner, 2026-11-06). Ask before adding anything that could bill.
 - Public data only. Never Montefiore data.
