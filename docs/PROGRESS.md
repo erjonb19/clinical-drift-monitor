@@ -5,7 +5,6 @@ Nothing goes here until the item's "Done when" is met.
 
 | Date | Item | What changed | How to check |
 | --- | --- | --- | --- |
-| 2026-11-11 | 45 | The $5 Haiku cap fails closed: a missing or shrunken spend log refuses calls once spending has begun | `pytest tests/test_extract.py -k spend_log` |
 | 2026-11-11 | 40 | `.gitignore` covers the standard's secret and state files | `pytest tests/test_gitignore.py` |
 | 2026-11-10 | 22 | Security audit against `docs/SECURITY_STANDARDS.md` (plan only): 0 Critical, 0 High, 5 Medium, 27 Low; items 23 to 47; a proposed `.claude/settings.json` | Read `docs/security-audit-2026-11-10.md` |
 | 2026-11-09 | 10 | README "Reviewer feedback" section (date, reviewer role, comment, what changed, link), empty until a real review | Read the README section; `pytest tests/test_readme_feedback.py` |
