@@ -15,13 +15,14 @@ clinical use."
 [Scroll to the Phase 2 results table.]
 "The shipped model is a three-seed ensemble. On the test split of the four hospitals it was
 trained on, its balanced accuracy is 66.5 percent. At two hospitals it never saw, Buenos Aires
-and a smartphone collection from Brazil, it falls to 55.9 and 39.4 percent. Nothing in the
-model's output says so. That silent drop is why the project has a drift monitor."
-[Point at `results/phase2/v2/test/final_test.json` beside the table.]
+and PAD-UFES-20's smartphone photos, it falls to 55.9 and 39.4 percent. The predictions
+themselves don't say so. That silent drop is why the project has a drift monitor."
+[Point at `results/phase2/v2/test/final_test.json`, then `results/phase2/analysis_look/results.json`.]
 
 **0:50 – 1:20. How the numbers were protected**
 [Open `docs/EVAL_PLAN.md`, then any `results/**/spec.json`.]
-"Every test result follows a specification committed before its single look at the test set.
+"Each test look is fixed in advance and locked against a second run; since the evaluation
+plan, every new result also has a specification committed before it ran.
 Splits are by lesion, never by image, and a test enforces it. A file of silent failures lists
 every bug that reported success while being wrong, and the check that now catches it."
 [Show `docs/silent-failures.md` for two seconds.]
@@ -30,10 +31,10 @@ every bug that reported success while being wrong, and the check that now catche
 [Open `docs/ARCHITECTURE.md`; the diagram is on screen.]
 "The data lands through a Databricks pipeline with quality gates that fail the update. The
 model is served by a FastAPI service that refuses bad input and abstains when an image looks
-unlike its training data. A monthly job replays real new-hospital images: over twelve months it
-alerted on every fully shifted month and on none of the in-distribution ones. A retraining
-rule, written down before the run, declined a challenger that gained six points at the new
-hospital but lost more than allowed on the original ones."
+unlike its training data. A monthly job replayed twelve months of real images: it alerted on
+every fully shifted month and on none of the in-distribution ones. A retraining rule, written
+before the run, declined a challenger that gained six points at the new hospital but lost too
+much on the original ones."
 [Point at the dashed lines.]
 "Dashed lines are planned or hand-run steps; the page says which."
 
@@ -42,8 +43,8 @@ hospital but lost more than allowed on the original ones."
 "Each backlog item ships as one reviewed pull request. CI runs the tests, a type check, an
 accuracy gate on committed metrics, secret scanning, a workflow audit, and a scan of the API
 image that fails on any fixable high-severity finding. Every action and the base image are
-pinned, and the image's system packages come from a fixed Debian snapshot, so a build is
-reproducible."
+pinned, and the image's system packages come from a fixed Debian snapshot, so they are the
+same on every build."
 
 **2:35 – 3:00. What it does not claim**
 [Open `docs/BUILT_VS_PLANNED.md`.]
