@@ -25,6 +25,7 @@ from typing import Any
 REPO = Path(__file__).resolve().parents[1]
 SEARCH = "https://api.isic-archive.com/api/v2/images/search/?"
 OUT = REPO / "config" / "champion_smoke_images.csv"
+# diagnosis is ISIC's coarse diagnosis_1 (Benign, Malignant, Indeterminate), for reading only.
 FIELDS = ["isic_id", "lesion_id", "diagnosis", "license", "attribution", "url", "sha256"]
 # The licences this project may use (CLAUDE.md); an image under any other is skipped.
 ALLOWED_LICENSES = {"CC-0", "CC-BY", "CC-BY-NC"}
@@ -37,12 +38,10 @@ def get(url: str) -> bytes:
 
 
 def image_lesion(image: dict[str, Any]) -> str | None:
-    """The lesion an ISIC image belongs to, wherever the API puts it."""
-    meta = image.get("metadata") or {}
-    for place in (image, meta, meta.get("clinical") or {}, meta.get("patient") or {}):
-        if place.get("lesion_id"):
-            return str(place["lesion_id"])
-    return None
+    """The lesion an ISIC image belongs to. ISIC's API files every clinical field, lesion_id
+    included, under metadata.clinical (ImageSerializer.get_metadata in ImageMarkup/isic)."""
+    lesion = ((image.get("metadata") or {}).get("clinical") or {}).get("lesion_id")
+    return str(lesion) if lesion else None
 
 
 def first_image(lesion_id: str) -> dict[str, Any] | None:
@@ -88,7 +87,7 @@ def main() -> None:
             }
         )
     with OUT.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=FIELDS)
+        writer = csv.DictWriter(f, fieldnames=FIELDS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     print(f"wrote {len(rows)} images to {OUT}")
