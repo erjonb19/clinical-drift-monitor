@@ -773,11 +773,17 @@ change only the owner can make (repository settings, accounts, consoles).
       from repository constants or the owner's own CLI arguments in eight named files; `urlopen` on fixed hosts in six named
       files, and on URLs returned by the ISIC API in four (restricting those to the ISIC host is
       item 47).
-37. [ ] **zizmor on workflow changes.**
+37. [x] **zizmor on workflow changes.**
     - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
-    - **Waiting on the owner (2026-11-11):** zizmor is a new tool (a PyPI package run in CI),
-      so directive 11 needs the owner's OK before it is added. Proposed: `zizmor==<pinned>`
-      installed in its own job on changes to `.github/workflows/**`, failing on any finding.
+    - **2026-11-11 (owner approved zizmor):** `.github/workflows/zizmor.yml` installs zizmor
+      1.32.0 (released 2026-11-02) by its manylinux wheel's SHA-256, checks that it flags a
+      planted template-injection workflow, then audits `.github/workflows/` offline; it runs on
+      any push or PR that changes a workflow. Locally it finds nothing in the eight workflows
+      (its own self-test first tripped it: a planted `${{ }}` in a `run:` block would really
+      be expanded, so the planted line is now assembled at run time).
+      `tests/test_supply_chain.py` checks the pin, the hash and the self-test. The job passed
+      in CI on PR #115 (self-test, then no findings). Dependabot does not update this pin;
+      bump it by hand.
 38. [x] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
     - **Done when:** each ecosystem has a cooldown, checked by a test.
     - **Done 2026-11-11:** pip, docker and github-actions each have `cooldown: default-days: 7`
