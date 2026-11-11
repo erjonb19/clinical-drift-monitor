@@ -23,9 +23,25 @@ from typing import Any
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 
-# The same pixel limit as the serving code (cdm.serving), set here too so a caller that never
-# imports cdm.serving (the monthly job) refuses decompression bombs alike.
-Image.MAX_IMAGE_PIXELS = 50_000_000
+# The pixel limit for every decoded image (the monthly job and the API alike). Pillow raises
+# DecompressionBombError only above twice MAX_IMAGE_PIXELS and merely warns between one and two
+# times it, so open_image checks the header's size against MAX_PIXELS itself, before any decode
+# (silent failure #16).
+MAX_PIXELS = 50_000_000
+Image.MAX_IMAGE_PIXELS = MAX_PIXELS
+
+
+def open_image(data: bytes) -> Image.Image:
+    """Open image bytes lazily and refuse one over MAX_PIXELS before its pixels are decoded.
+    Image.open reads only the header, so the size is known before ``load()``. Raises
+    Image.DecompressionBombError for an oversized image; the caller treats it as unreadable."""
+    img = Image.open(io.BytesIO(data))
+    w, h = img.size
+    if w * h > MAX_PIXELS:
+        img.close()
+        raise Image.DecompressionBombError(f"{w}x{h} is over the {MAX_PIXELS} pixel limit")
+    return img
+
 
 CONTRACT: dict[str, Any] = {
     "enforced": {
@@ -99,7 +115,7 @@ def check(
     v = Verdict()
     rules = config["enforced"]
     try:
-        with Image.open(io.BytesIO(data)) as img:
+        with open_image(data) as img:
             fmt = img.format
             img.load()
             rgb = img.convert("RGB")

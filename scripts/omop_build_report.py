@@ -34,7 +34,8 @@ def sql_client() -> Any:
     spec = importlib.util.spec_from_file_location(
         "evidence_export", REPO / "scripts" / "phase1_export_evidence.py"
     )
-    assert spec is not None and spec.loader is not None
+    if spec is None or spec.loader is None:
+        raise ImportError("cannot load the module")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.Sql()

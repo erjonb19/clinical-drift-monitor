@@ -124,3 +124,15 @@ def test_secret_scanning_runs_pinned_with_a_self_test() -> None:
     assert re.search(rf"rev: [0-9a-f]{{40}} # v{re.escape(version.group(1))}", hook)
     config = (REPO / ".gitleaks.toml").read_text("utf-8")
     assert "useDefault = true" in config and 'condition = "AND"' in config
+
+
+def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
+    """Backlog item 38: each ecosystem waits at least 7 days after a release before proposing it."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    blocks = re.split(r"\n  - package-ecosystem: ", text)[1:]
+    assert len(blocks) == 3, "expected the pip, docker and github-actions ecosystems"
+    for block in blocks:
+        name = block.split("\n", 1)[0]
+        days = re.search(r"\n    cooldown:\n      default-days: (\d+)\n", block)
+        assert days, f"{name}: no cooldown"
+        assert int(days.group(1)) >= 7, f"{name}: cooldown under 7 days"

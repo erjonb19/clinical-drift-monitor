@@ -3,12 +3,17 @@
 # Ignore rules (owner, 2026-11-09): the API image stays on Python 3.11 (the repo's standard),
 # and the model and training stack gets patch releases only, since a minor release can change
 # the numbers behind committed results (flwr is held at 1.39.x on purpose: config/pip_audit_ignore.json).
+# Cooldown (item 38): a version update waits 7 days after its release, so a hijacked release is
+# more likely to be found and pulled before it reaches a PR here (GitHub's default is 3 days).
+# Security updates do not wait.
 version: 2
 updates:
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     # No lockfile: leave a ">=" floor alone when the new release already satisfies it (#74 raised
     # floors such as mlflow-skinny 2.16 to 3.18); exact pins are still bumped.
     versioning-strategy: increase-if-necessary
@@ -47,6 +52,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: python
         update-types: [version-update:semver-major, version-update:semver-minor]
@@ -57,6 +64,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]
