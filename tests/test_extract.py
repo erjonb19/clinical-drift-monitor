@@ -413,3 +413,36 @@ def test_workbook_has_dropdowns_and_locks_the_note_text(tmp_path: Path) -> None:
     assert merge_workbook(tmp_path) == 1
     rows = pd.read_csv(tmp_path / "labelling_sheet.csv", dtype=str, keep_default_na=False)
     assert "Nevus" in set(rows["label_diagnosis"]) and set(rows["text"]) >= {tricky.text}
+
+
+def _spent(spend: SpendLog) -> None:
+    spend.record("claude-haiku-5-5", "n1", "sha", {"input_tokens": 1000, "output_tokens": 40})
+
+
+def test_a_missing_spend_log_refuses_once_spending_began(tmp_path: Path) -> None:
+    """Backlog item 45: deleting or moving the log must not reset the cap to $0."""
+    spend = SpendLog(tmp_path / "spend.jsonl")
+    spend.check("claude-haiku-5-5", 3000)  # a fresh start (no log, no mark) is allowed
+    _spent(spend)
+    assert spend.high_water() == pytest.approx(spend.total())
+    spend.path.unlink()
+    with pytest.raises(BudgetExceeded, match="missing"):
+        spend.check("claude-haiku-5-5", 3000)
+
+
+def test_a_shrunken_spend_log_refuses(tmp_path: Path) -> None:
+    spend = SpendLog(tmp_path / "spend.jsonl")
+    _spent(spend)
+    _spent(spend)
+    first = spend.path.read_text("utf-8").splitlines()[0]
+    spend.path.write_text(first + "\n", "utf-8")  # one recorded call removed
+    with pytest.raises(BudgetExceeded, match="less than"):
+        spend.check("claude-haiku-5-5", 3000)
+
+
+def test_the_price_constant_says_when_it_was_checked() -> None:
+    from datetime import date
+
+    from cdm.extract import MODEL, PRICE_CHECKED, PRICE_PER_MTOK
+
+    assert date.fromisoformat(PRICE_CHECKED) and PRICE_PER_MTOK[MODEL] == (0.10, 0.50)
