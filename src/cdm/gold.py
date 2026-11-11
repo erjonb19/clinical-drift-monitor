@@ -42,7 +42,7 @@ def load_imagenet(weights: Path) -> nn.Module:
     if not actual.startswith(expected):
         raise ValueError(f"{weights}: SHA-256 {actual[:8]}..., expected {expected}...")
     model = cast(nn.Module, efficientnet_b0(weights=None))
-    model.load_state_dict(torch.load(weights, map_location="cpu"))
+    model.load_state_dict(torch.load(weights, map_location="cpu", weights_only=True))
     return model.eval()
 
 

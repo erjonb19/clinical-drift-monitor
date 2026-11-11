@@ -55,7 +55,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 WORKERS = max(1, min(8, (os.cpu_count() or 2) - 1)) if device.type == "cuda" else 0
 cfg = REFERENCE["config"]
 model = build_model(pretrained=False, arch=cfg.get("arch", "b0"))
-model.load_state_dict(torch.load(REFERENCE["checkpoint"], map_location="cpu"))
+model.load_state_dict(torch.load(REFERENCE["checkpoint"], map_location="cpu", weights_only=True))
 assert weights_hash(model) == REFERENCE["weights_sha256"], "reference checkpoint mismatch"
 model.to(device).eval()
 result: dict[str, object] = {
