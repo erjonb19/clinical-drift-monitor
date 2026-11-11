@@ -20,16 +20,17 @@ def test_every_accepted_vulnerability_has_a_reason_and_a_review_date() -> None:
         date.fromisoformat(entry["review_by"])
 
 
-def test_third_party_actions_are_pinned_to_a_commit() -> None:
-    """GitHub's own actions (actions/*, github/*) may use tags; anyone else's must be a SHA."""
+def test_every_action_is_pinned_to_a_commit() -> None:
+    """Backlog item 34: every action, GitHub's own included, is pinned to a full commit SHA
+    (a tag can be moved to other code), with the release it was taken from in a comment."""
     for path in WORKFLOWS.glob("*.yml"):
-        for ref in re.findall(r"uses:\s*([^\s#]+)", path.read_text("utf-8")):
-            if ref.startswith(("./", "docker://")):
+        for line in path.read_text("utf-8").splitlines():
+            found = re.search(r"uses:\s*([^\s#]+)(.*)", line)
+            if found is None or found.group(1).startswith(("./", "docker://")):
                 continue  # local actions and container images are not pinned this way
-            owner, _, version = ref.partition("@")
-            owner = owner.split("/")[0]
-            if owner not in {"actions", "github"}:
-                assert re.fullmatch(r"[0-9a-f]{40}", version), f"{path.name}: {ref}"
+            ref, comment = found.groups()
+            assert re.fullmatch(r"[^@]+@[0-9a-f]{40}", ref), f"{path.name}: {ref}"
+            assert re.match(r"\s*# v\d", comment), f"{path.name}: {ref} names no release"
 
 
 def test_the_audit_and_scan_run_in_ci() -> None:
