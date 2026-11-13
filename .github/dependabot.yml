@@ -26,8 +26,8 @@ updates:
         update-types: [version-update:semver-major, version-update:semver-minor]
       # The BiomedCLIP stack behind the committed research Phase B results (vlm extra): patches
       # only. #83 moved open_clip_torch 3 -> 4 and transformers 4 -> 5. transformers was moved
-      # to 5.10.1 by hand for five security alerts (2026-11-13); these ignores also stop
-      # Dependabot's security updates, so watch the alerts and bump by hand.
+      # to 5.10.1 by hand for five security alerts (2026-11-13); no security update PR came for
+      # them, so watch the alerts and bump by hand.
       - dependency-name: open_clip_torch
         update-types: [version-update:semver-major, version-update:semver-minor]
       - dependency-name: transformers

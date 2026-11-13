@@ -41,9 +41,10 @@ demo = [
 # BiomedCLIP for research Phase B (cdm.vlm), on the Databricks GPU job and locally. Not in CI.
 # transformers 5.10.1 (2026-11-13; 5.10.0 was yanked) is the first release that fixes all five
 # Dependabot alerts (GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r,
-# GHSA-x9r9-c232-4q39, GHSA-xrqw-3rrv-vx5w). The committed Phase B results ran on 4.57.6; with
-# open_clip 3.3.0, BiomedCLIP's text tower (BERT, CLS pooler, MLP projection) loads a 4.57.6
-# state dict strictly under 5.10.1 and gives identical tokens and embeddings (offline check).
+# GHSA-x9r9-c232-4q39, GHSA-xrqw-3rrv-vx5w). The committed Phase B results ran on 4.57.6. An
+# offline check with open_clip 3.3.0 (a 2-layer random-init BERT text tower with BiomedCLIP's
+# pooler, projection and context length, and a toy vocabulary) loads a 4.57.6 state dict
+# strictly under 5.10.1 with identical tokens and embeddings; the real weights are untested.
 vlm = [
     "open_clip_torch==3.3.0",
     "transformers==5.10.1",
