@@ -32,7 +32,6 @@ import hashlib
 import json
 import logging
 import os
-import re
 import threading
 import time
 import uuid
@@ -221,11 +220,17 @@ document.getElementById("b").onclick = async () => {{
 
 
 def script_hash(html: str) -> str:
-    """The CSP source for the page's one inline script: sha256 of its exact text."""
-    scripts = re.findall(r"<script>(.*?)</script>", html, flags=re.S)
-    if len(scripts) != 1:
+    """The CSP source for the page's one inline script: sha256 of its exact text. The page is
+    this module's own constant HTML; plain string splitting (no regex) requires exactly one
+    bare <script>...</script> and refuses anything else, in any letter case."""
+    lower = html.lower()
+    if lower.count("<script") != 1 or lower.count("</script") != 1 or html.count("<script>") != 1:
         raise ValueError("the page must have exactly one inline script")
-    digest = hashlib.sha256(scripts[0].encode("utf-8")).digest()
+    _, _, rest = html.partition("<script>")
+    script, found, _ = rest.partition("</script>")
+    if not found:
+        raise ValueError("the page must have exactly one inline script")
+    digest = hashlib.sha256(script.encode("utf-8")).digest()
     return "'sha256-" + base64.b64encode(digest).decode("ascii") + "'"
 
 
