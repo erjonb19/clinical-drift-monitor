@@ -26,14 +26,23 @@ RUN sed -i \
     && apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=3 update \
     && DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 upgrade -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
-RUN pip install --index-url https://download.pytorch.org/whl/cpu torch==2.14.0 torchvision==0.29.0
 
 WORKDIR /app
-COPY pyproject.toml README.md docker/constraints.txt ./
+# Backlog item 27: every Python package comes from docker/requirements.txt, exported from uv.lock
+# with hashes (the CPU torch wheels included), so pip refuses any file whose hash differs and
+# installs nothing that is not listed (--no-deps). PyPI stays the main index; the PyTorch CPU index
+# is searched too, for the +cpu wheels only the hashes accept. The project itself is then built
+# offline with the hashed setuptools from that file (--no-build-isolation, --no-index).
+COPY docker/requirements.txt ./
+RUN pip install --require-hashes --no-deps --only-binary=:all: \
+      --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt \
+    && pip check
+COPY pyproject.toml README.md ./
 COPY src ./src
-RUN pip install -c constraints.txt ".[api]" scikit-learn
-# The base image's setuptools carries old jaraco.context and wheel copies with fixable HIGH CVEs
-# (Trivy, item 39). Nothing in the API imports setuptools at run time, so it is removed.
+RUN pip install --no-deps --no-build-isolation --no-index .
+# The base image's setuptools carried old jaraco.context and wheel copies with fixable HIGH CVEs
+# (Trivy, item 39), and nothing in the API imports setuptools at run time, so the build backend
+# and wheel are removed once the project is installed.
 RUN pip uninstall -y setuptools wheel
 COPY app/api ./app/api
 COPY dist/bundle ./bundle

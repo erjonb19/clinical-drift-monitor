@@ -266,6 +266,12 @@ vlm = [
 audit = [
     { name = "pip-audit" },
 ]
+image = [
+    { name = "torch", version = "2.14.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
+    { name = "torch", version = "2.14.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
+    { name = "torchvision", version = "0.29.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
+    { name = "torchvision", version = "0.29.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -301,6 +307,10 @@ provides-extras = ["train", "federated", "cohort", "demo", "vlm", "serve", "api"
 
 [package.metadata.requires-dev]
 audit = [{ name = "pip-audit", specifier = "==2.10.1" }]
+image = [
+    { name = "torch", index = "https://download.pytorch.org/whl/cpu" },
+    { name = "torchvision", index = "https://download.pytorch.org/whl/cpu" },
+]
 
 [[package]]
 name = "certifi"

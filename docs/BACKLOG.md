@@ -735,6 +735,20 @@ change only the owner can make (repository settings, accounts, consoles).
     - **2026-11-11:** the image's Debian layer is now reproducible (#116: packages from fixed
       snapshot.debian.org imports); the pip layers still wait for `download.pytorch.org`, which
       the owner is allowing in the cloud environment's network settings.
+    - **2026-11-13, built:** every Python package in the image comes from
+      `docker/requirements.txt`, exported from `uv.lock` with hashes (`--extra api --group
+      image`: the API's packages, scikit-learn and the `+cpu` torch and torchvision wheels).
+      pip installs it with `--require-hashes --no-deps --only-binary=:all:`, PyPI first and the
+      PyTorch CPU index second, then `pip check`. The project is built offline
+      (`--no-build-isolation --no-index`) with the hashed setuptools 84.2.1 from that file; the
+      build backend and wheel are then removed. `docker/constraints.txt` is gone.
+      `test_the_image_installs_only_hashed_packages_from_the_lock` fails if the file drifts from
+      `uv export`, or if either install loses its flags. Built locally (with a scratch copy of
+      the Dockerfile that adds this session's proxy CA, not committed): `/health` and
+      `/predict` answer on the untrained test bundle, torch is `2.14.0+cpu`, and setuptools and
+      wheel are gone. **Known cost:** Dependabot's `uv` updates re-lock `uv.lock` but not this
+      export, so a Dependabot PR that moves an image package fails that test until the file
+      is re-exported (the command is in its header). Trivy: CI's image job.
 28. [x] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
     `persist-credentials: false`; the repository default set to read-only (owner).
     - **Done when:** every workflow declares its permissions, checked by a test.
