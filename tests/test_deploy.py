@@ -297,7 +297,8 @@ def test_the_rehearsal_never_touches_the_real_job_tables_or_results() -> None:
     assert '"tables": "gold"' in source and 'TABLES not in {"gold", "rehearsal"}' in source
     # a rehearsal must write under the rehearsal folder, matched from its start
     assert 'REHEARSAL_ROOT = "/Volumes/workspace/cdm/raw/results/rehearsal/"' in source
-    assert ".startswith(REHEARSAL_ROOT)" in source
+    assert ".startswith(REHEARSAL_ROOT)" in source and '".." in OUT.parts' in source
+    assert ".." not in params["out"].split("/")
     assert "before_month=month" in source  # a month's targets never see later labels
     assert 'f"workspace.cdm.{TABLES}_{t}"' in source
     assert "gold_drift_monthly" not in source.split("MONTHLY, AUDIT, BASELINE", 1)[1]
@@ -323,7 +324,7 @@ def test_the_rehearsal_stages_every_file_the_notebook_reads_and_differs_only_whe
     command = next(
         line for line in steps.splitlines() if "stage_research_job.py --workspace-name" in line
     )
-    staged = set(command.split("monthly_drift", 1)[1].split()[1:])
+    staged = set(command.split(" monthly_drift ", 1)[1].split())
     assert read and read <= staged, read - staged
     real = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
     spec = json.loads((REPO / "databricks" / "monthly_drift_rehearsal_job.json").read_text("utf-8"))

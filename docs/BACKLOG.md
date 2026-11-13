@@ -67,6 +67,9 @@ gets a **Blocked:** line with the reason.
      schedule reads "At 06:00 AM, on day 1 of the month (UTC)" and shows a pause control, so it
      looks active. The job runs as the owner on serverless compute. No email arrived, which fits
      a run that never started.
+   - **Superseded (owner, 2026-11-13):** the probe's scheduled fires all ran (see "Probe
+     results" below), and the owner concluded the 1 November miss has another cause. The
+     inference below is kept as the record of 2026-11-06.
    - **Cause (inferred, not documented by Databricks), 2026-11-06:** the schedule was active
      and correct on 1 November, and the Free Edition scheduler did not start a run. No pause
      and no bad edit was found. Evidence, from four queries the owner ran in the workspace:
@@ -113,6 +116,20 @@ gets a **Blocked:** line with the reason.
        325029901767432 and the files in `/Volumes/workspace/cdm/raw/results/scheduler_probe/`.
        The owner's message of 2026-11-10 again held the unfilled placeholders for both days, so
        they stay not reported.
+     - **Probe results (owner, 2026-11-13; `results/phase3/scheduler_probe/runs.json`):** all
+       three scheduled fires ran. `databricks jobs list-runs` lists runs 1038163583722810,
+       774279266456471 and 786760919533574 as `PERIODIC`, started 06:00:04 to 06:00:05 UTC on 8,
+       9 and 10 November, all `SUCCESS`; each run's file records `trigger_type` `periodic` and
+       `trigger_time` 06:00:00 that day. Every file's ISIC download worked (ISIC_6589782,
+       CC-BY, Memorial Sloan Kettering Cancer Center, 2,658,276 bytes, SHA-256 b9d7aef5...).
+       **The owner's conclusion:** the Free Edition scheduler fired all three scheduled runs on
+       time, scheduled runs reach ISIC, and the 1 November miss of the drift job has another
+       cause, not found yet. Limit: the probe is a different job on different days, so it shows
+       the scheduler fires this kind of schedule, not what happened to the drift job on 1
+       November. **Next check (owner, 2026-11-13):** the drift job's own schedule, pause state,
+       deploy history and any run attempts. Deleting the probe job (planned above for after 10
+       November) is the owner's step in the workspace, not yet confirmed; its files in
+       `databricks/` stay until then.
    - **Scheduled rehearsal (owner, 2026-11-13; built, not deployed):** so item 1 doesn't wait
      for 1 December, a temporary copy of the monthly job is scheduled for 06:00 UTC on 20 November
      (`databricks/monthly_drift_rehearsal_job.json`; the cron repeats yearly, so the job is
@@ -122,11 +139,14 @@ gets a **Blocked:** line with the reason.
      the notebook's new `tables` parameter accepts only `gold` (the default) or `rehearsal`, and
      a rehearsal must write under a rehearsal folder. Its evidence will be labelled a rehearsal.
      The watchdog takes a `job_id` input so it can check the rehearsal too. The real job is not
-     changed: it still runs the notebook staged at 44451c6. The newer notebook also passes
-     `before_month` to `merge_history`, so a month's targets never use labels from later
-     months (a replayed month 1 would otherwise have seen the backfill of months 1 to 12). The
-     rehearsal shows a fresh scheduled copy fires and runs end to end; it cannot show why the
-     real job missed 1 November. Owner steps S11 and S12 in
+     changed: it still runs the notebook staged at 44451c6. The current notebook is newer than
+     that copy: besides the rehearsal switch, it has the targets and alert path (items 4 and 5:
+     `config/slo.json`, the `gold_melanoma_backfill` table, delayed accuracy with the referral
+     threshold, and an alert that fails the run), so the rehearsal is also the first Databricks
+     run of that code. It also passes `before_month` to `merge_history`, so a month's targets
+     never use labels from later months (a replayed month 1 would otherwise have seen the
+     backfill of months 1 to 12). The rehearsal shows a fresh scheduled copy fires and runs end
+     to end; it cannot show why the real job missed 1 November. Owner steps S11 and S12 in
      `docs/OWNER_STEPS.md`. Tests in `tests/test_deploy.py` and
      `tests/test_stage_research_job.py`.
    - **Fix (planned, written before code):**
@@ -187,8 +207,9 @@ gets a **Blocked:** line with the reason.
         internet to a set of trusted domains, but a serverless job reached both hosts it needs.
         For `ISIC_6589782` it read the metadata from `api.isic-archive.com` (license CC-BY,
         attribution Memorial Sloan Kettering Cancer Center) and downloaded the file, 2,658,276
-        bytes, from `isic-archive.s3.amazonaws.com`. One image on one day; the SHA-256 was not
-        captured (cut off in the owner's terminal).
+        bytes, from `isic-archive.s3.amazonaws.com`. The SHA-256 was not captured that day (cut
+        off in the owner's terminal); the three scheduled runs later downloaded the same file,
+        and all four files record the same SHA-256 (`results/phase3/scheduler_probe/runs.json`).
    - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
      run timeline committed with it) finishes green and records `scored` or `no_new_data`,
      with its results file and run ID committed; and, if the owner approves the watchdog, it
@@ -724,6 +745,24 @@ change only the owner can make (repository settings, accounts, consoles).
       where the CPU torch and torchvision wheels come from, so `uv lock` cannot resolve them.
       Unblock: allow that host in the cloud environment's network settings, or run `uv lock` on
       the laptop and commit `uv.lock`.
+    - **2026-11-13, CI part built:** the owner allowed `download.pytorch.org` (its wheels are
+      served from `download-r2.pytorch.org`, also allowed). `uv.lock` is committed
+      (`exclude-newer = "7 days"`, torch 2.14.0+cpu and torchvision 0.29.0 from the PyTorch CPU
+      index). The four workflows that install Python packages (ci, docker, benchmark,
+      detector-quality) use `uv sync --locked --no-python-downloads` (uv 0.13.7, pinned by
+      version and release SHA-256; uv before 0.13.4 trusts a compromised root CA,
+      GHSA-hq85-5cpj-mr62), and pip-audit runs from a locked `audit` dependency group.
+      `test_workflows_install_only_from_the_lock_or_hashes` fails on the other install commands
+      it knows (pip without hashes, uv without `--locked`, `uvx`, `uv tool`, `--with`,
+      `curl | sh`), and on a bare `uv` once `.venv/bin` is on PATH: flwr installs its own older
+      uv there, so CI's audit step calls the pinned binary by path and checks its version.
+      **Gap:** the project's own build backend (setuptools) is pinned by version
+      (`build-constraint-dependencies`) but not hash-checked, since uv does not lock build
+      dependencies. Dependabot now uses its `uv` ecosystem, which is expected to re-lock
+      `uv.lock` with each update so `--locked` accepts its PRs; not yet seen on a real
+      Dependabot PR. **Not ticked yet:** the Streamlit app's hashed requirements
+      come in a separate PR that the owner merges, because merging it redeploys the live demo;
+      the Docker image is item 27.
 27. [ ] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
     torch wheels), `--require-hashes --no-deps`, pinned build backend.
     - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.
@@ -914,7 +953,8 @@ change only the owner can make (repository settings, accounts, consoles).
       (`tests/test_extract.py`). The price constant carries the date it was last matched
       (`PRICE_CHECKED`, 2026-11-11: $0.10 and $0.50 per million tokens for `claude-haiku-5-5`,
       from the Claude API reference's model table). **Owner:** a spend limit on this key in the
-      Anthropic Console is the real backstop; whether one is set cannot be checked from here.
+      Anthropic Console is the real backstop. **Set (owner, 2026-11-13):** the key was rotated
+      into a clinical-drift-monitor workspace with a Console spend limit, and the old key deleted.
       Limits: deleting the log and its mark together still resets the client-side count, and a
       log that predates this change has no mark until its next call.
 46. [x] **Neutralise formulas in the G5 CSV error sheets.**
@@ -926,7 +966,7 @@ change only the owner can make (repository settings, accounts, consoles).
       leading whitespace into an invalid one (a test checks it still scores).
       Tests in `tests/test_extract.py`, including an end-to-end run with no network or model
       call.
-47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
+47. [x] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
     temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
     to its own host with a byte cap.
     - **Done when:** tests cover each, and the deployed demo is redeployed (owner).
@@ -939,6 +979,10 @@ change only the owner can make (repository settings, accounts, consoles).
       response bodies (20 MB for JSON, 100 MB for images). Tests in `tests/test_cohort.py`,
       `tests/test_demo.py` and `tests/test_sources.py`. **Owner:** redeploy the Streamlit app
       (Community Cloud picks up `main` on reboot), then tick this item.
+    - **Done 2026-11-13:** the owner rebooted the demo, which is set to deploy `main` (per the
+      note above), where the hardening merged in #98 on 2026-11-11. The tests above pass on
+      `main`. The live page was not checked from the cloud session (its network proxy refuses
+      the demo's host); how to check it is in `docs/PROGRESS.md`.
 
 ## Later (kept, not started)
 

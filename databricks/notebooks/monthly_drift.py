@@ -64,7 +64,7 @@ TABLES = dbutils.widgets.get("tables")
 if TABLES not in {"gold", "rehearsal"}:
     raise ValueError(f"tables must be gold or rehearsal, not {TABLES!r}")
 REHEARSAL_ROOT = "/Volumes/workspace/cdm/raw/results/rehearsal/"
-if TABLES == "rehearsal" and not f"{OUT}/".startswith(REHEARSAL_ROOT):
+if TABLES == "rehearsal" and (".." in OUT.parts or not f"{OUT}/".startswith(REHEARSAL_ROOT)):
     raise ValueError(f"a rehearsal writes its files under {REHEARSAL_ROOT}, not {OUT}")
 MONTHLY, AUDIT, BASELINE = (
     f"workspace.cdm.{TABLES}_{t}" for t in ("drift_monthly", "prediction_audit", "drift_baseline")

@@ -846,8 +846,8 @@ and each now has a test.
 ## Reproduce
 
 ```bash
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip install -e ".[dev,train]"
+uv sync --locked --extra dev --extra train   # the exact, hash-checked versions in uv.lock (CPU torch)
+source .venv/bin/activate
 CDM_DATA=/path/to/data python -m cdm.reproduce   # downloads and checksums all data
 ```
 
@@ -887,6 +887,7 @@ Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to 
 - [x] Item 44: API hardening: security headers, no public schema, response models, refusal events.
 - [x] Item 45: the $5 Haiku cap fails closed when its spend log is missing or shrinks.
 - [x] Item 46: spreadsheet formulas in the G5 CSV sheets are neutralised.
+- [x] Item 47: the public cohort demo is hardened (DuckDB external access off, no error details, per-session caps, the ISIC client held to its host).
 
 ## Reviewer feedback
 
