@@ -224,14 +224,20 @@ def test_workflows_install_only_from_the_lock_or_hashes() -> None:
     """Backlog item 26: every Python install in CI comes from uv.lock (`uv sync --locked`, which
     fails when the lock is stale) or from a hashed requirements file; uv itself is pinned by
     version and release checksum, and the lock takes only releases at least 7 days old."""
-    for path in WORKFLOWS.glob("*.yml"):
+    paths = [*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")]
+    for path in paths:
         text = path.read_text("utf-8")
+        on_path = False  # flwr's own older uv is in .venv/bin once that is on PATH
         for line in text.splitlines():
             code = line.split("#", 1)[0]
-            if re.search(r"\bpip3? (install|download)\b", code):
+            if on_path and re.search(r"(^|[\s;&|(])uv\s", code):
+                raise AssertionError(f"{path.name}: bare uv after .venv/bin is on PATH: {line}")
+            on_path = on_path or (".venv/bin" in code and "GITHUB_PATH" in code)
+            if re.search(r"\bpip[\d.]*\b(\s+-\S+)*\s+(install|download)\b", code):
                 assert "--require-hashes" in code, f"{path.name}: {line.strip()}"
-            if re.search(r"\buv (sync|run)\b", code):
-                assert "--locked" in code, f"{path.name}: {line.strip()}"
+            if re.search(r"\buv\"? (sync|run)\b", code):
+                assert "--locked" in code and "--no-python-downloads" in code, line
+            assert not re.search(r"\b(curl|wget)\b.*\|\s*(sh|bash)\b", code), line
             assert not re.search(
                 r"\buvx\b|\buv (add|lock|tool|pip install|pip sync)\b|--with\b", code
             ), f"{path.name}: {line.strip()}"
@@ -239,10 +245,10 @@ def test_workflows_install_only_from_the_lock_or_hashes() -> None:
             assert not re.search(r"\bpip3? *\\$", code), f"{path.name}: split pip command"
         for step in text.split("- uses: astral-sh/setup-uv@")[1:]:
             block = step.split("\n      - ", 1)[0]
-            pinned = re.search(r'version: "(\d+)\.(\d+)\.\d+"', block)
+            pinned = re.search(r'version: "(\d+)\.(\d+)\.(\d+)"', block)
             assert pinned, path.name
-            major, minor = map(int, pinned.groups())
-            assert (major, minor) >= (0, 13), f"{path.name}: uv before 0.13.4 (GHSA-hq85-5cpj-mr62)"
+            version = tuple(map(int, pinned.groups()))
+            assert version >= (0, 13, 4), f"{path.name}: uv before 0.13.4 (GHSA-hq85-5cpj-mr62)"
             assert re.search(r'checksum: "[0-9a-f]{64}"', block), path.name
             assert "enable-cache: false" in block, path.name
     pyproject = (REPO / "pyproject.toml").read_text("utf-8")

@@ -715,7 +715,10 @@ change only the owner can make (repository settings, accounts, consoles).
       detector-quality) use `uv sync --locked --no-python-downloads` (uv 0.13.7, pinned by
       version and release SHA-256; uv before 0.13.4 trusts a compromised root CA,
       GHSA-hq85-5cpj-mr62), and pip-audit runs from a locked `audit` dependency group.
-      `test_workflows_install_only_from_the_lock_or_hashes` fails on any other kind of install.
+      `test_workflows_install_only_from_the_lock_or_hashes` fails on the other install commands
+      it knows (pip without hashes, uv without `--locked`, `uvx`, `uv tool`, `--with`,
+      `curl | sh`), and on a bare `uv` once `.venv/bin` is on PATH: flwr installs its own older
+      uv there, so CI's audit step calls the pinned binary by path and checks its version.
       **Gap:** the project's own build backend (setuptools) is pinned by version
       (`build-constraint-dependencies`) but not hash-checked, since uv does not lock build
       dependencies. Dependabot now uses its `uv` ecosystem, which re-locks `uv.lock` with each
