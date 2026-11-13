@@ -224,6 +224,8 @@ def test_workflows_install_only_from_the_lock_or_hashes() -> None:
     """Backlog item 26: every Python install in CI comes from uv.lock (`uv sync --locked`, which
     fails when the lock is stale) or from a hashed requirements file; uv itself is pinned by
     version and release checksum, and the lock takes only releases at least 7 days old."""
+    # A uv invocation: a bare `uv`, or the pinned binary by path ("$UV" / ${UV}).
+    UV = r"(?:(?<![\w.-])uv|\"?\$\{?UV\}?\"?)"  # noqa: N806
     paths = [*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")]
     for path in paths:
         text = path.read_text("utf-8")
@@ -235,16 +237,19 @@ def test_workflows_install_only_from_the_lock_or_hashes() -> None:
             on_path = on_path or (".venv/bin" in code and "GITHUB_PATH" in code)
             if re.search(r"\bpip[\d.]*\b(\s+-\S+)*\s+(install|download)\b", code):
                 assert "--require-hashes" in code, f"{path.name}: {line.strip()}"
-            if re.search(r"\buv\"? (sync|run)\b", code):
+            if re.search(UV + r" (sync|run)\b", code):
                 assert "--locked" in code and "--no-python-downloads" in code, line
             assert not re.search(r"\b(curl|wget)\b.*\|\s*(sh|bash)\b", code), line
             assert not re.search(
-                r"\buvx\b|\buv (add|lock|tool|pip install|pip sync)\b|--with\b", code
+                r"\buvx\b|" + UV + r" (add|lock|tool|pip install|pip sync)\b|--with\b", code
             ), f"{path.name}: {line.strip()}"
             assert not re.search(r"\b(pipx|easy_install|conda) ", code), line
             assert not re.search(r"\bpip3? *\\$", code), f"{path.name}: split pip command"
-        for step in text.split("- uses: astral-sh/setup-uv@")[1:]:
-            block = step.split("\n      - ", 1)[0]
+        steps = re.split(r"\n      - ", text)
+        uv_steps = [st for st in steps if re.search(r"uses: astral-sh/setup-uv@[0-9a-f]{40}\b", st)]
+        if re.search(UV + r" ", "\n".join(ln.split("#", 1)[0] for ln in text.splitlines())):
+            assert uv_steps, f"{path.name} runs uv without the pinned setup-uv step"
+        for block in uv_steps:
             pinned = re.search(r'version: "(\d+)\.(\d+)\.(\d+)"', block)
             assert pinned, path.name
             version = tuple(map(int, pinned.groups()))

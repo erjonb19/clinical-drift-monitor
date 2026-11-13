@@ -721,8 +721,9 @@ change only the owner can make (repository settings, accounts, consoles).
       uv there, so CI's audit step calls the pinned binary by path and checks its version.
       **Gap:** the project's own build backend (setuptools) is pinned by version
       (`build-constraint-dependencies`) but not hash-checked, since uv does not lock build
-      dependencies. Dependabot now uses its `uv` ecosystem, which re-locks `uv.lock` with each
-      update, so `--locked` accepts its PRs. **Not ticked yet:** the Streamlit app's hashed requirements
+      dependencies. Dependabot now uses its `uv` ecosystem, which is expected to re-lock
+      `uv.lock` with each update so `--locked` accepts its PRs; not yet seen on a real
+      Dependabot PR. **Not ticked yet:** the Streamlit app's hashed requirements
       come in a separate PR that the owner merges, because merging it redeploys the live demo;
       the Docker image is item 27.
 27. [ ] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
