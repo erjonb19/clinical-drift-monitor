@@ -265,3 +265,81 @@ def test_the_backfill_job_installs_torch_like_the_monthly_job() -> None:
         spec = json.loads((REPO / "databricks" / name).read_text(encoding="utf-8"))
         deps[name] = {d for d in spec["environments"][0]["spec"]["dependencies"] if "torch" in d}
     assert deps["melanoma_backfill_job.json"] == deps["monthly_drift_job.json"] != set()
+
+
+def test_the_rehearsal_never_touches_the_real_job_tables_or_results() -> None:
+    """Item 1's rehearsal (owner, 2026-11-13): a copy of the monthly job on a one-date schedule
+    before 26 November, writing only to `rehearsal_*` tables and a rehearsal folder, under its
+    own notebook name, so it cannot replace the notebook or the results of the real job."""
+    real = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    spec = json.loads((REPO / "databricks" / "monthly_drift_rehearsal_job.json").read_text("utf-8"))
+    assert spec["name"] != real["name"]
+    cron = spec["schedule"]["quartz_cron_expression"].split()
+    assert cron[:3] == ["0", "0", "6"] and cron[5] == "?" and len(cron) == 6
+    day, month = int(cron[3]), int(cron[4])  # one date: a single day in a single month
+    assert (month, day) < (11, 26), "the rehearsal must fire before the 26 November deadline"
+    assert spec["schedule"]["timezone_id"] == "UTC"
+    (task,) = spec["tasks"]
+    (real_task,) = real["tasks"]
+    path = task["notebook_task"]["notebook_path"]
+    assert path != real_task["notebook_task"]["notebook_path"] and "rehearsal" in path
+    params = task["notebook_task"]["base_parameters"]
+    assert params["tables"] == "rehearsal"
+    assert params["out"].startswith("/Volumes/workspace/cdm/raw/results/rehearsal/")
+    assert params["bundle"] == real_task["notebook_task"]["base_parameters"]["bundle"]
+    assert real_task["notebook_task"]["base_parameters"].get("tables", "gold") == "gold"
+    for key in ("code_version", "wheel_sha256"):  # staged, never the real job's old values
+        assert (
+            params[key] == "STAGE_FIRST"
+            or params[key] != real_task["notebook_task"]["base_parameters"][key]
+        ), key
+    source = (REPO / "databricks" / "notebooks" / "monthly_drift.py").read_text("utf-8")
+    assert '"tables": "gold"' in source and 'TABLES not in {"gold", "rehearsal"}' in source
+    # a rehearsal must write under the rehearsal folder, matched from its start
+    assert 'REHEARSAL_ROOT = "/Volumes/workspace/cdm/raw/results/rehearsal/"' in source
+    assert ".startswith(REHEARSAL_ROOT)" in source and '".." in OUT.parts' in source
+    assert ".." not in params["out"].split("/")
+    assert "before_month=month" in source  # a month's targets never see later labels
+    assert 'f"workspace.cdm.{TABLES}_{t}"' in source
+    assert "gold_drift_monthly" not in source.split("MONTHLY, AUDIT, BASELINE", 1)[1]
+
+
+def test_the_watchdog_takes_a_job_id_only_as_digits() -> None:
+    """Item 1: the rehearsal is checked by the same watchdog, by hand, with its job ID passed
+    through the environment (never expanded into the script) and refused unless all digits."""
+    text = (REPO / ".github" / "workflows" / "drift-watchdog.yml").read_text("utf-8")
+    assert "JOB_ID: ${{ inputs.job_id }}" in text
+    assert '[[ "$JOB_ID" =~ ^[0-9]{1,20}$ ]]' in text
+    run = text.split("run: |", 1)[1]
+    assert "${{" not in run
+
+
+def test_the_rehearsal_stages_every_file_the_notebook_reads_and_differs_only_where_named() -> None:
+    """Review of #130: the notebook reads repo files from the staged folder, so the owner's
+    staging command (OWNER_STEPS S11) must stage each one; and the rehearsal job equals the real
+    job except in the fields that make it a rehearsal or that staging fills."""
+    source = (REPO / "databricks" / "notebooks" / "monthly_drift.py").read_text("utf-8")
+    read = set(re.findall(r'REPO / "([^"]+)"', source))
+    steps = (REPO / "docs" / "OWNER_STEPS.md").read_text("utf-8")
+    command = next(
+        line for line in steps.splitlines() if "stage_research_job.py --workspace-name" in line
+    )
+    staged = set(command.split(" monthly_drift ", 1)[1].split())
+    assert read and read <= staged, read - staged
+    real = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    spec = json.loads((REPO / "databricks" / "monthly_drift_rehearsal_job.json").read_text("utf-8"))
+    assert set(spec) == set(real)
+    for key in set(real) - {"name", "schedule", "tasks", "environments"}:
+        assert spec[key] == real[key], key
+    assert (
+        spec["environments"][0]["spec"]["dependencies"][1:]
+        == (real["environments"][0]["spec"]["dependencies"][1:])
+    )
+    (task,), (real_task,) = spec["tasks"], real["tasks"]
+    for key in set(real_task) - {"task_key", "notebook_task"}:
+        assert task[key] == real_task[key], key
+    params, real_params = (t["notebook_task"]["base_parameters"] for t in (task, real_task))
+    named = {"code_version", "wheel", "wheel_sha256", "repo", "files_sha256", "out", "tables"}
+    assert set(params) - set(real_params) <= {"tables"}
+    for key in set(real_params) - named:
+        assert params[key] == real_params[key], key
