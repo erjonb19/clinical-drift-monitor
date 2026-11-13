@@ -208,3 +208,13 @@ def test_onnxruntime_matches_the_databricks_job_and_its_results() -> None:
     text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
     entry = re.search(r"- dependency-name: onnxruntime\n(\s+)(\S+)", text)
     assert entry is not None and not entry.group(2).startswith("update-types")
+
+
+def test_transformers_is_past_the_2026_advisories() -> None:
+    """2026-11-13: the five Dependabot alerts on transformers (Trainer, remote code execution,
+    LightGlue loading, remote generation code before trust, chat-template path traversal) are
+    all fixed from 5.10.1 (5.10.0 was yanked). The vlm extra's pin must stay at or above it."""
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    pin = re.search(r'"transformers==(\d+)\.(\d+)\.(\d+)"', pyproject)
+    assert pin is not None
+    assert tuple(int(x) for x in pin.groups()) >= (5, 10, 1), pin.group(0)
