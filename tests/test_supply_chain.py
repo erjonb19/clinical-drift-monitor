@@ -61,7 +61,7 @@ def test_dependabot_keeps_python_311_and_the_model_stack_on_patches() -> None:
     both = ["version-update:semver-major", "version-update:semver-minor"]
     docker = text.split("package-ecosystem: docker", 1)[1].split("package-ecosystem:", 1)[0]
     assert sorted(_ignored(docker, "python")) == both
-    pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
+    pip = text.split("package-ecosystem: uv", 1)[1].split("package-ecosystem:", 1)[0]
     stack = ["numpy", "scikit-learn", "flwr", "mlflow", "mlflow-skinny"]
     for name in stack:
         assert sorted(_ignored(pip, name)) == both, name
@@ -87,7 +87,7 @@ def test_dependabot_keeps_floors_and_the_uvicorn_that_flwr_needs() -> None:
     """Owner, 2026-11-10, after #74: floors stay unless a release needs them raised, and
     uvicorn gets patches only while flwr is held at 1.39.x (it needs uvicorn < 0.50)."""
     text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
-    pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
+    pip = text.split("package-ecosystem: uv", 1)[1].split("package-ecosystem:", 1)[0]
     assert "versioning-strategy: increase-if-necessary" in pip
     # #83 (2026-11-11): fastapi, open_clip_torch, transformers; #108: mpmath (sympy needs < 1.4)
     for held in ("fastapi", "open_clip_torch", "transformers", "mpmath"):
@@ -105,7 +105,7 @@ def test_dependabot_never_updates_torch() -> None:
     """Owner, 2026-11-10: torch and torchvision are ignored outright (no update types), since
     Dependabot's bumps drop +cpu and miss the Dockerfile; a bump is made by hand."""
     text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
-    pip = text.split("package-ecosystem: pip", 1)[1].split("package-ecosystem:", 1)[0]
+    pip = text.split("package-ecosystem: uv", 1)[1].split("package-ecosystem:", 1)[0]
     for name in ("torch", "torchvision"):
         entry = re.search(rf"- dependency-name: {name}\n(\s+)(\S+)", pip)
         assert entry is not None, name
@@ -150,7 +150,7 @@ def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
     """Backlog item 38: each ecosystem waits at least 7 days after a release before proposing it."""
     text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
     blocks = re.split(r"\n  - package-ecosystem: ", text)[1:]
-    assert len(blocks) == 3, "expected the pip, docker and github-actions ecosystems"
+    assert len(blocks) == 3, "expected the uv, docker and github-actions ecosystems"
     for block in blocks:
         name = block.split("\n", 1)[0]
         days = re.search(r"\n    cooldown:\n      default-days: (\d+)\n", block)
@@ -218,3 +218,47 @@ def test_transformers_is_past_the_2026_advisories() -> None:
     pin = re.search(r'"transformers==(\d+)\.(\d+)\.(\d+)"', pyproject)
     assert pin is not None
     assert tuple(int(x) for x in pin.groups()) >= (5, 10, 1), pin.group(0)
+
+
+def test_workflows_install_only_from_the_lock_or_hashes() -> None:
+    """Backlog item 26: every Python install in CI comes from uv.lock (`uv sync --locked`, which
+    fails when the lock is stale) or from a hashed requirements file; uv itself is pinned by
+    version and release checksum, and the lock takes only releases at least 7 days old."""
+    # A uv invocation: a bare `uv`, or the pinned binary by path ("$UV" / ${UV}).
+    UV = r"(?:(?<![\w.-])uv|\"?\$\{?UV\}?\"?)"  # noqa: N806
+    paths = [*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")]
+    for path in paths:
+        text = path.read_text("utf-8")
+        on_path = False  # flwr's own older uv is in .venv/bin once that is on PATH
+        for line in text.splitlines():
+            code = line.split("#", 1)[0]
+            if on_path and re.search(r"(^|[\s;&|(])uv\s", code):
+                raise AssertionError(f"{path.name}: bare uv after .venv/bin is on PATH: {line}")
+            on_path = on_path or (".venv/bin" in code and "GITHUB_PATH" in code)
+            if re.search(r"\bpip[\d.]*\b(\s+-\S+)*\s+(install|download)\b", code):
+                assert "--require-hashes" in code, f"{path.name}: {line.strip()}"
+            if re.search(UV + r" (sync|run)\b", code):
+                assert "--locked" in code and "--no-python-downloads" in code, line
+            assert not re.search(r"\b(curl|wget)\b.*\|\s*(sh|bash)\b", code), line
+            assert not re.search(
+                r"\buvx\b|" + UV + r" (add|lock|tool|pip install|pip sync)\b|--with\b", code
+            ), f"{path.name}: {line.strip()}"
+            assert not re.search(r"\b(pipx|easy_install|conda) ", code), line
+            assert not re.search(r"\bpip3? *\\$", code), f"{path.name}: split pip command"
+        steps = re.split(r"\n      - ", text)
+        uv_steps = [st for st in steps if re.search(r"uses: astral-sh/setup-uv@[0-9a-f]{40}\b", st)]
+        if re.search(UV + r" ", "\n".join(ln.split("#", 1)[0] for ln in text.splitlines())):
+            assert uv_steps, f"{path.name} runs uv without the pinned setup-uv step"
+        for block in uv_steps:
+            pinned = re.search(r'version: "(\d+)\.(\d+)\.(\d+)"', block)
+            assert pinned, path.name
+            version = tuple(map(int, pinned.groups()))
+            assert version >= (0, 13, 4), f"{path.name}: uv before 0.13.4 (GHSA-hq85-5cpj-mr62)"
+            assert re.search(r'checksum: "[0-9a-f]{64}"', block), path.name
+            assert "enable-cache: false" in block, path.name
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    assert 'exclude-newer = "7 days"' in pyproject
+    assert 'build-constraint-dependencies = ["setuptools==' in pyproject
+    lock = (REPO / "uv.lock").read_text("utf-8")
+    assert 'exclude-newer-span = "P7D"' in lock
+    assert 'name = "torch"\nversion = "2.14.0+cpu"' in lock  # CPU wheels, as in the image

@@ -846,8 +846,8 @@ and each now has a test.
 ## Reproduce
 
 ```bash
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip install -e ".[dev,train]"
+uv sync --locked --extra dev --extra train   # the exact, hash-checked versions in uv.lock (CPU torch)
+source .venv/bin/activate
 CDM_DATA=/path/to/data python -m cdm.reproduce   # downloads and checksums all data
 ```
 

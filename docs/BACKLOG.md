@@ -708,6 +708,24 @@ change only the owner can make (repository settings, accounts, consoles).
       where the CPU torch and torchvision wheels come from, so `uv lock` cannot resolve them.
       Unblock: allow that host in the cloud environment's network settings, or run `uv lock` on
       the laptop and commit `uv.lock`.
+    - **2026-11-13, CI part built:** the owner allowed `download.pytorch.org` (its wheels are
+      served from `download-r2.pytorch.org`, also allowed). `uv.lock` is committed
+      (`exclude-newer = "7 days"`, torch 2.14.0+cpu and torchvision 0.29.0 from the PyTorch CPU
+      index). The four workflows that install Python packages (ci, docker, benchmark,
+      detector-quality) use `uv sync --locked --no-python-downloads` (uv 0.13.7, pinned by
+      version and release SHA-256; uv before 0.13.4 trusts a compromised root CA,
+      GHSA-hq85-5cpj-mr62), and pip-audit runs from a locked `audit` dependency group.
+      `test_workflows_install_only_from_the_lock_or_hashes` fails on the other install commands
+      it knows (pip without hashes, uv without `--locked`, `uvx`, `uv tool`, `--with`,
+      `curl | sh`), and on a bare `uv` once `.venv/bin` is on PATH: flwr installs its own older
+      uv there, so CI's audit step calls the pinned binary by path and checks its version.
+      **Gap:** the project's own build backend (setuptools) is pinned by version
+      (`build-constraint-dependencies`) but not hash-checked, since uv does not lock build
+      dependencies. Dependabot now uses its `uv` ecosystem, which is expected to re-lock
+      `uv.lock` with each update so `--locked` accepts its PRs; not yet seen on a real
+      Dependabot PR. **Not ticked yet:** the Streamlit app's hashed requirements
+      come in a separate PR that the owner merges, because merging it redeploys the live demo;
+      the Docker image is item 27.
 27. [ ] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
     torch wheels), `--require-hashes --no-deps`, pinned build backend.
     - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.

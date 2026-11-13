@@ -5,17 +5,21 @@
 # the numbers behind committed results (flwr is held at 1.39.x on purpose: config/pip_audit_ignore.json).
 # Cooldown (item 38): a version update waits 7 days after its release, so a hijacked release is
 # more likely to be found and pulled before it reaches a PR here (GitHub's default is 3 days).
-# Security updates do not wait.
+# Security updates skip Dependabot's cooldown, but uv.lock's exclude-newer (7 days, backlog
+# item 26) still holds a fix back until it is 7 days old; for an urgent fix, add a one-off
+# `exclude-newer-package` entry for that package in pyproject.toml (SECURITY_STANDARDS 4.3).
 version: 2
 updates:
-  - package-ecosystem: pip
+  # uv (backlog item 26): Dependabot edits pyproject.toml and re-locks uv.lock together, so CI's
+  # `uv sync --locked` accepts its PRs.
+  - package-ecosystem: uv
     directory: /
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
-    # No lockfile: leave a ">=" floor alone when the new release already satisfies it (#74 raised
-    # floors such as mlflow-skinny 2.16 to 3.18); exact pins are still bumped.
+    # Leave a ">=" floor in pyproject.toml alone when the new release already satisfies it (#74
+    # raised floors such as mlflow-skinny 2.16 to 3.18); uv.lock and exact pins still move.
     versioning-strategy: increase-if-necessary
     ignore:
       # flwr 1.39.x (held on purpose) needs uvicorn < 0.50; #74's uvicorn 0.54.0 broke the install.

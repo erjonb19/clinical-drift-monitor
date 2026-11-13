@@ -24,16 +24,26 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
-          cache: pip
-          cache-dependency-path: pyproject.toml
 
-      # CPU wheels only: CI runs the unit tests and a tiny synthetic end-to-end
-      # run, never the real datasets or GPU training.
-      - name: Install
+      # Backlog item 26: uv, pinned by version and its release SHA-256, installs the packages
+      # uv.lock records, hash-checked, from releases at least 7 days old. 0.13.4 or later: older
+      # uv trusts a compromised root CA (GHSA-hq85-5cpj-mr62). The project's own build backend
+      # (setuptools) is pinned by version, not hash: uv does not lock build dependencies.
+      # flwr installs its own (older) uv into .venv/bin, which goes first on PATH below, so later
+      # steps call this pinned binary by its path ($UV), never a bare `uv`.
+      - id: setup-uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          checksum: "c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
+          enable-cache: false
+
+      # CPU wheels only (uv.lock takes torch from the PyTorch CPU index): CI runs the unit tests
+      # and a tiny synthetic end-to-end run, never the real datasets or GPU training.
+      - name: Install (locked)
         run: |
-          python -m pip install --upgrade pip
-          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install -e ".[dev,train,federated,cohort,serve,api]"
+          uv sync --locked --no-python-downloads --python 3.11 --extra dev --extra train --extra federated --extra cohort --extra serve --extra api
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Lint
         run: ruff check .
@@ -47,17 +57,19 @@ jobs:
       - name: Test
         run: pytest
 
-      # Backlog item 11: audit the installed dependencies from a separate tool environment, so
-      # pip-audit's own packages are not in the audit. pip-audit fails on every finding except
-      # the accepted ones in config/pip_audit_ignore.json (each with its reason). Local version
+      # Backlog item 11: audit the installed dependencies from a separate tool environment (the
+      # locked "audit" dependency group), so pip-audit's own packages are not in the audit.
+      # pip-audit fails on every finding except the accepted ones in config/pip_audit_ignore.json (each with its reason). Local version
       # labels (torch's "+cpu") are stripped, because pip-audit cannot look them up on PyPI and
       # would otherwise skip them silently; any package it still could not audit fails the step.
       - name: Dependency audit
+        env:
+          UV: ${{ steps.setup-uv.outputs.uv-path }}
         run: |
           set -o pipefail
-          python -m venv /tmp/audit
-          /tmp/audit/bin/pip install -q pip-audit==2.10.1
-          pip freeze --exclude-editable | sed -E 's/\+[A-Za-z0-9.]+$//' > /tmp/requirements-frozen.txt
+          "$UV" --version | grep -qx "uv 0.13.7 .*" || { echo "::error::not the pinned uv"; exit 1; }
+          UV_PROJECT_ENVIRONMENT=/tmp/audit "$UV" sync --locked --no-python-downloads --python 3.11 --only-group audit --no-install-project
+          "$UV" pip freeze --exclude-editable --python .venv/bin/python | sed -E 's/\+[A-Za-z0-9.]+$//' > /tmp/requirements-frozen.txt
           ignores=$(python -c "import json; d = json.load(open('config/pip_audit_ignore.json')); print(' '.join('--ignore-vuln ' + i for a in d['accepted'] for i in a['ids']))")
           /tmp/audit/bin/pip-audit --disable-pip --no-deps --progress-spinner off -r /tmp/requirements-frozen.txt $ignores 2>&1 | tee /tmp/audit.txt
           if grep -q "could not be audited" /tmp/audit.txt; then echo "::error::pip-audit skipped packages it could not audit"; exit 1; fi

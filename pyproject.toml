@@ -76,10 +76,32 @@ dev = [
     "openpyxl==3.1.5",
 ]
 
+# Tools CI runs from their own locked environments, never installed into the project's.
+[dependency-groups]
+audit = ["pip-audit==2.10.1"]
+
 [project.scripts]
 # Databricks job tasks run these as python_wheel_task entry points.
 cdm-ingest = "cdm.ingest:main"
 cdm-gold = "cdm.gold:main"
+
+# Backlog item 26: uv resolves every extra into the committed uv.lock, only from releases at
+# least 7 days old, and takes torch and torchvision as CPU wheels from the PyTorch index, held
+# at the versions the API image and the committed results use (Dependabot ignores torch).
+[tool.uv]
+exclude-newer = "7 days"
+constraint-dependencies = ["torch==2.14.0", "torchvision==0.29.0"]
+# The project's build backend, pinned by version (uv.lock does not hash build dependencies).
+build-constraint-dependencies = ["setuptools==84.2.1"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
