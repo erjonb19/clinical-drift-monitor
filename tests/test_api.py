@@ -200,6 +200,7 @@ def test_script_hash_takes_exactly_one_bare_script() -> None:
         '<script src="x.js"></script>',
         "<script>a",
         "</script><script>",
+        "<script>a</script >",
     ):
         with pytest.raises(ValueError):
             script_hash(bad)

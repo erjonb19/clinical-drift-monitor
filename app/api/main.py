@@ -222,7 +222,7 @@ document.getElementById("b").onclick = async () => {{
 def script_hash(html: str) -> str:
     """The CSP source for the page's one inline script: sha256 of its exact text. The page is
     this module's own constant HTML; plain string splitting (no regex) requires exactly one
-    bare <script>...</script> and refuses anything else, in any letter case."""
+    bare <script>...</script> and refuses any other script tag, in any letter case."""
     lower = html.lower()
     if lower.count("<script") != 1 or lower.count("</script") != 1 or html.count("<script>") != 1:
         raise ValueError("the page must have exactly one inline script")
