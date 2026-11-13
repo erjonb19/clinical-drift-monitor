@@ -282,8 +282,10 @@ If it can't be deployed by 19 November, tell Claude, who will move the date.
    git checkout main
    git pull
    ```
-2. Stage the notebook, the wheel and the two input files under this commit. It prints a short
-   JSON block with no secrets: send it to Claude.
+2. Stage the notebook, the wheel and the three input files under this commit. It prints a short
+   JSON block with no secrets: send it to Claude. The script builds the wheel with pip; if your
+   `.venv` was made with `uv sync` it has no pip, so run
+   `.venv\Scripts\python.exe -m ensurepip` first.
    ```powershell
    .venv\Scripts\python.exe scripts\stage_research_job.py --workspace-name rehearsal_monthly_drift monthly_drift results/phase3/monthly/spec.json results/phase3/serving/results.json config/slo.json
    ```

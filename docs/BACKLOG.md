@@ -760,10 +760,17 @@ change only the owner can make (repository settings, accounts, consoles).
       (`build-constraint-dependencies`) but not hash-checked, since uv does not lock build
       dependencies. Dependabot now uses its `uv` ecosystem, which is expected to re-lock
       `uv.lock` with each update so `--locked` accepts its PRs; not yet seen on a real
-      Dependabot PR. **Not ticked yet:** the Streamlit app's hashed requirements
+      Dependabot PR. **First Dependabot `uv` run (2026-11-13, on `main` after #131):** both of its
+      update jobs reported errors. The security-update job cannot move `cryptography` or `uv`,
+      because flwr 1.39 pins both (`dependency_file_not_resolvable`): these are the findings
+      already accepted in `config/pip_audit_ignore.json`, so that job will show red until flwr
+      moves. The version-update job closed the old pip-ecosystem group PR as "no longer
+      possible" and failed on `transformers` and `starlette` with `unknown_error` and no detail;
+      its full log is on a host the cloud session cannot reach (owner: Insights, Dependency
+      graph, Dependabot, the `uv` job's log). **Not ticked yet:** the Streamlit app's hashed requirements
       come in a separate PR that the owner merges, because merging it redeploys the live demo;
       the Docker image is item 27.
-27. [ ] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
+27. [x] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
     torch wheels), `--require-hashes --no-deps`, pinned build backend.
     - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.
     - **Blocked (2026-11-11):** the hashed requirements need the `+cpu` torch wheels' hashes
@@ -786,6 +793,9 @@ change only the owner can make (repository settings, accounts, consoles).
       wheel are gone. **Known cost:** Dependabot's `uv` updates re-lock `uv.lock` but not this
       export, so a Dependabot PR that moves an image package fails that test until the file
       is re-exported (the command is in its header). Trivy: CI's image job.
+    - **Done 2026-11-13 (#131):** CI's image job built the image with `--require-hashes` and
+      its Trivy step passed, on #131's final commit and on `main` after the merge.
+
 28. [x] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
     `persist-credentials: false`; the repository default set to read-only (owner).
     - **Done when:** every workflow declares its permissions, checked by a test.
