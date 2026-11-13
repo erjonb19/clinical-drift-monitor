@@ -467,6 +467,22 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       `transformers` patch updates only (a test checks it); the rest of the group comes back on
       Dependabot's next run.
 
+    - **2026-11-13 (owner):** the five open Dependabot alerts were all transformers 4.57.6 in
+      the `vlm` extra (reached through `app/requirements.txt`'s `-e .`, although the Streamlit
+      app installs only the cohort and demo extras): GHSA-69w3-r845-3855 (Trainer),
+      GHSA-29pf-2h5f-8g72 (remote code execution), GHSA-fgcw-684q-jj6r (LightGlue loading),
+      GHSA-x9r9-c232-4q39 (remote generation code before trust) and GHSA-xrqw-3rrv-vx5w
+      (chat-template path traversal). Pinned to 5.10.1, the first release fixing all five (5.10.0
+      was yanked). Checked offline with open_clip 3.3.0: a 2-layer random-init BERT text tower
+      with BiomedCLIP's pooler, projection and context length and a toy vocabulary loads a
+      4.57.6 state dict strictly under 5.10.1 with identical tokens and embeddings; a review
+      also found a vocab-only BERT tokenizer gives the same ids and an old-layout hub cache
+      still reads. Not checked: the real BiomedCLIP weights and vocabulary (the Hugging Face
+      hub is unreachable from cloud sessions). `databricks/vlm_job.json` still installs the old
+      wheel (with 4.57.6), so the end-to-end check needs a new wheel and job file at the next
+      Databricks deploy (owner). No Dependabot security update came for these alerts (its
+      ignore rules for transformers may be why), so this bump is by hand;
+      `tests/test_supply_chain.py` keeps the pin at or above 5.10.1.
 12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
     (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
     vendor's own pages: Databricks Model Serving on Free Edition (Databricks stays central;
