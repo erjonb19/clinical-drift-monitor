@@ -910,7 +910,7 @@ change only the owner can make (repository settings, accounts, consoles).
       leading whitespace into an invalid one (a test checks it still scores).
       Tests in `tests/test_extract.py`, including an end-to-end run with no network or model
       call.
-47. [ ] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
+47. [x] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
     temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
     to its own host with a byte cap.
     - **Done when:** tests cover each, and the deployed demo is redeployed (owner).
@@ -923,6 +923,10 @@ change only the owner can make (repository settings, accounts, consoles).
       response bodies (20 MB for JSON, 100 MB for images). Tests in `tests/test_cohort.py`,
       `tests/test_demo.py` and `tests/test_sources.py`. **Owner:** redeploy the Streamlit app
       (Community Cloud picks up `main` on reboot), then tick this item.
+    - **Done 2026-11-13:** the owner rebooted the demo, which runs `main` (the hardening merged
+      in #98 on 2026-11-11). The tests above pass on `main`. The live page was not checked from
+      the cloud session (its network proxy refuses the demo's host); the owner's check is below
+      and in `docs/PROGRESS.md`.
 
 ## Later (kept, not started)
 

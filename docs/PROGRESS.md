@@ -5,6 +5,7 @@ Nothing goes here until the item's "Done when" is met.
 
 | Date | Item | What changed | How to check |
 | --- | --- | --- | --- |
+| 2026-11-13 | 47 | The public cohort demo, rebooted on `main` by the owner: DuckDB external access off and locked, no error details in the browser, per-session temporary folders and a 50-definition cap, the ISIC client held to its own host with byte caps | `pytest tests/test_cohort.py tests/test_demo.py tests/test_sources.py`; on the demo, a custom definition calling `read_csv` gets a generic error |
 | 2026-11-11 | 37 | zizmor (pinned by hash) audits every workflow change and must first catch a planted template injection | The "Workflow audit" job on any PR that touches `.github/workflows/`; `pytest tests/test_supply_chain.py` |
 | 2026-11-11 | 46 | The G5 CSV error sheets write formula-like text as text | `pytest tests/test_extract.py -k "spreadsheet or formulas or whitespace"` |
 | 2026-11-11 | 45 | The $5 Haiku cap fails closed: a missing or shrunken spend log refuses calls once spending has begun | `pytest tests/test_extract.py -k spend_log` |
