@@ -284,10 +284,13 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
   neutralised in the G5 CSVs; the $5 Haiku cap fails closed without its spend log.
 - API (`app/api`, not deployed): security headers, no public schema, response models, refusal
   events logged without an address or body.
-- Not done: locked and hashed installs (items 26 and 27, blocked on network access), zizmor
-  (item 37, waits for the owner's OK), the demo hardening (item 47: built and merged, not yet
-  redeployed), and the
-  owner's `.claude/settings.json` decision (item 23).
+- Public cohort demo (item 47): DuckDB external access off and locked, no error details in the
+  browser, per-session temporary folders and a definition cap, the ISIC client held to its own
+  host with byte caps. Redeployed by the owner's reboot on 2026-11-13; the live page was not
+  checked from the cloud session.
+- Workflow audit: zizmor, pinned by hash, on every workflow change (item 37, 2026-11-11).
+- Not done: locked and hashed installs (items 26 and 27, in progress), and the owner's check
+  that `.claude/settings.json` is loaded (item 23).
 
 ## Scaffolded
 
