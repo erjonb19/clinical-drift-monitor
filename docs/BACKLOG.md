@@ -756,8 +756,8 @@ change only the owner can make (repository settings, accounts, consoles).
     - **2026-11-13, built:** every Python package in the image comes from
       `docker/requirements.txt`, exported from `uv.lock` with hashes (`--extra api --group
       image`: the API's packages, scikit-learn and the `+cpu` torch and torchvision wheels).
-      pip installs it with `--require-hashes --no-deps --only-binary=:all:`, PyPI first and the
-      PyTorch CPU index second, then `pip check`. The project is built offline
+      pip installs it with `--require-hashes --no-deps --only-binary=:all:`, PyPI and the PyTorch
+      CPU index (the hashes decide which file is accepted), then `pip check`. The project is built offline
       (`--no-build-isolation --no-index`) with the hashed setuptools 84.2.1 from that file; the
       build backend and wheel are then removed. `docker/constraints.txt` is gone.
       `test_the_image_installs_only_hashed_packages_from_the_lock` fails if the file drifts from

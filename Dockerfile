@@ -30,8 +30,8 @@ RUN sed -i \
 WORKDIR /app
 # Backlog item 27: every Python package comes from docker/requirements.txt, exported from uv.lock
 # with hashes (the CPU torch wheels included), so pip refuses any file whose hash differs and
-# installs nothing that is not listed (--no-deps). PyPI stays the main index; the PyTorch CPU index
-# is searched too, for the +cpu wheels only the hashes accept. The project itself is then built
+# installs nothing that is not listed (--no-deps). pip looks in PyPI and the PyTorch CPU index; the
+# hashes decide which file is accepted, so a look-alike on either index can only fail the build. The project itself is then built
 # offline with the hashed setuptools from that file (--no-build-isolation, --no-index).
 COPY docker/requirements.txt ./
 RUN pip install --require-hashes --no-deps --only-binary=:all: \
@@ -39,7 +39,7 @@ RUN pip install --require-hashes --no-deps --only-binary=:all: \
     && pip check
 COPY pyproject.toml README.md ./
 COPY src ./src
-RUN pip install --no-deps --no-build-isolation --no-index .
+RUN pip install --no-deps --no-build-isolation --no-index . && pip check
 # The base image's setuptools carried old jaraco.context and wheel copies with fixable HIGH CVEs
 # (Trivy, item 39), and nothing in the API imports setuptools at run time, so the build backend
 # and wheel are removed once the project is installed.

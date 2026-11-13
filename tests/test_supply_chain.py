@@ -95,7 +95,7 @@ def test_the_image_installs_only_hashed_packages_from_the_lock() -> None:
     assert all("--no-deps" in run for run in installs)
     assert "--require-hashes" in installs[0] and "-r requirements.txt" in installs[0]
     assert "--no-index" in installs[1] and "--no-build-isolation" in installs[1]
-    assert "--index-url" not in dockerfile.replace("--extra-index-url", "")  # PyPI stays primary
+    assert "--index-url" not in dockerfile.replace("--extra-index-url", "")  # only an extra index
     uv = shutil.which("uv")
     assert uv, "uv is needed to check docker/requirements.txt against uv.lock"
     exported = subprocess.run(  # noqa: S603 (fixed arguments, no shell)
