@@ -113,6 +113,18 @@ gets a **Blocked:** line with the reason.
        325029901767432 and the files in `/Volumes/workspace/cdm/raw/results/scheduler_probe/`.
        The owner's message of 2026-11-10 again held the unfilled placeholders for both days, so
        they stay not reported.
+     - **Probe results (owner, 2026-11-13; `results/phase3/scheduler_probe/runs.json`):** all
+       three scheduled fires ran. `databricks jobs list-runs` lists runs 1038163583722810,
+       774279266456471 and 786760919533574 as `PERIODIC`, started 06:00:04 to 06:00:05 UTC on 8,
+       9 and 10 November, all `SUCCESS`; each run's file records `trigger_type` `periodic` and
+       `trigger_time` 06:00:00 that day. Every file's ISIC download worked (ISIC_6589782,
+       CC-BY, Memorial Sloan Kettering Cancer Center, 2,658,276 bytes, SHA-256 b9d7aef5...).
+       **Conclusion:** the Free Edition scheduler fired this kind of schedule on time, and
+       scheduled runs can reach ISIC. That rules out the "Cause (inferred)" above: the 1
+       November miss has another cause, not found yet. **Next check (owner, 2026-11-13):** the
+       drift job's own schedule, pause state, deploy history and any run attempts. The probe
+       job is no longer needed; the owner deletes it in the workspace. Its files in
+       `databricks/` stay until that is done.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
@@ -898,7 +910,8 @@ change only the owner can make (repository settings, accounts, consoles).
       (`tests/test_extract.py`). The price constant carries the date it was last matched
       (`PRICE_CHECKED`, 2026-11-11: $0.10 and $0.50 per million tokens for `claude-haiku-5-5`,
       from the Claude API reference's model table). **Owner:** a spend limit on this key in the
-      Anthropic Console is the real backstop; whether one is set cannot be checked from here.
+      Anthropic Console is the real backstop. **Set (owner, 2026-11-13):** the key was rotated
+      into a clinical-drift-monitor workspace with a Console spend limit, and the old key deleted.
       Limits: deleting the log and its mark together still resets the client-side count, and a
       log that predates this change has no mark until its next call.
 46. [x] **Neutralise formulas in the G5 CSV error sheets.**
