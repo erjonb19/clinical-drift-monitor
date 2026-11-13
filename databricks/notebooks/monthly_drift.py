@@ -63,8 +63,9 @@ JOB_RUN = dbutils.widgets.get("job_run_id") or "manual"
 TABLES = dbutils.widgets.get("tables")
 if TABLES not in {"gold", "rehearsal"}:
     raise ValueError(f"tables must be gold or rehearsal, not {TABLES!r}")
-if TABLES == "rehearsal" and "/rehearsal/" not in f"{OUT}/":
-    raise ValueError(f"a rehearsal writes its files under a rehearsal folder, not {OUT}")
+REHEARSAL_ROOT = "/Volumes/workspace/cdm/raw/results/rehearsal/"
+if TABLES == "rehearsal" and not f"{OUT}/".startswith(REHEARSAL_ROOT):
+    raise ValueError(f"a rehearsal writes its files under {REHEARSAL_ROOT}, not {OUT}")
 MONTHLY, AUDIT, BASELINE = (
     f"workspace.cdm.{TABLES}_{t}" for t in ("drift_monthly", "prediction_audit", "drift_baseline")
 )
@@ -317,8 +318,12 @@ def run_month(month: int) -> dict:
     backfill = (
         [r.asDict() for r in spark.table(BACKFILL).collect()] if table_exists(BACKFILL) else []
     )
-    slo = evaluate(row, merge_history([h for h in history if h], backfill), SLO_CONFIG)
-    (OUT / f"slo_{month:02d}.json").write_text(json.dumps(slo, indent=2) + "\n")
+    slo = evaluate(
+        row, merge_history([h for h in history if h], backfill, before_month=month), SLO_CONFIG
+    )
+    # The file carries the rehearsal label; `slo` itself stays targets only, for alerts().
+    label = {"rehearsal": row["rehearsal"]} if TABLES == "rehearsal" else {}
+    (OUT / f"slo_{month:02d}.json").write_text(json.dumps({**label, **slo}, indent=2) + "\n")
     row["alerts"] = alerts(row, slo)
     return row
 

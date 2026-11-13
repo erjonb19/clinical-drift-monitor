@@ -258,14 +258,18 @@ what a new workflow gets if it forgets.
 
 **Why:** the deadline (26 November) comes before the real monthly run on 1 December. The
 rehearsal is a temporary copy of the monthly job (`databricks/monthly_drift_rehearsal_job.json`),
-scheduled once, at **06:00 UTC on 20 November**. It runs the same notebook, with the same
-bundle, as one scheduled run, and replays month 1 into its own tables
+scheduled for **06:00 UTC on 20 November** (the cron repeats each 20 November, so S12 deletes
+the job afterwards). It runs the monthly notebook as of the merged commit (the real job still
+runs the copy staged at 44451c6; the newer one adds only the rehearsal switch and a fix that
+keeps later months' labels out of a month's targets) with the same bundle, and replays month 1
+into its own tables
 (`workspace.cdm.rehearsal_drift_monthly`, `rehearsal_prediction_audit` and
 `rehearsal_drift_baseline`) and its own folder
 (`/Volumes/workspace/cdm/raw/results/rehearsal/monthly`). It never writes the real `gold_*`
 tables, the real results folder, or the real job's notebook: it is imported under another name.
-Its results are labelled a rehearsal everywhere. The real 1 December run is still checked by the
-watchdog on 2 December.
+Its results are labelled a rehearsal everywhere. It shows that a fresh scheduled copy of the
+job fires and runs end to end; it cannot show why the real job missed 1 November (S6 looks
+for that). The real 1 December run is still checked by the watchdog on 2 December.
 
 If it can't be deployed by 19 November, tell Claude, who will move the date.
 
@@ -277,7 +281,7 @@ If it can't be deployed by 19 November, tell Claude, who will move the date.
 2. Stage the notebook, the wheel and the two input files under this commit. It prints a short
    JSON block with no secrets: send it to Claude.
    ```powershell
-   .venv\Scripts\python.exe scripts\stage_research_job.py --workspace-name rehearsal_monthly_drift monthly_drift results/phase3/monthly/spec.json results/phase3/serving/results.json
+   .venv\Scripts\python.exe scripts\stage_research_job.py --workspace-name rehearsal_monthly_drift monthly_drift results/phase3/monthly/spec.json results/phase3/serving/results.json config/slo.json
    ```
 3. Claude puts those values into the rehearsal job file in place of `STAGE_FIRST` and merges it.
    Then get it:
@@ -317,10 +321,12 @@ Replace `<JOB_ID>` with the ID from S11 step 4.
    gh workflow run drift-watchdog.yml --repo erjonb19/clinical-drift-monitor -f month=2026-11 -f job_id=<JOB_ID>
    gh run watch --repo erjonb19/clinical-drift-monitor
    ```
-4. Afterwards, delete the rehearsal job. Dropping its three tables is your call; they are
-   separate from the real ones.
+4. Afterwards, delete the rehearsal job and its notebook copy. Dropping its three tables is
+   your call; they are separate from the real ones.
    ```powershell
    databricks jobs delete <JOB_ID>
+   $me = (databricks current-user me -o json | ConvertFrom-Json).userName
+   databricks workspace delete "/Users/$me/cdm/rehearsal_monthly_drift"
    ```
    ```sql
    DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_monthly;

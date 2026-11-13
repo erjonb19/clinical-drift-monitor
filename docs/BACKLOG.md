@@ -114,14 +114,19 @@ gets a **Blocked:** line with the reason.
        The owner's message of 2026-11-10 again held the unfilled placeholders for both days, so
        they stay not reported.
    - **Scheduled rehearsal (owner, 2026-11-13; built, not deployed):** so item 1 doesn't wait
-     for 1 December, a temporary copy of the monthly job fires once, at 06:00 UTC on 20 November
-     (`databricks/monthly_drift_rehearsal_job.json`). It runs the same notebook with the same
+     for 1 December, a temporary copy of the monthly job is scheduled for 06:00 UTC on 20 November
+     (`databricks/monthly_drift_rehearsal_job.json`; the cron repeats yearly, so the job is
+     deleted afterwards). It runs the monthly notebook as of its staging commit, with the same
      bundle, imported under another name (`stage_research_job.py --workspace-name`). It replays
      month 1 into `rehearsal_*` tables and `/Volumes/workspace/cdm/raw/results/rehearsal/monthly`;
      the notebook's new `tables` parameter accepts only `gold` (the default) or `rehearsal`, and
      a rehearsal must write under a rehearsal folder. Its evidence will be labelled a rehearsal.
      The watchdog takes a `job_id` input so it can check the rehearsal too. The real job is not
-     changed: it still runs the notebook staged at 44451c6. Owner steps S11 and S12 in
+     changed: it still runs the notebook staged at 44451c6. The newer notebook also passes
+     `before_month` to `merge_history`, so a month's targets never use labels from later
+     months (a replayed month 1 would otherwise have seen the backfill of months 1 to 12). The
+     rehearsal shows a fresh scheduled copy fires and runs end to end; it cannot show why the
+     real job missed 1 November. Owner steps S11 and S12 in
      `docs/OWNER_STEPS.md`. Tests in `tests/test_deploy.py` and
      `tests/test_stage_research_job.py`.
    - **Fix (planned, written before code):**

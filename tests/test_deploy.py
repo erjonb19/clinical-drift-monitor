@@ -295,7 +295,10 @@ def test_the_rehearsal_never_touches_the_real_job_tables_or_results() -> None:
         ), key
     source = (REPO / "databricks" / "notebooks" / "monthly_drift.py").read_text("utf-8")
     assert '"tables": "gold"' in source and 'TABLES not in {"gold", "rehearsal"}' in source
-    assert '"/rehearsal/" not in' in source  # a rehearsal must write under a rehearsal folder
+    # a rehearsal must write under the rehearsal folder, matched from its start
+    assert 'REHEARSAL_ROOT = "/Volumes/workspace/cdm/raw/results/rehearsal/"' in source
+    assert ".startswith(REHEARSAL_ROOT)" in source
+    assert "before_month=month" in source  # a month's targets never see later labels
     assert 'f"workspace.cdm.{TABLES}_{t}"' in source
     assert "gold_drift_monthly" not in source.split("MONTHLY, AUDIT, BASELINE", 1)[1]
 
@@ -308,3 +311,34 @@ def test_the_watchdog_takes_a_job_id_only_as_digits() -> None:
     assert '[[ "$JOB_ID" =~ ^[0-9]{1,20}$ ]]' in text
     run = text.split("run: |", 1)[1]
     assert "${{" not in run
+
+
+def test_the_rehearsal_stages_every_file_the_notebook_reads_and_differs_only_where_named() -> None:
+    """Review of #130: the notebook reads repo files from the staged folder, so the owner's
+    staging command (OWNER_STEPS S11) must stage each one; and the rehearsal job equals the real
+    job except in the fields that make it a rehearsal or that staging fills."""
+    source = (REPO / "databricks" / "notebooks" / "monthly_drift.py").read_text("utf-8")
+    read = set(re.findall(r'REPO / "([^"]+)"', source))
+    steps = (REPO / "docs" / "OWNER_STEPS.md").read_text("utf-8")
+    command = next(
+        line for line in steps.splitlines() if "stage_research_job.py --workspace-name" in line
+    )
+    staged = set(command.split("monthly_drift", 1)[1].split()[1:])
+    assert read and read <= staged, read - staged
+    real = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    spec = json.loads((REPO / "databricks" / "monthly_drift_rehearsal_job.json").read_text("utf-8"))
+    assert set(spec) == set(real)
+    for key in set(real) - {"name", "schedule", "tasks", "environments"}:
+        assert spec[key] == real[key], key
+    assert (
+        spec["environments"][0]["spec"]["dependencies"][1:]
+        == (real["environments"][0]["spec"]["dependencies"][1:])
+    )
+    (task,), (real_task,) = spec["tasks"], real["tasks"]
+    for key in set(real_task) - {"task_key", "notebook_task"}:
+        assert task[key] == real_task[key], key
+    params, real_params = (t["notebook_task"]["base_parameters"] for t in (task, real_task))
+    named = {"code_version", "wheel", "wheel_sha256", "repo", "files_sha256", "out", "tables"}
+    assert set(params) - set(real_params) <= {"tables"}
+    for key in set(real_params) - named:
+        assert params[key] == real_params[key], key
