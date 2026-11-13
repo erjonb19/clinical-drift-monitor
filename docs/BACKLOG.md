@@ -923,10 +923,10 @@ change only the owner can make (repository settings, accounts, consoles).
       response bodies (20 MB for JSON, 100 MB for images). Tests in `tests/test_cohort.py`,
       `tests/test_demo.py` and `tests/test_sources.py`. **Owner:** redeploy the Streamlit app
       (Community Cloud picks up `main` on reboot), then tick this item.
-    - **Done 2026-11-13:** the owner rebooted the demo, which runs `main` (the hardening merged
-      in #98 on 2026-11-11). The tests above pass on `main`. The live page was not checked from
-      the cloud session (its network proxy refuses the demo's host); the owner's check is below
-      and in `docs/PROGRESS.md`.
+    - **Done 2026-11-13:** the owner rebooted the demo, which is set to deploy `main` (per the
+      note above), where the hardening merged in #98 on 2026-11-11. The tests above pass on
+      `main`. The live page was not checked from the cloud session (its network proxy refuses
+      the demo's host); how to check it is in `docs/PROGRESS.md`.
 
 ## Later (kept, not started)
 
