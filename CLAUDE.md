@@ -14,6 +14,11 @@ PLAN.md is the source of truth for scope and order. Do not add features that are
 - Before each phase, write a short plan (files to create, commands to run) and wait for my OK.
 - When you give me steps to run, use short numbered steps that say exactly what to open and what to run. Keep the number of files small.
 - Tick the PLAN.md checkboxes as items are finished.
+- **Owner steps (owner, 2026-11-13):** every step that needs me (laptop commands, Databricks,
+  GitHub or Console settings) goes into `docs/OWNER_STEPS.md` as a checklist: one section per
+  step with a title, why it matters, and exact copy-paste Windows PowerShell commands. Never put
+  secrets in it, and never ask me to paste a secret into chat; commands prompt for them. Commit
+  it through a PR and merge under the merging rule below. When I say a step is done, tick it.
 
 ## Ground rules (production upgrade, added 2026-11-06)
 - One backlog item per branch and PR. Keep each change small. Tests must stay green.
