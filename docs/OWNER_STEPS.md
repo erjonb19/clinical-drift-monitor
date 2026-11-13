@@ -35,8 +35,15 @@ attribution, because the training images include CC-BY-NC ones. The release asse
    ```powershell
    databricks fs cp -r dbfs:/Volumes/workspace/cdm/raw/deploy/serving/d7191f4 .\dist\champion\d7191f4
    ```
-2. Check it with the repository's own loader. This checks every file's SHA-256 and each
-   seed's weights hash, and must print `ok`:
+2. Check it is the evaluated bundle: its manifest's SHA-256 must be
+   `5734add1790eadd6f2e36d767bd78d6fcf5a791484756ed616edf721e8eedee5`
+   (`bundle.manifest_sha256` in `results/phase3/serving/results.json`):
+   ```powershell
+   (Get-FileHash .\dist\champion\d7191f4\manifest.json -Algorithm SHA256).Hash.ToLower()
+   ```
+   Then check it with the repository's own loader, which needs the laptop's `.venv` with torch
+   and `cdm` installed. It checks every file's SHA-256 and each seed's weights hash, and must
+   print `ok`:
    ```powershell
    .venv\Scripts\python.exe -c "from pathlib import Path; from cdm.serving import Service; Service.load(Path('dist/champion/d7191f4')); print('ok')"
    ```
@@ -52,6 +59,11 @@ attribution, because the training images include CC-BY-NC ones. The release asse
    ```powershell
    gh release upload v1.0.0 .\dist\cdm-champion-bundle-d7191f4.tar.gz --repo erjonb19/clinical-drift-monitor
    ```
+   Then add the terms to the release notes. Open the release page
+   (`gh release view v1.0.0 --web --repo erjonb19/clinical-drift-monitor`), click **Edit**, and
+   add a line such as: "cdm-champion-bundle-d7191f4.tar.gz: model weights trained on ISIC
+   images including CC-BY-NC ones. Non-commercial research use only, with attribution to the
+   ISIC Archive and the image contributors. Not for clinical use."
 6. Get its SHA-256 in lower case:
    ```powershell
    (Get-FileHash .\dist\cdm-champion-bundle-d7191f4.tar.gz -Algorithm SHA256).Hash.ToLower()
@@ -68,8 +80,10 @@ attribution, because the training images include CC-BY-NC ones. The release asse
 
 **Why:** Databricks does not email about a scheduled run that never starts, which is what
 happened on 1 November. The watchdog (`.github/workflows/drift-watchdog.yml`, 07:17 UTC on the
-2nd) asks the Jobs API whether the monthly job ran. It needs its own identity that can only
-view that one job. Until it has one, every watchdog run fails as "not configured".
+2nd) asks the Jobs API whether the monthly job ran. It needs its own identity, with **Can View**
+on that one job and nothing granted directly beyond it. Like every new identity it also joins
+the workspace `users` group and gets whatever that group holds (step 6 checks what that is).
+Until it exists, every watchdog run fails as "not configured".
 
 1. In the Databricks workspace, click your user icon (top right), then **Settings**.
 2. Go to **Identity and access**. Next to **Service principals**, click **Manage**, then
@@ -78,11 +92,17 @@ view that one job. Until it has one, every watchdog run fails as "not configured
    ticked. The API needs it. Untick anything else, such as Databricks SQL access or cluster
    creation.
 4. On its **Secrets** tab, click **Generate secret**. Leave the window open: S3 copies the
-   **Client ID** and the **Secret** from it, and the secret is shown only once.
+   **Client ID** and the **Secret** from it, and the secret is shown only once. Note the
+   secret's expiry date: when it expires, the watchdog reports "inconclusive" until a new
+   secret is generated and S3 step 3 is repeated.
 5. Give it view access to the monthly job only. Go to **Jobs & Pipelines** and open
    `cdm-phase3-monthly-drift` (job 524433148303929). Click **Permissions** (or the **⋮** menu,
    then **Edit permissions**), add `cdm-watchdog` with **Can View**, and click **Save**.
    Don't grant it anything else.
+
+6. Check what the `users` group gives it: open **Catalog**, select the `workspace` catalog,
+   then its **Permissions** tab, and look for `users` (or "All workspace users"). Tell Claude
+   what it lists; nothing needs changing unless it is more than read access.
 
 If a label differs from these, stop and tell Claude what you see. Don't give the principal any
 wider access to work around it.
@@ -120,14 +140,16 @@ Each command prompts for the value. Paste it into the prompt, not into a chat.
 
 **Why:** this proves the credential works before the real check on 2 December. November's
 monthly run never started, so the right answer is **missed**. The run should end in failure,
-with a message that no scheduled run was found since 1 November. A "not configured" or
-"inconclusive" message means the credential or its permission is wrong.
+with a line starting `MISSED: job 524433148303929 has no run started by its schedule between
+2026-11-01T06:00:00+00:00 and`. A "not configured" or "inconclusive" message means the
+credential or its permission is wrong.
 
 1. Start it:
    ```powershell
    gh workflow run drift-watchdog.yml --repo erjonb19/clinical-drift-monitor -f month=2026-11
    ```
-2. Follow it to the end. Pick the newest run if asked:
+2. Wait about ten seconds so the new run exists, then follow it to the end. Pick the newest
+   run (the top one) if asked:
    ```powershell
    gh run watch --repo erjonb19/clinical-drift-monitor
    ```
@@ -137,9 +159,10 @@ with a message that no scheduled run was found since 1 November. A "not configur
 
 - [ ] Done
 
-**Why:** the probe (job 325029901767432) did its work, and its results are committed in
-`results/phase3/scheduler_probe/runs.json` (#127). Its schedule has no more dates, but it
-should not stay in the workspace. Do this once #127 is merged.
+**Why:** the probe (job 325029901767432) did its work, and its results will be committed in
+`results/phase3/scheduler_probe/runs.json` by #127. Its schedule (`0 0 6 8,9,10 * ?`) fires on
+the 8th, 9th and 10th of every month, so it runs again on 8 December unless it is deleted. Do
+this once #127 is merged, and before 8 December.
 
 ```powershell
 databricks jobs delete 325029901767432
@@ -158,6 +181,7 @@ cause lies with the monthly job itself (job 524433148303929).
 1. Its schedule and pause state now. Check `quartz_cron_expression` is `0 0 6 1 * ?`,
    `timezone_id` is `UTC` and `pause_status` is `UNPAUSED`:
    ```powershell
+   New-Item -ItemType Directory -Force .\dist | Out-Null
    databricks jobs get 524433148303929 -o json | Out-File -Encoding utf8 .\dist\monthly_job.json
    Get-Content .\dist\monthly_job.json | Select-String -Pattern "quartz|timezone|pause_status|creator|run_as|created_time"
    ```
@@ -178,6 +202,8 @@ cause lies with the monthly job itself (job 524433148303929).
           OR action_name IN ('create', 'delete'))
    ORDER BY event_time;
    ```
+   If the query says the table does not exist or you lack access, skip it and say so; the
+   owner's earlier queries of 2026-11-06 used it, so it should work.
 4. Send Claude the matching lines from 1 and 2 and the rows from 3. Remove anything you consider
    private, such as email addresses, first.
 
