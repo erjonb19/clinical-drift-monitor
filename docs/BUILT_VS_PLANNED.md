@@ -289,8 +289,11 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
   host with byte caps. Redeployed by the owner's reboot on 2026-11-13; the live page was not
   checked from the cloud session.
 - Workflow audit: zizmor, pinned by hash, on every workflow change (item 37, 2026-11-11).
-- Not done: locked and hashed installs (items 26 and 27, in progress), and the owner's check
-  that `.claude/settings.json` is loaded (item 23).
+- Locked installs: CI installs only from `uv.lock` (7-day `exclude-newer`; uv pinned by
+  version and checksum), and the API image installs only hashed packages exported from it
+  (items 26 and 27, 2026-11-13).
+- Not done: the Streamlit app's hashed requirements (the rest of item 26), and the owner's
+  check that `.claude/settings.json` is loaded (item 23).
 
 ## Scaffolded
 
