@@ -205,7 +205,7 @@ cause lies with the monthly job itself (job 524433148303929).
           OR action_name IN ('create', 'delete'))
    ORDER BY event_time;
    ```
-   If the query says the table does not exist or you lack access, skip it and say so; the
+   If the query says the table does not exist or you lack access, skip it and say so;
    your earlier queries of 2026-11-06 used it, so it should work.
 4. Send Claude the matching lines from 1 and 2 and the rows from 3. Remove anything you consider
    private, such as email addresses, first.
