@@ -1,7 +1,7 @@
 {
   "what": "test functions per test file (def test_*), counted by tests/test_test_counts.py; a file may gain tests, but losing one fails CI until this file is edited in the same change (silent-failures #15)",
   "counts": {
-    "test_api.py": 12,
+    "test_api.py": 13,
     "test_backfill.py": 8,
     "test_backlog.py": 1,
     "test_batch_drift.py": 2,

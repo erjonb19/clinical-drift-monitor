@@ -17,7 +17,7 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from app.api.main import LICENSE, MAX_BYTES, RateLimiter, create_app
+from app.api.main import LICENSE, MAX_BYTES, RateLimiter, create_app, script_hash
 from cdm.serving import NOTICE
 
 
@@ -185,3 +185,22 @@ def test_a_60_megapixel_image_gets_400() -> None:
     c = client()
     r = c.post("/predict", content=buf.getvalue(), headers={"content-type": "image/png"})
     assert r.status_code == 400 and c.get("/health").json()["rejected"] == 1
+
+
+def test_script_hash_takes_exactly_one_bare_script() -> None:
+    """The CSP hash reads the page's one inline script by plain string splitting (code
+    scanning alert #3 flagged the old regex); anything but one bare <script>...</script> fails."""
+    body = 'document.title = "x";'
+    want = "'sha256-" + base64.b64encode(hashlib.sha256(body.encode()).digest()).decode() + "'"
+    assert script_hash(f"<p>a</p><script>{body}</script><p>b</p>") == want
+    for bad in (
+        "<p>no script</p>",
+        "<script>a</script><script>b</script>",
+        "<script>a</script><SCRIPT>b</SCRIPT>",
+        '<script src="x.js"></script>',
+        "<script>a",
+        "</script><script>",
+        "<script>a</script >",
+    ):
+        with pytest.raises(ValueError):
+            script_hash(bad)
