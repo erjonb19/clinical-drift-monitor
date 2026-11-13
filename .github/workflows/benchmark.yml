@@ -25,16 +25,18 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
-      # Backlog item 26: uv, pinned by version and its release SHA-256, installs only what
-      # uv.lock records (hashed, from releases at least 7 days old).
+      # Backlog item 26: uv, pinned by version and its release SHA-256, installs the packages
+      # uv.lock records, hash-checked, from releases at least 7 days old. 0.13.4 or later: older
+      # uv trusts a compromised root CA (GHSA-hq85-5cpj-mr62). The project's own build backend
+      # (setuptools) is pinned by version, not hash: uv does not lock build dependencies.
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
-          version: "0.11.32"
-          checksum: "aab924fd522efd06f1c5f3b93a243864fc453132c94b2dc49f1371b528a4b967"
+          version: "0.13.7"
+          checksum: "c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
           enable-cache: false
       - name: Install (locked)
         run: |
-          uv sync --locked --python 3.11 --extra train --extra serve --extra api
+          uv sync --locked --no-python-downloads --python 3.11 --extra train --extra serve --extra api
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - name: Test bundle (untrained)
         run: python scripts/make_test_bundle.py --out dist/test_bundle

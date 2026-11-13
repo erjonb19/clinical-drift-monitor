@@ -25,19 +25,21 @@ jobs:
         with:
           python-version: "3.11"
 
-      # Backlog item 26: uv, pinned by version and its release SHA-256, installs only what
-      # uv.lock records (hashed, from releases at least 7 days old).
+      # Backlog item 26: uv, pinned by version and its release SHA-256, installs the packages
+      # uv.lock records, hash-checked, from releases at least 7 days old. 0.13.4 or later: older
+      # uv trusts a compromised root CA (GHSA-hq85-5cpj-mr62). The project's own build backend
+      # (setuptools) is pinned by version, not hash: uv does not lock build dependencies.
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
-          version: "0.11.32"
-          checksum: "aab924fd522efd06f1c5f3b93a243864fc453132c94b2dc49f1371b528a4b967"
+          version: "0.13.7"
+          checksum: "c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
           enable-cache: false
 
       # CPU wheels only (uv.lock takes torch from the PyTorch CPU index): CI runs the unit tests
       # and a tiny synthetic end-to-end run, never the real datasets or GPU training.
       - name: Install (locked)
         run: |
-          uv sync --locked --python 3.11 --extra dev --extra train --extra federated --extra cohort --extra serve --extra api
+          uv sync --locked --no-python-downloads --python 3.11 --extra dev --extra train --extra federated --extra cohort --extra serve --extra api
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Lint
@@ -60,7 +62,7 @@ jobs:
       - name: Dependency audit
         run: |
           set -o pipefail
-          UV_PROJECT_ENVIRONMENT=/tmp/audit uv sync --locked --python 3.11 --only-group audit --no-install-project
+          UV_PROJECT_ENVIRONMENT=/tmp/audit uv sync --locked --no-python-downloads --python 3.11 --only-group audit --no-install-project
           uv pip freeze --exclude-editable --python .venv/bin/python | sed -E 's/\+[A-Za-z0-9.]+$//' > /tmp/requirements-frozen.txt
           ignores=$(python -c "import json; d = json.load(open('config/pip_audit_ignore.json')); print(' '.join('--ignore-vuln ' + i for a in d['accepted'] for i in a['ids']))")
           /tmp/audit/bin/pip-audit --disable-pip --no-deps --progress-spinner off -r /tmp/requirements-frozen.txt $ignores 2>&1 | tee /tmp/audit.txt

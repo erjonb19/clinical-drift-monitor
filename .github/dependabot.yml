@@ -8,13 +8,15 @@
 # Security updates do not wait.
 version: 2
 updates:
-  - package-ecosystem: pip
+  # uv (backlog item 26): Dependabot edits pyproject.toml and re-locks uv.lock together, so CI's
+  # `uv sync --locked` accepts its PRs.
+  - package-ecosystem: uv
     directory: /
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
-    # No lockfile: leave a ">=" floor alone when the new release already satisfies it (#74 raised
+    # Leave a ">=" floor in pyproject.toml alone (uv.lock still moves to the new release) when the new release already satisfies it (#74 raised
     # floors such as mlflow-skinny 2.16 to 3.18); exact pins are still bumped.
     versioning-strategy: increase-if-necessary
     ignore:
