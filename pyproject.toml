@@ -47,7 +47,7 @@ demo = [
 # strictly under 5.10.1 with identical tokens and embeddings; the real weights are untested.
 vlm = [
     "open_clip_torch==3.3.0",
-    "transformers==5.10.1",
+    "transformers==5.10.4",
 ]
 # Phase 3 serving (cdm.serve_onnx): ONNX export and ONNX Runtime on CPU. In CI.
 serve = [
