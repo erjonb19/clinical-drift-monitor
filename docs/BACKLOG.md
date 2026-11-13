@@ -67,6 +67,9 @@ gets a **Blocked:** line with the reason.
      schedule reads "At 06:00 AM, on day 1 of the month (UTC)" and shows a pause control, so it
      looks active. The job runs as the owner on serverless compute. No email arrived, which fits
      a run that never started.
+   - **Superseded (owner, 2026-11-13):** the probe's scheduled fires all ran (see "Probe
+     results" below), and the owner concluded the 1 November miss has another cause. The
+     inference below is kept as the record of 2026-11-06.
    - **Cause (inferred, not documented by Databricks), 2026-11-06:** the schedule was active
      and correct on 1 November, and the Free Edition scheduler did not start a run. No pause
      and no bad edit was found. Evidence, from four queries the owner ran in the workspace:
@@ -119,12 +122,14 @@ gets a **Blocked:** line with the reason.
        9 and 10 November, all `SUCCESS`; each run's file records `trigger_type` `periodic` and
        `trigger_time` 06:00:00 that day. Every file's ISIC download worked (ISIC_6589782,
        CC-BY, Memorial Sloan Kettering Cancer Center, 2,658,276 bytes, SHA-256 b9d7aef5...).
-       **Conclusion:** the Free Edition scheduler fired this kind of schedule on time, and
-       scheduled runs can reach ISIC. That rules out the "Cause (inferred)" above: the 1
-       November miss has another cause, not found yet. **Next check (owner, 2026-11-13):** the
-       drift job's own schedule, pause state, deploy history and any run attempts. The probe
-       job is no longer needed; the owner deletes it in the workspace. Its files in
-       `databricks/` stay until that is done.
+       **The owner's conclusion:** the Free Edition scheduler fired all three scheduled runs on
+       time, scheduled runs reach ISIC, and the 1 November miss of the drift job has another
+       cause, not found yet. Limit: the probe is a different job on different days, so it shows
+       the scheduler fires this kind of schedule, not what happened to the drift job on 1
+       November. **Next check (owner, 2026-11-13):** the drift job's own schedule, pause state,
+       deploy history and any run attempts. Deleting the probe job (planned above for after 10
+       November) is the owner's step in the workspace, not yet confirmed; its files in
+       `databricks/` stay until then.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
@@ -183,8 +188,9 @@ gets a **Blocked:** line with the reason.
         internet to a set of trusted domains, but a serverless job reached both hosts it needs.
         For `ISIC_6589782` it read the metadata from `api.isic-archive.com` (license CC-BY,
         attribution Memorial Sloan Kettering Cancer Center) and downloaded the file, 2,658,276
-        bytes, from `isic-archive.s3.amazonaws.com`. One image on one day; the SHA-256 was not
-        captured (cut off in the owner's terminal).
+        bytes, from `isic-archive.s3.amazonaws.com`. The SHA-256 was not captured that day (cut
+        off in the owner's terminal); the three scheduled runs later downloaded the same file,
+        and all four files record the same SHA-256 (`results/phase3/scheduler_probe/runs.json`).
    - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
      run timeline committed with it) finishes green and records `scored` or `no_new_data`,
      with its results file and run ID committed; and, if the owner approves the watchdog, it

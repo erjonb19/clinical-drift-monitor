@@ -1,12 +1,53 @@
 {
   "what": "Backlog item 1: the temporary scheduler probe's runs (job 325029901767432), as the owner reported them on 2026-11-13 from `databricks jobs list-runs --job-id 325029901767432` and the four files in /Volumes/workspace/cdm/raw/results/scheduler_probe/. Transcribed from the owner's message, not copied from the files.",
   "job_id": "325029901767432",
-  "schedule": {"quartz_cron_expression": "0 0 6 8,9,10 * ?", "timezone": "UTC", "pause_status": "UNPAUSED"},
+  "schedule": {
+    "quartz_cron_expression": "0 0 6 8,9,10 * ?",
+    "timezone": "UTC",
+    "pause_status": "UNPAUSED"
+  },
   "runs": [
-    {"run_id": "621176150087695", "list_runs_trigger": "ONE_TIME", "result": "SUCCESS", "note": "manual test", "file": "probe_621176150087695.json", "run_utc": "2026-11-07T13:57:24+00:00", "trigger_type": "one_time", "trigger_time": "2026-11-07T13:57:17.358"},
-    {"run_id": "1038163583722810", "list_runs_trigger": "PERIODIC", "result": "SUCCESS", "list_runs_start_utc": "2026-11-08 06:00:04", "file": "probe_1038163583722810.json", "run_utc": "2026-11-08T06:00:12+00:00", "trigger_type": "periodic", "trigger_time": "2026-11-08T06:00:00"},
-    {"run_id": "774279266456471", "list_runs_trigger": "PERIODIC", "result": "SUCCESS", "list_runs_start_utc": "2026-11-09 06:00:05", "file": "probe_774279266456471.json", "run_utc": "2026-11-09T06:00:14+00:00", "trigger_type": "periodic", "trigger_time": "2026-11-09T06:00:00"},
-    {"run_id": "786760919533574", "list_runs_trigger": "PERIODIC", "result": "SUCCESS", "list_runs_start_utc": "2026-11-10 06:00:05", "file": "probe_786760919533574.json", "run_utc": "2026-11-10T06:00:18+00:00", "trigger_type": "periodic", "trigger_time": "2026-11-10T06:00:00"}
+    {
+      "run_id": "621176150087695",
+      "list_runs_trigger": "ONE_TIME",
+      "result": "SUCCESS",
+      "note": "manual test",
+      "file": "probe_621176150087695.json",
+      "run_utc": "2026-11-07T13:57:24+00:00",
+      "trigger_type": "one_time",
+      "trigger_time": "2026-11-07T13:57:17.358",
+      "list_runs_start_utc": "2026-11-07 13:57"
+    },
+    {
+      "run_id": "1038163583722810",
+      "list_runs_trigger": "PERIODIC",
+      "result": "SUCCESS",
+      "list_runs_start_utc": "2026-11-08 06:00:04",
+      "file": "probe_1038163583722810.json",
+      "run_utc": "2026-11-08T06:00:12+00:00",
+      "trigger_type": "periodic",
+      "trigger_time": "2026-11-08T06:00:00"
+    },
+    {
+      "run_id": "774279266456471",
+      "list_runs_trigger": "PERIODIC",
+      "result": "SUCCESS",
+      "list_runs_start_utc": "2026-11-09 06:00:05",
+      "file": "probe_774279266456471.json",
+      "run_utc": "2026-11-09T06:00:14+00:00",
+      "trigger_type": "periodic",
+      "trigger_time": "2026-11-09T06:00:00"
+    },
+    {
+      "run_id": "786760919533574",
+      "list_runs_trigger": "PERIODIC",
+      "result": "SUCCESS",
+      "list_runs_start_utc": "2026-11-10 06:00:05",
+      "file": "probe_786760919533574.json",
+      "run_utc": "2026-11-10T06:00:18+00:00",
+      "trigger_type": "periodic",
+      "trigger_time": "2026-11-10T06:00:00"
+    }
   ],
   "download_test_every_file": {
     "image_id": "ISIC_6589782",
