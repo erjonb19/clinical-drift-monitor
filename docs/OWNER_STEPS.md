@@ -226,6 +226,82 @@ what a new workflow gets if it forgets.
    next CodeQL run.
 3. Tell Claude which, if any, are still open.
 
+### S11. Deploy the scheduled rehearsal of the monthly job (item 1; by 19 November)
+
+- [ ] Done
+
+**Why:** the deadline (26 November) comes before the real monthly run on 1 December. The
+rehearsal is a temporary copy of the monthly job (`databricks/monthly_drift_rehearsal_job.json`),
+scheduled once, at **06:00 UTC on 20 November**. It runs the same notebook, with the same
+bundle, as one scheduled run, and replays month 1 into its own tables
+(`workspace.cdm.rehearsal_drift_monthly`, `rehearsal_prediction_audit` and
+`rehearsal_drift_baseline`) and its own folder
+(`/Volumes/workspace/cdm/raw/results/rehearsal/monthly`). It never writes the real `gold_*`
+tables, the real results folder, or the real job's notebook: it is imported under another name.
+Its results are labelled a rehearsal everywhere. The real 1 December run is still checked by the
+watchdog on 2 December.
+
+If it can't be deployed by 19 November, tell Claude, who will move the date.
+
+1. Get the merged code:
+   ```powershell
+   git checkout main
+   git pull
+   ```
+2. Stage the notebook, the wheel and the two input files under this commit. It prints a short
+   JSON block with no secrets: send it to Claude.
+   ```powershell
+   .venv\Scripts\python.exe scripts\stage_research_job.py --workspace-name rehearsal_monthly_drift monthly_drift results/phase3/monthly/spec.json results/phase3/serving/results.json
+   ```
+3. Claude puts those values into the rehearsal job file in place of `STAGE_FIRST` and merges it.
+   Then get it:
+   ```powershell
+   git pull
+   ```
+4. Create the job. The script reads the job back and stops if the schedule is paused or
+   different. Send Claude the job ID it prints.
+   ```powershell
+   .venv\Scripts\python.exe scripts\deploy_databricks.py --job databricks\monthly_drift_rehearsal_job.json
+   ```
+5. If S2 is done: give `cdm-watchdog` **Can View** on `cdm-rehearsal-monthly-drift` too, the
+   same way as S2 step 5.
+
+### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
+
+- [ ] Done
+
+**Why:** Claude commits the evidence as a rehearsal: the run's trigger (it must say
+`PERIODIC`), its result and its month file.
+
+Replace `<JOB_ID>` with the ID from S11 step 4.
+
+1. The run, with its trigger and result:
+   ```powershell
+   databricks jobs list-runs --job-id <JOB_ID> -o json | Out-File -Encoding utf8 .\dist\rehearsal_runs.json
+   Get-Content .\dist\rehearsal_runs.json | Select-String -Pattern "run_id|trigger|life_cycle_state|result_state|start_time"
+   ```
+2. Its files:
+   ```powershell
+   databricks fs cp -r dbfs:/Volumes/workspace/cdm/raw/results/rehearsal/monthly .\dist\rehearsal
+   Get-ChildItem .\dist\rehearsal
+   ```
+   Send Claude the lines from step 1 and the contents of `month_01.json` and `slo_01.json`.
+3. If S2 to S4 are done, run the watchdog against the rehearsal job. It should end **ok**:
+   ```powershell
+   gh workflow run drift-watchdog.yml --repo erjonb19/clinical-drift-monitor -f month=2026-11 -f job_id=<JOB_ID>
+   gh run watch --repo erjonb19/clinical-drift-monitor
+   ```
+4. Afterwards, delete the rehearsal job. Dropping its three tables is your call; they are
+   separate from the real ones.
+   ```powershell
+   databricks jobs delete <JOB_ID>
+   ```
+   ```sql
+   DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_monthly;
+   DROP TABLE IF EXISTS workspace.cdm.rehearsal_prediction_audit;
+   DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
+   ```
+
 ## Done
 
 Ticked steps move here with the date. None yet.

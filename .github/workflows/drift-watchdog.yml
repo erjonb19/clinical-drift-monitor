@@ -14,6 +14,10 @@ on:
         description: "Month to check (YYYY-MM); default the current month"
         required: false
         default: ""
+      job_id:
+        description: "Job to check (digits); default the monthly job. Item 1's rehearsal uses this."
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -39,5 +43,12 @@ jobs:
           DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
           DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
           MONTH: ${{ inputs.month }}
+          JOB_ID: ${{ inputs.job_id }}
         run: |
-          if [ -n "$MONTH" ]; then python scripts/watchdog.py --month "$MONTH"; else python scripts/watchdog.py; fi
+          args=()
+          if [ -n "$MONTH" ]; then args+=(--month "$MONTH"); fi
+          if [ -n "$JOB_ID" ]; then
+            [[ "$JOB_ID" =~ ^[0-9]{1,20}$ ]] || { echo "::error::job_id must be digits"; exit 2; }
+            args+=(--job-id "$JOB_ID")
+          fi
+          python scripts/watchdog.py "${args[@]}"

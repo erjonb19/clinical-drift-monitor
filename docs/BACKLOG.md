@@ -113,6 +113,17 @@ gets a **Blocked:** line with the reason.
        325029901767432 and the files in `/Volumes/workspace/cdm/raw/results/scheduler_probe/`.
        The owner's message of 2026-11-10 again held the unfilled placeholders for both days, so
        they stay not reported.
+   - **Scheduled rehearsal (owner, 2026-11-13; built, not deployed):** so item 1 doesn't wait
+     for 1 December, a temporary copy of the monthly job fires once, at 06:00 UTC on 20 November
+     (`databricks/monthly_drift_rehearsal_job.json`). It runs the same notebook with the same
+     bundle, imported under another name (`stage_research_job.py --workspace-name`). It replays
+     month 1 into `rehearsal_*` tables and `/Volumes/workspace/cdm/raw/results/rehearsal/monthly`;
+     the notebook's new `tables` parameter accepts only `gold` (the default) or `rehearsal`, and
+     a rehearsal must write under a rehearsal folder. Its evidence will be labelled a rehearsal.
+     The watchdog takes a `job_id` input so it can check the rehearsal too. The real job is not
+     changed: it still runs the notebook staged at 44451c6. Owner steps S11 and S12 in
+     `docs/OWNER_STEPS.md`. Tests in `tests/test_deploy.py` and
+     `tests/test_stage_research_job.py`.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails

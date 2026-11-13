@@ -10,6 +10,9 @@
 # MAGIC Months 1 to 12 replay real shifts in a fixed order; later months log the live check only.
 # MAGIC Every table write is a Spark query over the tables its rows come from, so Unity Catalog lineage
 # MAGIC reaches the three tables (`results/phase3/lineage/spark_writes_spec.json`).
+# MAGIC `tables` picks the three tables' prefix: `gold` (the default, the real job) or `rehearsal`
+# MAGIC (backlog item 1's one-off scheduled rehearsal, `databricks/monthly_drift_rehearsal_job.json`,
+# MAGIC which must never touch the real tables or results). Any other value stops the run.
 
 # COMMAND ----------
 
@@ -23,6 +26,7 @@ for name, default in {
     "out": "/Volumes/workspace/cdm/raw/results/phase3/monthly",
     "count": "1",
     "job_run_id": "",
+    "tables": "gold",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -56,9 +60,13 @@ OUT = Path(dbutils.widgets.get("out"))
 BUNDLE = Path(dbutils.widgets.get("bundle"))
 COUNT = int(dbutils.widgets.get("count"))
 JOB_RUN = dbutils.widgets.get("job_run_id") or "manual"
+TABLES = dbutils.widgets.get("tables")
+if TABLES not in {"gold", "rehearsal"}:
+    raise ValueError(f"tables must be gold or rehearsal, not {TABLES!r}")
+if TABLES == "rehearsal" and "/rehearsal/" not in f"{OUT}/":
+    raise ValueError(f"a rehearsal writes its files under a rehearsal folder, not {OUT}")
 MONTHLY, AUDIT, BASELINE = (
-    f"workspace.cdm.{t}"
-    for t in ("gold_drift_monthly", "gold_prediction_audit", "gold_drift_baseline")
+    f"workspace.cdm.{TABLES}_{t}" for t in ("drift_monthly", "prediction_audit", "drift_baseline")
 )
 INDEX = {c: i for i, c in enumerate(CLASSES)}
 BACKFILL = "workspace.cdm.gold_melanoma_backfill"  # written once by melanoma_backfill.py
@@ -212,6 +220,8 @@ def run_month(month: int) -> dict:
         live["new_since_last_run"] = live["count"] - int(previous["live_count"])
     row = {"month": month, "run_utc": datetime.now(UTC).isoformat(timespec="seconds"), "job_run": JOB_RUN,
            "code_version": CODE, "bundle_version": VERSION, "live": live, "sizes": SIZES}  # fmt: skip
+    if TABLES == "rehearsal":
+        row["rehearsal"] = "backlog item 1's scheduled rehearsal: separate tables and folder"
     # The previous month's accuracy: its labels have now "arrived".
     prev = (
         spark.table(AUDIT).where(F.col("month") == month - 1).toPandas()
