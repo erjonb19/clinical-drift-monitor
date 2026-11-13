@@ -708,6 +708,15 @@ change only the owner can make (repository settings, accounts, consoles).
       where the CPU torch and torchvision wheels come from, so `uv lock` cannot resolve them.
       Unblock: allow that host in the cloud environment's network settings, or run `uv lock` on
       the laptop and commit `uv.lock`.
+    - **2026-11-13, CI part built:** the owner allowed `download.pytorch.org` (its wheels are
+      served from `download-r2.pytorch.org`, also allowed). `uv.lock` is committed
+      (`exclude-newer = "7 days"`, torch 2.14.0+cpu and torchvision 0.29.0 from the PyTorch CPU
+      index). The ci, docker, benchmark and detector-quality workflows install with
+      `uv sync --locked` (uv 0.11.32, pinned by version and release SHA-256), and pip-audit runs
+      from a locked `audit` dependency group. `test_workflows_install_only_from_the_lock_or_hashes`
+      fails on any other install. **Not ticked yet:** the Streamlit app's hashed requirements
+      come in a separate PR that the owner merges, because merging it redeploys the live demo;
+      the Docker image is item 27.
 27. [ ] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
     torch wheels), `--require-hashes --no-deps`, pinned build backend.
     - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.

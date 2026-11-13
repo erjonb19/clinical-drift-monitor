@@ -218,3 +218,29 @@ def test_transformers_is_past_the_2026_advisories() -> None:
     pin = re.search(r'"transformers==(\d+)\.(\d+)\.(\d+)"', pyproject)
     assert pin is not None
     assert tuple(int(x) for x in pin.groups()) >= (5, 10, 1), pin.group(0)
+
+
+def test_workflows_install_only_from_the_lock_or_hashes() -> None:
+    """Backlog item 26: every Python install in CI comes from uv.lock (`uv sync --locked`, which
+    fails when the lock is stale) or from a hashed requirements file; uv itself is pinned by
+    version and release checksum, and the lock takes only releases at least 7 days old."""
+    for path in WORKFLOWS.glob("*.yml"):
+        text = path.read_text("utf-8")
+        for line in text.splitlines():
+            code = line.split("#", 1)[0]
+            if re.search(r"\bpip3? install\b", code):
+                assert "--require-hashes" in code and "uv pip install" not in code, (
+                    f"{path.name}: {line.strip()}"
+                )
+            if re.search(r"\buv (sync|run)\b", code):
+                assert "--locked" in code, f"{path.name}: {line.strip()}"
+            assert not re.search(r"\buv (add|lock|pip install|tool install)\b", code), line
+            assert not re.search(r"\b(pipx|easy_install|conda) ", code), line
+        if "setup-uv@" in text:
+            assert re.search(r'version: "\d+\.\d+\.\d+"', text), path.name
+            assert re.search(r'checksum: "[0-9a-f]{64}"', text), path.name
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    assert 'exclude-newer = "7 days"' in pyproject
+    lock = (REPO / "uv.lock").read_text("utf-8")
+    assert 'exclude-newer-span = "P7D"' in lock
+    assert 'name = "torch"\nversion = "2.14.0+cpu"' in lock  # CPU wheels, as in the image
