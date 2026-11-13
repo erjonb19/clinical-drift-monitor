@@ -524,8 +524,8 @@ threshold).
 - The research-demo notice, the non-commercial licence terms and attribution are on the page
   and in every response.
 - Tested locally in Docker: peak memory 442 MiB with full-size made-up images, close to
-  Render's 512 MiB free tier; a run capped at 512 MiB sat at its limit. Dependencies are pinned
-  to the tested image (`docker/constraints.txt`).
+  Render's 512 MiB free tier; a run capped at 512 MiB sat at its limit. The image installs only
+  hashed packages exported from `uv.lock` (`docker/requirements.txt`, CPU torch wheels included).
 - **Not deployed: the free public deploy is blocked.** The owner approved public weights on
   2026-10-23, but Hugging Face returned 402 Payment Required for both a Docker and a Gradio Space ("hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription"). No Space was created. Render's free tier is too tight (above), and
   paying breaks the zero-cost rule, so the API stays built and tested in Docker CI. The public

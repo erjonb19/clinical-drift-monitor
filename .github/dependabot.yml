@@ -12,6 +12,8 @@ version: 2
 updates:
   # uv (backlog item 26): Dependabot edits pyproject.toml and re-locks uv.lock together, so CI's
   # `uv sync --locked` accepts its PRs.
+  # A uv update that moves an API image package also needs docker/requirements.txt re-exported
+  # (command in its header); test_the_image_installs_only_hashed_packages_from_the_lock says so.
   - package-ecosystem: uv
     directory: /
     schedule:
@@ -36,16 +38,17 @@ updates:
         update-types: [version-update:semver-major, version-update:semver-minor]
       - dependency-name: transformers
         update-types: [version-update:semver-major, version-update:semver-minor]
-      # sympy 1.14 (torch's dependency, pinned in docker/constraints.txt) needs mpmath < 1.4;
-      # #108's mpmath 1.4.1 made the constraints file impossible to install. Patches only.
+      # sympy 1.14 (torch's dependency, in uv.lock and docker/requirements.txt) needs
+      # mpmath < 1.4; #108's mpmath 1.4.1 made the image's pins impossible to install. Patches only.
       - dependency-name: mpmath
         update-types: [version-update:semver-major, version-update:semver-minor]
       # onnxruntime: held at the version the Databricks ONNX job ran and the committed results
       # in results/phase3/onnx/ record, until the next Databricks deploy (owner, 2026-11-11).
       - dependency-name: onnxruntime
-      # torch and torchvision: no updates at all (owner, 2026-11-10). Dependabot drops the
-      # +cpu label in docker/constraints.txt and cannot see the Dockerfile's RUN line (#74), so a
-      # bump is a hand change to both, checked by test_the_image_keeps_the_cpu_torch_wheels.
+      # torch and torchvision: no updates at all (owner, 2026-11-10). Dependabot dropped the
+      # +cpu label from the image's pins (#74). A bump is a hand change to
+      # constraint-dependencies in pyproject.toml, then uv lock and the docker/requirements.txt
+      # export, checked by test_the_image_keeps_the_cpu_torch_wheels.
       - dependency-name: torch
       - dependency-name: torchvision
       - dependency-name: numpy

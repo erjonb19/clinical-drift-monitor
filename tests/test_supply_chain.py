@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
+import subprocess
 from datetime import date
 from pathlib import Path
 
@@ -69,18 +71,58 @@ def test_dependabot_keeps_python_311_and_the_model_stack_on_patches() -> None:
 
 def test_the_image_keeps_the_cpu_torch_wheels() -> None:
     """A Dependabot pip PR (#68) dropped the `+cpu` label from torch and torchvision in the
-    image's constraints, which would pull the CUDA wheels; and it cannot see the Dockerfile's
-    RUN line, so the two pins could disagree."""
-    pins = dict(
-        line.split("==", 1)
-        for line in (REPO / "docker" / "constraints.txt").read_text("utf-8").splitlines()
-        if line.startswith(("torch==", "torchvision=="))
+    image's pins, which would pull the CUDA wheels. Item 27: the image's hashed requirements
+    hold the +cpu wheels for Linux, at the versions pyproject.toml holds them to."""
+    pins = re.findall(
+        r"^(torch|torchvision)==(\S+) ; sys_platform != 'darwin'",
+        (REPO / "docker" / "requirements.txt").read_text("utf-8"),
+        re.M,
     )
-    assert set(pins) == {"torch", "torchvision"}
-    dockerfile = (REPO / "Dockerfile").read_text("utf-8")
-    for name, version in pins.items():
+    assert sorted(name for name, _ in pins) == ["torch", "torchvision"]
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    for name, version in pins:
         assert version.endswith("+cpu"), f"{name}=={version}"
-        assert f"{name}=={version.removesuffix('+cpu')}" in dockerfile, f"{name} differs"
+        assert f'"{name}=={version.removesuffix("+cpu")}"' in pyproject, f"{name} differs"
+
+
+def test_the_image_installs_only_hashed_packages_from_the_lock() -> None:
+    """Backlog item 27: the image installs docker/requirements.txt with --require-hashes and
+    --no-deps (nothing unlisted, nothing with another hash), then the project offline with the
+    hashed setuptools; and that file is exactly what uv exports from the committed lock."""
+    dockerfile = (REPO / "Dockerfile").read_text("utf-8").replace("\\\n", " ")
+    installs = re.findall(r"^RUN pip install (.*)", dockerfile, re.M)
+    assert len(installs) == 2, installs
+    assert all("--no-deps" in run for run in installs)
+    assert "--require-hashes" in installs[0] and "-r requirements.txt" in installs[0]
+    assert "--no-index" in installs[1] and "--no-build-isolation" in installs[1]
+    assert "--index-url" not in dockerfile.replace("--extra-index-url", "")  # only an extra index
+    uv = shutil.which("uv")
+    assert uv, "uv is needed to check docker/requirements.txt against uv.lock"
+    exported = subprocess.run(  # noqa: S603 (fixed arguments, no shell)
+        [
+            uv,
+            "export",
+            "--frozen",
+            "--no-dev",
+            "--extra",
+            "api",
+            "--group",
+            "image",
+            "--no-emit-project",
+            "--format",
+            "requirements-txt",
+            "--no-header",
+            "--no-annotate",
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    committed = (REPO / "docker" / "requirements.txt").read_text("utf-8")
+    body = "".join(line for line in committed.splitlines(keepends=True) if not line.startswith("#"))
+    assert body == exported, "docker/requirements.txt is stale: re-export it from uv.lock"
+    assert "setuptools==" in body  # the build backend for the offline project install
 
 
 def test_dependabot_keeps_floors_and_the_uvicorn_that_flwr_needs() -> None:

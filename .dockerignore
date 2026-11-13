@@ -4,5 +4,5 @@
 !src/
 !app/api/
 !dist/bundle/
-!docker/constraints.txt
+!docker/requirements.txt
 **/__pycache__

@@ -79,6 +79,10 @@ dev = [
 # Tools CI runs from their own locked environments, never installed into the project's.
 [dependency-groups]
 audit = ["pip-audit==2.10.1"]
+# Backlog item 27: the API image's torch (CPU wheels, held by the constraints above). The image
+# installs `--extra api --group image` from docker/requirements.txt, exported from this lock with
+# hashes; that export also pins setuptools, the build backend the project is installed with.
+image = ["torch", "torchvision"]
 
 [project.scripts]
 # Databricks job tasks run these as python_wheel_task entry points.
