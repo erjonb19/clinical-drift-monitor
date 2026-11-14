@@ -847,7 +847,8 @@ and each now has a test.
 
 **Status: the demo runs, but the drift alarm has not been shown yet.** The "Compose demo"
 workflow runs it on a GitHub runner. The alarm can only be shown with the champion bundle; so
-far it has run with the untrained CI bundle, which gives every image the same score.
+far it has run with the untrained CI bundle, whose scores gave the two batches identical
+distributions (KS statistic 0, PSI 0), so that run checks the mechanics only.
 
 `compose.yaml` starts two containers:
 

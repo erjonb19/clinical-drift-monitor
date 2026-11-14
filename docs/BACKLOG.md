@@ -707,9 +707,9 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
         (`API_RATE_PER_CLIENT`, `API_RATE_TOTAL`). The defaults are unchanged, and a bad value
         stops the API at startup.
       - The "Compose demo" workflow ran `docker compose up` end to end on a runner (run
-        43537650980). It used the untrained CI bundle, which gives every image the same OOD
-        score (KS statistic 0 and PSI 0 on 50 different images against 50 others), so its
-        "no alarm" means nothing and the run says so.
+        43537650980, repeated on the PR's final commit by run 43539072535). It used the untrained CI
+        bundle, whose scores gave the two batches identical distributions (KS statistic 0 and
+        PSI 0), so its "no alarm" means nothing and the run says so.
       - **Not ticked:** whether the champion's scores trip the alarm on these two batches has
         not been run. The workflow uses the champion bundle as soon as
         `config/champion_smoke.json` names it.
