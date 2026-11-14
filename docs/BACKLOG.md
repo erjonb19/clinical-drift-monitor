@@ -687,6 +687,32 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       linked from the README. **Not built:** `docker compose up` with a sample batch that trips
       the drift alarm. A drift alarm from the untrained CI bundle would mean nothing, so it waits
       for the champion bundle as a release asset (owner), like items 6, 13 and 15.
+    - **2026-11-14, built, waiting on the champion bundle:**
+      - `compose.yaml` runs the API and a demo client (`cdm.compose_demo`) beside it. The client
+        scores two fixed batches through the API and runs the pre-registered drift test on
+        their OOD scores.
+      - The reference batch is the smoke test's 50 test-split images. The shifted batch is 50
+        PAD-UFES-20 smartphone photos (`config/compose_demo_shift_images.csv`, collection 406).
+      - That file was written by `scripts/make_smoke_manifest.py --collection 406` on a GitHub
+        runner and copied from the run's log. All 100 images' SHA-256 values were then checked
+        against fresh downloads, and every image is checked again on each demo run.
+      - The script's first version used ISIC's plain image list, which ignores `collections`:
+        it returned a dermoscopic image (ISIC_0000000). Its clinical-photo check stopped the
+        run, and it now uses the search endpoint, as the ingest does.
+      - The thresholds were set for 300 images a month against the validation baseline; here
+        they are applied to 50 against 50, so the result is a demonstration, not a measurement.
+      - `scripts/fetch_champion_bundle.py` takes the bundle only from this repository's
+        releases, with the configured SHA-256.
+      - The API's rate limits can now be raised from the environment for the local demo
+        (`API_RATE_PER_CLIENT`, `API_RATE_TOTAL`). The defaults are unchanged, and a bad value
+        stops the API at startup.
+      - The "Compose demo" workflow ran `docker compose up` end to end on a runner (run
+        43537650980). It used the untrained CI bundle, which gives every image the same OOD
+        score (KS statistic 0 and PSI 0 on 50 different images against 50 others), so its
+        "no alarm" means nothing and the run says so.
+      - **Not ticked:** whether the champion's scores trip the alarm on these two batches has
+        not been run. The workflow uses the champion bundle as soon as
+        `config/champion_smoke.json` names it.
 
 22. [x] **Security audit against `docs/SECURITY_STANDARDS.md`** (owner, 2026-11-09). Plan only, change no code. Audit the repo against Section 19.3 of `docs/SECURITY_STANDARDS.md` and every section that applies to this stack, and report each gap in the file's SEVERITY format. Add one backlog item per gap, numbered after this one, with anything Critical (CVSS 9+) first in the Order of work. Propose a `.claude/settings.json` from Section 17.2, tailored so unattended runs don't stall: keep the deny list, and explain each change to the ask list. Check every vendor-specific setting (npm, uv, GitHub, Claude Code permission syntax) against the vendor's current docs before proposing it. One docs-only PR, which the owner reviews and merges himself (security decisions are his). Include Section 4.5: model checkpoints loaded with pickle (torch.load) should use `weights_only=True` or safetensors.
     - **Done 2026-11-10:** `docs/security-audit-2026-11-10.md`: no Critical or High finding, no

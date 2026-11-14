@@ -47,3 +47,20 @@ jobs:
           echo "----- BEGIN champion_smoke_images.csv -----"
           cat config/champion_smoke_images.csv
           echo "----- END champion_smoke_images.csv -----"
+      # Backlog item 21: the compose demo's shifted batch, 50 PAD-UFES-20 smartphone photos.
+      - name: Write config/compose_demo_shift_images.csv
+        run: python scripts/make_smoke_manifest.py --collection 406 --n 50 --out config/compose_demo_shift_images.csv
+      - name: Check and print the shifted manifest
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import csv
+          rows = list(csv.DictReader(open("config/compose_demo_shift_images.csv", encoding="utf-8")))
+          assert len(rows) == 50, f"{len(rows)} rows, expected 50"
+          assert {r["license"] for r in rows} <= {"CC-0", "CC-BY", "CC-BY-NC"}
+          assert all(len(r["sha256"]) == 64 for r in rows)
+          print("checked:", len(rows), "rows,", sorted({r["license"] for r in rows}), sorted({r["attribution"] for r in rows}))
+          PY
+          echo "----- BEGIN compose_demo_shift_images.csv -----"
+          cat config/compose_demo_shift_images.csv
+          echo "----- END compose_demo_shift_images.csv -----"

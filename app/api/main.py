@@ -334,4 +334,21 @@ def _load() -> Service:
     return Service.load(Path(os.environ.get("BUNDLE_DIR", "/app/bundle")))
 
 
-app = create_app(_load, trusted_hops=int(os.environ.get("TRUSTED_PROXY_HOPS", "0")))
+def limiter_from_env(env: dict[str, str]) -> RateLimiter:
+    """The rate limits, 10 per client and 60 in total a minute unless set. Backlog item 21: the
+    local compose demo raises them for its own client. A value that is not a whole number from 1
+    to 10,000 stops the API at startup (fail closed), never falls back to no limit."""
+    values = {}
+    for name, default in (("API_RATE_PER_CLIENT", 10), ("API_RATE_TOTAL", 60)):
+        raw = env.get(name, str(default))
+        if not (raw.isascii() and raw.isdigit()) or not 1 <= int(raw) <= 10_000:
+            raise ValueError(f"{name} must be a whole number from 1 to 10000")
+        values[name] = int(raw)
+    return RateLimiter(per_client=values["API_RATE_PER_CLIENT"], total=values["API_RATE_TOTAL"])
+
+
+app = create_app(
+    _load,
+    limiter=limiter_from_env(dict(os.environ)),
+    trusted_hops=int(os.environ.get("TRUSTED_PROXY_HOPS", "0")),
+)
