@@ -162,6 +162,9 @@ credential or its permission is wrong.
 
 - [ ] Done
 
+2026-11-14: the owner's reply about this step held an unfilled placeholder ("[yes/not yet]"),
+so it is not ticked.
+
 **Why:** the probe (job 325029901767432) did its work, and its results will be committed in
 `results/phase3/scheduler_probe/runs.json` by #127. Its schedule (`0 0 6 8,9,10 * ?`) fires on
 the 8th, 9th and 10th of every month, so it runs again on 8 December unless it is deleted. Do
@@ -209,29 +212,6 @@ cause lies with the monthly job itself (job 524433148303929).
    your earlier queries of 2026-11-06 used it, so it should work.
 4. Send Claude the matching lines from 1 and 2 and the rows from 3. Remove anything you consider
    private, such as email addresses, first.
-
-### S7. Add `gitleaks` to the required checks on `main` (item 25)
-
-- [ ] Done
-
-**Why:** the secret scan runs on every push, but merging does not wait for it unless it is a
-required check.
-
-1. On GitHub, open the repository, then **Settings**, **Branches** (or **Rules**,
-   **Rulesets**), and edit the rule for `main`.
-2. Under **Require status checks to pass**, add `gitleaks`. Keep `quality`, `image`,
-   `analyze (actions)` and `analyze (python)`.
-3. Click **Save changes**.
-
-### S8. Make the default workflow token read-only (item 28)
-
-- [ ] Done
-
-**Why:** every workflow already asks for `contents: read`, but the repository default decides
-what a new workflow gets if it forgets.
-
-1. On GitHub: **Settings**, **Actions**, **General**, **Workflow permissions**.
-2. Choose **Read repository contents and packages permissions**, and click **Save**.
 
 ### S9. Check `.claude/settings.json` is loaded (item 23)
 
@@ -345,4 +325,27 @@ Replace `<JOB_ID>` with the ID from S11 step 4.
 
 ## Done
 
-Ticked steps move here with the date. None yet.
+Ticked steps move here with the date.
+
+### S7. Add `gitleaks` to the required checks on `main` (item 25)
+
+- [x] Done (owner, 2026-11-14)
+
+**Why:** the secret scan runs on every push, but merging does not wait for it unless it is a
+required check.
+
+1. On GitHub, open the repository, then **Settings**, **Branches** (or **Rules**,
+   **Rulesets**), and edit the rule for `main`.
+2. Under **Require status checks to pass**, add `gitleaks`. Keep `quality`, `image`,
+   `analyze (actions)` and `analyze (python)`.
+3. Click **Save changes**.
+
+### S8. Make the default workflow token read-only (item 28)
+
+- [x] Done (owner, 2026-11-14)
+
+**Why:** every workflow already asks for `contents: read`, but the repository default decides
+what a new workflow gets if it forgets.
+
+1. On GitHub: **Settings**, **Actions**, **General**, **Workflow permissions**.
+2. Choose **Read repository contents and packages permissions**, and click **Save**.

@@ -49,7 +49,7 @@ gets a **Blocked:** line with the reason.
   by a separate agent that did not write the change finds nothing blocking. The owner is asked
   first, in chat, for spending, GPU runs, release tags, Databricks deploys, deleting data and any
   permission-settings change (those PRs are opened and left). PR #50 stays with the owner (his
-  threshold decisions).
+  threshold decisions); the owner takes it up after Thanksgiving (owner, 2026-11-14).
 
 ## Items, in order
 
@@ -734,7 +734,7 @@ change only the owner can make (repository settings, accounts, consoles).
       rule flagged 24 times, matched by path and line together. Locally: no leaks in 354
       commits. `.pre-commit-config.yaml` pins the same version by commit for the owner's
       laptop (`pre-commit install`). **Owner:** add the `gitleaks` check to the required checks
-      on `main`.
+      on `main`. **Done (owner, 2026-11-14):** `gitleaks` is a required check on `main`.
 26. [ ] **Locked, hashed, cooled-down Python installs** (Medium; a new tool, uv, needs the
     owner's OK first): `uv.lock`, `exclude-newer = "7 days"`, `uv sync --locked` in every
     workflow, hashed exports for Docker and the Streamlit app.
@@ -804,7 +804,8 @@ change only the owner can make (repository settings, accounts, consoles).
       `tests/test_supply_chain.py` fails if a workflow lacks a top-level `contents: read` block or
       a checkout keeps its credentials (checked by removing the block from `ci.yml`). **Owner:**
       the repository's default workflow permission (Settings, Actions, General) should be
-      read-only; it cannot be read without admin access.
+      read-only; it cannot be read without admin access. **Done (owner, 2026-11-14):** the
+      default workflow token is read-only.
 29. [x] **Refuse 50 to 100 megapixel images** (silent failure #16): treat Pillow's
     `DecompressionBombWarning` as unreadable, or cap `img.size` before decoding.
     - **Done when:** a 60-megapixel PNG gets a 400 from the API and `unreadable` from the
