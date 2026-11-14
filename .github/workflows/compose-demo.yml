@@ -1,0 +1,68 @@
+# Backlog item 21: runs the one-command demo exactly as a visitor would (`docker compose up`) and
+# prints its result. With the champion bundle once config/champion_smoke.json names its release
+# asset (scripts/fetch_champion_bundle.py checks its SHA-256); until then with the untrained CI
+# bundle, whose scores are meaningless, so that run checks the mechanics only and says so. It
+# reads public ISIC images (each SHA-256 checked) and pushes nothing.
+name: Compose demo
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/compose-demo.yml"
+      - "compose.yaml"
+      - "src/cdm/compose_demo.py"
+      - "scripts/fetch_champion_bundle.py"
+      - "config/champion_smoke.json"
+      - "config/compose_demo_shift_images.csv"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      # Backlog item 26: uv, pinned by version and its release SHA-256 (0.13.4 or later:
+      # GHSA-hq85-5cpj-mr62), installs only what uv.lock records.
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          checksum: "c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
+          enable-cache: false
+      - name: Bundle (champion if configured, else the untrained CI bundle)
+        run: |
+          set -euo pipefail
+          if python -c "import json, sys; a = json.load(open('config/champion_smoke.json'))['bundle_asset']; sys.exit(0 if a.get('url') and a.get('sha256') else 1)"; then
+            python scripts/fetch_champion_bundle.py
+            echo "BUNDLE=champion" >> "$GITHUB_ENV"
+          else
+            uv sync --locked --no-python-downloads --python 3.11 --extra train
+            .venv/bin/python scripts/make_test_bundle.py --out dist/bundle
+            echo "BUNDLE=untrained CI bundle: mechanics only, scores meaningless" >> "$GITHUB_ENV"
+          fi
+      - name: docker compose up
+        run: |
+          set -euo pipefail
+          mkdir -p dist/compose_demo
+          chmod a+rwx dist/compose_demo  # the demo container runs as user 1000
+          docker compose up --build --abort-on-container-exit --exit-code-from demo
+      - name: Result
+        if: always()
+        run: |
+          echo "bundle: $BUNDLE"
+          echo "----- BEGIN compose_demo.json -----"
+          cat dist/compose_demo/compose_demo.json || echo "(no result written)"
+          echo "----- END compose_demo.json -----"
+          docker compose down

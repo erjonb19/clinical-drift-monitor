@@ -30,6 +30,8 @@ services:
       - ALL
 
   demo:
+    # The same image as the API (the build is cached), so compose never tries to pull it.
+    build: .
     image: cdm-api:local
     depends_on:
       api:
@@ -40,6 +42,8 @@ services:
               "--out", "/demo/out/compose_demo.json"]
     volumes:
       - ./config:/demo/config:ro
+      # The result file. The container runs as user 1000: on Linux, create this folder and make
+      # it writable first (`mkdir -p dist/compose_demo && chmod a+rwx dist/compose_demo`).
       - ./dist/compose_demo:/demo/out
     read_only: true
     tmpfs:
