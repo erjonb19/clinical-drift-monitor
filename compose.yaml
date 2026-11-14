@@ -3,7 +3,7 @@
 # `python scripts/fetch_champion_bundle.py`, or the untrained CI bundle via
 # `python scripts/make_test_bundle.py --out dist/bundle`), starts it, and runs the demo client
 # (cdm.compose_demo): two fixed batches of public ISIC images, scored by the API, then the
-# pre-registered drift test. A research demo, not for medical use.
+# pre-registered drift test; it prints the result. A research demo, not for medical use.
 services:
   api:
     build: .
@@ -38,13 +38,10 @@ services:
         condition: service_healthy
     command: ["python", "-m", "cdm.compose_demo", "--api", "http://api:7860",
               "--reference", "/demo/config/champion_smoke_images.csv",
-              "--shifted", "/demo/config/compose_demo_shift_images.csv",
-              "--out", "/demo/out/compose_demo.json"]
+              "--shifted", "/demo/config/compose_demo_shift_images.csv"]
+    # Read-only inputs only: the result is printed (`docker compose logs demo` shows it again).
     volumes:
       - ./config:/demo/config:ro
-      # The result file. The container runs as user 1000: on Linux, create this folder and make
-      # it writable first (`mkdir -p dist/compose_demo && chmod a+rwx dist/compose_demo`).
-      - ./dist/compose_demo:/demo/out
     read_only: true
     tmpfs:
       - /tmp

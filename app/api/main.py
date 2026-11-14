@@ -341,7 +341,7 @@ def limiter_from_env(env: dict[str, str]) -> RateLimiter:
     values = {}
     for name, default in (("API_RATE_PER_CLIENT", 10), ("API_RATE_TOTAL", 60)):
         raw = env.get(name, str(default))
-        if not raw.isdigit() or not 1 <= int(raw) <= 10_000:
+        if not (raw.isascii() and raw.isdigit()) or not 1 <= int(raw) <= 10_000:
             raise ValueError(f"{name} must be a whole number from 1 to 10000")
         values[name] = int(raw)
     return RateLimiter(per_client=values["API_RATE_PER_CLIENT"], total=values["API_RATE_TOTAL"])

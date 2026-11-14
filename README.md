@@ -869,11 +869,12 @@ three PAD-UFES months scored a PSI of 3.1 to 4.0 against that baseline
 
 ```bash
 python scripts/fetch_champion_bundle.py      # once the bundle is a release asset; SHA-256 checked
-mkdir -p dist/compose_demo && chmod a+rwx dist/compose_demo
 docker compose up --build --abort-on-container-exit --exit-code-from demo
 ```
 
-The result is written to `dist/compose_demo/compose_demo.json`. Until the champion bundle is
+The demo prints its result (`docker compose logs demo` shows it again). The thresholds were set
+for 300 images a month against the validation baseline, so on 50 against 50 the result is a
+demonstration, not a measurement. Until the champion bundle is
 released, `python scripts/make_test_bundle.py --out dist/bundle` gives the untrained CI bundle,
 which checks the mechanics only. A research demo, not for medical use.
 

@@ -699,6 +699,8 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       - The script's first version used ISIC's plain image list, which ignores `collections`:
         it returned a dermoscopic image (ISIC_0000000). Its clinical-photo check stopped the
         run, and it now uses the search endpoint, as the ingest does.
+      - The thresholds were set for 300 images a month against the validation baseline; here
+        they are applied to 50 against 50, so the result is a demonstration, not a measurement.
       - `scripts/fetch_champion_bundle.py` takes the bundle only from this repository's
         releases, with the configured SHA-256.
       - The API's rate limits can now be raised from the environment for the local demo
@@ -706,7 +708,8 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
         stops the API at startup.
       - The "Compose demo" workflow ran `docker compose up` end to end on a runner (run
         43537650980). It used the untrained CI bundle, which gives every image the same OOD
-        score (0.216), so its "no alarm" means nothing and the run says so.
+        score (KS statistic 0 and PSI 0 on 50 different images against 50 others), so its
+        "no alarm" means nothing and the run says so.
       - **Not ticked:** whether the champion's scores trip the alarm on these two batches has
         not been run. The workflow uses the champion bundle as soon as
         `config/champion_smoke.json` names it.

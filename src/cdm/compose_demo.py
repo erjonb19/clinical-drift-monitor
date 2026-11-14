@@ -11,10 +11,13 @@ drift test (``cdm.monitor.drift_test``: KS p < 0.01 and PSI >= 0.2) on the API's
   Real images, not staged drift.
 
 This compares two small scored batches, not a month against the monitoring job's validation
-baseline (the bundle does not carry that baseline), and says so in its output. Images are kept
+baseline (the bundle does not carry that baseline), and says so in its output. The thresholds
+were set for 300 images a month against that baseline; on 50 against 50 the result is a
+demonstration, not a measurement. Images are kept
 only in a cache folder for the run; nothing is sent anywhere but the API.
 
-Usage: python -m cdm.compose_demo --api http://api:7860 --out /out/compose_demo.json
+Usage: python -m cdm.compose_demo --api http://api:7860 [--out result.json]
+The result is printed; ``--out`` also writes it to a file.
 """
 
 from __future__ import annotations
@@ -23,6 +26,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 import time
 import urllib.error
 import urllib.request
@@ -34,7 +38,8 @@ import numpy as np
 
 from cdm.monitor import drift_test
 
-# ISIC's file host, under both names it has served (the newer one since November 2026).
+# ISIC's file host, under both names its manifests use (the regional one in files written
+# 2026-11-14).
 ISIC_FILES = (
     "https://isic-archive.s3.amazonaws.com/images/",
     "https://isic-archive.s3.us-east-1.amazonaws.com/images/",
@@ -54,9 +59,13 @@ def read_manifest(path: Path) -> list[dict[str, str]]:
         rows = list(csv.DictReader(f))
     if not rows:
         raise ValueError(f"{path}: no images")
-    for r in rows:  # only ISIC's own file host, with a full SHA-256
-        if not r["url"].startswith(ISIC_FILES) or len(r["sha256"]) != 64:
-            raise ValueError(f"{path}: {r['isic_id']} has an unexpected URL or hash")
+    for r in rows:  # only ISIC's own file host, a plain ISIC ID, a full SHA-256
+        if (
+            not r["url"].startswith(ISIC_FILES)
+            or not re.fullmatch(r"ISIC_\d+", r["isic_id"])
+            or not re.fullmatch(r"[0-9a-f]{64}", r["sha256"])
+        ):
+            raise ValueError(f"{path}: {r['isic_id']} has an unexpected URL, ID or hash")
     return rows
 
 
@@ -71,11 +80,13 @@ def http_get(url: str) -> bytes:
 def image_bytes(row: dict[str, str], cache: Path, fetch: Fetch) -> bytes:
     """The image, from the cache or ISIC, refused unless its SHA-256 matches the manifest."""
     path = cache / f"{row['isic_id']}.img"
-    data = path.read_bytes() if path.exists() else fetch(row["url"])
+    cached = path.exists()
+    data = path.read_bytes() if cached else fetch(row["url"])
     if hashlib.sha256(data).hexdigest() != row["sha256"]:
         raise ValueError(f"{row['isic_id']}: SHA-256 differs from the manifest")
-    cache.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(data)
+    if not cached:
+        cache.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
     return data
 
 

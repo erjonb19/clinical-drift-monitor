@@ -41,11 +41,16 @@ def test_only_isic_urls_with_full_hashes_are_read(tmp_path: Path) -> None:
     path.write_text(header + "ISIC_1,IL_1,B,CC-0,A,https://example.com/x.jpg," + "0" * 64 + "\n")
     with pytest.raises(ValueError, match="unexpected URL"):
         compose_demo.read_manifest(path)
+    good = f"{compose_demo.ISIC_FILES[0]}x.jpg,"
+    for bad_id, sha in (("../../etc/x", "0" * 64), ("ISIC_1", "Z" * 64)):
+        path.write_text(header + f"{bad_id},IL_1,B,CC-0,A,{good}{sha}\n")
+        with pytest.raises(ValueError, match="unexpected URL"):
+            compose_demo.read_manifest(path)
 
 
 def test_the_client_waits_on_the_rate_limit_and_runs_the_drift_test(tmp_path: Path) -> None:
-    ref = {f"ISIC_R{i}": f"r{i}".encode() for i in range(30)}
-    new = {f"ISIC_S{i}": f"s{i}".encode() for i in range(30)}
+    ref = {f"ISIC_{1000 + i}": f"r{i}".encode() for i in range(30)}
+    new = {f"ISIC_{2000 + i}": f"s{i}".encode() for i in range(30)}
     blobs = {**ref, **new}
     calls: list[int] = []
 
@@ -90,7 +95,7 @@ def test_rate_limits_come_from_the_environment_or_stop_the_api() -> None:
     assert (default.per_client, default.total) == (10, 60)
     raised = limiter_from_env({"API_RATE_PER_CLIENT": "120", "API_RATE_TOTAL": "240"})
     assert (raised.per_client, raised.total) == (120, 240)
-    for bad in ("0", "-1", "ten", "", "10001", "1.5"):
+    for bad in ("0", "-1", "ten", "", "10001", "1.5", "\u00b2"):
         with pytest.raises(ValueError, match="whole number"):
             limiter_from_env({"API_RATE_PER_CLIENT": bad})
 
@@ -125,6 +130,6 @@ def test_the_bundle_fetch_refuses_without_a_release_asset(tmp_path: Path) -> Non
 def test_the_compose_file_keeps_the_api_local_and_the_config_read_only() -> None:
     text = (REPO / "compose.yaml").read_text("utf-8")
     assert '"127.0.0.1:7860:7860"' in text  # not published on every interface
-    assert "./config:/demo/config:ro" in text
+    assert "./config:/demo/config:ro" in text and "/demo/out" not in text  # inputs only
     assert text.count("read_only: true") == 2 and text.count("no-new-privileges:true") == 2
     assert "privileged" not in text and "SECRET" not in text.upper()

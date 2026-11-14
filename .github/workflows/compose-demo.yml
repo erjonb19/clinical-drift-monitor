@@ -55,14 +55,12 @@ jobs:
       - name: docker compose up
         run: |
           set -euo pipefail
-          mkdir -p dist/compose_demo
-          chmod a+rwx dist/compose_demo  # the demo container runs as user 1000
           docker compose up --build --abort-on-container-exit --exit-code-from demo
       - name: Result
         if: always()
         run: |
           echo "bundle: $BUNDLE"
-          echo "----- BEGIN compose_demo.json -----"
-          cat dist/compose_demo/compose_demo.json || echo "(no result written)"
-          echo "----- END compose_demo.json -----"
+          echo "----- BEGIN demo output -----"
+          docker compose logs --no-log-prefix demo
+          echo "----- END demo output -----"
           docker compose down
