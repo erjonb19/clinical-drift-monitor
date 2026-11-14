@@ -31,7 +31,6 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 SEARCH = "https://api.isic-archive.com/api/v2/images/search/?"
-IMAGES = "https://api.isic-archive.com/api/v2/images/?"
 OUT = REPO / "config" / "champion_smoke_images.csv"
 # diagnosis is ISIC's coarse diagnosis_1 (Benign, Malignant, Indeterminate), for reading only.
 FIELDS = ["isic_id", "lesion_id", "diagnosis", "license", "attribution", "url", "sha256"]
@@ -84,8 +83,10 @@ def row(image: dict[str, Any], lesion: str, url: str) -> dict[str, str]:
 def collection_rows(collection: int, n: int) -> list[dict[str, str]]:
     """Up to ``n`` images of one collection, one per lesion, allowed licences only. Pages are
     followed only over https on the API's own host; every image must be a clinical photo."""
-    host = urllib.parse.urlsplit(IMAGES).netloc
-    url: str | None = IMAGES + urllib.parse.urlencode({"collections": collection, "limit": 100})
+    # The search endpoint, as the ingest uses (cdm.sources): the plain images list ignores
+    # `collections` (it returned ISIC_0000000, a dermoscopic image, for PAD-UFES-20).
+    host = urllib.parse.urlsplit(SEARCH).netloc
+    url: str | None = SEARCH + urllib.parse.urlencode({"collections": collection, "limit": 100})
     rows: list[dict[str, str]] = []
     seen: set[str] = set()
     while url and len(rows) < n:

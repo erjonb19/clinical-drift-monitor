@@ -1,0 +1,50 @@
+# Backlog item 21: the one-command demo. `docker compose up` builds the research API from the
+# Dockerfile (with the serving bundle in dist/bundle: the champion via
+# `python scripts/fetch_champion_bundle.py`, or the untrained CI bundle via
+# `python scripts/make_test_bundle.py --out dist/bundle`), starts it, and runs the demo client
+# (cdm.compose_demo): two fixed batches of public ISIC images, scored by the API, then the
+# pre-registered drift test. A research demo, not for medical use.
+services:
+  api:
+    build: .
+    image: cdm-api:local
+    ports:
+      - "127.0.0.1:7860:7860"
+    environment:
+      # The demo client is the API's only caller here; the image's defaults (10 per client and
+      # 60 in total a minute) stay for any other deployment.
+      API_RATE_PER_CLIENT: "120"
+      API_RATE_TOTAL: "240"
+      TRUSTED_PROXY_HOPS: "0"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  demo:
+    image: cdm-api:local
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["python", "-m", "cdm.compose_demo", "--api", "http://api:7860",
+              "--reference", "/demo/config/champion_smoke_images.csv",
+              "--shifted", "/demo/config/compose_demo_shift_images.csv",
+              "--out", "/demo/out/compose_demo.json"]
+    volumes:
+      - ./config:/demo/config:ro
+      - ./dist/compose_demo:/demo/out
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
