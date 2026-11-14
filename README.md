@@ -843,6 +843,40 @@ for in-distribution but the nearest class for OOD, and projected PathMNIST with 
 on itself. [docs/phase0-note.md](docs/phase0-note.md) traces each fault to a notebook cell,
 and each now has a test.
 
+## One-command demo (`docker compose up`, backlog item 21)
+
+**Status: the demo runs, but the drift alarm has not been shown yet.** The "Compose demo"
+workflow runs it on a GitHub runner. The alarm can only be shown with the champion bundle; so
+far it has run with the untrained CI bundle, which gives every image the same score.
+
+`compose.yaml` starts two containers:
+
+- **`api`:** the research API, with the serving bundle in `dist/bundle`.
+- **`demo`:** a client (`cdm.compose_demo`). It downloads two fixed batches of public ISIC
+  images, checks each file's SHA-256, sends every image to the API, and runs the
+  pre-registered drift test (KS p < 0.01 and PSI >= 0.2) on the API's OOD scores.
+
+The two batches:
+
+- **Reference:** 50 images from the clients' test split (`config/champion_smoke_images.csv`).
+- **Shifted:** 50 PAD-UFES-20 smartphone photos (`config/compose_demo_shift_images.csv`). The
+  model never saw this hospital or this kind of camera. These are real images, not staged drift.
+
+This demo compares the two small batches with each other. The monthly job instead compares
+each month against the validation baseline, which the bundle does not carry. In the replay, the
+three PAD-UFES months scored a PSI of 3.1 to 4.0 against that baseline
+(`results/phase3/monthly/month_10.json` to `month_12.json`).
+
+```bash
+python scripts/fetch_champion_bundle.py      # once the bundle is a release asset; SHA-256 checked
+mkdir -p dist/compose_demo && chmod a+rwx dist/compose_demo
+docker compose up --build --abort-on-container-exit --exit-code-from demo
+```
+
+The result is written to `dist/compose_demo/compose_demo.json`. Until the champion bundle is
+released, `python scripts/make_test_bundle.py --out dist/bundle` gives the untrained CI bundle,
+which checks the mechanics only. A research demo, not for medical use.
+
 ## Reproduce
 
 ```bash

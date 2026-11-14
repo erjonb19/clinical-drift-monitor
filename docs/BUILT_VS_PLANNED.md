@@ -297,6 +297,14 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 
 ## Scaffolded
 
+### Backlog item 21: `docker compose up` demo (2026-11-14)
+
+- Built and run end to end on a GitHub runner, but only with the untrained CI bundle, so it has
+  checked the mechanics only: `compose.yaml`, `cdm.compose_demo`, `scripts/fetch_champion_bundle.py`
+  and the 50 PAD-UFES-20 images.
+- Whether the champion bundle trips the drift alarm on the two batches has not been run. It
+  waits for the champion bundle as a release asset.
+
 ### Phase 3: ONNX export (tried 2026-10-22; parity failed)
 
 - `cdm.serve_onnx` exports each shipped seed with features and logits and a dynamic batch,
