@@ -13,7 +13,7 @@ logged in, as for earlier deploys.
 
 ## Open
 
-### S1. Upload the champion bundle as a release asset (items 6, 13, 15, 21; before Nov 26)
+### S1. Upload the champion bundle as a release asset (items 6, 13, 15, 21; by 18 November)
 
 - [ ] Done
 
@@ -74,7 +74,9 @@ attribution, because the training images include CC-BY-NC ones. The release asse
 
 `dist/` is ignored by git, so nothing here gets committed.
 
-### S2. Create the watchdog's view-only service principal (item 1)
+### S2. Create the watchdog's view-only service principal (item 1; after Thanksgiving)
+
+Waits until after Thanksgiving (owner, 2026-11-16); not needed for item 1 to close.
 
 - [ ] Done
 
@@ -107,7 +109,9 @@ Until it exists, every watchdog run fails as "not configured".
 If a label differs from these, stop and tell Claude what you see. Don't give the principal any
 wider access to work around it.
 
-### S3. Add the three repository secrets for the watchdog (item 1)
+### S3. Add the three repository secrets for the watchdog (item 1; after Thanksgiving)
+
+Waits until after Thanksgiving (owner, 2026-11-16); not needed for item 1 to close.
 
 - [ ] Done
 
@@ -134,7 +138,9 @@ Each command prompts for the value. Paste it into the prompt, not into a chat.
    gh secret list --repo erjonb19/clinical-drift-monitor
    ```
 
-### S4. Run the watchdog once for November (item 1)
+### S4. Run the watchdog once for November (item 1; after Thanksgiving)
+
+Waits until after Thanksgiving (owner, 2026-11-16); not needed for item 1 to close.
 
 - [ ] Done
 
@@ -235,7 +241,7 @@ cause lies with the monthly job itself (job 524433148303929).
    next CodeQL run.
 3. Tell Claude which, if any, are still open.
 
-### S11. Deploy the scheduled rehearsal of the monthly job (item 1; by 19 November)
+### S11. Deploy the scheduled rehearsal of the monthly job (item 1; by 18 November)
 
 - [ ] Done
 
@@ -303,7 +309,8 @@ Replace `<JOB_ID>` with the ID from S11 step 4.
    Get-ChildItem .\dist\rehearsal
    ```
    Send Claude the lines from step 1 and the contents of `month_01.json` and `slo_01.json`.
-3. If S2 to S4 are done, run the watchdog against the rehearsal job. It should end **ok**:
+3. Only if S2 to S4 are done (they wait until after Thanksgiving; item 1 does not need this),
+   run the watchdog against the rehearsal job. It should end **ok**:
    ```powershell
    gh workflow run drift-watchdog.yml --repo erjonb19/clinical-drift-monitor -f month=2026-11 -f job_id=<JOB_ID>
    gh run watch --repo erjonb19/clinical-drift-monitor

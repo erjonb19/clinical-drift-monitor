@@ -346,6 +346,15 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-11-16: decided by the owner** (deadline Thursday 26 November; cut-line items 1, 6, 21)
+  - **Item 1 closes on the 20 November rehearsal alone.** The scheduled rehearsal of the monthly
+    job (`databricks/monthly_drift_rehearsal_job.json`, 06:00 UTC on 20 November) is enough to
+    tick item 1 if it meets the updated "Done when" in `docs/BACKLOG.md`. The watchdog (its
+    service principal, secrets and first run: owner steps S2 to S4) waits until after
+    Thanksgiving, and is not part of item 1's "Done when".
+  - **Owner steps by 18 November:** the champion bundle as a release asset (S1) and the
+    rehearsal deploy (S11).
+  - **PR #50** waits until after 26 November.
 - **2026-11-11: decided by the owner** (overnight instructions)
   - **Merging:** Claude merges PRs itself, including ones marked "owner merges", once CI is green
     on the final commit and a fresh review by a separate agent that did not write the change finds
