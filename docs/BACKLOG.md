@@ -29,7 +29,8 @@ gets a **Blocked:** line with the reason.
    run waits for the owner's approval of its estimate.
 7. **Item 7**, then **items 15, 17, 16, 14** (detector quality, an automated retraining
    pipeline, shadow scoring, batch scoring at scale).
-8. **Item 8** once the owner sets PR #50's thresholds, then **items 9 and 10**.
+8. **Item 8** once the owner sets PR #50's thresholds (after 26 November, owner 2026-11-16),
+   then **items 9 and 10**.
 9. **Item 12** (a live endpoint) and **item 19** (least-privilege access) when the owner has
    made their accounts and decisions; **item 20** after the governed clinical agent's item 22.
 10. **Item 21** (showcase) last.
@@ -49,7 +50,7 @@ gets a **Blocked:** line with the reason.
   by a separate agent that did not write the change finds nothing blocking. The owner is asked
   first, in chat, for spending, GPU runs, release tags, Databricks deploys, deleting data and any
   permission-settings change (those PRs are opened and left). PR #50 stays with the owner (his
-  threshold decisions); the owner takes it up after Thanksgiving (owner, 2026-11-14).
+  threshold decisions); it waits until after 26 November (owner, 2026-11-16).
 
 ## Items, in order
 
@@ -210,10 +211,16 @@ gets a **Blocked:** line with the reason.
         bytes, from `isic-archive.s3.amazonaws.com`. The SHA-256 was not captured that day (cut
         off in the owner's terminal); the three scheduled runs later downloaded the same file,
         and all four files record the same SHA-256 (`results/phase3/scheduler_probe/runs.json`).
-   - **Done when (updated):** one run started by the schedule (its `trigger_type` from the
-     run timeline committed with it) finishes green and records `scored` or `no_new_data`,
-     with its results file and run ID committed; and, if the owner approves the watchdog, it
-     exists and has been seen to fail on a missing run.
+   - **Done when (owner, 2026-11-16; replaces the version below):** the scheduled rehearsal of
+     20 November closes the item on its own. Its run, started by the schedule (`PERIODIC` in
+     `databricks jobs list-runs`, committed with it), finishes `SUCCESS`, and its run ID,
+     `month_01.json` and `slo_01.json` (each labelled a rehearsal) are committed. The watchdog
+     is not part of this: it waits until after Thanksgiving, and still checks the real 1
+     December run once it is set up.
+   - **Done when (previous version, 2026-11-09; replaced 2026-11-16):** one run started by the
+     schedule (its `trigger_type` from the run timeline committed with it) finishes green and
+     records `scored` or `no_new_data`, with its results file and run ID committed; and, if the
+     owner approves the watchdog, it exists and has been seen to fail on a missing run.
 
 2. [ ] **Model versioning and rollbacks** through the MLflow model registry, with the steps to
    roll back to the previous version.
