@@ -1055,6 +1055,16 @@ change only the owner can make (repository settings, accounts, consoles).
   PLAN.md but filed under Scaffolded in BUILT_VS_PLANNED, and G1 to G4 are open. See
   `docs/BUILT_VS_PLANNED.md` and PLAN.md.
 
+- Saved ideas. *From the "Portfolio project upgrade stages" chat (Oct 25 to Nov 3, 2026), saved by the owner on 2026-11-17 before that chat was deleted. Ideas, not commitments: none is in the Order of work, and each needs the owner's OK before it starts.*
+  - An MCP server for the monitor, with optional multi-agent detection, analysis and reporting
+    (proposed Oct 14).
+  - A drift-alert incident agent: an alert triggers a drafted 8D report and a proposed action
+    under `docs/change-control-plan.md`, which a person signs off. *Note:* overlaps the Phase 4
+    report generator and review queue in the next section.
+  - Equity alerts (per Fitzpatrick type) routed to a reviewer queue.
+  - *Already built, so not listed:* the change-control plan (PCCP), the CHAI-aligned model card
+    and the technical report (`docs/report/report.tex`).
+
 ## Open from PLAN.md, not placed (owner to decide)
 
 These were open in PLAN.md and are not in the list above. They stay here until the owner adds
