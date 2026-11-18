@@ -289,6 +289,11 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
   host with byte caps. Redeployed by the owner's reboot on 2026-11-13; the live page was not
   checked from the cloud session.
 - Workflow audit: zizmor, pinned by hash, on every workflow change (item 37, 2026-11-11).
+- Champion smoke test in CI (item 6, 2026-11-18): the release-asset bundle, SHA-256 checked,
+  scores 50 public test-split images on every push.
+- `docker compose up` demo (item 21, 2026-11-18): with the champion bundle it tripped the drift
+  alarm on 50 PAD-UFES-20 photos against 50 test-split images (a demonstration on small
+  batches; `results/phase3/compose_demo/champion_2026-11-18.json`).
 - Locked installs: CI installs only from `uv.lock` (7-day `exclude-newer`; uv pinned by
   version and checksum), and the API image installs only hashed packages exported from it
   (items 26 and 27, 2026-11-13).
@@ -296,14 +301,6 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
   check that `.claude/settings.json` is loaded (item 23).
 
 ## Scaffolded
-
-### Backlog item 21: `docker compose up` demo (2026-11-14)
-
-- Built and run end to end on a GitHub runner, but only with the untrained CI bundle, so it has
-  checked the mechanics only: `compose.yaml`, `cdm.compose_demo`, `scripts/fetch_champion_bundle.py`
-  and the 50 PAD-UFES-20 images.
-- Whether the champion bundle trips the drift alarm on the two batches has not been run. It
-  waits for the champion bundle as a release asset.
 
 ### Phase 3: ONNX export (tried 2026-10-22; parity failed)
 

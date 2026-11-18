@@ -23,7 +23,8 @@ further down.
 | Does a medical vision-language model do better? | No: a BiomedCLIP linear probe trails the shipped model by 15 to 16 points on the clients' test split | `results/research/b_vlm/results.json` |
 
 **Start here:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (one page: what runs where, how it
-scales, where it breaks) and [docs/walkthrough.md](docs/walkthrough.md) (a 3-minute tour).
+scales, where it breaks), [docs/walkthrough.md](docs/walkthrough.md) (a 3-minute tour) and the
+[one-command demo](#one-command-demo-docker-compose-up-backlog-item-21) (`docker compose up`).
 
 **Status (2026-11-11):** Phases 0 to 2 are done; research Phases A to E are built and G is in
 progress ([plan](docs/research_extension_plan.md)); Phase 3 (serving and MLOps) is mostly
@@ -845,10 +846,11 @@ and each now has a test.
 
 ## One-command demo (`docker compose up`, backlog item 21)
 
-**Status: the demo runs, but the drift alarm has not been shown yet.** The "Compose demo"
-workflow runs it on a GitHub runner. The alarm can only be shown with the champion bundle; so
-far it has run with the untrained CI bundle, whose scores gave the two batches identical
-distributions (KS statistic 0, PSI 0), so that run checks the mechanics only.
+**Result with the champion bundle (2026-11-18, "Compose demo" run 44241541700):** the drift
+alarm tripped. KS p = 1.41e-13 and PSI = 7.66, and the API abstained on 38% of the shifted batch
+and none of the reference batch ([`champion_2026-11-18.json`](results/phase3/compose_demo/champion_2026-11-18.json)).
+Two 50-image batches compared with each other: a demonstration, not a measurement, and this PSI
+(binned on 50 reference scores) is not comparable with the monthly job's.
 
 `compose.yaml` starts two containers:
 
@@ -924,6 +926,8 @@ Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to 
 - [x] Item 45: the $5 Haiku cap fails closed when its spend log is missing or shrinks.
 - [x] Item 46: spreadsheet formulas in the G5 CSV sheets are neutralised.
 - [x] Item 27: the API image installs only hashed packages from the lock.
+- [x] Item 6: CI loads the champion bundle and scores 50 public test-split images on every push.
+- [x] Item 21: one-command demo (`docker compose up`) that trips the drift alarm with the champion bundle.
 - [x] Item 47: the public cohort demo is hardened (DuckDB external access off, no error details, per-session caps, the ISIC client held to its host).
 
 ## Reviewer feedback
