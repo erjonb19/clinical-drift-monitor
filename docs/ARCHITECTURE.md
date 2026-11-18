@@ -47,10 +47,10 @@ flowchart LR
   288.6 ms per image at batch size 1 on Databricks serverless CPU
   (`results/phase3/onnx/results.json`). The benchmark's 18 ms per whole request on other
   hardware is about 5 times faster per network; the gap is not explained. The champion's
-  throughput needs its bundle as a release asset (item 6).
+  throughput (item 13) has not been measured; its bundle is now a release asset (2026-11-18).
 - **Not measured yet:** batch scoring at scale (item 14; the owner chose a 5,000-image slice
-  first) and detector quality on staged shifts (item 15; approved, code and spec committed,
-  waiting for the champion bundle as a release asset).
+  first) and detector quality on staged shifts (item 15; approved, code and spec committed, not yet
+  run; the champion bundle it needs is a release asset since 2026-11-18).
 
 ## Where it breaks
 

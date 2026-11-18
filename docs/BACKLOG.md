@@ -346,8 +346,8 @@ gets a **Blocked:** line with the reason.
 6. [x] **Tests and model evals in CI** on every push, with pass and fail thresholds.
    - **Done when:** CI runs the tests and the eval gate on every push and pull request, the
      thresholds are listed in one place, and a self-test shows a regression fails the build.
-   - **Today:** built for pushes to `main` and every pull request, not for pushes to other
-     branches (`.github/workflows/ci.yml`, `docker.yml`): ruff, mypy, pytest, and the eval gate
+   - **Today (2026-11-06; superseded by the notes below, which now run on every push):** built
+     for pushes to `main` and every pull request, not for pushes to other branches (`.github/workflows/ci.yml`, `docker.yml`): ruff, mypy, pytest, and the eval gate
      with a regression self-test, plus the Docker smoke test. **The eval gate does not run
      inference:** `tests/test_eval_gate.py`
      reads committed results files (`config/eval_gate.json` says so). The Docker smoke test
