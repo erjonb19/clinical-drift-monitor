@@ -548,7 +548,7 @@ Throughput stays flat while latency grows with the number of users: the machine 
 (concurrent requests compute in parallel threads and compete for the CPUs; CPU use was not
 measured). Phase 3 measured PyTorch at about 93 ms per seed per image on Databricks serverless,
 about 5 times slower than this whole request; the gap is not explained (different hardware,
-torch build and threads). The champion's numbers need its bundle (a release asset), and the
+torch build and threads). The champion's numbers have not been measured (its bundle is a release asset since 2026-11-18), and the
 dispatch-only `benchmark.yml` workflow repeats this on a GitHub runner. ONNX was not
 re-benchmarked (it failed parity, Phase 3), and int8 quantization needs the champion to check
 accuracy.
@@ -871,15 +871,16 @@ three PAD-UFES months scored a PSI of 3.1 to 4.0 against that baseline
 (`results/phase3/monthly/month_10.json` to `month_12.json`).
 
 ```bash
-python scripts/fetch_champion_bundle.py      # once the bundle is a release asset; SHA-256 checked
+python scripts/fetch_champion_bundle.py      # the champion, from release v1.0.0; SHA-256 checked
 docker compose up --build --abort-on-container-exit --exit-code-from demo
 ```
 
 The demo prints its result (`docker compose logs demo` shows it again). The thresholds were set
 for 300 images a month against the validation baseline, so on 50 against 50 the result is a
-demonstration, not a measurement. Until the champion bundle is
-released, `python scripts/make_test_bundle.py --out dist/bundle` gives the untrained CI bundle,
-which checks the mechanics only. A research demo, not for medical use.
+demonstration, not a measurement. The reference batch's 0 of 50 abstentions does not show a low
+abstain rate either: 50 images are too few for that.
+Without the download, `python scripts/make_test_bundle.py --out dist/bundle` gives the untrained
+CI bundle, which checks the mechanics only. A research demo, not for medical use.
 
 ## Reproduce
 
