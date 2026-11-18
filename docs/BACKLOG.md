@@ -343,7 +343,7 @@ gets a **Blocked:** line with the reason.
      owner. Thresholds and reasons are in the README's "Alerts and model targets" table. Not
      ticked: no run has sent an alert yet.
 
-6. [ ] **Tests and model evals in CI** on every push, with pass and fail thresholds.
+6. [x] **Tests and model evals in CI** on every push, with pass and fail thresholds.
    - **Done when:** CI runs the tests and the eval gate on every push and pull request, the
      thresholds are listed in one place, and a self-test shows a regression fails the build.
    - **Today:** built for pushes to `main` and every pull request, not for pushes to other
@@ -373,6 +373,13 @@ gets a **Blocked:** line with the reason.
      licences CC-0 and CC-BY-NC only (the script now skips any other), each image's own lesion
      ID checked against the one asked for (so the query syntax is now checked). The smoke test
      now skips naming only the champion bundle release asset (owner).
+   - **Done 2026-11-18:** the owner attached the champion bundle to release v1.0.0 (archive
+     SHA-256 9132a89b..., manifest SHA-256 5734add1..., the evaluated bundle's), and
+     `config/champion_smoke.json` names it. The smoke test loaded it in CI and scored the 50
+     images within the 20% abstain limit (the `quality` job on commit 8c431a0, job
+     134590375116: 586 passed; the test's skip condition reads only the committed config and
+     manifest, both present). It also passed in the cloud session before the push. It now runs
+     on every push and pull request.
 
 7. [ ] **Observability on Databricks:** a prediction audit table, Unity Catalog lineage, and
    per-run cost tracking.
@@ -686,7 +693,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
     through its guard.
     - **Done when:** one question about a drift month answers correctly from the other repo.
 
-21. [ ] **Showcase.** A one-page `docs/ARCHITECTURE.md` (one diagram; how it scales and where
+21. [x] **Showcase.** A one-page `docs/ARCHITECTURE.md` (one diagram; how it scales and where
     it breaks, using items 13 to 15's numbers), the README refreshed results-first (an open
     Phase 5 item), `docker compose up` as the one-command demo (also open in Phase 5), and a
     three-minute walkthrough script for the owner to record.
@@ -720,9 +727,12 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
         43537650980, repeated on the PR's final commit by run 43539072535). It used the untrained CI
         bundle, whose scores gave the two batches identical distributions (KS statistic 0 and
         PSI 0), so its "no alarm" means nothing and the run says so.
-      - **Not ticked:** whether the champion's scores trip the alarm on these two batches has
-        not been run. The workflow uses the champion bundle as soon as
-        `config/champion_smoke.json` names it.
+    - **Done 2026-11-18:** with the champion bundle, `docker compose up` on a GitHub runner
+      (Compose demo run 44241541700) tripped the drift alarm: KS p = 1.41e-13, PSI = 7.66;
+      the API abstained on 38% of the PAD-UFES-20 batch and none of the reference batch
+      (`results/phase3/compose_demo/champion_2026-11-18.json`). Two 50-image batches compared
+      with each other, so a demonstration, not a measurement; this PSI is not comparable with
+      the monthly job's. All four parts exist and the README links them.
 
 22. [x] **Security audit against `docs/SECURITY_STANDARDS.md`** (owner, 2026-11-09). Plan only, change no code. Audit the repo against Section 19.3 of `docs/SECURITY_STANDARDS.md` and every section that applies to this stack, and report each gap in the file's SEVERITY format. Add one backlog item per gap, numbered after this one, with anything Critical (CVSS 9+) first in the Order of work. Propose a `.claude/settings.json` from Section 17.2, tailored so unattended runs don't stall: keep the deny list, and explain each change to the ask list. Check every vendor-specific setting (npm, uv, GitHub, Claude Code permission syntax) against the vendor's current docs before proposing it. One docs-only PR, which the owner reviews and merges himself (security decisions are his). Include Section 4.5: model checkpoints loaded with pickle (torch.load) should use `weights_only=True` or safetensors.
     - **Done 2026-11-10:** `docs/security-audit-2026-11-10.md`: no Critical or High finding, no

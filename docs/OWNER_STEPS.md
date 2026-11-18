@@ -13,67 +13,6 @@ logged in, as for earlier deploys.
 
 ## Open
 
-### S1. Upload the champion bundle as a release asset (items 6, 13, 15, 21; by 18 November)
-
-- [ ] Done
-
-**Why:** the champion smoke test (item 6), the champion benchmark (13), detector quality (15)
-and the `docker compose up` demo (21) all need the evaluated model in CI. CI downloads it from a
-GitHub release and checks its SHA-256 before use. Today every one of them skips or waits.
-
-**Which bundle:** registry version 1, alias `champion`. Its serving bundle is the Databricks
-folder `/Volumes/workspace/cdm/raw/deploy/serving/d7191f4`, the one `databricks/monthly_drift_job.json`
-and `docs/rollback.md` name.
-
-**Which release:** attach it to the existing release `v1.0.0` (published 2026-10-23), so no
-new tag is needed.
-
-**Licence:** you approved public weights on 2026-10-23, for non-commercial research use with
-attribution, because the training images include CC-BY-NC ones. The release asset is public.
-
-1. Download the bundle folder from the volume:
-   ```powershell
-   databricks fs cp -r dbfs:/Volumes/workspace/cdm/raw/deploy/serving/d7191f4 .\dist\champion\d7191f4
-   ```
-2. Check it is the evaluated bundle: its manifest's SHA-256 must be
-   `5734add1790eadd6f2e36d767bd78d6fcf5a791484756ed616edf721e8eedee5`
-   (`bundle.manifest_sha256` in `results/phase3/serving/results.json`):
-   ```powershell
-   (Get-FileHash .\dist\champion\d7191f4\manifest.json -Algorithm SHA256).Hash.ToLower()
-   ```
-   Then check it with the repository's own loader, which needs the laptop's `.venv` with torch
-   and `cdm` installed. It checks every file's SHA-256 and each seed's weights hash, and must
-   print `ok`:
-   ```powershell
-   .venv\Scripts\python.exe -c "from pathlib import Path; from cdm.serving import Service; Service.load(Path('dist/champion/d7191f4')); print('ok')"
-   ```
-3. Pack it into one archive (`tar` is built into Windows 10 and 11):
-   ```powershell
-   tar -czf .\dist\cdm-champion-bundle-d7191f4.tar.gz -C .\dist\champion d7191f4
-   ```
-4. Check its size, which must be under 2 GB (GitHub's limit per asset):
-   ```powershell
-   "{0:N0} MB" -f ((Get-Item .\dist\cdm-champion-bundle-d7191f4.tar.gz).Length / 1MB)
-   ```
-5. Upload it to the `v1.0.0` release:
-   ```powershell
-   gh release upload v1.0.0 .\dist\cdm-champion-bundle-d7191f4.tar.gz --repo erjonb19/clinical-drift-monitor
-   ```
-   Then add the terms to the release notes. Open the release page
-   (`gh release view v1.0.0 --web --repo erjonb19/clinical-drift-monitor`), click **Edit**, and
-   add a line such as: "cdm-champion-bundle-d7191f4.tar.gz: model weights trained on ISIC
-   images including CC-BY-NC ones. Non-commercial research use only, with attribution to the
-   ISIC Archive and the image contributors. Not for clinical use."
-6. Get its SHA-256 in lower case:
-   ```powershell
-   (Get-FileHash .\dist\cdm-champion-bundle-d7191f4.tar.gz -Algorithm SHA256).Hash.ToLower()
-   ```
-7. Send Claude two lines: the SHA-256 from step 6, and this URL:
-   `https://github.com/erjonb19/clinical-drift-monitor/releases/download/v1.0.0/cdm-champion-bundle-d7191f4.tar.gz`.
-   Claude fills `bundle_asset` in `config/champion_smoke.json`, and CI then runs the smoke test.
-
-`dist/` is ignored by git, so nothing here gets committed.
-
 ### S2. Create the watchdog's view-only service principal (item 1; after Thanksgiving)
 
 Waits until after Thanksgiving (owner, 2026-11-16); not needed for item 1 to close.
@@ -314,6 +253,67 @@ Replace `<JOB_ID>` with the ID from S11 step 4.
 ## Done
 
 Ticked steps move here with the date.
+
+### S1. Upload the champion bundle as a release asset (items 6, 13, 15, 21; by 18 November)
+
+- [x] Done (owner, 2026-11-18: uploaded to v1.0.0, 65 MB; manifest SHA-256 and `Service.load` checked; licence note in the release notes under "Model weights")
+
+**Why:** the champion smoke test (item 6), the champion benchmark (13), detector quality (15)
+and the `docker compose up` demo (21) all need the evaluated model in CI. CI downloads it from a
+GitHub release and checks its SHA-256 before use. Today every one of them skips or waits.
+
+**Which bundle:** registry version 1, alias `champion`. Its serving bundle is the Databricks
+folder `/Volumes/workspace/cdm/raw/deploy/serving/d7191f4`, the one `databricks/monthly_drift_job.json`
+and `docs/rollback.md` name.
+
+**Which release:** attach it to the existing release `v1.0.0` (published 2026-10-23), so no
+new tag is needed.
+
+**Licence:** you approved public weights on 2026-10-23, for non-commercial research use with
+attribution, because the training images include CC-BY-NC ones. The release asset is public.
+
+1. Download the bundle folder from the volume:
+   ```powershell
+   databricks fs cp -r dbfs:/Volumes/workspace/cdm/raw/deploy/serving/d7191f4 .\dist\champion\d7191f4
+   ```
+2. Check it is the evaluated bundle: its manifest's SHA-256 must be
+   `5734add1790eadd6f2e36d767bd78d6fcf5a791484756ed616edf721e8eedee5`
+   (`bundle.manifest_sha256` in `results/phase3/serving/results.json`):
+   ```powershell
+   (Get-FileHash .\dist\champion\d7191f4\manifest.json -Algorithm SHA256).Hash.ToLower()
+   ```
+   Then check it with the repository's own loader, which needs the laptop's `.venv` with torch
+   and `cdm` installed. It checks every file's SHA-256 and each seed's weights hash, and must
+   print `ok`:
+   ```powershell
+   .venv\Scripts\python.exe -c "from pathlib import Path; from cdm.serving import Service; Service.load(Path('dist/champion/d7191f4')); print('ok')"
+   ```
+3. Pack it into one archive (`tar` is built into Windows 10 and 11):
+   ```powershell
+   tar -czf .\dist\cdm-champion-bundle-d7191f4.tar.gz -C .\dist\champion d7191f4
+   ```
+4. Check its size, which must be under 2 GB (GitHub's limit per asset):
+   ```powershell
+   "{0:N0} MB" -f ((Get-Item .\dist\cdm-champion-bundle-d7191f4.tar.gz).Length / 1MB)
+   ```
+5. Upload it to the `v1.0.0` release:
+   ```powershell
+   gh release upload v1.0.0 .\dist\cdm-champion-bundle-d7191f4.tar.gz --repo erjonb19/clinical-drift-monitor
+   ```
+   Then add the terms to the release notes. Open the release page
+   (`gh release view v1.0.0 --web --repo erjonb19/clinical-drift-monitor`), click **Edit**, and
+   add a line such as: "cdm-champion-bundle-d7191f4.tar.gz: model weights trained on ISIC
+   images including CC-BY-NC ones. Non-commercial research use only, with attribution to the
+   ISIC Archive and the image contributors. Not for clinical use."
+6. Get its SHA-256 in lower case:
+   ```powershell
+   (Get-FileHash .\dist\cdm-champion-bundle-d7191f4.tar.gz -Algorithm SHA256).Hash.ToLower()
+   ```
+7. Send Claude two lines: the SHA-256 from step 6, and this URL:
+   `https://github.com/erjonb19/clinical-drift-monitor/releases/download/v1.0.0/cdm-champion-bundle-d7191f4.tar.gz`.
+   Claude fills `bundle_asset` in `config/champion_smoke.json`, and CI then runs the smoke test.
+
+`dist/` is ignored by git, so nothing here gets committed.
 
 ### S5. Delete the scheduler probe job (item 1)
 
