@@ -164,25 +164,6 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
-### S5. Delete the scheduler probe job (item 1)
-
-- [ ] Done
-
-2026-11-14: the owner's reply about this step held an unfilled placeholder ("[yes/not yet]"),
-so it is not ticked.
-
-**Why:** the probe (job 325029901767432) did its work, and its results will be committed in
-`results/phase3/scheduler_probe/runs.json` by #127. Its schedule (`0 0 6 8,9,10 * ?`) fires on
-the 8th, 9th and 10th of every month, so it runs again on 8 December unless it is deleted. Do
-this once #127 is merged, and before 8 December.
-
-```powershell
-databricks jobs delete 325029901767432
-```
-
-The four probe files in `/Volumes/workspace/cdm/raw/results/scheduler_probe/` can stay; they
-are small. Tell Claude when it is deleted, so the probe's files in `databricks/` can go too.
-
 ### S6. Find why the monthly job did not run on 1 November (item 1)
 
 - [ ] Done
@@ -333,6 +314,23 @@ Replace `<JOB_ID>` with the ID from S11 step 4.
 ## Done
 
 Ticked steps move here with the date.
+
+### S5. Delete the scheduler probe job (item 1)
+
+- [x] Done (owner, 2026-11-18: job 325029901767432 deleted and confirmed gone)
+
+**Why:** the probe (job 325029901767432) did its work, and its results will be committed in
+`results/phase3/scheduler_probe/runs.json` by #127. Its schedule (`0 0 6 8,9,10 * ?`) fires on
+the 8th, 9th and 10th of every month, so it runs again on 8 December unless it is deleted. Do
+this once #127 is merged, and before 8 December.
+
+```powershell
+databricks jobs delete 325029901767432
+```
+
+The four probe files in `/Volumes/workspace/cdm/raw/results/scheduler_probe/` can stay; they
+are small. The probe's job definition and notebook stay in `databricks/` as the record of the code
+that produced `results/phase3/scheduler_probe/runs.json`.
 
 ### S7. Add `gitleaks` to the required checks on `main` (item 25)
 

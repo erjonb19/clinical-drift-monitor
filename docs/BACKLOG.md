@@ -128,9 +128,9 @@ gets a **Blocked:** line with the reason.
        cause, not found yet. Limit: the probe is a different job on different days, so it shows
        the scheduler fires this kind of schedule, not what happened to the drift job on 1
        November. **Next check (owner, 2026-11-13):** the drift job's own schedule, pause state,
-       deploy history and any run attempts. Deleting the probe job (planned above for after 10
-       November) is the owner's step in the workspace, not yet confirmed; its files in
-       `databricks/` stay until then.
+       deploy history and any run attempts. **Probe job deleted (owner, 2026-11-18):** job
+       325029901767432 is gone from the workspace. Its job definition and notebook stay in
+       `databricks/` as the record of the code that produced `runs.json`.
    - **Scheduled rehearsal (owner, 2026-11-13; built, not deployed):** so item 1 doesn't wait
      for 1 December, a temporary copy of the monthly job is scheduled for 06:00 UTC on 20 November
      (`databricks/monthly_drift_rehearsal_job.json`; the cron repeats yearly, so the job is
