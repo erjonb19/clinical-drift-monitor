@@ -150,6 +150,9 @@ gets a **Blocked:** line with the reason.
      to end; it cannot show why the real job missed 1 November. Owner steps S11 and S12 in
      `docs/OWNER_STEPS.md`. Tests in `tests/test_deploy.py` and
      `tests/test_stage_research_job.py`.
+   - **Staged (owner, 2026-11-18):** `stage_research_job.py --workspace-name` at commit 7a0070b;
+     its values replace `STAGE_FIRST` in the rehearsal job file. The four file hashes match that
+     commit; the wheel's hash is the laptop build's, checked by the notebook at run time.
    - **Fix (planned, written before code):**
      1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
         each month that the job has a run started by the schedule since the 1st, and fails
