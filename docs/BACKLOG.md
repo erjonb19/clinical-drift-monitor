@@ -503,7 +503,8 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       of version), which takes cryptography 50.0.2 and uv 0.13.7 and keeps the fastapi,
       uvicorn and starlette pins. Both accepted entries are gone from
       `config/pip_audit_ignore.json`, and pip-audit reports no known vulnerability without any
-      exception. The committed federated results were produced with `flwr` 1.39.0. **Owner:** turn on branch protection for `main` (Settings,
+      exception. The committed federated results were produced with `flwr` 1.39.0. GitHub then
+      listed Dependabot alerts #6 to #10 as fixed (2026-11-19, 04:50 UTC), none dismissed. **Owner:** turn on branch protection for `main` (Settings,
       Branches) requiring the `quality`, `image` and CodeQL `analyze` checks; the first
       Dependabot PR appears on its weekly run. **Gap:** Dependabot's Docker updates cover the
       `FROM` image only, not the torch pin in the Dockerfile's `RUN` line or
