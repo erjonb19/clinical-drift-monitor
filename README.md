@@ -68,7 +68,10 @@ range over 3 seeds; the ensemble interval is a 95% bootstrap by lesion. Source:
 | FedProx (Flower), single model | 58.98 (57.54–60.12) | 50.86 (49.75–52.09) | |
 
 Federated rounds were selected on pooled validation, which a real federated deployment could
-not see, so the federated rows are if anything optimistic.
+not see, so the federated rows are if anything optimistic. The federated rows were produced with
+`flwr` 1.39.0. The lockfile has pinned 1.43.0 since 2026-11-19, for security fixes in its
+cryptography and uv dependencies (#144). These results were not re-run, and a re-run would use
+1.43.0.
 
 **At the new hospitals the model degrades sharply.** Shipped ensemble; seven-class accuracy
 counts only classes that map cleanly to HAM10000's. Sources:
