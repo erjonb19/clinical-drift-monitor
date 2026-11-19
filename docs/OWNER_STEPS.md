@@ -103,55 +103,14 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
-### S6. Find why the monthly job did not run on 1 November (item 1)
-
-- [ ] Done
-
-**Why:** the probe showed the Free Edition scheduler does fire this kind of schedule, so the
-cause lies with the monthly job itself (job 524433148303929).
-
-1. Its schedule and pause state now. Check `quartz_cron_expression` is `0 0 6 1 * ?`,
-   `timezone_id` is `UTC` and `pause_status` is `UNPAUSED`:
-   ```powershell
-   New-Item -ItemType Directory -Force .\dist | Out-Null
-   databricks jobs get 524433148303929 -o json | Out-File -Encoding utf8 .\dist\monthly_job.json
-   Get-Content .\dist\monthly_job.json | Select-String -Pattern "quartz|timezone|pause_status|creator|run_as|created_time"
-   ```
-2. Every run the job has had, including skipped or failed attempts:
-   ```powershell
-   databricks jobs list-runs --job-id 524433148303929 -o json | Out-File -Encoding utf8 .\dist\monthly_runs.json
-   Get-Content .\dist\monthly_runs.json | Select-String -Pattern "run_id|trigger|life_cycle_state|result_state|start_time"
-   ```
-3. Its change history since 20 October, in a SQL editor in the workspace. This includes any
-   deploy (`reset`, `update`, `create`) and any event by another identity:
-   ```sql
-   SELECT event_time, action_name, user_identity.email AS who, response.status_code,
-          request_params['job_id'] AS job_id
-   FROM system.access.audit
-   WHERE service_name = 'jobs'
-     AND event_date >= '2026-10-20'
-     AND (request_params['job_id'] = '524433148303929'
-          OR action_name IN ('create', 'delete'))
-   ORDER BY event_time;
-   ```
-   If the query says the table does not exist or you lack access, skip it and say so;
-   your earlier queries of 2026-11-06 used it, so it should work.
-4. Send Claude the matching lines from 1 and 2 and the rows from 3. Remove anything you consider
-   private, such as email addresses, first.
-
-### S9. Check `.claude/settings.json` is loaded (item 23)
-
-- [ ] Done
-
-**Why:** the deny rules from #97 only count once a new Claude Code session reads them.
-
-1. Start a new Claude Code session on this repository and run `/permissions`.
-2. Check the deny list includes `Bash(rm -rf *)`, the `.env` read rules and the `find -delete`
-   and `find -exec` rules. Tell Claude what it shows.
-
 ### S10. Confirm the security alerts are closed (#123, #124)
 
 - [ ] Done
+
+2026-11-18 (owner): Dependabot alerts #1 to #5 and code scanning alert #3 are closed, with no
+open code scanning or secret scanning alert. Five new Dependabot alerts opened in `uv.lock`:
+#10 (uv, Critical) and #6, #7 and #8 (cryptography, High) and #9 (cryptography, Moderate). PR #144 fixes them through the lockfile; this
+step is ticked once GitHub shows #6 to #10 closed.
 
 **Why:** Claude cannot read the alert lists: the API returns 403 without admin access.
 
@@ -161,9 +120,55 @@ cause lies with the monthly job itself (job 524433148303929).
    next CodeQL run.
 3. Tell Claude which, if any, are still open.
 
-### S11. Deploy the scheduled rehearsal of the monthly job (item 1; by 18 November)
+### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
 
 - [ ] Done
+
+**Why:** Claude commits the evidence as a rehearsal: the run's trigger (it must say
+`PERIODIC`), its result and its month file.
+
+The rehearsal job's ID is 746196917078725 (S11 step 4, 2026-11-18).
+
+1. The run, with its trigger and result:
+   ```powershell
+   New-Item -ItemType Directory -Force .\dist | Out-Null
+   databricks jobs list-runs --job-id 746196917078725 -o json | Out-File -Encoding utf8 .\dist\rehearsal_runs.json
+   Get-Content .\dist\rehearsal_runs.json | Select-String -Pattern "run_id|trigger|life_cycle_state|result_state|start_time"
+   ```
+2. Its files:
+   ```powershell
+   databricks fs cp -r dbfs:/Volumes/workspace/cdm/raw/results/rehearsal/monthly .\dist\rehearsal
+   Get-ChildItem .\dist\rehearsal
+   ```
+   Send Claude the lines from step 1 and the contents of `month_01.json` and `slo_01.json`.
+3. Only if S2 to S4 are done (they wait until after Thanksgiving; item 1 does not need this),
+   run the watchdog against the rehearsal job. It should end **ok**:
+   ```powershell
+   gh workflow run drift-watchdog.yml --repo erjonb19/clinical-drift-monitor -f month=2026-11 -f job_id=746196917078725
+   gh run watch --repo erjonb19/clinical-drift-monitor
+   gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
+   ```
+   Pick the same run (the top one) if asked. Send Claude the line it prints.
+4. Afterwards, delete the rehearsal job and its notebook copy. Dropping its three tables is
+   your call; they are separate from the real ones.
+   ```powershell
+   databricks jobs delete 746196917078725
+   $me = (databricks current-user me -o json | ConvertFrom-Json).userName
+   databricks workspace delete "/Users/$me/cdm/rehearsal_monthly_drift"
+   ```
+   ```sql
+   DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_monthly;
+   DROP TABLE IF EXISTS workspace.cdm.rehearsal_prediction_audit;
+   DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
+   ```
+
+## Done
+
+Ticked steps move here with the date.
+
+### S11. Deploy the scheduled rehearsal of the monthly job (item 1; by 18 November)
+
+- [x] Done (owner, 2026-11-18: job `cdm-rehearsal-monthly-drift` = 746196917078725; the deploy script printed "schedule ok: 0 0 6 20 11 ? UTC UNPAUSED")
 
 **Why:** the deadline (26 November) comes before the real monthly run on 1 December. The
 rehearsal is a temporary copy of the monthly job (`databricks/monthly_drift_rehearsal_job.json`),
@@ -208,51 +213,51 @@ If it can't be deployed by 19 November, tell Claude, who will move the date.
 5. If S2 is done: give `cdm-watchdog` **Can View** on `cdm-rehearsal-monthly-drift` too, the
    same way as S2 step 5.
 
-### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
+### S9. Check `.claude/settings.json` is loaded (item 23)
 
-- [ ] Done
+- [x] Done (owner, 2026-11-18: `/permissions` in a fresh laptop session lists the deny rules; what it showed is under item 23 in `docs/BACKLOG.md`)
 
-**Why:** Claude commits the evidence as a rehearsal: the run's trigger (it must say
-`PERIODIC`), its result and its month file.
+**Why:** the deny rules from #97 only count once a new Claude Code session reads them.
 
-Replace `<JOB_ID>` with the ID from S11 step 4.
+1. Start a new Claude Code session on this repository and run `/permissions`.
+2. Check the deny list includes `Bash(rm -rf *)`, the `.env` read rules and the `find -delete`
+   and `find -exec` rules. Tell Claude what it shows.
 
-1. The run, with its trigger and result:
+### S6. Find why the monthly job did not run on 1 November (item 1)
+
+- [x] Done (owner, 2026-11-18: schedule, runs and audit history collected; the finding is under item 1 in `docs/BACKLOG.md`)
+
+**Why:** the probe showed the Free Edition scheduler does fire this kind of schedule, so the
+cause lies with the monthly job itself (job 524433148303929).
+
+1. Its schedule and pause state now. Check `quartz_cron_expression` is `0 0 6 1 * ?`,
+   `timezone_id` is `UTC` and `pause_status` is `UNPAUSED`:
    ```powershell
    New-Item -ItemType Directory -Force .\dist | Out-Null
-   databricks jobs list-runs --job-id <JOB_ID> -o json | Out-File -Encoding utf8 .\dist\rehearsal_runs.json
-   Get-Content .\dist\rehearsal_runs.json | Select-String -Pattern "run_id|trigger|life_cycle_state|result_state|start_time"
+   databricks jobs get 524433148303929 -o json | Out-File -Encoding utf8 .\dist\monthly_job.json
+   Get-Content .\dist\monthly_job.json | Select-String -Pattern "quartz|timezone|pause_status|creator|run_as|created_time"
    ```
-2. Its files:
+2. Every run the job has had, including skipped or failed attempts:
    ```powershell
-   databricks fs cp -r dbfs:/Volumes/workspace/cdm/raw/results/rehearsal/monthly .\dist\rehearsal
-   Get-ChildItem .\dist\rehearsal
+   databricks jobs list-runs --job-id 524433148303929 -o json | Out-File -Encoding utf8 .\dist\monthly_runs.json
+   Get-Content .\dist\monthly_runs.json | Select-String -Pattern "run_id|trigger|life_cycle_state|result_state|start_time"
    ```
-   Send Claude the lines from step 1 and the contents of `month_01.json` and `slo_01.json`.
-3. Only if S2 to S4 are done (they wait until after Thanksgiving; item 1 does not need this),
-   run the watchdog against the rehearsal job. It should end **ok**:
-   ```powershell
-   gh workflow run drift-watchdog.yml --repo erjonb19/clinical-drift-monitor -f month=2026-11 -f job_id=<JOB_ID>
-   gh run watch --repo erjonb19/clinical-drift-monitor
-   gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
-   ```
-   Pick the same run (the top one) if asked. Send Claude the line it prints.
-4. Afterwards, delete the rehearsal job and its notebook copy. Dropping its three tables is
-   your call; they are separate from the real ones.
-   ```powershell
-   databricks jobs delete <JOB_ID>
-   $me = (databricks current-user me -o json | ConvertFrom-Json).userName
-   databricks workspace delete "/Users/$me/cdm/rehearsal_monthly_drift"
-   ```
+3. Its change history since 20 October, in a SQL editor in the workspace. This includes any
+   deploy (`reset`, `update`, `create`) and any event by another identity:
    ```sql
-   DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_monthly;
-   DROP TABLE IF EXISTS workspace.cdm.rehearsal_prediction_audit;
-   DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
+   SELECT event_time, action_name, user_identity.email AS who, response.status_code,
+          request_params['job_id'] AS job_id
+   FROM system.access.audit
+   WHERE service_name = 'jobs'
+     AND event_date >= '2026-10-20'
+     AND (request_params['job_id'] = '524433148303929'
+          OR action_name IN ('create', 'delete'))
+   ORDER BY event_time;
    ```
-
-## Done
-
-Ticked steps move here with the date.
+   If the query says the table does not exist or you lack access, skip it and say so;
+   your earlier queries of 2026-11-06 used it, so it should work.
+4. Send Claude the matching lines from 1 and 2 and the rows from 3. Remove anything you consider
+   private, such as email addresses, first.
 
 ### S1. Upload the champion bundle as a release asset (items 6, 13, 15, 21; by 18 November)
 

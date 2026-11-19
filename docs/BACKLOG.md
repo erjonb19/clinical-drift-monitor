@@ -131,6 +131,28 @@ gets a **Blocked:** line with the reason.
        deploy history and any run attempts. **Probe job deleted (owner, 2026-11-18):** job
        325029901767432 is gone from the workspace. Its job definition and notebook stay in
        `databricks/` as the record of the code that produced `runs.json`.
+   - **S6 evidence (owner, 2026-11-18) for job 524433148303929:** its settings now read quartz
+     `0 0 6 1 * ?`, `UTC`, `UNPAUSED`, created 2026-10-23 02:02 UTC. `list-runs` shows exactly
+     one run, 830837634650904 (`ONE_TIME`, `SUCCESS`, 8 s after creation), and no `PERIODIC`
+     run on 1 November, not even a skipped or failed one. The jobs audit since 20 October
+     shows create (02:02:05), runNow (02:02:13) and two resets (02:29:20 and 16:21:02) on 23
+     October, and nothing for this job after that.
+   - **Finding (Claude, 2026-11-19): cause not determined; the job's own settings are ruled
+     out.** Both resets set the schedule to `0 0 6 1 * ?`, `UTC`, `UNPAUSED` (query 4 of
+     2026-11-06 read their `request_params`), nothing changed the job afterwards, and it reads
+     the same today. So the job was correctly scheduled and unpaused on 1 November, and no run
+     was created at all. A job with the same kind of schedule (the probe, created once and never
+     reset) fired on time three times, so the scheduler does fire this kind of job. The one
+     known difference is this job's history: two `reset` calls after it was created, which
+     `system.lakeflow.jobs` did not record (the anomaly in query 2 of 2026-11-06). That is a
+     lead, not a shown cause. Otherwise this leaves a miss on the Databricks side that left
+     no record. **An observation, not a shown cause:** 06:00 UTC on Sunday
+     1 November 2026 is the exact moment US Eastern time fell back from daylight saving
+     (02:00 EDT). The job's time zone is UTC, which has no such change. The 20 November
+     rehearsal and the 1 December run fall on no clock change, so they will show whether the
+     miss recurs; the watchdog (after Thanksgiving) is the standing guard against a silent miss.
+   - **Rehearsal deployed (owner, 2026-11-18):** job `cdm-rehearsal-monthly-drift`,
+     746196917078725; the deploy script read back "schedule ok: 0 0 6 20 11 ? UTC UNPAUSED".
    - **Scheduled rehearsal (owner, 2026-11-13; built, not deployed):** so item 1 doesn't wait
      for 1 December, a temporary copy of the monthly job is scheduled for 06:00 UTC on 20 November
      (`databricks/monthly_drift_rehearsal_job.json`; the cron repeats yearly, so the job is
@@ -768,6 +790,11 @@ change only the owner can make (repository settings, accounts, consoles).
       `dontAsk` it still denies much of what an unattended session does (tests through a venv
       path or with `PYTHONPATH=...`, `python3` one-liners, `cd`), so try it in a watched
       session first.
+    - **2026-11-18 (owner, S9):** `/permissions` in a fresh laptop session shows the deny list
+      loaded: `rm -rf` and `rm -fr`, `.env` reads (`grep`, `head`, `printenv`), `find -delete`
+      and `-exec`, `sudo`, and pushes to `main`. **Not ticked:** the "Done when" also asks for
+      a cloud session's `/permissions`, `ruff check .` running without a prompt, and `curl -X
+      POST` being denied, which were not reported.
 24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
     - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
