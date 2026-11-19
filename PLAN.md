@@ -346,6 +346,15 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-11-18: decided by the owner** (security alerts, directive 20)
+  - **Fix the Critical uv alert and the four cryptography alerts through the lockfile, and
+    dismiss none.** How (Claude's choice, 2026-11-19): the only lockfile fix found was moving
+    `flwr` from 1.39.0 to 1.43.0 (the `federated` extra), which allows cryptography 50.x and
+    uv 0.13.x and keeps the same fastapi, uvicorn and starlette pins. The federated tests pass
+    on 1.43.0. The committed federated results were produced with 1.39.0; a rerun would use
+    1.43.0.
+  - **PR #50 and Dependabot #138** wait until after 26 November.
+
 - **2026-11-16: decided by the owner** (deadline Thursday 26 November; cut-line items 1, 6, 21)
   - **Item 1 closes on the 20 November rehearsal alone.** The scheduled rehearsal of the monthly
     job (`databricks/monthly_drift_rehearsal_job.json`, 06:00 UTC on 20 November) is enough to

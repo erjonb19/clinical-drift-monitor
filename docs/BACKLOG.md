@@ -475,7 +475,13 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       passes with it). **Accepted (confirmed by the owner, 2026-11-09):** four
       `cryptography` 46.0.7 findings and one `uv` 0.11.33 finding, both held back by `flwr`
       1.39.0 (`federated` extra, training only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
-      committed federated results. **Owner:** turn on branch protection for `main` (Settings,
+      committed federated results. **Resolved 2026-11-19:** the owner asked (2026-11-18) for
+      the Critical uv alert and the cryptography alerts to be fixed through the lockfile, with
+      none dismissed. The only lockfile fix found was moving `flwr` to 1.43.0 (Claude's choice
+      of version), which takes cryptography 50.0.2 and uv 0.13.7 and keeps the fastapi,
+      uvicorn and starlette pins. Both accepted entries are gone from
+      `config/pip_audit_ignore.json`, and pip-audit reports no known vulnerability without any
+      exception. The committed federated results were produced with `flwr` 1.39.0. **Owner:** turn on branch protection for `main` (Settings,
       Branches) requiring the `quality`, `image` and CodeQL `analyze` checks; the first
       Dependabot PR appears on its weekly run. **Gap:** Dependabot's Docker updates cover the
       `FROM` image only, not the torch pin in the Dockerfile's `RUN` line or
