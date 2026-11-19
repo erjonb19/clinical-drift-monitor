@@ -796,6 +796,19 @@ change only the owner can make (repository settings, accounts, consoles).
       and `-exec`, `sudo`, and pushes to `main`. **Not ticked:** the "Done when" also asks for
       a cloud session's `/permissions`, `ruff check .` running without a prompt, and `curl -X
       POST` being denied, which were not reported.
+    - **2026-11-19, cloud session checks (Claude):** `ruff check .` ran without a prompt and
+      passed. `curl -sS -m 3 -o /dev/null http://127.0.0.1:9/ -X POST` was denied, but
+      `curl -X POST -sS -m 3 -o /dev/null http://127.0.0.1:9/` was **allowed**: it ran and only
+      failed to connect (nothing listens on that local port). Every curl and `gh api` write
+      rule has the form `Bash(curl * -X *)`, which needs some text between `curl` and the flag,
+      so a command that starts with the flag is not matched. **Not ticked:** the `curl -X POST`
+      check fails until flag-first rules are added (`Bash(curl -X *)`, `Bash(curl --request *)`,
+      `Bash(curl -d *)`, `Bash(curl --data*)`, `Bash(curl -F *)`, `Bash(curl --form *)`,
+      `Bash(curl -T *)`, `Bash(curl --upload-file *)`, `Bash(curl --json *)`, and the same for
+      `gh api`: `-X`, `--method`, `-f`, `-F`, `--input`, `--field`, `--raw-field`). That is a
+      `.claude/settings.json` change, which needs the owner's approval; writing it was refused
+      in this session. The owner's report of this session's `/permissions` (2026-11-19) held an
+      unfilled placeholder, so that part is not reported either.
 24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
     - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
