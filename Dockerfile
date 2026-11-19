@@ -3,7 +3,7 @@
 # (never committed). Runs as user 1000 on port 7860, as Hugging Face Spaces expects.
 # Pinned by digest (backlog item 35): the multi-platform index digest of python:3.11.17-slim,
 # read from Docker Hub on 2026-11-11. Dependabot's docker updates keep it current.
-FROM python:3.11.17-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377
+FROM python:3.11.18-slim@sha256:07d4824036af339fa1b6ef769cc99d9c10a141769538b52b3b597c84f7a7b535
 
 # TRUSTED_PROXY_HOPS=1: Hugging Face Spaces puts one proxy in front (see app/api/main.py).
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 BUNDLE_DIR=/app/bundle \
