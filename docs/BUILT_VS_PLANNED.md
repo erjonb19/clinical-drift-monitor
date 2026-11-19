@@ -78,7 +78,10 @@ tagged so). Record: [phase2-note.md](phase2-note.md).
 - v2 data: Barcelona to 9,999 images. Auto Loader picked up only the new files.
 - Tuning ladder on validation only: no rung beat the control (`results/phase2/ladder/`).
 - 3 centralized and 6 federated models (Flower FedAvg and FedProx, clients trained in sequence in
-  one process). One test look per model (`results/phase2/v2/test/final_test.json`).
+  one process). One test look per model (`results/phase2/v2/test/final_test.json`). The
+  federated models were trained with `flwr` 1.39.0. On 2026-11-19 the lockfile moved to 1.43.0
+  for security fixes in its cryptography and uv dependencies (#144); the federated results were
+  not re-run, and a re-run would use 1.43.0.
 - Drift table: 4 detectors × 3 setups × 2 real held-out sites + 2 benchmark sets
   (`results/phase2/drift/v2/`). Mahalanobis was shipped by the pre-set rule.
 - Triage operating point, committed before test (`results/phase2/triage/`).
