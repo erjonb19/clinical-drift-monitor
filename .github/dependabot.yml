@@ -2,7 +2,8 @@
 # GitHub Actions. Each group arrives as one PR, reviewed and CI-gated like any other change.
 # Ignore rules (owner, 2026-11-09): the API image stays on Python 3.11 (the repo's standard),
 # and the model and training stack gets patch releases only, since a minor release can change
-# the numbers behind committed results (flwr is held at 1.39.x on purpose: config/pip_audit_ignore.json).
+# the numbers behind committed results. flwr is held to patches: it moved from 1.39.0 to 1.43.0 by
+# hand on 2026-11-19 for security fixes, and the committed federated results used 1.39.0.
 # Cooldown (item 38): a version update waits 7 days after its release, so a hijacked release is
 # more likely to be found and pulled before it reaches a PR here (GitHub's default is 3 days).
 # Security updates skip Dependabot's cooldown, but uv.lock's exclude-newer (7 days, backlog
@@ -24,10 +25,10 @@ updates:
     # raised floors such as mlflow-skinny 2.16 to 3.18); uv.lock and exact pins still move.
     versioning-strategy: increase-if-necessary
     ignore:
-      # flwr 1.39.x (held on purpose) needs uvicorn < 0.50; #74's uvicorn 0.54.0 broke the install.
+      # flwr (1.39.x and 1.43.x alike) needs uvicorn < 0.50; #74's uvicorn 0.54.0 broke the install.
       - dependency-name: uvicorn
         update-types: [version-update:semver-major, version-update:semver-minor]
-      # flwr 1.39.x also needs fastapi >= 0.138, < 0.139; #83's fastapi 0.162.0 broke the install.
+      # flwr also needs fastapi >= 0.138, < 0.139; #83's fastapi 0.162.0 broke the install.
       - dependency-name: fastapi
         update-types: [version-update:semver-major, version-update:semver-minor]
       # The BiomedCLIP stack behind the committed research Phase B results (vlm extra): patches

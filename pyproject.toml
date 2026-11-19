@@ -27,7 +27,7 @@ train = [
 ]
 # Federated training (cdm.federated): Flower's FedAvg and FedProx strategies.
 federated = [
-    "flwr==1.39.0",
+    "flwr==1.43.0",
 ]
 # The governed cohort service (cdm.cohort, scripts/cohort.py): phenotype files and DuckDB.
 cohort = [
