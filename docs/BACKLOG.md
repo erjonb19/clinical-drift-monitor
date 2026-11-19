@@ -141,9 +141,12 @@ gets a **Blocked:** line with the reason.
      out.** Both resets set the schedule to `0 0 6 1 * ?`, `UTC`, `UNPAUSED` (query 4 of
      2026-11-06 read their `request_params`), nothing changed the job afterwards, and it reads
      the same today. So the job was correctly scheduled and unpaused on 1 November, and no run
-     was created at all. A job deployed the same way (the probe) fired on time three times,
-     so the scheduler does fire this kind of job. That leaves a miss on the Databricks side
-     that left no record. **An observation, not a shown cause:** 06:00 UTC on Sunday
+     was created at all. A job with the same kind of schedule (the probe, created once and never
+     reset) fired on time three times, so the scheduler does fire this kind of job. The one
+     known difference is this job's history: two `reset` calls after it was created, which
+     `system.lakeflow.jobs` did not record (the anomaly in query 2 of 2026-11-06). That is a
+     lead, not a shown cause. Otherwise this leaves a miss on the Databricks side that left
+     no record. **An observation, not a shown cause:** 06:00 UTC on Sunday
      1 November 2026 is the exact moment US Eastern time fell back from daylight saving
      (02:00 EDT). The job's time zone is UTC, which has no such change. The 20 November
      rehearsal and the 1 December run fall on no clock change, so they will show whether the

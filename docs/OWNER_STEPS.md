@@ -109,7 +109,7 @@ credential or its permission is wrong.
 
 2026-11-18 (owner): Dependabot alerts #1 to #5 and code scanning alert #3 are closed, with no
 open code scanning or secret scanning alert. Five new Dependabot alerts opened in `uv.lock`:
-#10 (uv, Critical) and #6 to #9 (cryptography). PR #144 fixes them through the lockfile; this
+#10 (uv, Critical) and #6, #7 and #8 (cryptography, High) and #9 (cryptography, Moderate). PR #144 fixes them through the lockfile; this
 step is ticked once GitHub shows #6 to #10 closed.
 
 **Why:** Claude cannot read the alert lists: the API returns 403 without admin access.
@@ -215,7 +215,7 @@ If it can't be deployed by 19 November, tell Claude, who will move the date.
 
 ### S9. Check `.claude/settings.json` is loaded (item 23)
 
-- [x] Done (owner, 2026-11-18: `/permissions` in a fresh laptop session lists the deny rules)
+- [x] Done (owner, 2026-11-18: `/permissions` in a fresh laptop session lists the deny rules; what it showed is under item 23 in `docs/BACKLOG.md`)
 
 **Why:** the deny rules from #97 only count once a new Claude Code session reads them.
 
