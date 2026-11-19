@@ -103,23 +103,6 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
-### S10. Confirm the security alerts are closed (#123, #124)
-
-- [ ] Done
-
-2026-11-18 (owner): Dependabot alerts #1 to #5 and code scanning alert #3 are closed, with no
-open code scanning or secret scanning alert. Five new Dependabot alerts opened in `uv.lock`:
-#10 (uv, Critical) and #6, #7 and #8 (cryptography, High) and #9 (cryptography, Moderate). PR #144 fixes them through the lockfile; this
-step is ticked once GitHub shows #6 to #10 closed.
-
-**Why:** Claude cannot read the alert lists: the API returns 403 without admin access.
-
-1. On GitHub: **Security**, **Dependabot**. Alerts #1 to #5 (transformers) should be closed
-   by #123.
-2. **Security**, **Code scanning**. Alert #3 (`app/api/main.py`) should be closed by #124's
-   next CodeQL run.
-3. Tell Claude which, if any, are still open.
-
 ### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
 
 - [ ] Done
@@ -165,6 +148,23 @@ The rehearsal job's ID is 746196917078725 (S11 step 4, 2026-11-18).
 ## Done
 
 Ticked steps move here with the date.
+
+### S10. Confirm the security alerts are closed (#123, #124)
+
+- [x] Done (2026-11-19: GitHub lists Dependabot alerts #6 to #10 as fixed at 04:50 UTC after #144, none dismissed; #1 to #5 and code scanning #3 closed per the owner, 2026-11-18)
+
+2026-11-18 (owner): Dependabot alerts #1 to #5 and code scanning alert #3 are closed, with no
+open code scanning or secret scanning alert. Five new Dependabot alerts opened in `uv.lock`:
+#10 (uv, Critical) and #6, #7 and #8 (cryptography, High) and #9 (cryptography, Moderate). PR #144 fixes them through the lockfile; this
+step is ticked once GitHub shows #6 to #10 closed.
+
+**Why:** Claude cannot read the alert lists: the API returns 403 without admin access.
+
+1. On GitHub: **Security**, **Dependabot**. Alerts #1 to #5 (transformers) should be closed
+   by #123.
+2. **Security**, **Code scanning**. Alert #3 (`app/api/main.py`) should be closed by #124's
+   next CodeQL run.
+3. Tell Claude which, if any, are still open.
 
 ### S11. Deploy the scheduled rehearsal of the monthly job (item 1; by 18 November)
 
