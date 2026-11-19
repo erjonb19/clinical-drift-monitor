@@ -145,6 +145,22 @@ The rehearsal job's ID is 746196917078725 (S11 step 4, 2026-11-18).
    DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
    ```
 
+### S13. Approve the flag-first deny rules for curl and `gh api` (item 23)
+
+- [ ] Done
+
+**Why:** in a cloud session on 2026-11-19, `curl -X POST <url>` (flag right after `curl`) was
+not denied. Every curl and `gh api` write rule in `.claude/settings.json` needs some text
+between the command and the flag. Item 23 can't close until a POST is denied in that form too.
+Changing permission settings needs your approval, and this session was refused when it tried.
+
+1. Reply in chat with: "Approved: add the flag-first curl and gh api deny rules to
+   .claude/settings.json." Claude then opens a PR with the rules listed under item 23 in
+   `docs/BACKLOG.md` and a test, and stops: you merge it.
+2. After the merge, start a new cloud session and check `/permissions` lists the new rules.
+   Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
+   check against a local port, so nothing is sent anywhere).
+
 ## Done
 
 Ticked steps move here with the date.
