@@ -46,8 +46,10 @@ flowchart LR
 - **The shipped model runs three networks per image:** the ensemble's PyTorch median is
   288.6 ms per image at batch size 1 on Databricks serverless CPU
   (`results/phase3/onnx/results.json`). The benchmark's 18 ms per whole request on other
-  hardware is about 5 times faster per network; the gap is not explained. The champion's
-  throughput (item 13) has not been measured; its bundle is now a release asset (2026-11-18).
+  hardware is about 5 times faster per network; the gap is not explained. The champion itself, on a 4-CPU GitHub runner
+  (`results/phase3/serving/benchmark_champion.json`): median 158.8 ms per request for one user,
+  rising to 1,365.2 ms at 20 users, while throughput rises only from 5.97 to 14.21 images a
+  second; the likely bottleneck is CPU compute for the three networks (CPU use not measured).
 - **Not measured yet:** batch scoring at scale (item 14; the owner chose a 5,000-image slice
   first) and detector quality on staged shifts (item 15; approved, code and spec committed, not yet
   run; the champion bundle it needs is a release asset since 2026-11-18).
