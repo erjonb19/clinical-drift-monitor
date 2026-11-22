@@ -103,9 +103,47 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
-### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
+### S13. Approve the flag-first deny rules for curl and `gh api` (item 23)
 
 - [ ] Done
+
+**Why:** in a cloud session on 2026-11-19, `curl -X POST <url>` (flag right after `curl`) was
+not denied. Every curl and `gh api` write rule in `.claude/settings.json` needs some text
+between the command and the flag. Item 23 can't close until a POST is denied in that form too.
+Changing permission settings needs your approval, and this session was refused when it tried.
+
+1. Reply in chat with: "Approved: add the flag-first curl and gh api deny rules to
+   .claude/settings.json." Claude then opens a PR with the rules listed under item 23 in
+   `docs/BACKLOG.md` and a test, and stops: you merge it.
+2. After the merge, start a new cloud session and check `/permissions` lists the new rules.
+   Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
+   check against a local port, so nothing is sent anywhere).
+
+### S14. Delete the rehearsal job (item 1)
+
+- [ ] Done
+
+**Why:** the rehearsal (job 746196917078725) did its work, and its evidence is committed in
+`results/phase3/rehearsal/`. Its cron, `0 0 6 20 11 ?`, fires every 20 November, so it should not
+stay in the workspace. Do this once the evidence PR is merged.
+
+```powershell
+databricks jobs delete 746196917078725
+$me = (databricks current-user me -o json | ConvertFrom-Json).userName
+databricks workspace delete "/Users/$me/cdm/rehearsal_monthly_drift"
+```
+
+Dropping its three tables (`workspace.cdm.rehearsal_drift_monthly`,
+`rehearsal_prediction_audit`, `rehearsal_drift_baseline`) is your call; they are separate from
+the real ones. The SQL is in S12 step 4.
+
+## Done
+
+Ticked steps move here with the date.
+
+### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
+
+- [x] Done (owner, 2026-11-20: list-runs, month_01.json and slo_01.json sent; committed in `results/phase3/rehearsal/`). Step 4, deleting the rehearsal job, is S14.
 
 **Why:** Claude commits the evidence as a rehearsal: the run's trigger (it must say
 `PERIODIC`), its result and its month file.
@@ -144,26 +182,6 @@ The rehearsal job's ID is 746196917078725 (S11 step 4, 2026-11-18).
    DROP TABLE IF EXISTS workspace.cdm.rehearsal_prediction_audit;
    DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
    ```
-
-### S13. Approve the flag-first deny rules for curl and `gh api` (item 23)
-
-- [ ] Done
-
-**Why:** in a cloud session on 2026-11-19, `curl -X POST <url>` (flag right after `curl`) was
-not denied. Every curl and `gh api` write rule in `.claude/settings.json` needs some text
-between the command and the flag. Item 23 can't close until a POST is denied in that form too.
-Changing permission settings needs your approval, and this session was refused when it tried.
-
-1. Reply in chat with: "Approved: add the flag-first curl and gh api deny rules to
-   .claude/settings.json." Claude then opens a PR with the rules listed under item 23 in
-   `docs/BACKLOG.md` and a test, and stops: you merge it.
-2. After the merge, start a new cloud session and check `/permissions` lists the new rules.
-   Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
-   check against a local port, so nothing is sent anywhere).
-
-## Done
-
-Ticked steps move here with the date.
 
 ### S10. Confirm the security alerts are closed (#123, #124)
 
