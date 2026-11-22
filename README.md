@@ -930,6 +930,7 @@ Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to 
 - [x] Item 45: the $5 Haiku cap fails closed when its spend log is missing or shrinks.
 - [x] Item 46: spreadsheet formulas in the G5 CSV sheets are neutralised.
 - [x] Item 27: the API image installs only hashed packages from the lock.
+- [x] Item 1: a scheduled drift job run started by its schedule and finished green (the 20 November rehearsal, on its own tables).
 - [x] Item 6: CI loads the champion bundle and scores 50 public test-split images on every push.
 - [x] Item 21: one-command demo (`docker compose up`) that trips the drift alarm with the champion bundle.
 - [x] Item 47: the public cohort demo is hardened (DuckDB external access off, no error details, per-session caps, the ISIC client held to its host).

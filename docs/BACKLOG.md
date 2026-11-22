@@ -54,7 +54,7 @@ gets a **Blocked:** line with the reason.
 
 ## Items, in order
 
-1. [ ] **Scheduled drift job.** A Databricks job scores drift on a schedule without anyone
+1. [x] **Scheduled drift job.** A Databricks job scores drift on a schedule without anyone
    pressing anything.
    - **Done when (first version, replaced below):** one run started by the schedule (not by
      hand) finishes green, and its results file and job run ID are committed, with the run's
@@ -242,6 +242,17 @@ gets a **Blocked:** line with the reason.
      `month_01.json` and `slo_01.json` (each labelled a rehearsal) are committed. The watchdog
      is not part of this: it waits until after Thanksgiving, and still checks the real 1
      December run once it is set up.
+   - **Done 2026-11-20 (a rehearsal; owner's S12 report, committed in
+     `results/phase3/rehearsal/`):** the rehearsal job 746196917078725 started run
+     759057427881435 by its schedule (`PERIODIC`, at 06:00:08 UTC on 20 November), and it ended
+     `TERMINATED` / `SUCCESS`. Its `month_01.json` and `slo_01.json` are committed, both carrying
+     the rehearsal label. Month 1 had no drift alert (KS p = 0.274, PSI = 0.020) and an abstain
+     share of 0.057, against a target of 0.15. Both label-based targets read "insufficient
+     data", as expected for a first month. These numbers equal the 2026-10-23 replay's month 1
+     to every digit (same seeded images, same bundle): a reproducibility check, not a new
+     result. This is a rehearsal on its own job and tables, not the real monthly job; the real
+     job's 1 November miss is still unexplained (see the S6 finding above), and the 1 December
+     run is still to come.
    - **Done when (previous version, 2026-11-09; replaced 2026-11-16):** one run started by the
      schedule (its `trigger_type` from the run timeline committed with it) finishes green and
      records `scored` or `no_new_data`, with its results file and run ID committed; and, if the
@@ -364,6 +375,12 @@ gets a **Blocked:** line with the reason.
      target, an overall drift alert, a skin-type drift alert); the failure email reaches the
      owner. Thresholds and reasons are in the README's "Alerts and model targets" table. Not
      ticked: no run has sent an alert yet.
+   - **Next (2026-11-22):** owner step S15 runs the rehearsal job once by hand through months
+     2 to 10 on its own tables. In the committed replay record (`slo_replay.json`), months 7 to
+     10 alerted (skin type II from month 7, overall drift and the abstain-share target from month
+     9, delayed accuracy in month 10), so this run should end in "ALERT (not a job error)" and
+     send the failure email: live evidence for this item and for item 4's "a broken target raises an
+     alert". Real images, labelled a rehearsal.
 
 6. [x] **Tests and model evals in CI** on every push, with pass and fail thresholds.
    - **Done when:** CI runs the tests and the eval gate on every push and pull request, the

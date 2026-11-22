@@ -103,9 +103,86 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
-### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
+### S13. Approve the flag-first deny rules for curl and `gh api` (item 23)
 
 - [ ] Done
+
+**Why:** in a cloud session on 2026-11-19, `curl -X POST <url>` (flag right after `curl`) was
+not denied. Every curl and `gh api` write rule in `.claude/settings.json` needs some text
+between the command and the flag. Item 23 can't close until a POST is denied in that form too.
+Changing permission settings needs your approval, and this session was refused when it tried.
+
+1. Reply in chat with: "Approved: add the flag-first curl and gh api deny rules to
+   .claude/settings.json." Claude then opens a PR with the rules listed under item 23 in
+   `docs/BACKLOG.md` and a test, and stops: you merge it.
+2. After the merge, start a new cloud session and check `/permissions` lists the new rules.
+   Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
+   check against a local port, so nothing is sent anywhere).
+
+### S15. Run the rehearsal job once by hand through months 2 to 10 (items 4 and 5; before S14)
+
+- [ ] Done
+
+**Why:** items 4 and 5 need a live alert: a broken target and a drift alarm that reach you, not
+only a flag in a table. The rehearsal's own tables now hold month 1, so one manual run with
+`count` = 9 replays months 2 to 10 there. In the committed record of the 23 October replay
+(`results/phase3/monthly/slo_replay.json`), months 7 and 8 raised a skin-type II drift alert;
+months 9 and 10 (all Buenos Aires, then all PAD-UFES-20) also tripped the overall drift alarm and
+broke the abstain-share target (0.20 and 0.28 against 0.15); and month 10 also broke the delayed
+balanced accuracy target. If that repeats, the run saves every month, then fails with
+"ALERT (not a job error)" naming months 7 to 10, and the job's failure email reaches you. These are real images from
+real hospitals, not staged drift, written only to the rehearsal tables and folder. It runs on
+serverless CPU (Free Edition), like the 23 October replay of 12 months.
+
+1. Start it, overriding only `count`:
+   ```powershell
+   New-Item -ItemType Directory -Force .\dist | Out-Null
+   '{"job_id": 746196917078725, "notebook_params": {"count": "9"}}' | Out-File -Encoding ascii .\dist\rehearsal_run9.json
+   databricks jobs run-now --no-wait --json "@dist/rehearsal_run9.json"
+   ```
+   `--no-wait` returns at once with the run ID. The run itself takes a while: it scores 9
+   months of 300 images (the validation baseline is already saved from 20 November).
+2. When it ends, it should end in failure with an "ALERT (not a job error)" message, and the
+   failure email should arrive. Then collect:
+   ```powershell
+   databricks jobs list-runs --job-id 746196917078725 -o json | Out-File -Encoding utf8 .\dist\rehearsal_runs.json
+   Get-Content .\dist\rehearsal_runs.json | Select-String -Pattern "run_id|trigger|life_cycle_state|result_state|state_message|start_time"
+   databricks fs cp -r --overwrite dbfs:/Volumes/workspace/cdm/raw/results/rehearsal/monthly .\dist\rehearsal
+   ```
+3. Send Claude: the run's lines from step 2 (with its `state_message`; if that is short or
+   generic, copy the error text from the run's page in the workspace, under Jobs & Pipelines),
+   whether the email arrived and its subject line, and the contents of `month_09.json`, `month_10.json`,
+   `slo_09.json` and `slo_10.json`. Then do S14.
+
+### S14. Delete the rehearsal job (item 1)
+
+- [ ] Done
+
+**Why:** after S15, the rehearsal (job 746196917078725) has done its work, and its evidence
+is committed in `results/phase3/rehearsal/`. Its cron, `0 0 6 20 11 ?`, fires every 20 November, so it should not
+stay in the workspace. Do this after S15, once its evidence is committed.
+
+```powershell
+databricks jobs delete 746196917078725
+$me = (databricks current-user me -o json | ConvertFrom-Json).userName
+databricks workspace delete "/Users/$me/cdm/rehearsal_monthly_drift"
+```
+
+Dropping its three tables is your call; they are separate from the real ones. In a SQL editor:
+
+```sql
+DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_monthly;
+DROP TABLE IF EXISTS workspace.cdm.rehearsal_prediction_audit;
+DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
+```
+
+## Done
+
+Ticked steps move here with the date.
+
+### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
+
+- [x] Done (owner, 2026-11-20: list-runs, month_01.json and slo_01.json sent; committed in `results/phase3/rehearsal/`). Step 4, deleting the rehearsal job, is S14.
 
 **Why:** Claude commits the evidence as a rehearsal: the run's trigger (it must say
 `PERIODIC`), its result and its month file.
@@ -144,26 +221,6 @@ The rehearsal job's ID is 746196917078725 (S11 step 4, 2026-11-18).
    DROP TABLE IF EXISTS workspace.cdm.rehearsal_prediction_audit;
    DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
    ```
-
-### S13. Approve the flag-first deny rules for curl and `gh api` (item 23)
-
-- [ ] Done
-
-**Why:** in a cloud session on 2026-11-19, `curl -X POST <url>` (flag right after `curl`) was
-not denied. Every curl and `gh api` write rule in `.claude/settings.json` needs some text
-between the command and the flag. Item 23 can't close until a POST is denied in that form too.
-Changing permission settings needs your approval, and this session was refused when it tried.
-
-1. Reply in chat with: "Approved: add the flag-first curl and gh api deny rules to
-   .claude/settings.json." Claude then opens a PR with the rules listed under item 23 in
-   `docs/BACKLOG.md` and a test, and stops: you merge it.
-2. After the merge, start a new cloud session and check `/permissions` lists the new rules.
-   Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
-   check against a local port, so nothing is sent anywhere).
-
-## Done
-
-Ticked steps move here with the date.
 
 ### S10. Confirm the security alerts are closed (#123, #124)
 
