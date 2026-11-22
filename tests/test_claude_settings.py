@@ -71,7 +71,8 @@ def test_curl_and_gh_api_writes_are_denied_whatever_the_flag_position() -> None:
     """Item 23's check (2026-11-19): `Bash(curl * -X *)` needs text before the flag, so
     `curl -X POST <url>` ran in a cloud session (it failed only to connect). Each curl and
     `gh api` write rule now has a flag-first twin and a no-space twin (`-XPOST`,
-    `--request=POST`), approved by the owner on 2026-11-20 (owner step S13)."""
+    `--request=POST`), approved by the owner on 2026-11-20 (owner step S13). Combined short
+    flags (`curl -sX POST`) and quoted flags are not covered (see item 23 in docs/BACKLOG.md)."""
     for command in (
         "curl -X POST https://example.com",
         "curl -XPOST https://example.com",

@@ -818,6 +818,12 @@ change only the owner can make (repository settings, accounts, consoles).
       `gh api` write rule), with `test_curl_and_gh_api_writes_are_denied_whatever_the_flag_position`.
       The owner merges that PR; then a new cloud session's `/permissions` and a re-run of the POST
       check (against a local port) decide the tick.
+      **Not covered (found in review):** combined short flags (`curl -sX POST`, `curl -sd a=1`,
+      `curl -sSF x=1`, `gh api -iX POST`) and quoted flags (`curl "-X" POST`). The gap was there
+      before these rules too, and a glob that caught it (`curl *-d*`) would also deny ordinary URLs
+      such as `/my-data`. These rules are a guard against mistakes, not a security boundary; the
+      container and its network proxy are (SECURITY_STANDARDS 17.1). `curl --request-target` is
+      denied as a side effect (it fails closed).
 24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
     - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
