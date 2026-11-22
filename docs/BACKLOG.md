@@ -620,7 +620,8 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       (`results/phase3/serving/benchmark_champion.json`, linked from the README). The likely
       bottleneck is CPU compute for the three networks (throughput up 2.4 times while latency
       rises 8.6 times; CPU use not measured, so inferred). **Not ticked:** the bottleneck is
-      inferred, not measured, and int8 quantization has not been tried (it needs the
+      inferred, not measured, the ONNX export failed parity in Phase 3, and int8 quantization
+      has not been tried (it needs the
       champion's accuracy on the validation images, which live on Databricks).
 
 14. [ ] **Batch scoring at scale.** Score a large slice of the public ISIC archive (for example
