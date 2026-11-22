@@ -376,9 +376,10 @@ gets a **Blocked:** line with the reason.
      owner. Thresholds and reasons are in the README's "Alerts and model targets" table. Not
      ticked: no run has sent an alert yet.
    - **Next (2026-11-22):** owner step S15 runs the rehearsal job once by hand through months
-     2 to 10 on its own tables. In the 23 October replay, months 9 and 10 alerted and broke the
-     abstain-share target, so this run should end in "ALERT (not a job error)" and send the
-     failure email: live evidence for this item and for item 4's "a broken target raises an
+     2 to 10 on its own tables. In the committed replay record (`slo_replay.json`), months 7 to
+     10 alerted (skin type II from month 7, overall drift and the abstain-share target from month
+     9, delayed accuracy in month 10), so this run should end in "ALERT (not a job error)" and
+     send the failure email: live evidence for this item and for item 4's "a broken target raises an
      alert". Real images, labelled a rehearsal.
 
 6. [x] **Tests and model evals in CI** on every push, with pass and fail thresholds.
