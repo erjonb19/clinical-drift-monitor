@@ -119,13 +119,43 @@ Changing permission settings needs your approval, and this session was refused w
    Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
    check against a local port, so nothing is sent anywhere).
 
+### S15. Run the rehearsal job once by hand through months 2 to 10 (items 4 and 5; before S14)
+
+- [ ] Done
+
+**Why:** items 4 and 5 need a live alert: a broken target and a drift alarm that reach you, not
+only a flag in a table. The rehearsal's own tables now hold month 1, so one manual run with
+`count` = 9 replays months 2 to 10 there. In the 23 October replay, months 9 and 10 (all
+Buenos Aires, then all PAD-UFES-20) tripped the drift alarm, and their abstain shares (0.20 and
+0.28) were above the 0.15 target. If that repeats, the run saves every month, then fails with
+"ALERT (not a job error)", and the job's failure email reaches you. These are real images from
+real hospitals, not staged drift, written only to the rehearsal tables and folder. It runs on
+serverless CPU (Free Edition), like the 23 October replay of 12 months.
+
+1. Start it, overriding only `count`:
+   ```powershell
+   New-Item -ItemType Directory -Force .\dist | Out-Null
+   '{"job_id": 746196917078725, "notebook_params": {"count": "9"}}' | Out-File -Encoding ascii .\dist\rehearsal_run9.json
+   databricks jobs run-now --json "@dist/rehearsal_run9.json"
+   ```
+2. When it ends, it should end in failure with an "ALERT (not a job error)" message, and the
+   failure email should arrive. Then collect:
+   ```powershell
+   databricks jobs list-runs --job-id 746196917078725 -o json | Out-File -Encoding utf8 .\dist\rehearsal_runs.json
+   Get-Content .\dist\rehearsal_runs.json | Select-String -Pattern "run_id|trigger|life_cycle_state|result_state|state_message|start_time"
+   databricks fs cp -r --overwrite dbfs:/Volumes/workspace/cdm/raw/results/rehearsal/monthly .\dist\rehearsal
+   ```
+3. Send Claude: the run's lines from step 2 (with its `state_message`), whether the email
+   arrived and its subject line, and the contents of `month_09.json`, `month_10.json`,
+   `slo_09.json` and `slo_10.json`. Then do S14.
+
 ### S14. Delete the rehearsal job (item 1)
 
 - [ ] Done
 
-**Why:** the rehearsal (job 746196917078725) did its work, and its evidence is committed in
-`results/phase3/rehearsal/`. Its cron, `0 0 6 20 11 ?`, fires every 20 November, so it should not
-stay in the workspace. Do this once the evidence PR is merged.
+**Why:** after S15, the rehearsal (job 746196917078725) has done its work, and its evidence
+is committed in `results/phase3/rehearsal/`. Its cron, `0 0 6 20 11 ?`, fires every 20 November, so it should not
+stay in the workspace. Do this after S15, once its evidence is committed.
 
 ```powershell
 databricks jobs delete 746196917078725
@@ -133,9 +163,13 @@ $me = (databricks current-user me -o json | ConvertFrom-Json).userName
 databricks workspace delete "/Users/$me/cdm/rehearsal_monthly_drift"
 ```
 
-Dropping its three tables (`workspace.cdm.rehearsal_drift_monthly`,
-`rehearsal_prediction_audit`, `rehearsal_drift_baseline`) is your call; they are separate from
-the real ones. The SQL is in S12 step 4.
+Dropping its three tables is your call; they are separate from the real ones. In a SQL editor:
+
+```sql
+DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_monthly;
+DROP TABLE IF EXISTS workspace.cdm.rehearsal_prediction_audit;
+DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
+```
 
 ## Done
 
