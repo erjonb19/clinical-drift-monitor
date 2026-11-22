@@ -612,6 +612,17 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       a 5x gap with Phase 3's PyTorch timing are not explained.
       **Not done:** the champion's numbers (needs its bundle), the ONNX export (failed parity in
       Phase 3) and int8 quantization (needs the champion's accuracy on validation). Not ticked.
+    - **2026-11-22, the champion measured:** `benchmark.yml` now serves the champion bundle by
+      default (fetched by `scripts/fetch_champion_bundle.py`, SHA-256 checked). "Serving
+      benchmark" run 45074396136 on a 4-CPU GitHub runner, bundle `v2-ensemble-cpu-d7191f4`:
+      p50 158.8, 511.9 and 1,365.2 ms and 5.97, 8.52 and 14.21 images a second at 1, 5 and 20
+      users, server memory up to 1,158 MB; all 600 requests 200
+      (`results/phase3/serving/benchmark_champion.json`, linked from the README). The likely
+      bottleneck is CPU compute for the three networks (throughput up 2.4 times while latency
+      rises 8.6 times; CPU use not measured, so inferred). **Not ticked:** the bottleneck is
+      inferred, not measured, the ONNX export failed parity in Phase 3, and int8 quantization
+      has not been tried (it needs the
+      champion's accuracy on the validation images, which live on Databricks).
 
 14. [ ] **Batch scoring at scale.** Score a large slice of the public ISIC archive (for example
     50,000 images) on Databricks serverless as a distributed job (Spark with a pandas UDF, or

@@ -1,0 +1,94 @@
+{
+  "what": "serving speed of the API (backlog item 13); not accuracy",
+  "bundle_version": "v2-ensemble-cpu-d7191f4",
+  "caveat": "",
+  "measured_utc": "2026-11-22T21:52:50+00:00",
+  "code_version": "4e7c762",
+  "uncommitted_changes": false,
+  "where": "GitHub Actions ubuntu-latest runner (4 CPUs)",
+  "hardware": {
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logical_cpus": 4,
+    "memory_mb": 15983,
+    "os": "Linux-7.0.0-1020-azure-x86_64-with-glibc2.43"
+  },
+  "software": {
+    "python": "3.11.18",
+    "torch": "2.14.0+cpu",
+    "torch_threads_default": 2,
+    "torch_threads_note": "read in the client process; the server uses the same default"
+  },
+  "server": "scripts/bench_app.py: app/api/main.py's create_app, one uvicorn worker, rate limiter opened wide",
+  "networks_in_bundle": 3,
+  "conditions": "client and server share the same machine's CPUs; every request opens a new connection (urllib sends Connection: close); the API runs each request in a worker thread, so concurrent requests compute in parallel and compete for the CPUs; CPU use is not measured",
+  "image": "one synthetic 448x448 JPEG, sent repeatedly; 10 warm-up requests not counted",
+  "memory_after_warmup_kb": {
+    "VmHWM": 642148,
+    "VmRSS": 642148
+  },
+  "levels": [
+    {
+      "users": 1,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 158.8,
+        "p95": 288.1,
+        "p99": 324.1,
+        "mean": 167.5
+      },
+      "throughput_per_s": 5.97,
+      "wall_s": 33.5,
+      "server_memory_kb": {
+        "VmHWM": 642184,
+        "VmRSS": 642184
+      }
+    },
+    {
+      "users": 5,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 511.9,
+        "p95": 1033.8,
+        "p99": 1247.5,
+        "mean": 548.6
+      },
+      "throughput_per_s": 8.52,
+      "wall_s": 23.5,
+      "server_memory_kb": {
+        "VmHWM": 758480,
+        "VmRSS": 758480
+      }
+    },
+    {
+      "users": 20,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 1365.2,
+        "p95": 1702.4,
+        "p99": 1767.4,
+        "mean": 1385.7
+      },
+      "throughput_per_s": 14.21,
+      "wall_s": 14.1,
+      "server_memory_kb": {
+        "VmHWM": 1185820,
+        "VmRSS": 1185820
+      }
+    }
+  ],
+  "run": {
+    "workflow": "Serving benchmark (.github/workflows/benchmark.yml), workflow_dispatch with bundle=champion, requests=200",
+    "run_id": 45074396136,
+    "job_id": 137368270557,
+    "transcribed": "copied from the run's log, where the workflow prints benchmark.json; also uploaded as artifact 14774602512"
+  }
+}

@@ -536,8 +536,24 @@ threshold).
   demo that exists is the cohort service's
   ([cdm-cohort-demo.streamlit.app](https://cdm-cohort-demo.streamlit.app/)), not this classifier.
 
-**Serving speed (backlog item 13), measured on the untrained CI test bundle, so serving speed
-only, never accuracy** ([`benchmark.json`](results/phase3/serving/benchmark.json); one network,
+**Serving speed of the champion (backlog item 13; serving speed only, never accuracy)**
+([`benchmark_champion.json`](results/phase3/serving/benchmark_champion.json); the shipped
+three-network bundle `v2-ensemble-cpu-d7191f4`; a GitHub Actions runner with 4 CPUs (AMD EPYC
+7763), torch 2.14.0+cpu, no container; one uvicorn worker, the rate limiter opened wide; one
+synthetic 448x448 JPEG; "Serving benchmark" run 45074396136, 2026-11-22):
+
+| Concurrent users | p50 ms | p95 ms | p99 ms | Images/s | Server memory peak (MB) |
+|---|---|---|---|---|---|
+| 1 | 158.8 | 288.1 | 324.1 | 5.97 | 627 |
+| 5 | 511.9 | 1033.8 | 1247.5 | 8.52 | 741 |
+| 20 | 1365.2 | 1702.4 | 1767.4 | 14.21 | 1158 |
+
+From 1 to 20 users throughput rises only 2.4 times while median latency rises 8.6 times: the
+likely bottleneck is CPU compute for the three networks, shared by concurrent requests on four
+CPUs (CPU use was not measured, so this is inferred, not shown). All 600 requests returned 200.
+
+**Serving speed (backlog item 13), measured earlier on the untrained CI test bundle, so serving
+speed only, never accuracy** ([`benchmark.json`](results/phase3/serving/benchmark.json); one network,
 where the champion runs three; this cloud session's 4-CPU Xeon VM, torch 2.15.0+cu132
 not the image's CPU build, no container; one uvicorn worker, the rate limiter opened wide):
 
@@ -551,8 +567,8 @@ Throughput stays flat while latency grows with the number of users: the machine 
 (concurrent requests compute in parallel threads and compete for the CPUs; CPU use was not
 measured). Phase 3 measured PyTorch at about 93 ms per seed per image on Databricks serverless,
 about 5 times slower than this whole request; the gap is not explained (different hardware,
-torch build and threads). The champion's numbers have not been measured (its bundle is a release asset since 2026-11-18), and the
-dispatch-only `benchmark.yml` workflow repeats this on a GitHub runner. ONNX was not
+torch build and threads). The champion's numbers are above; the dispatch-only `benchmark.yml` workflow serves the
+champion by default and the test bundle with `bundle: test`. ONNX was not
 re-benchmarked (it failed parity, Phase 3), and int8 quantization needs the champion to check
 accuracy.
 
