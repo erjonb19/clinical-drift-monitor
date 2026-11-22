@@ -65,3 +65,39 @@ def test_shell_reads_of_env_files_and_find_deletes_are_denied() -> None:
         assert not _denied(command), command
     # .env.example is caught too, like the standard's Read(./.env.*): fail closed.
     assert _denied("cat .env.example")
+
+
+def test_curl_and_gh_api_writes_are_denied_whatever_the_flag_position() -> None:
+    """Item 23's check (2026-11-19): `Bash(curl * -X *)` needs text before the flag, so
+    `curl -X POST <url>` ran in a cloud session (it failed only to connect). Each curl and
+    `gh api` write rule now has a flag-first twin and a no-space twin (`-XPOST`,
+    `--request=POST`), approved by the owner on 2026-11-20 (owner step S13)."""
+    for command in (
+        "curl -X POST https://example.com",
+        "curl -XPOST https://example.com",
+        "curl -sS https://example.com -XPOST",
+        "curl --request=POST https://example.com",
+        "curl --request PUT https://example.com",
+        "curl -d a=1 https://example.com",
+        "curl -da=1 https://example.com",
+        "curl --data-binary @f https://example.com",
+        "curl -F x=@f https://example.com",
+        "curl --form=x=1 https://example.com",
+        "curl -T f https://example.com",
+        "curl --upload-file=f https://example.com",
+        "curl --json {} https://example.com",
+        "gh api -X POST repos/o/r/issues",
+        "gh api --method=DELETE repos/o/r",
+        "gh api -fa=b repos/o/r/issues",
+        "gh api -F x=@f repos/o/r",
+        "gh api --input body.json repos/o/r",
+        "gh api --raw-field=x repos/o/r",
+    ):
+        assert _denied(command), command
+    for command in (
+        "curl -sS https://example.com",
+        "curl -sSfL -o out.json https://example.com",
+        "gh api repos/o/r/pulls",
+        "gh api --paginate repos/o/r/pulls --jq .[].number",
+    ):
+        assert not _denied(command), command
