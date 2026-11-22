@@ -1,6 +1,8 @@
-# Backlog item 13: the serving benchmark on a GitHub runner, by hand only. It uses the CI test
-# bundle (untrained weights), so its numbers are serving speed, never accuracy. The results file
-# is uploaded as an artifact; committing it is a normal PR.
+# Backlog item 13: the serving benchmark on a GitHub runner, by hand only. By default it serves
+# the champion bundle (the release asset in config/champion_smoke.json, SHA-256 checked by
+# scripts/fetch_champion_bundle.py); `bundle: test` serves the untrained CI test bundle instead.
+# Either way its numbers are serving speed, never accuracy. The results file is uploaded as an
+# artifact and printed in the log; committing it is a normal PR.
 name: Serving benchmark
 
 on:
@@ -10,6 +12,12 @@ on:
         description: "Requests per concurrency level"
         required: false
         default: "200"
+      bundle:
+        description: "Which bundle to serve: champion (three networks) or test (one, untrained)"
+        required: false
+        default: "champion"
+        type: choice
+        options: [champion, test]
 
 permissions:
   contents: read
@@ -38,14 +46,27 @@ jobs:
         run: |
           uv sync --locked --no-python-downloads --python 3.11 --extra train --extra serve --extra api
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
-      - name: Test bundle (untrained)
-        run: python scripts/make_test_bundle.py --out dist/test_bundle
+      - name: Bundle
+        env:
+          BUNDLE: ${{ inputs.bundle }}
+        run: |
+          set -euo pipefail
+          if [ "$BUNDLE" = "test" ]; then
+            python scripts/make_test_bundle.py --out dist/bundle
+          else
+            python scripts/fetch_champion_bundle.py --dest dist/bundle
+          fi
       - name: Benchmark
         env:
           REQUESTS: ${{ inputs.requests }}
         run: |
-          PYTHONPATH=. python scripts/load_test.py --bundle dist/test_bundle --requests "$REQUESTS" \
-            --where "GitHub Actions ubuntu-latest runner" --out benchmark.json
+          set -euo pipefail
+          nproc
+          PYTHONPATH=. python scripts/load_test.py --bundle dist/bundle --requests "$REQUESTS" \
+            --where "GitHub Actions ubuntu-latest runner ($(nproc) CPUs)" --out benchmark.json
+          echo "----- BEGIN benchmark.json -----"
+          cat benchmark.json
+          echo "----- END benchmark.json -----"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: benchmark-${{ github.run_id }}
