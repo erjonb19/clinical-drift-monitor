@@ -1,0 +1,15 @@
+{
+  "what": "Backlog item 1: the scheduled REHEARSAL of the monthly drift job, a temporary copy (databricks/monthly_drift_rehearsal_job.json) writing only rehearsal_* tables and /Volumes/workspace/cdm/raw/results/rehearsal/monthly. Not the real monthly job (524433148303929) and not a real month: it replays month 1. Transcribed from the owner's S12 report of 2026-11-20 (databricks jobs list-runs and the run's two files, which are committed beside this one as the owner sent them).",
+  "job": {"name": "cdm-rehearsal-monthly-drift", "job_id": "746196917078725", "schedule": "0 0 6 20 11 ? UTC UNPAUSED (read back by the deploy script, 2026-11-18)"},
+  "run": {
+    "run_id": "759057427881435",
+    "trigger": "PERIODIC",
+    "life_cycle_state": "TERMINATED",
+    "result_state": "SUCCESS",
+    "start_time_ms": 1795154408341,
+    "start_time_utc": "2026-11-20T06:00:08.341Z"
+  },
+  "code_version": "7a0070b",
+  "files": ["month_01.json", "slo_01.json"],
+  "note": "The drift test's numbers (KS 0.0595, p 0.274, PSI 0.0201) and the abstain share (0.0567) equal results/phase3/monthly/month_01.json from the 2026-10-23 replay to every digit: the same seeded draw of 300 images, the same bundle, and a validation baseline of the same 3,210 images, recomputed on serverless CPU. That is a reproducibility check, not a new result."
+}

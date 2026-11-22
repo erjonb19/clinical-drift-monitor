@@ -292,6 +292,10 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
   host with byte caps. Redeployed by the owner's reboot on 2026-11-13; the live page was not
   checked from the cloud session.
 - Workflow audit: zizmor, pinned by hash, on every workflow change (item 37, 2026-11-11).
+- Scheduled drift job (item 1, 2026-11-20): a rehearsal copy of the monthly job started by its
+  schedule and finished green, writing its own tables and files (`results/phase3/rehearsal/`).
+  The real monthly job's first scheduled run (1 November) did not start, and its cause is not
+  found; its 1 December run is still to come.
 - Champion smoke test in CI (item 6, 2026-11-18): the release-asset bundle, SHA-256 checked,
   scores 50 public test-split images on every push.
 - `docker compose up` demo (item 21, 2026-11-18): with the champion bundle it tripped the drift
