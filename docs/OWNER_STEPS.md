@@ -103,6 +103,47 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
+### S17. Export the detector-quality image IDs once (item 15)
+
+- [ ] Done
+
+**Why:** item 15 (time to detect and false alarms, approved 2026-11-09 to run on a GitHub
+runner) is built; the champion bundle it scores with is already a release asset (S1). The one
+input left is the list of public ISIC image IDs in silver's labelled client validation and test
+splits, which only the workspace holds. The file holds public IDs and split names only: no
+images, labels or patient data. The runner refuses any file whose counts are not exactly 3,210
+validation and 3,262 test IDs.
+
+1. In the Databricks workspace open **SQL Editor**, choose the Serverless Starter Warehouse,
+   and run:
+   ```sql
+   SELECT isic_id, split FROM workspace.cdm.silver_images
+   WHERE role = 'client' AND split IN ('val', 'test') AND label IS NOT NULL
+   ORDER BY split, isic_id
+   ```
+   Check the result has 6,472 rows (if it shows 1,000, turn off the editor's row limit and run
+   it again). Download it as CSV (the download arrow under the result).
+2. Put it in the repo as `config/detector_quality_ids.csv`, check it starts with the header
+   row `isic_id,split`, and check the counts. Replace the path with where the download went:
+   ```powershell
+   git checkout main
+   git pull
+   git checkout -b owner/detector-quality-ids
+   Copy-Item "$HOME\Downloads\export.csv" config\detector_quality_ids.csv
+   Get-Content config\detector_quality_ids.csv -TotalCount 2
+   Import-Csv config\detector_quality_ids.csv | Group-Object split | Select-Object Name, Count
+   ```
+   The first line should be `isic_id,split`; the table should show `test` 3262 and `val` 3210.
+3. Push it on its own branch and tell Claude the branch name. Claude opens the PR; once it is
+   merged, Claude starts the dispatch-only `detector-quality` workflow and commits its results.
+   Its run time on the runner is not known yet: the job's limit is 340 minutes, and it
+   records its own time in `score_meta.json`.
+   ```powershell
+   git add config\detector_quality_ids.csv
+   git commit -m "Item 15: silver's labelled client val and test IDs (public ISIC IDs only)"
+   git push -u origin owner/detector-quality-ids
+   ```
+
 ### S15. Run the rehearsal job once by hand through months 2 to 10 (items 4 and 5; before S14)
 
 - [ ] Done

@@ -684,6 +684,8 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       `SELECT isic_id, split FROM workspace.cdm.silver_images WHERE role = 'client' AND split
       IN ('val', 'test') AND label IS NOT NULL ORDER BY split, isic_id`. The workflow fails,
       saying which is missing, until both exist.
+    - **2026-11-24:** (1) is met: the champion bundle is a release asset (S1, 2026-11-18). (2)
+      is owner step S17 in `docs/OWNER_STEPS.md`.
 
 16. [ ] **Shadow scoring.** The challenger scores the same monthly images as the champion
     without serving them; both scores land in the audit table with the model version, and a
