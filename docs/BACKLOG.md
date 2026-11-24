@@ -859,7 +859,8 @@ change only the owner can make (repository settings, accounts, consoles).
       no rule; the same POST was allowed on 2026-11-19, before #150); `ruff check .` ran
       without a prompt on 2026-11-19. The owner asked for the tick if the POST was refused.
       **Caveat:** the cloud session's `/permissions` list itself was not reported (the
-      2026-11-19 report held a placeholder); the refusals show the rules are enforced here, and
+      2026-11-19 report held a placeholder); the refusals are consistent with the deny rules (auto mode's classifier can also refuse, so
+      the cause is not proven), and
       the laptop's list was checked in S9. The known limits above still hold.
 24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.

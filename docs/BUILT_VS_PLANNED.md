@@ -304,9 +304,9 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 - Locked installs: CI installs only from `uv.lock` (7-day `exclude-newer`; uv pinned by
   version and checksum), and the API image installs only hashed packages exported from it
   (items 26 and 27, 2026-11-13).
-- Claude Code permission rules (item 23, 2026-11-24): `.claude/settings.json` was enforced in
-  a cloud session (a flag-first `curl -X POST` and a push to `main` were refused); that
-  session's `/permissions` list was not reported. Known gaps are listed under item 23.
+- Claude Code permission rules (item 23, 2026-11-24): `.claude/settings.json` is committed; in a
+  cloud session a flag-first `curl -X POST` and a push to `main` were refused, consistent with its
+  deny rules (the refusal names no rule); that session's `/permissions` list was not reported. Known gaps are listed under item 23.
 - Not done: the Streamlit app's hashed requirements (the rest of item 26).
 
 ## Scaffolded
