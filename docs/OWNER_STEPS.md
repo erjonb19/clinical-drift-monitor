@@ -121,9 +121,10 @@ validation and 3,262 test IDs.
    WHERE role = 'client' AND split IN ('val', 'test') AND label IS NOT NULL
    ORDER BY split, isic_id
    ```
-   Check the result has 6,472 rows. Download it as CSV (the download arrow under the result).
-2. Put it in the repo as `config/detector_quality_ids.csv`, with the header row
-   `isic_id,split`, and check the counts. Replace the path with where the download went:
+   Check the result has 6,472 rows (if it shows 1,000, turn off the editor's row limit and run
+   it again). Download it as CSV (the download arrow under the result).
+2. Put it in the repo as `config/detector_quality_ids.csv`, check it starts with the header
+   row `isic_id,split`, and check the counts. Replace the path with where the download went:
    ```powershell
    git checkout main
    git pull
@@ -132,10 +133,11 @@ validation and 3,262 test IDs.
    Get-Content config\detector_quality_ids.csv -TotalCount 2
    Import-Csv config\detector_quality_ids.csv | Group-Object split | Select-Object Name, Count
    ```
-   It should print `isic_id,split` first, then `test 3262` and `val 3210`.
+   The first line should be `isic_id,split`; the table should show `test` 3262 and `val` 3210.
 3. Push it on its own branch and tell Claude the branch name. Claude opens the PR; once it is
-   merged, Claude starts the dispatch-only `detector-quality` workflow (about 2.5 CPU hours on
-   a free GitHub runner, an estimate) and commits its results.
+   merged, Claude starts the dispatch-only `detector-quality` workflow and commits its results.
+   Its run time on the runner is not known yet: the job's limit is 340 minutes, and it
+   records its own time in `score_meta.json`.
    ```powershell
    git add config\detector_quality_ids.csv
    git commit -m "Item 15: silver's labelled client val and test IDs (public ISIC IDs only)"
