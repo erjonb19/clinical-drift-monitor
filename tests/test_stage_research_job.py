@@ -66,3 +66,33 @@ def test_a_workspace_name_imports_the_notebook_elsewhere(monkeypatch: pytest.Mon
     assert imports and imports[0][3] == "/Users/someone/cdm/rehearsal_monthly_drift"
     with pytest.raises(SystemExit, match="letters"):
         module.main(["--workspace-name", "../x", "monthly_drift", "a.json"])
+
+
+def test_several_notebooks_share_one_wheel(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Item 3's challenger job runs three notebooks; one call stages all of them with one wheel
+    (each build of the wheel has a different SHA-256)."""
+    module = script()
+    calls: list[tuple[str, ...]] = []
+
+    def fake_run(*args: str, capture: bool = True) -> str:
+        calls.append(args)
+        if args[:2] == ("git", "rev-parse"):
+            return "abc1234"
+        if args[:2] == ("databricks", "current-user"):
+            return '{"userName": "someone"}'
+        if args[1:3] == ("-m", "pip"):
+            Path(args[-1], module.WHEEL).write_bytes(b"wheel")
+        return ""
+
+    monkeypatch.setattr(module, "run", fake_run)
+    monkeypatch.setattr(module.subprocess, "run", lambda *a, **k: type("R", (), {"stdout": b"x"})())
+    module.main(["retrain,serving_bundle", "a.json"])
+    assert sum(1 for c in calls if c[1:3] == ("-m", "pip")) == 1
+    imports = [c[3] for c in calls if c[:3] == ("databricks", "workspace", "import")]
+    assert imports == ["/Users/someone/cdm/retrain", "/Users/someone/cdm/serving_bundle"]
+    copied = [c[3] for c in calls if c[:3] == ("databricks", "fs", "cp")]
+    assert any(c.endswith("repo/databricks/notebooks/serving_bundle.py") for c in copied)
+    with pytest.raises(SystemExit, match="one notebook"):
+        module.main(["--workspace-name", "x", "retrain,serving_bundle", "a.json"])
+    with pytest.raises(SystemExit, match="letters"):
+        module.main(["retrain,../x", "a.json"])

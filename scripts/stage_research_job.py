@@ -8,6 +8,10 @@ too, so the run records which committed notebook it was imported from.
 
 Usage: python scripts/stage_research_job.py [--workspace-name NAME] <notebook name> <repo file> ...
 
+A multi-task job names its notebooks joined by commas (``retrain,serving_bundle``): one wheel
+and one ``files_sha256`` map then serve every task. Staging them one call at a time would not
+work, because each call rebuilds the wheel and its SHA-256 changes between builds.
+
 ``--workspace-name`` imports the notebook under another workspace name, so a second job (item
 1's rehearsal of the monthly job) never replaces the notebook a scheduled job runs.
 """
@@ -42,8 +46,12 @@ def main(argv: list[str] | None = None) -> None:
         workspace_name, args = args[1], args[2:]
     if len(args) < 2:
         sys.exit(__doc__)
-    notebook = args[0]
-    files = [*args[1:], f"databricks/notebooks/{notebook}.py"]
+    notebooks = args[0].split(",")
+    if not all(n.replace("_", "").isalnum() for n in notebooks):
+        sys.exit("notebook names are letters, digits and underscores, joined by commas")
+    if workspace_name and len(notebooks) > 1:
+        sys.exit("--workspace-name takes one notebook")
+    files = [*args[1:], *(f"databricks/notebooks/{n}.py" for n in notebooks)]
     # The wheel is built from the working tree, so all of it that goes in must be committed.
     tracked = ["src", "scripts", "config", "databricks", "pyproject.toml", *files]
     if run("git", "status", "--porcelain", "--untracked-files=all", "--", *tracked):
@@ -67,10 +75,11 @@ def main(argv: list[str] | None = None) -> None:
         run("databricks", "fs", "cp", str(wheel), f"dbfs:{remote}/{WHEEL}", "--overwrite")
         wheel_sha = hashlib.sha256(wheel.read_bytes()).hexdigest()
     user = json.loads(run("databricks", "current-user", "me", "-o", "json"))["userName"]
-    source = REPO / "databricks" / "notebooks" / f"{notebook}.py"
-    target = workspace_name or notebook
-    run("databricks", "workspace", "import", f"/Users/{user}/cdm/{target}", "--file",
-        str(source), "--format", "SOURCE", "--language", "PYTHON", "--overwrite")  # fmt: skip
+    for notebook in notebooks:
+        source = REPO / "databricks" / "notebooks" / f"{notebook}.py"
+        target = workspace_name or notebook
+        run("databricks", "workspace", "import", f"/Users/{user}/cdm/{target}", "--file",
+            str(source), "--format", "SOURCE", "--language", "PYTHON", "--overwrite")  # fmt: skip
     print(json.dumps({"code_version": sha, "wheel": f"{remote}/{WHEEL}",
                       "wheel_sha256": wheel_sha, "repo": f"{remote}/repo",
                       "files_sha256": json.dumps(hashes)}, indent=2))  # fmt: skip

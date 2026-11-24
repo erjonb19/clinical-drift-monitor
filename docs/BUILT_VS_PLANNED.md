@@ -311,6 +311,14 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 
 ## Scaffolded
 
+### Items 3, 2 and 17: the challenger job (2026-11-24)
+
+- `databricks/challenger_job.json`: one GPU task trains a challenger and keeps its weights, a
+  CPU task builds and checks its serving bundle, and a CPU task registers it with its decision
+  tags without moving the `champion` alias. Spec committed before the run
+  (`results/phase3/challenger/spec.json`). Approved by the owner (2026-11-24); not deployed or
+  run yet (`docs/OWNER_STEPS.md` S16). No challenger result exists beyond the 2026-10-23 one.
+
 ### Phase 3: ONNX export (tried 2026-10-22; parity failed)
 
 - `cdm.serve_onnx` exports each shipped seed with features and logits and a dynamic batch,
