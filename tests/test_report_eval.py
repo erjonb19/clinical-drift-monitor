@@ -99,7 +99,7 @@ def test_outages_are_not_scored_and_too_many_make_it_inconclusive() -> None:
 
 
 def test_four_failed_scenarios_fail() -> None:
-    bad = {s["id"]: [("invalid", {})] * 3 for s in SCENARIOS[:4]}
+    bad: dict[str, list[tuple[str, Any]]] = {s["id"]: [("invalid", {})] * 3 for s in SCENARIOS[:4]}
     r = result(runs(bad))
     assert (r["verdict"], r["scenarios_passed"]) == ("fail", 26)
 

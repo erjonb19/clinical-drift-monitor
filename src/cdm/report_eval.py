@@ -114,11 +114,11 @@ def score(
             "scenario": sid, "scored_runs": len(scored), "correct_runs": n_correct,
             "short_of_runs": short, "passed": not short and n_correct >= MIN_CORRECT,
         })  # fmt: skip
-    passed = sum(r["passed"] for r in rows)
-    short = sum(r["short_of_runs"] for r in rows)
+    passed = sum(bool(r["passed"]) for r in rows)
+    n_short = sum(bool(r["short_of_runs"]) for r in rows)
     if ungrounded:
         verdict = "fail"
-    elif short > MAX_SHORT:
+    elif n_short > MAX_SHORT:
         verdict = "inconclusive"
     else:
         verdict = "pass" if passed >= PASS_AT_LEAST else "fail"
@@ -127,7 +127,7 @@ def score(
         "exit_code": {"pass": 0, "fail": 1, "inconclusive": 2}[verdict],
         "scenarios_passed": passed,
         "scenarios": len(rows),
-        "scenarios_short_of_runs": short,
+        "scenarios_short_of_runs": n_short,
         "ungrounded_runs": ungrounded,
         "outages": sum(r["outcome"] == "outage" for r in runs),
         "per_scenario": rows,
