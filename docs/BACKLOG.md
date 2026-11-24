@@ -802,7 +802,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
 places them. Each names its finding in `docs/security-audit-2026-11-10.md`. "(owner)" marks a
 change only the owner can make (repository settings, accounts, consoles).
 
-23. [ ] **Add `.claude/settings.json`** from the audit's proposal, after the owner's review.
+23. [x] **Add `.claude/settings.json`** from the audit's proposal, after the owner's review.
     - **Done when:** the file is committed and a cloud session's `/permissions` lists its rules;
       `ruff check .` runs without a prompt, `curl -X POST` and a push to `main` are denied.
     - **2026-11-11:** the audit's proposal plus the `-q` push forms and a small read-only set
@@ -852,6 +852,16 @@ change only the owner can make (repository settings, accounts, consoles).
       such as `/my-data`. These rules are a guard against mistakes, not a security boundary; the
       container and its network proxy are (SECURITY_STANDARDS 17.1). `curl --request-target` is
       denied as a side effect (it fails closed).
+    - **Done 2026-11-24 (Claude, after the owner merged #150):** on `main`, `.claude/settings.json`
+      has 91 deny rules. In this cloud session `curl -X POST -sS -m 3 -o /dev/null
+      http://127.0.0.1:9/` (flag first, local port, nothing sent) and `git push --dry-run origin
+      HEAD:main` were both refused by the permission system before running (the refusal names
+      no rule; the same POST was allowed on 2026-11-19, before #150); `ruff check .` ran
+      without a prompt on 2026-11-19. The owner asked for the tick if the POST was refused.
+      **Caveat:** the cloud session's `/permissions` list itself was not reported (the
+      2026-11-19 report held a placeholder); the refusals are consistent with the deny rules (auto mode's classifier can also refuse, so
+      the cause is not proven), and
+      the laptop's list was checked in S9. The known limits above still hold.
 24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
     `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
     - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
