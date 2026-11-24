@@ -7,7 +7,7 @@ runs and is reproducible from the repository.
 **This is a personal portfolio project.** No patients, clinicians or business decisions
 depend on it.
 
-Last updated: 2026-11-11.
+Last updated: 2026-11-24.
 
 ## Built
 
@@ -379,10 +379,21 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
   with a reason; blur and exposure only flag (uncalibrated). In the API (422, a `quarantined`
   count, `input_flags`); not yet in the monthly job. Tested on synthetic images only.
 
+### Phase 4: eval scenarios (2026-11-03)
+
+- `cdm.scenarios` and `scripts/phase4_scenarios.py`: 30 synthetic (staged) drift scenarios in
+  `results/phase4/scenarios.json`, each a month record shaped like `gold_drift_monthly`'s summary,
+  built from seeded made-up scores run through the monitoring code's own drift tests; known
+  findings derived from each record and a fixed rules context (the job's rules and the finding
+  words, committed with the scenarios). `results/phase4/eval_spec.json` sets the scoring and the pass
+  threshold (Claude's proposal, approved by the owner 2026-11-24). No generator, groundedness
+  check or LLM call exists yet.
+
 ## Not started
 
 - Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
-  shifts) and Phases 4 and 5.
+  shifts); the rest of Phase 4 (generator, groundedness check, eval harness, review queue) and
+  Phase 5.
 - Closed without being built (owner, 2026-11-03): the Gram backup detector (dropped: a CPU
   refit missed the GPU fit's normalizer by up to 11.8% in Phase 2) and the GPU-fit serving-setup
   check (superseded: the served bundle fits its detector on CPU features). See PLAN.md's

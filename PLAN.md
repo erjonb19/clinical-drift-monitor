@@ -346,6 +346,17 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-11-24: decided by the owner**
+  - **PR #50's eval thresholds:** "use your proposed thresholds" (27 of 30 scenarios pass and no
+    scored run has an ungrounded number; inconclusive if more than 3 scenarios lack 2 scored
+    runs because of outages). Claude merges #50 under the standing rule.
+  - **Champion vs challenger GPU run on Databricks Free Edition approved** (items 2 and 3):
+    Claude prepares it and writes the deploy and run steps in `docs/OWNER_STEPS.md`; the owner
+    runs them from the laptop.
+  - **Dependabot #125 and #138** merge under the standing rule if CI is green and a review
+    finds nothing blocking.
+  - **Item 12 (live endpoint) is skipped for now.**
+
 - **2026-11-18: decided by the owner** (security alerts, directive 20)
   - **Fix the Critical uv alert and the four cryptography alerts through the lockfile, and
     dismiss none.** How (Claude's choice, 2026-11-19): the only lockfile fix found was moving
