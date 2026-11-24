@@ -48,8 +48,8 @@ gets a **Blocked:** line with the reason.
   including ones marked "owner merges", once CI is green on the final commit and a fresh review
   by a separate agent that did not write the change finds nothing blocking. The owner is asked
   first, in chat, for spending, GPU runs, release tags, Databricks deploys, deleting data and any
-  permission-settings change (those PRs are opened and left). PR #50 stays with the owner (his
-  threshold decisions); it waits until after 26 November (owner, 2026-11-16).
+  permission-settings change (those PRs are opened and left). PR #50's thresholds were set by the
+  owner on 2026-11-24 (Claude's proposal, approved); #50 then merges under this rule.
 
 ## Items, in order
 
@@ -448,8 +448,9 @@ gets a **Blocked:** line with the reason.
    - **Today:** 30 synthetic (staged) eval scenarios and the eval spec
      (`results/phase4/scenarios.json`, `results/phase4/eval_spec.json`) are on `main`; the owner
      approved Claude's proposed thresholds on 2026-11-24 (27 of 30, groundedness a hard gate).
-     There is no report generator, groundedness check, review queue or runbook yet. The replay's alert months use real images in an order we
-     chose, so they count as replayed, not as live drift.
+     There is no report generator, groundedness check, review queue or runbook yet. The
+     replay's alert months use real images in an order we chose, so they count as replayed, not
+     as live drift.
 
 9. [x] **Model card and change-control plan:** a CHAI-format applied model card, and a one-page
    change-control plan mapped to FDA's Predetermined Change Control Plan guidance.

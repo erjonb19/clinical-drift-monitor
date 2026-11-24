@@ -7,7 +7,7 @@ runs and is reproducible from the repository.
 **This is a personal portfolio project.** No patients, clinicians or business decisions
 depend on it.
 
-Last updated: 2026-11-11.
+Last updated: 2026-11-24.
 
 ## Built
 
