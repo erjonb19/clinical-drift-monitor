@@ -125,9 +125,10 @@ same verdict as 2026-10-23, "not promoted": the data, seeds and recipe are the s
    ```
 2. Stage the three notebooks, one wheel and the five input files under this commit. It prints
    a short JSON block with no secrets: send it to Claude. (If `.venv` has no pip, run
-   `.venv\Scripts\python.exe -m ensurepip` first.)
+   `.venv\Scripts\python.exe -m ensurepip` first. Keep the quotes around the notebook list:
+   without them PowerShell splits it at the commas.)
    ```powershell
-   .venv\Scripts\python.exe scripts\stage_research_job.py retrain,serving_bundle,register_model results/phase3/challenger/spec.json results/phase3/retrain/spec.json results/phase3/serving/results.json results/phase3/serving/spec.json results/phase2/triage/threshold.json
+   .venv\Scripts\python.exe scripts\stage_research_job.py "retrain,serving_bundle,register_model" results/phase3/challenger/spec.json results/phase3/retrain/spec.json results/phase3/serving/results.json results/phase3/serving/spec.json results/phase2/triage/threshold.json
    ```
 3. Claude puts those values into `databricks/challenger_job.json` in place of `STAGE_FIRST` and
    merges it. Then get it:
@@ -145,13 +146,16 @@ same verdict as 2026-10-23, "not promoted": the data, seeds and recipe are the s
    "{""job_id"": $JobId}" | Out-File -Encoding ascii .\dist\challenger_run.json
    databricks jobs run-now --no-wait --json "@dist/challenger_run.json"
    ```
-6. When the job's email arrives (success or failure), list the run:
+6. When the job's email arrives (success or failure), list the run. Replace `0` with the job ID
+   again (a new PowerShell window forgets it):
    ```powershell
+   $JobId = 0
    databricks jobs list-runs --job-id $JobId -o json | Out-File -Encoding utf8 .\dist\challenger_runs.json
    Get-Content .\dist\challenger_runs.json | Select-String -Pattern "run_id|life_cycle_state|result_state|start_time|end_time"
    ```
    If a task failed, send Claude the error text from that task's page in the Jobs UI (it holds
-   no secrets) and stop here.
+   no secrets) and stop here. Do not start it again: once `decision.json` is written, a rerun
+   refuses until Claude has looked at what is left on the volume.
 7. If it succeeded, copy its four record files into the repo and push them on a branch (public
    numbers and IDs only, no images or weights). Tell Claude the branch name; Claude opens the
    PR, checks the files and updates items 3, 2 and 17.

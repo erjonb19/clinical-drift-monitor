@@ -13,12 +13,14 @@ JOB = REPO / "databricks" / "challenger_job.json"
 
 
 def job() -> dict[str, Any]:
-    return json.loads(JOB.read_text(encoding="utf-8"))
+    spec: dict[str, Any] = json.loads(JOB.read_text(encoding="utf-8"))
+    return spec
 
 
 def params(task: str) -> dict[str, str]:
     t = next(t for t in job()["tasks"] if t["task_key"] == task)
-    return t["notebook_task"]["base_parameters"]
+    values: dict[str, str] = t["notebook_task"]["base_parameters"]
+    return values
 
 
 def widgets(notebook: str) -> set[str]:

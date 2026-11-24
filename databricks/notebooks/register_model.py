@@ -74,6 +74,10 @@ MODEL_GEN = dbutils.widgets.get("model_gen")
 if DECISION:
     assert not ALIAS, "a challenger is registered without moving the alias (promote_challenger)"
     assert MODEL_GEN, "a challenger is registered with its model_gen tag"
+    # Read before anything is registered, so a bad decision file stops the run with no version.
+    DECISION_BYTES = Path(DECISION).read_bytes()
+    VERDICT = json.loads(DECISION_BYTES)["promoted"]
+    assert isinstance(VERDICT, bool), "the decision file's promoted is true or false"
 evaluated = json.loads(EVALUATED.read_text(encoding="utf-8"))
 manifest_sha = hashlib.sha256((BUNDLE / "manifest.json").read_bytes()).hexdigest()
 assert manifest_sha == evaluated["bundle"]["manifest_sha256"], "not the evaluated bundle"
@@ -154,11 +158,8 @@ if dbutils.widgets.get("training_data"):
     tags["training_data"] = dbutils.widgets.get("training_data")
 if DECISION:
     # The tags promote_challenger and move_champion check (cdm.promotion, cdm.registry).
-    decision_bytes = Path(DECISION).read_bytes()
-    tags["decision_sha256"] = hashlib.sha256(decision_bytes).hexdigest()
-    tags["decision"] = (
-        "promoted_by_rule" if json.loads(decision_bytes)["promoted"] is True else "rejected"
-    )
+    tags["decision_sha256"] = hashlib.sha256(DECISION_BYTES).hexdigest()
+    tags["decision"] = "promoted_by_rule" if VERDICT else "rejected"
     tags["serving_bundle_sha256"] = manifest_sha
 for k, v in tags.items():
     client.set_model_version_tag(NAME, version, k, v)
