@@ -103,25 +103,6 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
-### S13. Approve the flag-first deny rules for curl and `gh api` (item 23)
-
-- [ ] Done
-
-2026-11-20: approved by the owner in chat (step 1). The PR that adds the rules is open for the
-owner to merge; step 2 follows the merge.
-
-**Why:** in a cloud session on 2026-11-19, `curl -X POST <url>` (flag right after `curl`) was
-not denied. Every curl and `gh api` write rule in `.claude/settings.json` needs some text
-between the command and the flag. Item 23 can't close until a POST is denied in that form too.
-Changing permission settings needs your approval, and this session was refused when it tried.
-
-1. Reply in chat with: "Approved: add the flag-first curl and gh api deny rules to
-   .claude/settings.json." Claude then opens a PR with the rules listed under item 23 in
-   `docs/BACKLOG.md` and a test, and stops: you merge it.
-2. After the merge, start a new cloud session and check `/permissions` lists the new rules.
-   Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
-   check against a local port, so nothing is sent anywhere).
-
 ### S16. Deploy and run the champion vs challenger GPU job (items 3, 2 and 17)
 
 - [ ] Done
@@ -252,6 +233,25 @@ DROP TABLE IF EXISTS workspace.cdm.rehearsal_drift_baseline;
 ## Done
 
 Ticked steps move here with the date.
+
+### S13. Approve the flag-first deny rules for curl and `gh api` (item 23)
+
+- [x] Done (owner merged #150; 2026-11-24: Claude re-ran the flag-first `curl -X POST` check against a local port and it was refused; item 23 ticked; step 2's `/permissions` list was not reported, and the owner asked for the tick on the POST refusal).
+
+2026-11-20: approved by the owner in chat (step 1). The PR that adds the rules is open for the
+owner to merge; step 2 follows the merge.
+
+**Why:** in a cloud session on 2026-11-19, `curl -X POST <url>` (flag right after `curl`) was
+not denied. Every curl and `gh api` write rule in `.claude/settings.json` needs some text
+between the command and the flag. Item 23 can't close until a POST is denied in that form too.
+Changing permission settings needs your approval, and this session was refused when it tried.
+
+1. Reply in chat with: "Approved: add the flag-first curl and gh api deny rules to
+   .claude/settings.json." Claude then opens a PR with the rules listed under item 23 in
+   `docs/BACKLOG.md` and a test, and stops: you merge it.
+2. After the merge, start a new cloud session and check `/permissions` lists the new rules.
+   Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
+   check against a local port, so nothing is sent anywhere).
 
 ### S12. Collect the rehearsal's evidence (item 1; 20 November, after 06:30 UTC)
 
