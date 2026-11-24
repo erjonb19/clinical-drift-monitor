@@ -855,7 +855,8 @@ change only the owner can make (repository settings, accounts, consoles).
     - **Done 2026-11-24 (Claude, after the owner merged #150):** on `main`, `.claude/settings.json`
       has 91 deny rules. In this cloud session `curl -X POST -sS -m 3 -o /dev/null
       http://127.0.0.1:9/` (flag first, local port, nothing sent) and `git push --dry-run origin
-      HEAD:main` were both refused by the permission system before running; `ruff check .` ran
+      HEAD:main` were both refused by the permission system before running (the refusal names
+      no rule; the same POST was allowed on 2026-11-19, before #150); `ruff check .` ran
       without a prompt on 2026-11-19. The owner asked for the tick if the POST was refused.
       **Caveat:** the cloud session's `/permissions` list itself was not reported (the
       2026-11-19 report held a placeholder); the refusals show the rules are enforced here, and

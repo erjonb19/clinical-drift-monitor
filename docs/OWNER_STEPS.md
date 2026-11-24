@@ -166,7 +166,7 @@ Ticked steps move here with the date.
 
 ### S13. Approve the flag-first deny rules for curl and `gh api` (item 23)
 
-- [x] Done (owner merged #150; 2026-11-24: Claude re-ran the flag-first `curl -X POST` check against a local port and it was refused; item 23 ticked).
+- [x] Done (owner merged #150; 2026-11-24: Claude re-ran the flag-first `curl -X POST` check against a local port and it was refused; item 23 ticked; step 2's `/permissions` list was not reported, and the owner asked for the tick on the POST refusal).
 
 2026-11-20: approved by the owner in chat (step 1). The PR that adds the rules is open for the
 owner to merge; step 2 follows the merge.
