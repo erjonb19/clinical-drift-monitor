@@ -386,13 +386,15 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
   built from seeded made-up scores run through the monitoring code's own drift tests; known
   findings derived from each record and a fixed rules context (the job's rules and the finding
   words, committed with the scenarios). `results/phase4/eval_spec.json` sets the scoring and the pass
-  threshold (Claude's proposal, approved by the owner 2026-11-24). No generator, groundedness
-  check or LLM call exists yet.
+  threshold (Claude's proposal, approved by the owner 2026-11-24).
+- `cdm.groundedness` (2026-11-24): the groundedness check, with its rounding and percent rules;
+  tested on hand-written text and the committed scenario records only. No generator or LLM call
+  exists yet, so no report has been checked.
 
 ## Not started
 
 - Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
-  shifts); the rest of Phase 4 (generator, groundedness check, eval harness, review queue) and
+  shifts); the rest of Phase 4 (generator, eval harness, review queue) and
   Phase 5.
 - Closed without being built (owner, 2026-11-03): the Gram backup detector (dropped: a CPU
   refit missed the GPU fit's normalizer by up to 11.8% in Phase 2) and the GPU-fit serving-setup
