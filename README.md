@@ -950,6 +950,7 @@ Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to 
 - [x] Item 6: CI loads the champion bundle and scores 50 public test-split images on every push.
 - [x] Item 21: one-command demo (`docker compose up`) that trips the drift alarm with the champion bundle.
 - [x] Item 47: the public cohort demo is hardened (DuckDB external access off, no error details, per-session caps, the ISIC client held to its host).
+- [x] Item 23: Claude Code permission rules (`.claude/settings.json`) deny secret reads, force pushes, pushes to `main` and curl or `gh api` writes; a guard against mistakes, not a security boundary.
 
 ## Reviewer feedback
 
