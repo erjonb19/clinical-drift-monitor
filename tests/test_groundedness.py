@@ -71,3 +71,30 @@ def test_every_committed_scenario_record_grounds_its_own_numbers() -> None:
     """A report that repeats each record value as stored is grounded against that record."""
     for s in SCENARIOS["scenarios"]:
         assert check(s["record"], s["record"], RULES, FLOOR)["grounded"], s["id"]
+
+
+def test_nothing_with_a_digit_is_skipped_or_cut_short() -> None:
+    """Review of #156: each of these once passed. Every run of characters holding a digit must
+    read in full as a number, or it is unmatched."""
+    for text in ("PSI .9", ".9 of images", "so on...301 images", "end.301 images",
+                 "PSI rose 0.9x", "PSI 0.3s", "0.9_", "8.7e", "301images", "PSI0.9",
+                 "1e400 images", "7-8", "1,2,3", "½ of images", "10⁻⁷", "3²"):  # fmt: skip
+        result = check(text, RECORD, RULES, FLOOR)
+        assert not result["grounded"], (text, result)
+
+
+def test_leading_dot_decimals_and_sentence_punctuation_read_correctly() -> None:
+    assert [n.value for n in numbers_in(".184, then 0.18. And 300.")] == [0.184, 0.18, 300.0]
+    assert grounded("PSI .184.")
+
+
+def test_non_finite_leaves_and_keys_in_the_report_are_read() -> None:
+    assert not check({"value": float("nan")}, RECORD, RULES, FLOOR)["grounded"]
+    assert not check({"value": float("inf")}, RECORD, RULES, FLOOR)["grounded"]
+    assert not check({"301 images": True}, RECORD, RULES, FLOOR)["grounded"]
+    assert check({"300 images": True}, RECORD, RULES, FLOOR)["grounded"]
+
+
+def test_a_huge_exponent_in_the_record_is_ignored_not_a_crash() -> None:
+    record = {**RECORD, "note": "1e400"}
+    assert check("300", record, RULES, FLOOR)["grounded"]
