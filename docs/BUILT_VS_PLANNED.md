@@ -398,11 +398,14 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 - `cdm.groundedness` (2026-11-24): the groundedness check, with its rounding and percent rules;
   tested on hand-written text and the committed scenario records only. No generator or LLM call
   exists yet, so no report has been checked.
+- `cdm.report_eval` (2026-11-24): scores recorded runs under the approved spec (correctness,
+  the groundedness gate, 2 of 3 runs, outages apart, pass / inconclusive / fail). Tested on
+  made-up runs only; no generator exists, so no real run has been scored.
 
 ## Not started
 
 - Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
-  shifts); the rest of Phase 4 (generator, eval harness, review queue) and
+  shifts); the rest of Phase 4 (generator and its workflow, the replay step, review queue, runbook) and
   Phase 5.
 - Closed without being built (owner, 2026-11-03): the Gram backup detector (dropped: a CPU
   refit missed the GPU fit's normalizer by up to 11.8% in Phase 2) and the GPU-fit serving-setup
