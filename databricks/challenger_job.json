@@ -1,0 +1,117 @@
+{
+  "name": "cdm-item3-challenger",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "gpu",
+      "spec": {
+        "base_environment": "databricks_ai_v6"
+      }
+    },
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "STAGE_FIRST",
+          "torch==2.14.0",
+          "torchvision==0.29.0",
+          "mlflow==3.17.1"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "train_challenger",
+      "environment_key": "gpu",
+      "compute": {
+        "hardware_accelerator": "GPU_1xA10"
+      },
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/retrain",
+        "base_parameters": {
+          "code_version": "STAGE_FIRST",
+          "wheel": "STAGE_FIRST",
+          "wheel_sha256": "STAGE_FIRST",
+          "repo": "STAGE_FIRST",
+          "files_sha256": "STAGE_FIRST",
+          "models_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/v2/final_models.json",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/challenger",
+          "deadline_minutes": "45",
+          "job_run_id": "{{job.run_id}}",
+          "keep_checkpoints": "true",
+          "checkpoint_dir": "/Volumes/workspace/cdm/raw/checkpoints/phase3/challenger-item3"
+        }
+      }
+    },
+    {
+      "task_key": "serving_bundle",
+      "depends_on": [
+        {
+          "task_key": "train_challenger"
+        }
+      ],
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 10800,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/serving_bundle",
+        "base_parameters": {
+          "code_version": "STAGE_FIRST",
+          "wheel": "STAGE_FIRST",
+          "wheel_sha256": "STAGE_FIRST",
+          "repo": "STAGE_FIRST",
+          "files_sha256": "STAGE_FIRST",
+          "models_file": "/Volumes/workspace/cdm/raw/results/phase3/challenger/challenger_models.json",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/challenger/serving",
+          "job_run_id": "{{job.run_id}}",
+          "bundle_dir": "/Volumes/workspace/cdm/raw/deploy/serving/challenger-item3",
+          "version_name": "v3-challenger-item3"
+        }
+      }
+    },
+    {
+      "task_key": "register",
+      "depends_on": [
+        {
+          "task_key": "serving_bundle"
+        }
+      ],
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/register_model",
+        "base_parameters": {
+          "code_version": "STAGE_FIRST",
+          "wheel": "STAGE_FIRST",
+          "wheel_sha256": "STAGE_FIRST",
+          "repo": "STAGE_FIRST",
+          "files_sha256": "STAGE_FIRST",
+          "bundle": "/Volumes/workspace/cdm/raw/deploy/serving/challenger-item3",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/challenger/registry",
+          "job_run_id": "{{job.run_id}}",
+          "evaluated_results": "/Volumes/workspace/cdm/raw/results/phase3/challenger/serving/results.json",
+          "alias": "",
+          "decision_path": "/Volumes/workspace/cdm/raw/results/phase3/challenger/decision.json",
+          "model_gen": "v3",
+          "training_data": "the clients' training split plus the labelled Buenos Aires images the monthly job scored in replay months 5 to 9"
+        }
+      }
+    }
+  ]
+}

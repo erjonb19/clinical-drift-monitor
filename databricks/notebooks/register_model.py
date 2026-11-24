@@ -7,6 +7,11 @@
 # MAGIC clients' training split of `workspace.cdm.silver_images` as its training input (an MLflow
 # MAGIC dataset record; Unity Catalog lineage into the model itself is not shown here). Then it reads `system.access.table_lineage` for the chain
 # MAGIC bronze -> silver -> gold, OMOP and the audit table, and writes it with the model version.
+# MAGIC Item 3's challenger job registers its challenger here too, with `alias` empty (the alias never
+# MAGIC moves; `promote_challenger` does that by hand), the volume's bundle results as
+# MAGIC `evaluated_results`, and `decision_path`: the version is tagged with the decision file's
+# MAGIC SHA-256, the rule's verdict (`promoted_by_rule` or `rejected`), the checked bundle's
+# MAGIC manifest SHA-256 and `model_gen`.
 
 # COMMAND ----------
 
@@ -20,6 +25,11 @@ for name, default in {
     "out": "/Volumes/workspace/cdm/raw/results/phase3/lineage",
     "experiment_id": "3252981153928765",
     "job_run_id": "",
+    "evaluated_results": "",
+    "alias": "champion",
+    "decision_path": "",
+    "model_gen": "",
+    "training_data": "",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -54,7 +64,17 @@ assert dbutils.widgets.get("wheel_sha256") == WHEEL_SHA, f"wheel sha256 {WHEEL_S
 for rel, digest in json.loads(dbutils.widgets.get("files_sha256")).items():
     got = hashlib.sha256((REPO / rel).read_bytes()).hexdigest()
     assert got == digest, f"{rel}: sha256 {got}, expected {digest}"
-evaluated = json.loads((REPO / "results/phase3/serving/results.json").read_text(encoding="utf-8"))
+EVALUATED = Path(
+    dbutils.widgets.get("evaluated_results") or REPO / "results/phase3/serving/results.json"
+)
+ALIAS = dbutils.widgets.get("alias")
+assert ALIAS in ("champion", ""), "alias: champion, or empty to leave every alias where it is"
+DECISION = dbutils.widgets.get("decision_path")
+MODEL_GEN = dbutils.widgets.get("model_gen")
+if DECISION:
+    assert not ALIAS, "a challenger is registered without moving the alias (promote_challenger)"
+    assert MODEL_GEN, "a challenger is registered with its model_gen tag"
+evaluated = json.loads(EVALUATED.read_text(encoding="utf-8"))
 manifest_sha = hashlib.sha256((BUNDLE / "manifest.json").read_bytes()).hexdigest()
 assert manifest_sha == evaluated["bundle"]["manifest_sha256"], "not the evaluated bundle"
 local = Path(tempfile.mkdtemp()) / "bundle"
@@ -119,12 +139,28 @@ with mlflow.start_run(
     run_id = run.info.run_id
 client = mlflow.MlflowClient(registry_uri="databricks-uc")
 version = info.registered_model_version
-client.set_registered_model_alias(NAME, "champion", version)
-for k, v in {
+if ALIAS:
+    client.set_registered_model_alias(NAME, ALIAS, version)
+tags = {
     "bundle_manifest_sha256": manifest_sha,
-    "evaluated_in": "results/phase3/serving/results.json",
+    "evaluated_in": str(EVALUATED.relative_to(REPO))
+    if EVALUATED.is_relative_to(REPO)
+    else str(EVALUATED),
     "code_version": CODE,
-}.items():
+}
+if MODEL_GEN:
+    tags["model_gen"] = MODEL_GEN
+if dbutils.widgets.get("training_data"):
+    tags["training_data"] = dbutils.widgets.get("training_data")
+if DECISION:
+    # The tags promote_challenger and move_champion check (cdm.promotion, cdm.registry).
+    decision_bytes = Path(DECISION).read_bytes()
+    tags["decision_sha256"] = hashlib.sha256(decision_bytes).hexdigest()
+    tags["decision"] = (
+        "promoted_by_rule" if json.loads(decision_bytes)["promoted"] is True else "rejected"
+    )
+    tags["serving_bundle_sha256"] = manifest_sha
+for k, v in tags.items():
     client.set_model_version_tag(NAME, version, k, v)
 
 # COMMAND ----------
@@ -142,8 +178,9 @@ out = {
     "registered_model": {
         "name": NAME,
         "version": int(version),
-        "alias": "champion",
-        "uri": f"models:/{NAME}@champion",
+        "alias": ALIAS or None,
+        "uri": f"models:/{NAME}/{version}",
+        "tags": tags,
         "mlflow_run": run_id,
         "training_input": "workspace.cdm.silver_images (clients' training split)",
         "bundle_manifest_sha256": manifest_sha,

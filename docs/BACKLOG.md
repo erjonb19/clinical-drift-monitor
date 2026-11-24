@@ -274,6 +274,12 @@ gets a **Blocked:** line with the reason.
      bundle), are in `docs/rollback.md`. Tested with a fake registry. **Waits on:** a second
      registry version (item 3's challenger, a GPU run the owner approves), and tagging v1
      `model_gen=v2` (the owner, step 2 of `docs/rollback.md`).
+   - **2026-11-24:** item 3's challenger job (S16) registers the challenger as v2, tagged
+     `model_gen=v3`. If the rule rejects it (likely), `move_champion.py` refuses to move the
+     alias to it (a `rejected` version is never promoted), so this item's "moves the alias to
+     the newer one and back" cannot be shown with it. **For the owner:** keep waiting for a
+     promoted challenger, or accept the rollback drill on a rejected version (a rule change,
+     not made here).
 
 3. [ ] **Champion vs challenger.** The current model (v1) is the champion and v2 is the
    challenger. Score both on the same data, compare them, and promote the challenger only if it
@@ -312,6 +318,22 @@ gets a **Blocked:** line with the reason.
      highest rate). Two start-up failures on 2026-10-23 (900 seconds each) may also count;
      unknown. The 10 to 25 minutes assumes the 6-minute notebook plus start-up and the
      pipeline's extra tasks; that is a guess, not a measurement.
+   - **Owner decision, 2026-11-24:** the GPU run is approved; Claude prepares it and the owner
+     deploys and runs it from the laptop (`docs/OWNER_STEPS.md` S16).
+   - **Built 2026-11-24 (not run):** `databricks/challenger_job.json` (`cdm-item3-challenger`):
+     `train_challenger` (the existing `retrain.py` on one A10, now with `keep_checkpoints`, so
+     every challenger's weights are kept and listed, promoted or not), `serving_bundle` (the
+     existing notebook, writing to its own bundle folder and version name) and `register` (the
+     existing `register_model.py`, with no alias move and the `model_gen`, `decision`,
+     `decision_sha256` and `serving_bundle_sha256` tags that `promote_challenger` and
+     `move_champion.py` check). The spec, committed before the run:
+     `results/phase3/challenger/spec.json` (the 2026-10-23 rule, unchanged). Tested in
+     `tests/test_challenger_job.py`; one call of `stage_research_job.py` now stages several
+     notebooks with one wheel. Not built from item 17's spec: the `trigger_check` task (the
+     notebook keeps its own trigger, an alert in a month with Buenos Aires images) and the
+     evaluation against `config/slo.json`'s targets. **Expected (an inference):** "not
+     promoted" again, since the data, seeds and recipe match 2026-10-23; a rejected version
+     cannot be promoted, so item 2's move forwards and back would still wait (see item 2).
 
 4. [ ] **SLOs as model targets**, such as a minimum melanoma sensitivity, written in the README,
    with an alert when drift breaks a target.

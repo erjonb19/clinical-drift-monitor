@@ -1,0 +1,27 @@
+{
+  "committed_before_running": true,
+  "written": "2026-11-24, by Claude; the GPU run was approved by the owner on 2026-11-24 (\"the champion vs challenger GPU run on Databricks Free Edition\"); the owner deploys and starts it from the laptop",
+  "items": "BACKLOG items 3 (champion vs challenger) and 2 (a second registry version), as the first run of item 17's pipeline (owner, 2026-11-10)",
+  "job": "databricks/challenger_job.json (cdm-item3-challenger): train_challenger (GPU, A10) -> serving_bundle (CPU) -> register (CPU)",
+  "rule": "results/phase3/retrain/spec.json, unchanged: its trigger, champion, challenger recipe, held-out data, comparison and promotion rule (gain >= 2.0 points on held-out Buenos Aires with the paired 95% lower bound above 0, and client validation change >= -1.0 point)",
+  "data": {
+    "challenger_training": "the clients' training split plus the labelled Buenos Aires images the monthly job scored in replay months 5 to 9 (workspace.cdm.gold_prediction_audit)",
+    "held_out": "labelled Buenos Aires images of patients (else lesions) with no image in the challenger's training data",
+    "client_validation": "the clients' validation split (also chooses the challenger's epoch)"
+  },
+  "differences_from_the_2026_10_23_run": [
+    "every challenger's checkpoints are kept and listed in challenger_models.json, promoted or not (keep_checkpoints = true)",
+    "the challenger always gets a serving bundle built and checked on CPU, in its own folder (deploy/serving/challenger-item3), and is always registered in workspace.cdm.skin_lesion_classifier with model_gen v3, decision (promoted_by_rule or rejected), decision_sha256 and serving_bundle_sha256 tags",
+    "the champion alias never moves in this job; a promotion is the owner's separate promote_challenger run, allowed only if the rule promoted"
+  ],
+  "expected_outcome_note": "an inference, not a result: the data, seeds and recipe match the 2026-10-23 run, which did not promote (held-out gain 6.2 points, client validation -1.6 points); a similar verdict is likely. A rejected version is registered but can never be promoted, so item 2's move to the newer version and back would still wait for a version the rule promotes",
+  "serving_bundle_test_look": "serving_bundle.py's one look at the clients' test split and the two new hospitals runs for the challenger too; its Buenos Aires rows include images the challenger trained on, so they are not a held-out result",
+  "outputs": {
+    "decision": "/Volumes/workspace/cdm/raw/results/phase3/challenger/decision.json (and a row in workspace.cdm.gold_model_decisions)",
+    "checkpoints": "/Volumes/workspace/cdm/raw/checkpoints/phase3/challenger-item3/seed{0,1,2}.pt with challenger_models.json",
+    "bundle_results": "/Volumes/workspace/cdm/raw/results/phase3/challenger/serving/results.json",
+    "registration": "/Volumes/workspace/cdm/raw/results/phase3/challenger/registry/lineage.json"
+  },
+  "commit_after_the_run": "decision.json, challenger_models.json, serving/results.json and registry/lineage.json, copied to results/phase3/challenger/ by the owner (docs/OWNER_STEPS.md)",
+  "cost": "Free Edition: no charge. GPU estimate from committed records, not a result (BACKLOG item 3): about 0.7 to 1.9 GPU DBUs for a 10- to 25-minute GPU task, capped near 4.6 by the 60-minute timeout; the CPU tasks are serverless CPU"
+}

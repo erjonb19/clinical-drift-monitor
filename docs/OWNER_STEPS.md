@@ -122,6 +122,76 @@ Changing permission settings needs your approval, and this session was refused w
    Tell Claude what it shows, and whether `curl -X POST` is now refused (Claude re-runs that
    check against a local port, so nothing is sent anywhere).
 
+### S16. Deploy and run the champion vs challenger GPU job (items 3, 2 and 17)
+
+- [ ] Done
+
+Approved by the owner on 2026-11-24 ("the champion vs challenger GPU run on Databricks Free
+Edition"). **Why:** item 3 needs one run that scores the champion and a new challenger on the
+same images under the committed rule, and items 2 and 17 need the challenger registered as a
+second version. The job (`databricks/challenger_job.json`, `cdm-item3-challenger`) has three
+tasks: `train_challenger` on one A10 GPU (stops itself at 45 minutes, hard timeout 60), then
+`serving_bundle` and `register` on serverless CPU. It never moves the `champion` alias and
+writes nothing where the champion's files are. What it does and how it differs from the
+2026-10-23 run is in `results/phase3/challenger/spec.json`. Cost: Free Edition charges nothing;
+the GPU estimate is under item 3 in `docs/BACKLOG.md`. Expect (an inference, not a result) the
+same verdict as 2026-10-23, "not promoted": the data, seeds and recipe are the same.
+
+1. Get the merged code:
+   ```powershell
+   git checkout main
+   git pull
+   ```
+2. Stage the three notebooks, one wheel and the five input files under this commit. It prints
+   a short JSON block with no secrets: send it to Claude. (If `.venv` has no pip, run
+   `.venv\Scripts\python.exe -m ensurepip` first.)
+   ```powershell
+   .venv\Scripts\python.exe scripts\stage_research_job.py retrain,serving_bundle,register_model results/phase3/challenger/spec.json results/phase3/retrain/spec.json results/phase3/serving/results.json results/phase3/serving/spec.json results/phase2/triage/threshold.json
+   ```
+3. Claude puts those values into `databricks/challenger_job.json` in place of `STAGE_FIRST` and
+   merges it. Then get it:
+   ```powershell
+   git pull
+   ```
+4. Create the job. Send Claude the job ID it prints.
+   ```powershell
+   .venv\Scripts\python.exe scripts\deploy_databricks.py --job databricks\challenger_job.json
+   ```
+5. Start it. Replace `0` with the job ID from step 4:
+   ```powershell
+   $JobId = 0
+   New-Item -ItemType Directory -Force .\dist | Out-Null
+   "{""job_id"": $JobId}" | Out-File -Encoding ascii .\dist\challenger_run.json
+   databricks jobs run-now --no-wait --json "@dist/challenger_run.json"
+   ```
+6. When the job's email arrives (success or failure), list the run:
+   ```powershell
+   databricks jobs list-runs --job-id $JobId -o json | Out-File -Encoding utf8 .\dist\challenger_runs.json
+   Get-Content .\dist\challenger_runs.json | Select-String -Pattern "run_id|life_cycle_state|result_state|start_time|end_time"
+   ```
+   If a task failed, send Claude the error text from that task's page in the Jobs UI (it holds
+   no secrets) and stop here.
+7. If it succeeded, copy its four record files into the repo and push them on a branch (public
+   numbers and IDs only, no images or weights). Tell Claude the branch name; Claude opens the
+   PR, checks the files and updates items 3, 2 and 17.
+   ```powershell
+   git checkout -b owner/challenger-results
+   $R = "dbfs:/Volumes/workspace/cdm/raw/results/phase3/challenger"
+   databricks fs cp "$R/decision.json" results\phase3\challenger\decision.json
+   databricks fs cp "$R/challenger_models.json" results\phase3\challenger\challenger_models.json
+   New-Item -ItemType Directory -Force results\phase3\challenger\serving, results\phase3\challenger\registry | Out-Null
+   databricks fs cp "$R/serving/results.json" results\phase3\challenger\serving\results.json
+   databricks fs cp "$R/registry/lineage.json" results\phase3\challenger\registry\lineage.json
+   git add results\phase3\challenger
+   git commit -m "Item 3: the challenger run's records"
+   git push -u origin owner/challenger-results
+   ```
+8. Tag registry v1 with its model generation (item 2; `docs/rollback.md` step 2), so both
+   versions carry `model_gen`:
+   ```powershell
+   .venv\Scripts\python.exe scripts\move_champion.py --tag 1 model_gen v2 --apply
+   ```
+
 ### S15. Run the rehearsal job once by hand through months 2 to 10 (items 4 and 5; before S14)
 
 - [ ] Done

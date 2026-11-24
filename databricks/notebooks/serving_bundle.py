@@ -20,6 +20,8 @@ for name, default in {
     "models_file": "/Volumes/workspace/cdm/raw/results/phase2/overnight/v2/final_models.json",
     "out": "/Volumes/workspace/cdm/raw/results/phase3/serving",
     "job_run_id": "",
+    "bundle_dir": "",
+    "version_name": "",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -47,7 +49,14 @@ CODE = dbutils.widgets.get("code_version")
 REPO = Path(dbutils.widgets.get("repo"))
 OUT = Path(dbutils.widgets.get("out"))
 JOB_RUN = dbutils.widgets.get("job_run_id") or "manual"
-BUNDLE = Path(f"/Volumes/workspace/cdm/raw/deploy/serving/{CODE}")
+# Item 3's challenger job builds its bundle in its own folder under its own version name, so it
+# can never overwrite the champion's bundle (the defaults are the champion's 2026-10 layout).
+BUNDLE = Path(
+    dbutils.widgets.get("bundle_dir") or f"/Volumes/workspace/cdm/raw/deploy/serving/{CODE}"
+)
+assert str(BUNDLE).startswith("/Volumes/workspace/cdm/raw/deploy/serving/"), "bundle_dir"
+assert not (BUNDLE / "manifest.json").exists(), f"{BUNDLE} already holds a bundle"
+VERSION = dbutils.widgets.get("version_name") or f"v2-ensemble-cpu-{CODE}"
 
 WHEEL_SHA = hashlib.sha256(Path(dbutils.widgets.get("wheel")).read_bytes()).hexdigest()
 assert dbutils.widgets.get("wheel_sha256") == WHEEL_SHA, f"wheel sha256 {WHEEL_SHA}"
@@ -175,7 +184,7 @@ for m, arrays in detectors:
     )
 files = [s["checkpoint"] for s in seeds] + [s["detector"] for s in seeds]
 manifest = {
-    "version": f"v2-ensemble-cpu-{CODE}",
+    "version": VERSION,
     "classes": list(CLASSES),
     "abstain_threshold": threshold,
     "refer_threshold": refer_threshold,
@@ -200,6 +209,8 @@ results = {
     "ran_on": f"Databricks serverless CPU, job run {JOB_RUN}",
     "abstain_threshold": threshold,
     "refer_threshold": refer_threshold,
+    "refer_threshold_from": "results/phase2/triage/threshold.json (the champion ensemble's)",
+    "models_file": dbutils.widgets.get("models_file"),
     "detector_checks": checks,
     "validation": validation,
     "test_look": test_rows,

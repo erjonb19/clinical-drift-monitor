@@ -7,6 +7,9 @@
 # MAGIC scored (their labels have arrived), then compares the two ensembles on Buenos Aires patients
 # MAGIC the challenger never saw and on the clients' validation split, and applies the promotion
 # MAGIC rule fixed in the spec. The decision and results are written before any checkpoint.
+# MAGIC With `keep_checkpoints` = true (backlog items 3 and 17, the challenger job), every
+# MAGIC challenger's checkpoints are kept, promoted or not, with a manifest the serving-bundle task
+# MAGIC reads; the default keeps them only on promotion, as the 2026-10-23 run did.
 
 # COMMAND ----------
 
@@ -20,6 +23,8 @@ for name, default in {
     "out": "/Volumes/workspace/cdm/raw/results/phase3/retrain",
     "deadline_minutes": "45",
     "job_run_id": "",
+    "keep_checkpoints": "false",
+    "checkpoint_dir": "",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -67,6 +72,14 @@ CODE = dbutils.widgets.get("code_version")
 REPO = Path(dbutils.widgets.get("repo"))
 OUT = Path(dbutils.widgets.get("out"))
 JOB_RUN = dbutils.widgets.get("job_run_id") or "manual"
+KEEP = dbutils.widgets.get("keep_checkpoints") == "true"
+assert dbutils.widgets.get("keep_checkpoints") in ("true", "false"), (
+    "keep_checkpoints: true or false"
+)
+CKPT = Path(dbutils.widgets.get("checkpoint_dir"))
+if KEEP:
+    assert str(CKPT).startswith("/Volumes/workspace/cdm/raw/checkpoints/"), "checkpoint_dir"
+    assert not CKPT.exists() or not any(CKPT.iterdir()), f"{CKPT} is not empty"
 INDEX = {c: i for i, c in enumerate(CLASSES)}
 
 WHEEL_SHA = hashlib.sha256(Path(dbutils.widgets.get("wheel")).read_bytes()).hexdigest()
@@ -247,6 +260,8 @@ decision = {
     "promoted": promoted,
     "next_step": "rebuild a serving bundle for the challenger before any registry change" if promoted else "champion kept; no registry change",
     "training_history": {f"seed{s}": h for s, (_, h) in challengers.items()},
+    "challenger_weights_sha256": {f"seed{s}": weights_hash(m) for s, (m, _) in challengers.items()},
+    "checkpoints_kept": str(CKPT) if KEEP else ("on promotion" if promoted else "none"),
     "seconds": round(time.time() - START),
     "completed_utc": datetime.now(UTC).isoformat(timespec="seconds"),
 }  # fmt: skip
@@ -256,7 +271,25 @@ spark.createDataFrame(pd.DataFrame([{
     "decided_utc": decision["completed_utc"], "job_run": JOB_RUN, "promoted": promoted,
     "held_out_gain_points": float(100 * gain), "client_val_change_points": float(100 * val_change),
     "record": json.dumps(decision, default=float)}])).write.mode("append").saveAsTable("workspace.cdm.gold_model_decisions")  # fmt: skip
-if promoted:
+if KEEP:
+    # Every challenger is kept (registered later whether or not it is promoted); each saved file
+    # is reloaded and its weights checked before the manifest names it.
+    CKPT.mkdir(parents=True, exist_ok=True)
+    kept = []
+    for seed, (model, _) in sorted(challengers.items()):
+        torch.save(model.state_dict(), f"/tmp/c{seed}.pt")
+        (CKPT / f"seed{seed}.pt").write_bytes(Path(f"/tmp/c{seed}.pt").read_bytes())
+        back = build_model(pretrained=False, arch="b0")
+        back.load_state_dict(
+            torch.load(CKPT / f"seed{seed}.pt", map_location="cpu", weights_only=True)
+        )
+        digest = decision["challenger_weights_sha256"][f"seed{seed}"]
+        assert weights_hash(back) == digest, f"seed {seed}: saved checkpoint differs"
+        kept.append(
+            {"seed": seed, "checkpoint": str(CKPT / f"seed{seed}.pt"), "weights_sha256": digest}
+        )
+    (OUT / "challenger_models.json").write_text(json.dumps(kept, indent=2) + "\n")
+elif promoted:
     ck = Path(f"/Volumes/workspace/cdm/raw/checkpoints/phase3/challenger-{JOB_RUN}")
     ck.mkdir(parents=True, exist_ok=True)
     for seed, (model, _) in challengers.items():
