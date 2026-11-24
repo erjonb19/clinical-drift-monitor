@@ -1,0 +1,306 @@
+"""Backlog item 11: supply-chain settings stay in force."""
+
+from __future__ import annotations
+
+import json
+import re
+import shutil
+import subprocess
+from datetime import date
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+WORKFLOWS = REPO / ".github" / "workflows"
+
+
+def test_every_accepted_vulnerability_has_a_reason_and_a_review_date() -> None:
+    accepted = json.loads((REPO / "config" / "pip_audit_ignore.json").read_text("utf-8"))[
+        "accepted"
+    ]
+    for entry in accepted:
+        assert entry["ids"] and len(entry["reason"]) > 40
+        date.fromisoformat(entry["review_by"])
+
+
+def test_every_action_is_pinned_to_a_commit() -> None:
+    """Backlog item 34: every action, GitHub's own included, is pinned to a full commit SHA
+    (a tag can be moved to other code), with the release it was taken from in a comment."""
+    for path in WORKFLOWS.glob("*.yml"):
+        for line in path.read_text("utf-8").splitlines():
+            found = re.search(r"uses:\s*([^\s#]+)(.*)", line)
+            if found is None or found.group(1).startswith(("./", "docker://")):
+                continue  # local actions and container images are not pinned this way
+            ref, comment = found.groups()
+            assert re.fullmatch(r"[^@]+@[0-9a-f]{40}", ref), f"{path.name}: {ref}"
+            assert re.match(r"\s*# v\d", comment), f"{path.name}: {ref} names no release"
+
+
+def test_the_audit_and_scan_run_in_ci() -> None:
+    ci = (WORKFLOWS / "ci.yml").read_text("utf-8")
+    docker = (WORKFLOWS / "docker.yml").read_text("utf-8")
+    assert "pip-audit" in ci and "vulnerable_requirements.txt" in ci
+    assert "trivy-action" in docker and "severity: CRITICAL,HIGH" in docker  # item 39
+    assert (REPO / ".github" / "dependabot.yml").exists() and (WORKFLOWS / "codeql.yml").exists()
+
+
+def test_every_trivyignore_entry_has_a_reason_above_it() -> None:
+    lines = (REPO / ".trivyignore").read_text("utf-8").splitlines()
+    for i, line in enumerate(lines):
+        if line.strip() and not line.startswith("#"):
+            assert i > 0 and lines[i - 1].startswith("#"), f"no reason above {line}"
+
+
+def _ignored(text: str, name: str) -> list[str]:
+    """The update types ignored for one dependency in dependabot.yml (plain text, no YAML lib)."""
+    match = re.search(rf"- dependency-name: {re.escape(name)}\n\s+update-types: \[([^\]]+)\]", text)
+    return [t.strip() for t in match.group(1).split(",")] if match else []
+
+
+def test_dependabot_keeps_python_311_and_the_model_stack_on_patches() -> None:
+    """Owner, 2026-11-09: no Python minor or major bump of the image (PR #66 tried 3.15), and
+    patch-only updates for the stack behind committed results (PR #68 tried flwr 1.43.0)."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    both = ["version-update:semver-major", "version-update:semver-minor"]
+    docker = text.split("package-ecosystem: docker", 1)[1].split("package-ecosystem:", 1)[0]
+    assert sorted(_ignored(docker, "python")) == both
+    pip = text.split("package-ecosystem: uv", 1)[1].split("package-ecosystem:", 1)[0]
+    stack = ["numpy", "scikit-learn", "flwr", "mlflow", "mlflow-skinny"]
+    for name in stack:
+        assert sorted(_ignored(pip, name)) == both, name
+
+
+def test_the_image_keeps_the_cpu_torch_wheels() -> None:
+    """A Dependabot pip PR (#68) dropped the `+cpu` label from torch and torchvision in the
+    image's pins, which would pull the CUDA wheels. Item 27: the image's hashed requirements
+    hold the +cpu wheels for Linux, at the versions pyproject.toml holds them to."""
+    pins = re.findall(
+        r"^(torch|torchvision)==(\S+) ; sys_platform != 'darwin'",
+        (REPO / "docker" / "requirements.txt").read_text("utf-8"),
+        re.M,
+    )
+    assert sorted(name for name, _ in pins) == ["torch", "torchvision"]
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    for name, version in pins:
+        assert version.endswith("+cpu"), f"{name}=={version}"
+        assert f'"{name}=={version.removesuffix("+cpu")}"' in pyproject, f"{name} differs"
+
+
+def test_the_image_installs_only_hashed_packages_from_the_lock() -> None:
+    """Backlog item 27: the image installs docker/requirements.txt with --require-hashes and
+    --no-deps (nothing unlisted, nothing with another hash), then the project offline with the
+    hashed setuptools; and that file is exactly what uv exports from the committed lock."""
+    dockerfile = (REPO / "Dockerfile").read_text("utf-8").replace("\\\n", " ")
+    installs = re.findall(r"^RUN pip install (.*)", dockerfile, re.M)
+    assert len(installs) == 2, installs
+    assert all("--no-deps" in run for run in installs)
+    assert "--require-hashes" in installs[0] and "-r requirements.txt" in installs[0]
+    assert "--no-index" in installs[1] and "--no-build-isolation" in installs[1]
+    assert "--index-url" not in dockerfile.replace("--extra-index-url", "")  # only an extra index
+    uv = shutil.which("uv")
+    assert uv, "uv is needed to check docker/requirements.txt against uv.lock"
+    exported = subprocess.run(  # noqa: S603 (fixed arguments, no shell)
+        [
+            uv,
+            "export",
+            "--frozen",
+            "--no-dev",
+            "--extra",
+            "api",
+            "--group",
+            "image",
+            "--no-emit-project",
+            "--format",
+            "requirements-txt",
+            "--no-header",
+            "--no-annotate",
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    committed = (REPO / "docker" / "requirements.txt").read_text("utf-8")
+    body = "".join(line for line in committed.splitlines(keepends=True) if not line.startswith("#"))
+    assert body == exported, "docker/requirements.txt is stale: re-export it from uv.lock"
+    assert "setuptools==" in body  # the build backend for the offline project install
+
+
+def test_dependabot_keeps_floors_and_the_uvicorn_that_flwr_needs() -> None:
+    """Owner, 2026-11-10, after #74: floors stay unless a release needs them raised, and
+    uvicorn gets patches only while flwr is held at 1.39.x (it needs uvicorn < 0.50)."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    pip = text.split("package-ecosystem: uv", 1)[1].split("package-ecosystem:", 1)[0]
+    assert "versioning-strategy: increase-if-necessary" in pip
+    # #83 (2026-11-11): fastapi, open_clip_torch, transformers; #108: mpmath (sympy needs < 1.4)
+    for held in ("fastapi", "open_clip_torch", "transformers", "mpmath"):
+        assert sorted(_ignored(pip, held)) == [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+        ], held
+    assert sorted(_ignored(pip, "uvicorn")) == [
+        "version-update:semver-major",
+        "version-update:semver-minor",
+    ]
+
+
+def test_dependabot_never_updates_torch() -> None:
+    """Owner, 2026-11-10: torch and torchvision are ignored outright (no update types), since
+    Dependabot's bumps drop +cpu and miss the Dockerfile; a bump is made by hand."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    pip = text.split("package-ecosystem: uv", 1)[1].split("package-ecosystem:", 1)[0]
+    for name in ("torch", "torchvision"):
+        entry = re.search(rf"- dependency-name: {name}\n(\s+)(\S+)", pip)
+        assert entry is not None, name
+        assert not entry.group(2).startswith("update-types"), name
+
+
+def test_the_base_image_is_pinned_by_digest() -> None:
+    """Backlog item 35: a re-pushed tag cannot change the image's base layers unseen."""
+    froms = re.findall(r"^FROM\s+(\S+)", (REPO / "Dockerfile").read_text("utf-8"), re.M)
+    assert froms and all(re.search(r"@sha256:[0-9a-f]{64}$", f) for f in froms), froms
+
+
+def test_secret_scanning_runs_pinned_with_a_self_test() -> None:
+    """Backlog item 25: gitleaks in CI is a checksummed pinned release that must catch a
+    planted key, and the pre-commit hook pins the same version by commit."""
+    text = (WORKFLOWS / "secrets.yml").read_text("utf-8")
+    version = re.search(r'GITLEAKS_VERSION: "([\d.]+)"', text)
+    assert version and re.search(r'GITLEAKS_SHA256: "[0-9a-f]{64}"', text)
+    assert "sha256sum -c" in text and "planted key" in text and "fetch-depth: 0" in text
+    # Steps run under bash -e: without set +e the self-test stops at gitleaks' exit 1 and
+    # always fails (review of #88).
+    assert "set +e" in text.split("planted key", 1)[1].split("- name:", 1)[0]
+    hook = (REPO / ".pre-commit-config.yaml").read_text("utf-8")
+    assert re.search(rf"rev: [0-9a-f]{{40}} # v{re.escape(version.group(1))}", hook)
+    config = (REPO / ".gitleaks.toml").read_text("utf-8")
+    assert "useDefault = true" in config and 'condition = "AND"' in config
+
+
+def test_every_workflow_reads_only_unless_it_says_why() -> None:
+    """Backlog item 28: each workflow sets a top-level permissions block, the default is
+    contents: read, and no checkout leaves the token in .git/config."""
+    for path in WORKFLOWS.glob("*.yml"):
+        text = path.read_text("utf-8")
+        top = re.search(r"^permissions:\n((?:  .*\n)+)", text, re.MULTILINE)
+        assert top is not None, f"{path.name}: no top-level permissions"
+        assert top.group(1).strip() == "contents: read", f"{path.name}: {top.group(1)!r}"
+        checkouts = text.count("uses: actions/checkout@")
+        assert text.count("persist-credentials: false") == checkouts, path.name
+
+
+def test_every_dependabot_ecosystem_has_a_cooldown() -> None:
+    """Backlog item 38: each ecosystem waits at least 7 days after a release before proposing it."""
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    blocks = re.split(r"\n  - package-ecosystem: ", text)[1:]
+    assert len(blocks) == 3, "expected the uv, docker and github-actions ecosystems"
+    for block in blocks:
+        name = block.split("\n", 1)[0]
+        days = re.search(r"\n    cooldown:\n      default-days: (\d+)\n", block)
+        assert days, f"{name}: no cooldown"
+        assert int(days.group(1)) >= 7, f"{name}: cooldown under 7 days"
+
+
+def test_the_api_image_drops_setuptools_after_installing() -> None:
+    """Item 39: the base image's setuptools carries old jaraco.context and wheel copies with
+    fixable HIGH CVEs; the API never imports it, so the image removes it after the installs. The
+    image also applies Debian's security updates while still root."""
+    lines = (REPO / "Dockerfile").read_text("utf-8").splitlines()
+    installs = [i for i, line in enumerate(lines) if line.startswith("RUN pip install")]
+    drop = lines.index("RUN pip uninstall -y setuptools wheel")
+    assert installs and drop > max(installs)
+    # Debian's security fixes since the base image was built (apt, zlib1g had fixable HIGHs),
+    # from a fixed snapshot.debian.org timestamp, so the build is reproducible (owner, 2026-11-11).
+    upgrade = next(i for i, line in enumerate(lines) if "apt-get" in line and "upgrade -y" in line)
+    assert upgrade < lines.index("USER demo")
+    text = "\n".join(lines)
+    for arg in ("DEBIAN_SNAPSHOT", "DEBIAN_SECURITY_SNAPSHOT"):
+        assert re.search(rf"^ARG {arg}=\d{{8}}T\d{{6}}Z$", text, re.M), arg
+    assert "https://snapshot.debian.org/archive/debian-security/${DEBIAN_SECURITY_SNAPSHOT}" in text
+    assert '! grep -rqs "deb.debian.org"' in text  # the build stops if the moving mirror remains
+
+
+def test_zizmor_audits_workflow_changes_pinned_with_a_self_test() -> None:
+    """Backlog item 37: zizmor runs on every workflow change, installed by version and wheel hash,
+    and must flag a planted template injection before it audits the real workflows. The planted
+    expression is built at run time, so the workflow file holds no expression for Actions to
+    expand into the shell."""
+    text = (WORKFLOWS / "zizmor.yml").read_text("utf-8")
+    assert '".github/workflows/**"' in text
+    assert re.search(r"zizmor==[\d.]+ --hash=sha256:[0-9a-f]{64}", text)
+    assert "--require-hashes" in text and "self-test" in text
+    self_test = text.split("self-test)", 1)[1].split("- name:", 1)[0]
+    assert "${{" not in self_test and "set +e" in self_test
+    assert '"$status" -lt 10' in self_test and "template-injection" in self_test
+    assert "zizmor --offline .github/workflows/" in text
+
+
+def test_onnxruntime_matches_the_databricks_job_and_its_results() -> None:
+    """Owner, 2026-11-11: the serve extra pins the onnxruntime the Databricks ONNX job ran and
+    the committed results record; a bump changes all three together, at a Databricks deploy."""
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    pin = re.search(r'"onnxruntime==([\d.]+)"', pyproject)
+    job = re.search(
+        r'"onnxruntime==([\d.]+)"',
+        (REPO / "databricks" / "onnx_export_job.json").read_text("utf-8"),
+    )
+    assert pin and job and pin.group(1) == job.group(1), (pin, job)
+    for name in ("results.json", "noise.json"):
+        recorded = json.loads((REPO / "results" / "phase3" / "onnx" / name).read_text("utf-8"))
+        assert recorded["versions"]["onnxruntime"] == pin.group(1), name
+    text = (REPO / ".github" / "dependabot.yml").read_text("utf-8")
+    entry = re.search(r"- dependency-name: onnxruntime\n(\s+)(\S+)", text)
+    assert entry is not None and not entry.group(2).startswith("update-types")
+
+
+def test_transformers_is_past_the_2026_advisories() -> None:
+    """2026-11-13: the five Dependabot alerts on transformers (Trainer, remote code execution,
+    LightGlue loading, remote generation code before trust, chat-template path traversal) are
+    all fixed from 5.10.1 (5.10.0 was yanked). The vlm extra's pin must stay at or above it."""
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    pin = re.search(r'"transformers==(\d+)\.(\d+)\.(\d+)"', pyproject)
+    assert pin is not None
+    assert tuple(int(x) for x in pin.groups()) >= (5, 10, 1), pin.group(0)
+
+
+def test_workflows_install_only_from_the_lock_or_hashes() -> None:
+    """Backlog item 26: every Python install in CI comes from uv.lock (`uv sync --locked`, which
+    fails when the lock is stale) or from a hashed requirements file; uv itself is pinned by
+    version and release checksum, and the lock takes only releases at least 7 days old."""
+    # A uv invocation: a bare `uv`, or the pinned binary by path ("$UV" / ${UV}).
+    UV = r"(?:(?<![\w.-])uv|\"?\$\{?UV\}?\"?)"  # noqa: N806
+    paths = [*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")]
+    for path in paths:
+        text = path.read_text("utf-8")
+        on_path = False  # flwr's own older uv is in .venv/bin once that is on PATH
+        for line in text.splitlines():
+            code = line.split("#", 1)[0]
+            if on_path and re.search(r"(^|[\s;&|(])uv\s", code):
+                raise AssertionError(f"{path.name}: bare uv after .venv/bin is on PATH: {line}")
+            on_path = on_path or (".venv/bin" in code and "GITHUB_PATH" in code)
+            if re.search(r"\bpip[\d.]*\b(\s+-\S+)*\s+(install|download)\b", code):
+                assert "--require-hashes" in code, f"{path.name}: {line.strip()}"
+            if re.search(UV + r" (sync|run)\b", code):
+                assert "--locked" in code and "--no-python-downloads" in code, line
+            assert not re.search(r"\b(curl|wget)\b.*\|\s*(sh|bash)\b", code), line
+            assert not re.search(
+                r"\buvx\b|" + UV + r" (add|lock|tool|pip install|pip sync)\b|--with\b", code
+            ), f"{path.name}: {line.strip()}"
+            assert not re.search(r"\b(pipx|easy_install|conda) ", code), line
+            assert not re.search(r"\bpip3? *\\$", code), f"{path.name}: split pip command"
+        steps = re.split(r"\n      - ", text)
+        uv_steps = [st for st in steps if re.search(r"uses: astral-sh/setup-uv@[0-9a-f]{40}\b", st)]
+        if re.search(UV + r" ", "\n".join(ln.split("#", 1)[0] for ln in text.splitlines())):
+            assert uv_steps, f"{path.name} runs uv without the pinned setup-uv step"
+        for block in uv_steps:
+            pinned = re.search(r'version: "(\d+)\.(\d+)\.(\d+)"', block)
+            assert pinned, path.name
+            version = tuple(map(int, pinned.groups()))
+            assert version >= (0, 13, 4), f"{path.name}: uv before 0.13.4 (GHSA-hq85-5cpj-mr62)"
+            assert re.search(r'checksum: "[0-9a-f]{64}"', block), path.name
+            assert "enable-cache: false" in block, path.name
+    pyproject = (REPO / "pyproject.toml").read_text("utf-8")
+    assert 'exclude-newer = "7 days"' in pyproject
+    assert 'build-constraint-dependencies = ["setuptools==' in pyproject
+    lock = (REPO / "uv.lock").read_text("utf-8")
+    assert 'exclude-newer-span = "P7D"' in lock
+    assert 'name = "torch"\nversion = "2.14.0+cpu"' in lock  # CPU wheels, as in the image

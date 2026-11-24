@@ -82,3 +82,54 @@ def test_a_changed_custom_definition_is_a_new_version(session: DemoSession) -> N
     session.approve(first)
     with pytest.raises(Refused):
         session.run(second)  # the approval was for v1's exact hash
+
+
+def test_a_session_may_make_only_so_many_definitions(session: DemoSession) -> None:
+    """A visitor cannot grow the work per Run without bound (security audit, item 47)."""
+    from cdm.demo import MAX_DEFINITIONS
+
+    paths = [
+        session.write(custom_definition(["Melanoma, NOS"], age, None, False, []))
+        for age in range(1, MAX_DEFINITIONS + 1)
+    ]
+    assert len(set(paths)) == MAX_DEFINITIONS
+    # One already written is still found; a new one is refused with a clear message.
+    assert session.write(custom_definition(["Melanoma, NOS"], 1, None, False, [])) == paths[0]
+    with pytest.raises(Refused, match=f"already has {MAX_DEFINITIONS} cohort definitions"):
+        session.write(custom_definition(["Melanoma, NOS"], MAX_DEFINITIONS + 1, None, False, []))
+    assert len(list(session.folder.glob("*/v*.yaml"))) == MAX_DEFINITIONS
+
+
+def test_the_scratch_folder_goes_with_the_session(tmp_path: Path) -> None:
+    """A session's own temporary folder is deleted when the session is dropped or closed;
+    a folder passed in is left alone."""
+    import gc
+
+    tables = fetch_tables(lambda collection: records())
+    dropped = DemoSession(tables)
+    folder = dropped.folder
+    dropped.approve(next(p for p in library() if p.parent.name == "melanoma_any"))
+    assert (folder / "approvals.jsonl").exists()
+    del dropped
+    gc.collect()
+    assert not folder.exists()
+
+    closed = DemoSession(tables)
+    closed.close()
+    assert not closed.folder.exists()
+
+    given = DemoSession(tables, folder=tmp_path)
+    given.approve(next(p for p in library() if p.parent.name == "melanoma_any"))
+    given.close()
+    assert (tmp_path / "approvals.jsonl").exists()
+
+
+def test_the_public_page_hides_error_details() -> None:
+    """Community Cloud runs from the repository root and reads .streamlit/config.toml there;
+    with "none" the browser gets no traceback, exception type or message (item 47)."""
+    import tomllib
+
+    from cdm.demo import REPO
+
+    config = tomllib.loads((REPO / ".streamlit" / "config.toml").read_text(encoding="utf-8"))
+    assert config["client"]["showErrorDetails"] == "none"

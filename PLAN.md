@@ -346,6 +346,47 @@ Each phase unlocks a claim you can put on a resume and defend in an interview. T
 
 Owner decisions that change scope, cost or process, newest first.
 
+- **2026-11-24: decided by the owner**
+  - **PR #50's eval thresholds:** "use your proposed thresholds" (27 of 30 scenarios pass and no
+    scored run has an ungrounded number; inconclusive if more than 3 scenarios lack 2 scored
+    runs because of outages). Claude merges #50 under the standing rule.
+  - **Champion vs challenger GPU run on Databricks Free Edition approved** (items 2 and 3):
+    Claude prepares it and writes the deploy and run steps in `docs/OWNER_STEPS.md`; the owner
+    runs them from the laptop.
+  - **Dependabot #125 and #138** merge under the standing rule if CI is green and a review
+    finds nothing blocking.
+  - **Item 12 (live endpoint) is skipped for now.**
+
+- **2026-11-18: decided by the owner** (security alerts, directive 20)
+  - **Fix the Critical uv alert and the four cryptography alerts through the lockfile, and
+    dismiss none.** How (Claude's choice, 2026-11-19): the only lockfile fix found was moving
+    `flwr` from 1.39.0 to 1.43.0 (the `federated` extra), which allows cryptography 50.x and
+    uv 0.13.x and keeps the same fastapi, uvicorn and starlette pins. The federated tests pass
+    on 1.43.0. The committed federated results were produced with 1.39.0; a rerun would use
+    1.43.0.
+  - **PR #50 and Dependabot #138** wait until after 26 November.
+
+- **2026-11-16: decided by the owner** (deadline Thursday 26 November; cut-line items 1, 6, 21)
+  - **Item 1 closes on the 20 November rehearsal alone.** The scheduled rehearsal of the monthly
+    job (`databricks/monthly_drift_rehearsal_job.json`, 06:00 UTC on 20 November) is enough to
+    tick item 1 if it meets the updated "Done when" in `docs/BACKLOG.md`. The watchdog (its
+    service principal, secrets and first run: owner steps S2 to S4) waits until after
+    Thanksgiving, and is not part of item 1's "Done when".
+  - **Owner steps by 18 November:** the champion bundle as a release asset (S1) and the
+    rehearsal deploy (S11).
+  - **PR #50** waits until after 26 November.
+- **2026-11-11: decided by the owner** (overnight instructions)
+  - **Merging:** Claude merges PRs itself, including ones marked "owner merges", once CI is green
+    on the final commit and a fresh review by a separate agent that did not write the change finds
+    nothing blocking. The owner is still asked first, in chat, for anything that spends money, GPU
+    runs, release tags, Databricks deploys, deleting data, and any change to
+    `.claude/settings.json` or other permission settings (those PRs are opened and left).
+    Replaces the 2026-11-10 rule in `docs/BACKLOG.md`. CLAUDE.md records the same rule.
+  - **uv approved** for backlog item 26 (locked, hashed Python installs).
+  - **Repository security settings on (owner):** branch protection on `main` (required checks
+    `quality`, `image` and both CodeQL `analyze` jobs), private vulnerability reporting,
+    Dependabot security updates (grouped) and malware alerts.
+
 - **2026-11-03: decided by the owner** (on the cloud-session plan,
   `docs/plan-2026-11-phases-3-to-5.md`, PR #47)
   - **Phase 3 "Done when" amended:** the API is built and smoke-tested in Docker CI, and the

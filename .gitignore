@@ -11,8 +11,21 @@ logs/
 dist/
 build/
 
-# Secrets
+# Secrets and state (docs/SECURITY_STANDARDS.md §3.1; backlog item 40)
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.tfstate
+*.tfstate.*
+.terraform/
+secrets/
+*credentials*.json
+service-account*.json
+.databrickscfg
 
 # Python
 .venv/

@@ -59,6 +59,10 @@ def check_resolved(cmap_path: Path, resolved: Path) -> None:
         sys.exit(f"concept map notes quote SNOMED names, which must not be published: {problems}")
 
 
+# A committed job whose files are not staged yet carries this in place of the staged values.
+STAGE_FIRST = "STAGE_FIRST"
+
+
 def render(template: str, values: dict[str, str]) -> dict[str, Any]:
     """Fill ``{{NAME}}`` placeholders; refuse to return a definition with any left over."""
     text = template
@@ -67,6 +71,8 @@ def render(template: str, values: dict[str, str]) -> dict[str, Any]:
     left = sorted(set(re.findall(r"\{\{([A-Z_]+)\}\}", text)))
     if left:
         raise ValueError(f"unfilled placeholders: {left}")
+    if STAGE_FIRST in text:
+        raise ValueError(f"run scripts/stage_research_job.py and replace every {STAGE_FIRST} value")
     rendered: dict[str, Any] = json.loads(text)
     return rendered
 
@@ -120,10 +126,34 @@ def upsert_job(cli: Cli, spec: dict[str, Any], dry_run: bool) -> str:
             json.dumps({"job_id": int(job_id), "new_settings": spec}, indent=2), encoding="utf-8"
         )
         cli("jobs", "reset", "--json", f"@{path}")
-        return job_id
-    path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
-    out = cli("jobs", "create", "--json", f"@{path}")
-    return "DRY-RUN-JOB-ID" if dry_run else str(json.loads(out)["job_id"])
+    else:
+        path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
+        out = cli("jobs", "create", "--json", f"@{path}")
+        job_id = "DRY-RUN-JOB-ID" if dry_run else str(json.loads(out)["job_id"])
+    if not dry_run:
+        check_deployed_schedule(spec, json.loads(cli("jobs", "get", job_id, "--output", "json")))
+    return job_id
+
+
+def check_deployed_schedule(spec: dict[str, Any], deployed: dict[str, Any]) -> None:
+    """Backlog item 1's deploy guard: read the job back and refuse unless its schedule is the
+    committed one and unpaused. The 1 November 2026 run did not start although the schedule was
+    correct; this cannot fix that, but it rules out a deploy leaving a paused or wrong schedule.
+    """
+    want = spec.get("schedule")
+    got = (deployed.get("settings") or {}).get("schedule")
+    if want is None:
+        if got is not None:
+            sys.exit(f"{spec['name']}: deployed with a schedule the committed file does not have")
+        return
+    if got is None:
+        sys.exit(f"{spec['name']}: deployed without its schedule")
+    for key in ("quartz_cron_expression", "timezone_id"):
+        if got.get(key) != want[key]:
+            sys.exit(f"{spec['name']}: deployed {key} {got.get(key)!r}, committed {want[key]!r}")
+    if got.get("pause_status", "UNPAUSED") != "UNPAUSED":
+        sys.exit(f"{spec['name']}: deployed schedule is {got.get('pause_status')}, not UNPAUSED")
+    print(f"schedule ok: {got['quartz_cron_expression']} {got['timezone_id']} UNPAUSED", flush=True)
 
 
 def current_user(cli: Cli, dry_run: bool) -> str:
@@ -162,7 +192,10 @@ def main() -> int:
     deploy = f"{raw}/deploy/{sha}"
 
     ham_csv = data_root() / "ham10000" / config["ham10000"]["metadata_file"]
-    if hashlib.md5(ham_csv.read_bytes()).hexdigest() != config["ham10000"]["metadata_md5"]:
+    if (
+        hashlib.md5(ham_csv.read_bytes(), usedforsecurity=False).hexdigest()
+        != config["ham10000"]["metadata_md5"]
+    ):
         sys.exit(f"{ham_csv} does not match the MD5 in config/sites.json")
     check_resolved(REPO / "config" / "omop_concepts.csv", RESOLVED_CONCEPTS)
     weights = Path.home() / ".cache" / "torch" / "hub" / "checkpoints" / WEIGHTS_FILE

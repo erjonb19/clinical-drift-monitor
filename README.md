@@ -9,21 +9,30 @@ A skin lesion classifier trained across hospitals, with an out-of-distribution (
 tested on real new hospitals. Built on Databricks Free Edition at zero cost. A personal
 portfolio project and research prototype: **not for clinical use**.
 
-**Status (2026-11-03):**
-- Phases 0 to 2 are done: fix the science, data engineering, and ML. The one Phase 2 item left,
-  error analysis, moved to research Phase D.
-- The research extension (Phases A to F: OMOP data, a vision-language baseline, subgroups,
-  interpretability, fusion) is planned in
-  [docs/research_extension_plan.md](docs/research_extension_plan.md). Phase A (OMOP tables),
-  Phase B (the BiomedCLIP baseline), C (subgroups and bias), D (Grad-CAM review
-  worksheet) and E (image plus metadata) are built; Phase G
-  (research data services) is in progress.
-- Phase 3 (serving and MLOps) is mostly built: the API with an abstain flag (Docker image built
-  and smoke-tested in CI with a test bundle; the free public deploy is blocked), the monthly drift job with per-skin-type alerts and an
-  audit table, the Unity Catalog model registry, per-run cost tracking, a retraining loop and a
-  CI accuracy gate. On 2026-11-03 the owner amended Phase 3's "Done when" (no live URL needed),
-  closed the serving-setup check as superseded and dropped the Gram backup (PLAN.md decisions
-  log). Phases 4 and 5 have not started; Phase 6 is deferred.
+## Results at a glance
+
+Every number below is from the committed file named beside it; details are in the sections
+further down.
+
+| Question | Result | Source |
+| --- | --- | --- |
+| How good is the shipped model where it was trained? | 66.46% balanced accuracy; at the triage threshold 96.2% of melanomas are caught, with 57% of all images referred (3-seed ensemble, clients' test split) | `results/phase2/v2/test/final_test.json`, `results/phase2/triage/test.json` |
+| What happens at hospitals it never saw? | It falls to 55.91% (Buenos Aires) and 39.40% (PAD-UFES-20, smartphone photos) | `results/phase2/analysis_look/results.json` |
+| Does the drift monitor see it? | In a 12-month replay of real images, in an order we chose, it alerted on every fully shifted month (9 to 12) and on none of the in-distribution months (1 to 4) | `results/phase3/monthly/` |
+| Does retraining fix it? | A challenger gained 6.2 points at Buenos Aires but lost 1.6 on the original sites (limit 1.0), so the pre-registered rule kept the champion | `results/phase3/retrain/decision.json` |
+| Does a medical vision-language model do better? | No: a BiomedCLIP linear probe trails the shipped model by 15 to 16 points on the clients' test split | `results/research/b_vlm/results.json` |
+
+**Start here:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (one page: what runs where, how it
+scales, where it breaks), [docs/walkthrough.md](docs/walkthrough.md) (a 3-minute tour) and the
+[one-command demo](#one-command-demo-docker-compose-up-backlog-item-21) (`docker compose up`).
+
+**Status (2026-11-11):** Phases 0 to 2 are done; research Phases A to E are built and G is in
+progress ([plan](docs/research_extension_plan.md)); Phase 3 (serving and MLOps) is mostly
+built, with the API built and scanned in CI but not deployed (its "Done when" was amended on
+2026-11-03: no live URL needed; see PLAN.md's decisions log). The production backlog
+(`docs/BACKLOG.md`) is worked one reviewed pull request at a time; its finished items are
+listed under "Production readiness" below. Phases 4 and 5 have not started; Phase 6 is
+deferred.
 
 A short technical report, written for 4 to 6 pages (LaTeX source with standard packages, written to build on Overleaf;
 not yet compiled, since no TeX is installed on the build machine):
@@ -59,7 +68,10 @@ range over 3 seeds; the ensemble interval is a 95% bootstrap by lesion. Source:
 | FedProx (Flower), single model | 58.98 (57.54–60.12) | 50.86 (49.75–52.09) | |
 
 Federated rounds were selected on pooled validation, which a real federated deployment could
-not see, so the federated rows are if anything optimistic.
+not see, so the federated rows are if anything optimistic. The federated rows were produced with
+`flwr` 1.39.0. The lockfile has pinned 1.43.0 since 2026-11-19, for security fixes in its
+cryptography and uv dependencies (#144). These results were not re-run, and a re-run would use
+1.43.0.
 
 **At the new hospitals the model degrades sharply.** Shipped ensemble; seven-class accuracy
 counts only classes that map cleanly to HAM10000's. Sources:
@@ -516,13 +528,49 @@ threshold).
 - The research-demo notice, the non-commercial licence terms and attribution are on the page
   and in every response.
 - Tested locally in Docker: peak memory 442 MiB with full-size made-up images, close to
-  Render's 512 MiB free tier; a run capped at 512 MiB sat at its limit. Dependencies are pinned
-  to the tested image (`docker/constraints.txt`).
+  Render's 512 MiB free tier; a run capped at 512 MiB sat at its limit. The image installs only
+  hashed packages exported from `uv.lock` (`docker/requirements.txt`, CPU torch wheels included).
 - **Not deployed: the free public deploy is blocked.** The owner approved public weights on
   2026-10-23, but Hugging Face returned 402 Payment Required for both a Docker and a Gradio Space ("hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription"). No Space was created. Render's free tier is too tight (above), and
   paying breaks the zero-cost rule, so the API stays built and tested in Docker CI. The public
   demo that exists is the cohort service's
   ([cdm-cohort-demo.streamlit.app](https://cdm-cohort-demo.streamlit.app/)), not this classifier.
+
+**Serving speed of the champion (backlog item 13; serving speed only, never accuracy)**
+([`benchmark_champion.json`](results/phase3/serving/benchmark_champion.json); the shipped
+three-network bundle `v2-ensemble-cpu-d7191f4`; a GitHub Actions runner with 4 CPUs (AMD EPYC
+7763), torch 2.14.0+cpu, no container; one uvicorn worker, the rate limiter opened wide; one
+synthetic 448x448 JPEG; "Serving benchmark" run 45074396136, 2026-11-22):
+
+| Concurrent users | p50 ms | p95 ms | p99 ms | Images/s | Server memory peak (MB) |
+|---|---|---|---|---|---|
+| 1 | 158.8 | 288.1 | 324.1 | 5.97 | 627 |
+| 5 | 511.9 | 1033.8 | 1247.5 | 8.52 | 741 |
+| 20 | 1365.2 | 1702.4 | 1767.4 | 14.21 | 1158 |
+
+From 1 to 20 users throughput rises only 2.4 times while median latency rises 8.6 times: the
+likely bottleneck is CPU compute for the three networks, shared by concurrent requests on four
+CPUs (CPU use was not measured, so this is inferred, not shown). All 600 requests returned 200.
+
+**Serving speed (backlog item 13), measured earlier on the untrained CI test bundle, so serving
+speed only, never accuracy** ([`benchmark.json`](results/phase3/serving/benchmark.json); one network,
+where the champion runs three; this cloud session's 4-CPU Xeon VM, torch 2.15.0+cu132
+not the image's CPU build, no container; one uvicorn worker, the rate limiter opened wide):
+
+| Concurrent users | p50 ms | p95 ms | p99 ms | Images/s | Server memory peak (MB) |
+|---|---|---|---|---|---|
+| 1 | 18.4 | 24.0 | 27.0 | 52.54 | 874 |
+| 5 | 94.2 | 111.0 | 116.3 | 52.75 | 990 |
+| 20 | 458.6 | 510.1 | 529.5 | 43.63 | 1435 |
+
+Throughput stays flat while latency grows with the number of users: the machine is saturated
+(concurrent requests compute in parallel threads and compete for the CPUs; CPU use was not
+measured). Phase 3 measured PyTorch at about 93 ms per seed per image on Databricks serverless,
+about 5 times slower than this whole request; the gap is not explained (different hardware,
+torch build and threads). The champion's numbers are above; the dispatch-only `benchmark.yml` workflow serves the
+champion by default and the test bundle with `bundle: test`. ONNX was not
+re-benchmarked (it failed parity, Phase 3), and int8 quantization needs the champion to check
+accuracy.
 
 ## Phase 3: the monthly drift job
 
@@ -581,6 +629,36 @@ by us, so the progression is a scenario, not drift observed over time.
 - **Not yet shown:** a scheduled run. The first one was due on 1 November 2026; its outcome is
   not yet recorded in this repository. It reports month 12's delayed accuracy and the live check. After the replay, runs load no model:
   they log the live count (new images are counted, not scored).
+
+## Alerts and model targets (backlog items 4 and 5)
+
+Every threshold, and why it was chosen. Drift thresholds were fixed before any month ran; the
+target values were set on 2026-11-09, before any month was judged with them, and accepted by the
+owner the same day; the model targets are **provisional** until replay months 1 to 12 are
+backfilled with their melanoma referral counts (`config/slo.json`,
+`results/phase3/monthly/post_replay_spec.json`).
+
+| Check | Alerts when | Why |
+|---|---|---|
+| Drift, OOD score | KS p < 0.01 and PSI >= 0.2 (warning: PSI >= 0.1) | Both a significant and a sizeable shift; fixed in `results/phase3/monthly/spec.json` before the replay |
+| Drift by skin type (equity) | the same test, per Fitzpatrick type with at least 100 images that month | 100 is the repo's minimum for a reported metric; smaller groups are counts only. **Caveat:** skin type is recorded only at the two new hospitals, so these alerts have so far detected the site, not anything about skin type |
+| After replay month 12 | any of: the OOD test; embedding drift on the baseline's top 5 components (Bonferroni); predicted-class mix (chi-square p < 0.01 and total variation >= 0.1); confidence (KS p < 0.01 and median change >= 0.05), from 100 images | Label-free, since new images have no labels; spec committed before any such run |
+| Melanoma referral sensitivity | the trailing window's sensitivity (at least 100 melanomas) is below 90%; its 95% Wilson interval is reported beside it | The referral threshold was set for 95% on validation and reached 96.2% on the client test split, 81.8% and 78.8% at the new hospitals |
+| Delayed balanced accuracy | below 0.55 | In-distribution replay months scored 59.1% to 68.4% at 300 images |
+| Abstain share | above 0.15 | 5% abstain by construction; 15% means about three times the review workload |
+
+**How an alert reaches the owner:** after saving every month of a run, the job fails the run with
+a message starting "ALERT (not a job error)" and naming each month's breaches; Databricks emails the owner
+on a failed run. Not yet deployed: the next monthly run with this code is the first.
+
+**On the committed replay** (real images in an order we chose, not drift over time;
+`results/phase3/monthly/slo_replay.json`): months 1 to 6 would not alert; months 7 and 8 alert
+on skin type II only (the site caveat above); month 9 breaks the abstain target and alerts on
+drift; months 10 to 12 also break the accuracy target. Melanoma referral sensitivity reads
+"insufficient data" for every replay month, because those records predate the referral count.
+It stays so after the replay too, since new images have no labels, until months 1 to 12 are
+backfilled from the audit table's referral flags and their labels (a Databricks run for the
+owner).
 
 ## Phase 3: registry, retraining, CI gate and costs
 
@@ -785,11 +863,49 @@ for in-distribution but the nearest class for OOD, and projected PathMNIST with 
 on itself. [docs/phase0-note.md](docs/phase0-note.md) traces each fault to a notebook cell,
 and each now has a test.
 
+## One-command demo (`docker compose up`, backlog item 21)
+
+**Result with the champion bundle (2026-11-18, "Compose demo" run 44241541700):** the drift
+alarm tripped. KS p = 1.41e-13 and PSI = 7.66, and the API abstained on 38% of the shifted batch
+and none of the reference batch ([`champion_2026-11-18.json`](results/phase3/compose_demo/champion_2026-11-18.json)).
+Two 50-image batches compared with each other: a demonstration, not a measurement, and this PSI
+(binned on 50 reference scores) is not comparable with the monthly job's.
+
+`compose.yaml` starts two containers:
+
+- **`api`:** the research API, with the serving bundle in `dist/bundle`.
+- **`demo`:** a client (`cdm.compose_demo`). It downloads two fixed batches of public ISIC
+  images, checks each file's SHA-256, sends every image to the API, and runs the
+  pre-registered drift test (KS p < 0.01 and PSI >= 0.2) on the API's OOD scores.
+
+The two batches:
+
+- **Reference:** 50 images from the clients' test split (`config/champion_smoke_images.csv`).
+- **Shifted:** 50 PAD-UFES-20 smartphone photos (`config/compose_demo_shift_images.csv`). The
+  model never saw this hospital or this kind of camera. These are real images, not staged drift.
+
+This demo compares the two small batches with each other. The monthly job instead compares
+each month against the validation baseline, which the bundle does not carry. In the replay, the
+three PAD-UFES months scored a PSI of 3.1 to 4.0 against that baseline
+(`results/phase3/monthly/month_10.json` to `month_12.json`).
+
+```bash
+python scripts/fetch_champion_bundle.py      # the champion, from release v1.0.0; SHA-256 checked
+docker compose up --build --abort-on-container-exit --exit-code-from demo
+```
+
+The demo prints its result (`docker compose logs demo` shows it again). The thresholds were set
+for 300 images a month against the validation baseline, so on 50 against 50 the result is a
+demonstration, not a measurement. The reference batch's 0 of 50 abstentions does not show a low
+abstain rate either: 50 images are too few for that.
+Without the download, `python scripts/make_test_bundle.py --out dist/bundle` gives the untrained
+CI bundle, which checks the mechanics only. A research demo, not for medical use.
+
 ## Reproduce
 
 ```bash
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-pip install -e ".[dev,train]"
+uv sync --locked --extra dev --extra train   # the exact, hash-checked versions in uv.lock (CPU torch)
+source .venv/bin/activate
 CDM_DATA=/path/to/data python -m cdm.reproduce   # downloads and checksums all data
 ```
 
@@ -798,6 +914,52 @@ from the sources in [docs/DATA_CARD.md](docs/DATA_CARD.md) and is never committe
 above came from code `2ccda00`, which seeded after building the model. Current code seeds
 first and runs deterministically, so a rerun is exactly repeatable but gives numbers within
 the variation shown in caveat 3, not these exact numbers.
+
+## Production readiness
+
+Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to check each is in
+[docs/PROGRESS.md](docs/PROGRESS.md). Items that are built but not done are not listed.
+
+- [x] Item 9: a CHAI-format model card and a one-page change-control plan, regenerated from committed evidence and checked in CI.
+- [x] Item 10: a reviewer feedback section with a fixed format (below).
+- [x] Item 11: supply chain and merge rules (Dependabot, CodeQL, pip-audit, Trivy, branch protection on `main`).
+- [x] Item 22: a security audit against the owner's standard, findings and a plan ([docs/security-audit-2026-11-10.md](docs/security-audit-2026-11-10.md)).
+- [x] Item 24: branch protection on `main` requires the `quality`, `image` and CodeQL `analyze` checks (owner).
+- [x] Item 25: secret scanning of the full history on every push, with a planted-key self-test.
+- [x] Item 28: every CI workflow runs with a read-only token.
+- [x] Item 29: images over 50 megapixels are refused before decoding.
+- [x] Item 30: uploads are opened with the JPEG and PNG decoders only.
+- [x] Item 31: every checkpoint load uses `weights_only=True`.
+- [x] Item 32: the serving bundle's manifest must hash every checkpoint and detector.
+- [x] Item 33: CIFAR-10 files are checksummed before they are unpickled.
+- [x] Item 34: every GitHub Action is pinned to a commit.
+- [x] Item 35: the Docker base image is pinned by digest.
+- [x] Item 36: ruff's security rules on, with each exception's reason recorded.
+- [x] Item 37: zizmor audits every workflow change, with a planted-injection self-test.
+- [x] Item 38: Dependabot waits 7 days after a release before proposing it.
+- [x] Item 39: the image scan fails on fixable HIGH and CRITICAL findings, and passes.
+- [x] Item 40: `.gitignore` covers secret and state files.
+- [x] Item 41: `.env.example` names every environment variable the code reads.
+- [x] Item 42: private vulnerability reporting, described in `SECURITY.md`.
+- [x] Item 43: Dependabot alerts, grouped security updates and malware alerts on (owner).
+- [x] Item 44: API hardening: security headers, no public schema, response models, refusal events.
+- [x] Item 45: the $5 Haiku cap fails closed when its spend log is missing or shrinks.
+- [x] Item 46: spreadsheet formulas in the G5 CSV sheets are neutralised.
+- [x] Item 27: the API image installs only hashed packages from the lock.
+- [x] Item 1: a scheduled drift job run started by its schedule and finished green (the 20 November rehearsal, on its own tables).
+- [x] Item 6: CI loads the champion bundle and scores 50 public test-split images on every push.
+- [x] Item 21: one-command demo (`docker compose up`) that trips the drift alarm with the champion bundle.
+- [x] Item 47: the public cohort demo is hardened (DuckDB external access off, no error details, per-session caps, the ISIC client held to its host).
+
+## Reviewer feedback
+
+What outside reviewers said and what changed because of it. Real entries only, added when a
+review happens; a test checks every row has all five fields.
+
+| Date | Reviewer role | Comment | What changed | Link |
+| --- | --- | --- | --- | --- |
+
+No entries yet.
 
 ## Honesty docs
 

@@ -1,0 +1,40 @@
+{
+  "what": "Backlog item 21: `docker compose up` with the champion bundle, run by the Compose demo workflow on a GitHub runner. Copied from the run's log (job 134590375536); the demo prints this JSON.",
+  "run": {
+    "workflow": "Compose demo (.github/workflows/compose-demo.yml)",
+    "run_id": 44241541700,
+    "job_id": 134590375536,
+    "commit": "8c431a0bb737a71db8e0361013ae4ee804b13109",
+    "date_utc": "2026-11-18",
+    "bundle": "champion: release v1.0.0 asset cdm-champion-bundle-d7191f4.tar.gz, archive SHA-256 9132a89b6abe0b9899c6dc37855729308649b1e6c956fd611dc24b1aac0a3354, checked by scripts/fetch_champion_bundle.py"
+  },
+  "batches": {
+    "reference": "config/champion_smoke_images.csv: 50 images of the clients' test split",
+    "shifted": "config/compose_demo_shift_images.csv: 50 PAD-UFES-20 smartphone photos (ISIC collection 406); real images, not staged drift"
+  },
+  "limits": "Two small batches compared with each other, both scored by the API in the run; not the monitoring job's comparison against the validation baseline. The alert thresholds (KS p < 0.01 and PSI >= 0.2, results/phase3/monthly/spec.json) were set for 300 images a month against that baseline, so this is a demonstration, not a measurement. PSI here uses 10 bins at the 50 reference scores' quantiles, so it is not comparable with the monthly job's PSI.",
+  "output": {
+    "what": "backlog item 21: the docker compose demo's drift check",
+    "comparison": "shifted batch against the reference batch, both scored by the API now; not the monitoring job's comparison against the validation baseline",
+    "model_version": [
+      "v2-ensemble-cpu-d7191f4"
+    ],
+    "reference": {
+      "images": 50,
+      "abstain_share": 0.0
+    },
+    "shifted": {
+      "images": 50,
+      "abstain_share": 0.38
+    },
+    "drift": {
+      "images": 50,
+      "ks_statistic": 0.74,
+      "ks_p": 1.409544601041165e-13,
+      "psi": 7.661339898693933,
+      "alert": true,
+      "warning": false
+    }
+  },
+  "printed": "DRIFT ALARM (KS p = 1.41e-13, PSI = 7.66)"
+}

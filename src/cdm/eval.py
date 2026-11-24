@@ -119,5 +119,6 @@ def subgroup_table(
         else:
             row["warning"] = f"fewer than {min_n} melanoma images: no melanoma sensitivity"
         rows.append(row)
-    assert sum(int(str(r["images"])) for r in rows) == len(keys)
+    if sum(int(str(r["images"])) for r in rows) != len(keys):
+        raise ValueError("group counts do not add up to the number of images")
     return rows

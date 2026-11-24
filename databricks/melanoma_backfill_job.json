@@ -1,0 +1,47 @@
+{
+  "name": "cdm-item4-melanoma-backfill",
+  "max_concurrent_runs": 1,
+  "email_notifications": {
+    "on_failure": [
+      "{{DATABRICKS_USER}}"
+    ],
+    "on_success": [
+      "{{DATABRICKS_USER}}"
+    ]
+  },
+  "environments": [
+    {
+      "environment_key": "cpu",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "STAGE_FIRST",
+          "torch==2.14.0",
+          "torchvision==0.29.0"
+        ]
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "melanoma_backfill",
+      "environment_key": "cpu",
+      "max_retries": 0,
+      "retry_on_timeout": false,
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/{{DATABRICKS_USER}}/cdm/melanoma_backfill",
+        "base_parameters": {
+          "code_version": "STAGE_FIRST",
+          "wheel": "STAGE_FIRST",
+          "wheel_sha256": "STAGE_FIRST",
+          "repo": "STAGE_FIRST",
+          "files_sha256": "STAGE_FIRST",
+          "bundle": "/Volumes/workspace/cdm/raw/deploy/serving/d7191f4",
+          "out": "/Volumes/workspace/cdm/raw/results/phase3/monthly",
+          "job_run_id": "{{job.run_id}}"
+        }
+      }
+    }
+  ]
+}

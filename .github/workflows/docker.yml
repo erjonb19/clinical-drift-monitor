@@ -3,28 +3,42 @@
 name: Docker
 
 on:
+  # Every push to every branch (backlog item 6), and every pull request.
   push:
-    branches: [main]
   pull_request:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   image:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
+      # Backlog item 26: uv, pinned by version and its release SHA-256, installs the packages
+      # uv.lock records, hash-checked, from releases at least 7 days old. 0.13.4 or later: older
+      # uv trusts a compromised root CA (GHSA-hq85-5cpj-mr62). The project's own build backend
+      # (setuptools) is pinned by version, not hash: uv does not lock build dependencies.
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          checksum: "c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
+          enable-cache: false
       - name: Test bundle (untrained, CI only)
         run: |
-          python -m pip install --upgrade pip
-          pip install torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cpu
-          pip install -e ".[train]"
-          python scripts/make_test_bundle.py --out dist/bundle
+          uv sync --locked --no-python-downloads --python 3.11 --extra train
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          .venv/bin/python scripts/make_test_bundle.py --out dist/bundle
       - name: Build the image
         run: docker build -t cdm-api:ci .
       - name: Smoke test
@@ -34,7 +48,7 @@ jobs:
           python - <<'PY'
           import io, json, urllib.error, urllib.request
           from PIL import Image
-          buf = io.BytesIO(); Image.new("RGB", (300, 200), (180, 120, 100)).save(buf, format="JPEG")
+          buf = io.BytesIO(); Image.new("RGB", (320, 320), (180, 120, 100)).save(buf, format="JPEG")
           req = urllib.request.Request("http://localhost:7860/predict", data=buf.getvalue(), headers={"Content-Type": "image/jpeg"})
           out = json.load(urllib.request.urlopen(req, timeout=60))
           assert "not for medical use" in out["notice"] and "non-commercial" in out["license"], out
@@ -46,8 +60,8 @@ jobs:
               assert err.code == 400, err.code
           health = json.load(urllib.request.urlopen("http://localhost:7860/health"))
           assert health["predictions"] == 1 and health["rejected"] == 1, health
-          allowed = {"status", "model_version", "notice", "predictions", "rejected", "rate_limited",
-                     "latency_ms_p50", "latency_ms_p95"}
+          allowed = {"status", "model_version", "notice", "predictions", "rejected", "quarantined",
+                     "rate_limited", "latency_ms_p50", "latency_ms_p95"}
           assert set(health) == allowed, set(health) ^ allowed  # counts and timing only
           print("smoke test passed", health)
           PY
@@ -56,6 +70,18 @@ jobs:
           docker diff api | tee changes.txt
           # Allowed: /tmp itself and the empty cache directory torch creates at start-up.
           if grep -v -E " /(tmp|home/demo|tmp/torchinductor_demo)$" changes.txt | grep -q .; then echo "unexpected files written"; exit 1; fi
+      # Backlog items 11 and 39: scan the built image; fixable CRITICAL and HIGH findings fail the
+      # build. Accepted ones go in .trivyignore with their reason. The action is pinned to a commit.
+      - name: Image scan (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: cdm-api:ci
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+          format: table
       - name: Container logs
         if: always()
         run: docker logs api || true

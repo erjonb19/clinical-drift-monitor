@@ -54,7 +54,7 @@ def verify_ham_metadata(path: Path, md5: str) -> pd.DataFrame:
         raise DataError(
             f"{path} is missing: upload HAM10000_metadata.csv (see docs/phase1-runbook.md)"
         )
-    actual = hashlib.md5(path.read_bytes()).hexdigest()
+    actual = hashlib.md5(path.read_bytes(), usedforsecurity=False).hexdigest()  # published MD5
     if actual != md5:
         raise DataError(f"{path}: MD5 {actual}, expected Dataverse's {md5}")
     return pd.read_csv(path)
@@ -274,7 +274,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--raw", type=Path, required=True, help="raw volume root")
-    parser.add_argument("--tmp", type=Path, default=Path("/tmp/cdm-ingest"))
+    # A scratch folder on the job's own ephemeral serverless disk, not a shared host.
+    parser.add_argument("--tmp", type=Path, default=Path("/tmp/cdm-ingest"))  # noqa: S108
     parser.add_argument("--workers", type=int, default=16)
     parser.add_argument("--code-version", default="unknown")
     parser.add_argument("--make-broken", action="store_true")

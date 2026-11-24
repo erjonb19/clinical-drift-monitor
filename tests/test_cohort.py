@@ -438,3 +438,23 @@ def test_no_small_difference_can_be_worked_out_from_two_nested_releases() -> Non
         and all(max(x[:2]) < 20 for x in cases)
     ]
     assert leaks == []
+
+
+def test_the_duckdb_engine_cannot_reach_files_or_unlock_itself(tmp_path: Path) -> None:
+    """The demo's connection reads only the registered frames (security audit, item 47)."""
+    import duckdb
+
+    outside = tmp_path / "outside.csv"
+    outside.write_text("a\n1\n", encoding="utf-8")
+    engine, tables = duckdb_engine(omop(silver(8)))
+    assert len(engine(f"SELECT * FROM {tables['person']}")) == 8  # registered frames still work
+    for sql in (
+        f"SELECT * FROM read_csv('{outside.as_posix()}')",
+        f"ATTACH '{(tmp_path / 'other.db').as_posix()}' AS other",
+        f"COPY (SELECT 1) TO '{(tmp_path / 'out.csv').as_posix()}'",
+        "SET enable_external_access = true",
+        "RESET lock_configuration",
+    ):
+        with pytest.raises(duckdb.Error):
+            engine(sql)
+    assert not (tmp_path / "other.db").exists() and not (tmp_path / "out.csv").exists()

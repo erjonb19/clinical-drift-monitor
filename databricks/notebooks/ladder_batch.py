@@ -175,7 +175,9 @@ def judge(out: dict[str, object], reference: dict[str, object]) -> dict[str, obj
 if DRIFT:  # the reference's own drift, from its saved checkpoint
     ref_cfg = config(REFERENCE["config"])
     ref_model = build_model(pretrained=False, arch=ref_cfg.arch)
-    ref_model.load_state_dict(torch.load(REFERENCE["checkpoint"], map_location="cpu"))
+    ref_model.load_state_dict(
+        torch.load(REFERENCE["checkpoint"], map_location="cpu", weights_only=True)
+    )
     assert weights_hash(ref_model) == REFERENCE["weights_sha256"], "reference checkpoint mismatch"
     REFERENCE["drift"] = drift_aurocs(ref_model.to(device).eval(), ref_cfg)
 

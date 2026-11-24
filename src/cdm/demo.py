@@ -5,7 +5,8 @@ The demo builds the OMOP tables from public ISIC metadata (PAD-UFES-20, collecti
 CC-BY), fetched when the app starts. Nothing is committed and no image is shown. The concept
 table carries concept IDs and Athena links only, so no SNOMED text appears. Each visitor gets
 a scratch approvals file and audit log in a temporary folder: they play the reviewer, and
-their decisions never touch ``phenotypes/approvals.jsonl``.
+their decisions never touch ``phenotypes/approvals.jsonl``. The folder is removed when the
+session is dropped, and a session may write at most ``MAX_DEFINITIONS`` definitions.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from cdm.cohort import (
     AuditLog,
     CohortResult,
     CohortService,
+    Refused,
     duckdb_engine,
     load,
     parse,
@@ -41,6 +43,10 @@ ATTRIBUTION = (
 )
 HISTOPATHOLOGY = 43531286
 REVIEWER = "demo visitor (scratch approvals, this session only)"
+# Each Run re-checks every definition run before in the session (the cross-result guard), so
+# the work per Run grows with the definitions a visitor makes. This bounds it (item 47).
+MAX_DEFINITIONS = 50
+_SCRATCH = Path("<scratch>")  # the default: a temporary folder owned by the session
 
 
 def concept_map() -> pd.DataFrame:
@@ -95,12 +101,18 @@ def custom_definition(
 
 @dataclass
 class DemoSession:
-    """One visitor's service: their own scratch approvals and audit log."""
+    """One visitor's service: their own scratch approvals and audit log. Without a
+    ``folder``, they live in a temporary folder that is deleted with the session (when it is
+    garbage collected or ``close`` is called); a given ``folder`` is left in place."""
 
     tables: dict[str, pd.DataFrame]
-    folder: Path = field(default_factory=lambda: Path(tempfile.mkdtemp(prefix="cdm-demo-")))
+    folder: Path = _SCRATCH
+    _scratch: tempfile.TemporaryDirectory[str] | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
+        if self.folder == _SCRATCH:
+            self._scratch = tempfile.TemporaryDirectory(prefix="cdm-demo-")
+            self.folder = Path(self._scratch.name)
         engine, names = duckdb_engine(self.tables)
         self.service = CohortService(
             engine,
@@ -110,9 +122,15 @@ class DemoSession:
             source="demo: PAD-UFES-20 public metadata",
         )
 
+    def close(self) -> None:
+        """Delete the temporary folder now, if the session owns one."""
+        if self._scratch is not None:
+            self._scratch.cleanup()
+
     def write(self, definition: dict[str, Any]) -> Path:
         """A visitor's definition as a versioned file in the scratch folder. A changed
-        definition is a new version, as in the library."""
+        definition is a new version, as in the library. A session may hold at most
+        ``MAX_DEFINITIONS`` of them; past that, a new one is refused."""
         folder = self.folder / str(definition["name"])
         folder.mkdir(exist_ok=True)
         versions = sorted(folder.glob("v*.yaml"))
@@ -120,6 +138,11 @@ class DemoSession:
             existing = load(path)
             if existing.definition == parse({**definition, "version": existing.version}).definition:
                 return path
+        if len(list(self.folder.glob("*/v*.yaml"))) >= MAX_DEFINITIONS:
+            raise Refused(
+                f"this session already has {MAX_DEFINITIONS} cohort definitions, the most one "
+                "session may make; reload the page to start a new session"
+            )
         definition = {**definition, "version": len(versions) + 1}
         path = folder / f"v{definition['version']}.yaml"
         path.write_text(yaml.safe_dump(definition, sort_keys=False), encoding="utf-8")

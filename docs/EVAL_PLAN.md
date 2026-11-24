@@ -21,7 +21,7 @@ were looked at. Results live in `results/`, each logged in MLflow
 | Q5 | What do the worst errors and most out-of-distribution images have in common? | D | Reviewer categories on the review worksheet (qualitative) |
 | Q6 | Does adding age, sex and body site to image features help? | E | Balanced accuracy: fusion vs image-only |
 | Q7 | Can an LLM pull diagnosis, body site and confirmation method from notes into OMOP fields? | G5 | Per-field exact-match accuracy against hand labels |
-| Q8 | Can an LLM write an 8D incident report from a drift-table row whose findings are correct and whose every number matches the row? | 4 | Scenarios passed (correct and grounded) out of 30 synthetic (staged) scenarios; thresholds in `results/phase4/eval_spec.json` (proposed, owner to set) |
+| Q8 | Can an LLM write an 8D incident report from a drift-table row whose findings are correct and whose every number matches the row? | 4 | Scenarios passed (correct and grounded) out of 30 synthetic (staged) scenarios; thresholds in `results/phase4/eval_spec.json` (Claude's proposal, approved by the owner 2026-11-24) |
 
 ## 2. Data and units of analysis
 
@@ -164,3 +164,4 @@ as a finding, with the same prominence as a success.
 | 2026-10-22 | G5: no temperature 0; answers are cached and replayed | The API refuses a temperature setting for Claude Haiku 5.5 ("deprecated for this model"), found on the first connection test | None: no G5 note had been run |
 | 2026-10-23 | G5: the labels are pre-annotated by Claude under a written protocol (33 of 75 notes flagged low confidence), then reviewed by the owner, who changed 2 of 225 labels (1 note); not labelled from scratch by hand | Owner's decision; counts in `results/research/g5_extraction/label_provenance.json`. Risk: the extractor is also a Claude model, so its agreement with these labels may be inflated; reported with the score | None: recorded before any prompt ran on a scoring note |
 | 2026-11-03 | Phase 4 (Q8): 30 synthetic (staged) drift scenarios with known findings (`results/phase4/scenarios.json`, `cdm.scenarios`) and a proposed eval spec (`results/phase4/eval_spec.json`) | Written before any report generator, groundedness check or LLM call exists, so the answers and the bar are fixed first; the pass threshold is the owner's to set (PLAN.md Phase 4) | None: nothing has been generated or scored |
+| 2026-11-24 | Phase 4 (Q8): pass threshold set: at least 27 of 30 scenarios pass and no scored run has an ungrounded number; more than 3 scenarios short of 2 scored runs from outages is inconclusive (`results/phase4/eval_spec.json`, `thresholds`) | Owner's decision: Claude's 2026-11-03 proposal, approved unchanged | None: nothing has been generated or scored |

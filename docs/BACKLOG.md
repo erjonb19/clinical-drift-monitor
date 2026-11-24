@@ -1,0 +1,1186 @@
+# Backlog
+
+The source of truth for what to work on and in what order (from 2026-11-06). Work the first
+unchecked item **in the "Order of work" below** (from 2026-11-08; item numbers never change,
+the order is set there). The owner edits this file as plans change. When an item is done it is ticked
+here, gets one line in [PROGRESS.md](PROGRESS.md), and goes on the README's "Production
+readiness" checklist.
+
+Each item has a **Done when** line (the check), and a **Today** line: what already exists in
+the repo on 2026-11-06, so no item is ticked for work that only partly exists. A blocked item
+gets a **Blocked:** line with the reason.
+
+## Order of work (owner, 2026-11-08)
+
+**First (owner, 2026-11-09): item 22, the security audit** (plan only), after any PR already in progress. The items it adds are placed by the owner when he merges it.
+
+1. **Item 1**, the parts that need no workspace access first: the deploy guard (fix 2), the
+   watchdog workflow (written and tested, with no credential stored until the owner creates
+   the service principal), and the post-month-12 scoring code and its spec. The probe's
+   scheduled fires (8 to 10 November) and every Databricks deploy are the owner's.
+2. **Item 6**: CI on every push to every branch. The CPU smoke test waits on the champion
+   bundle as a release asset (the owner uploads it); build the test so it skips with a clear
+   message until the asset exists.
+3. **Item 11** (supply chain and merge rules).
+4. **Items 4 and 5** (SLOs and alerts): the window rule, the targets and the alert path in
+   code, tested on committed results; the live alert is checked on the next scheduled run.
+5. **Items 18 and 13** (an input contract for images; a load test and serving benchmark).
+6. **Items 2 and 3** (registry versions, rollback, champion vs challenger). The challenger's GPU
+   run waits for the owner's approval of its estimate.
+7. **Item 7**, then **items 15, 17, 16, 14** (detector quality, an automated retraining
+   pipeline, shadow scoring, batch scoring at scale).
+8. **Item 8** (PR #50's thresholds approved by the owner 2026-11-24), then **items 9 and 10**.
+9. **Item 12** (a live endpoint) and **item 19** (least-privilege access) when the owner has
+   made their accounts and decisions; **item 20** after the governed clinical agent's item 22.
+10. **Item 21** (showcase) last.
+
+**Rules for items 11 to 21 (owner, 2026-11-08):**
+- **(ask)** before: a GPU run, a new account or hosted service, anything that could bill,
+  Haiku spend, publishing a release or image, a change to another repo, and any deploy to the
+  Databricks workspace (the owner deploys from the laptop; cloud sessions have no workspace
+  access by design, decided 2026-11-03).
+- **Numbers are measured and labelled:** what ran, on what hardware, with which model (a
+  test bundle's latency is serving speed, never accuracy). Staged drift stays labelled
+  staged, as the honesty rules say.
+- **Unattended runs:** when an item is blocked or needs an (ask), write the reason under it and
+  move to the next item that does not depend on it, instead of stopping.
+- **Merging (owner, 2026-11-11, replacing 2026-11-10's rule):** Claude merges PRs itself,
+  including ones marked "owner merges", once CI is green on the final commit and a fresh review
+  by a separate agent that did not write the change finds nothing blocking. The owner is asked
+  first, in chat, for spending, GPU runs, release tags, Databricks deploys, deleting data and any
+  permission-settings change (those PRs are opened and left). PR #50 stays with the owner (his
+  threshold decisions); it waits until after 26 November (owner, 2026-11-16).
+
+## Items, in order
+
+1. [x] **Scheduled drift job.** A Databricks job scores drift on a schedule without anyone
+   pressing anything.
+   - **Done when (first version, replaced below):** one run started by the schedule (not by
+     hand) finishes green, and its results file and job run ID are committed, with the run's
+     trigger shown as scheduled.
+   - **Today:** `databricks/monthly_drift_job.json` is scheduled at 06:00 UTC on the 1st, and
+     emails the owner on success and failure. The 12-month replay ran once as a manual backfill.
+     The first scheduled run was due on 1 November 2026; it did not start (below). After the replay, scheduled runs only log the ISIC live count and score nothing
+     new, so a green run alone would not show drift being scored.
+   - **Found in the workspace (owner, 2026-11-06):** no run on 1 November. The job's only run
+     ever is the manual backfill on 22 October 2026 at 10:02 PM (succeeded, 15m 14s). The
+     schedule reads "At 06:00 AM, on day 1 of the month (UTC)" and shows a pause control, so it
+     looks active. The job runs as the owner on serverless compute. No email arrived, which fits
+     a run that never started.
+   - **Superseded (owner, 2026-11-13):** the probe's scheduled fires all ran (see "Probe
+     results" below), and the owner concluded the 1 November miss has another cause. The
+     inference below is kept as the record of 2026-11-06.
+   - **Cause (inferred, not documented by Databricks), 2026-11-06:** the schedule was active
+     and correct on 1 November, and the Free Edition scheduler did not start a run. No pause
+     and no bad edit was found. Evidence, from four queries the owner ran in the workspace:
+     1. `system.access.audit`, jobs events for this job, 22 October to 6 November: three
+        events, all by the owner on 23 October: `runNow` at 02:02:13 UTC (the backfill), then
+        `reset` at 02:29:20 and 16:21:02 UTC. No pause event.
+     2. `system.lakeflow.jobs`: two rows, both at 2026-10-23 02:02:05 UTC, `paused = false`,
+        quartz `0 0 6 1 * ?`. **Anomaly:** no rows for the two later resets, which query 1
+        shows; why this table missed them is not known.
+     3. `system.lakeflow.job_run_timeline`: one run only (ID starting 8308376346509, the
+        backfill, 2026-10-23 02:02 UTC, trigger `ONETIME`, `SUCCEEDED`, termination code
+        `SUCCESS`). Nothing on
+        1 November, not even a skipped run.
+     4. The schedule each reset set (`get_json_object(request_params['new_settings'],
+        '$.schedule')` on the query 1 rows): both set `0 0 6 1 * ?`, `UTC`, `UNPAUSED`.
+
+     Earlier candidates ruled out: a pause or edit (queries 1, 2 and 4) and a skipped run
+     (query 3). A Free Edition user reported schedules that stopped firing with no record in
+     September 2026 on the Databricks Community forum
+     (community.databricks.com/t5/databricks-free-edition-help/jobs-suddenly-stopped-running-with-no-errors/td-p/169936);
+     no cause was confirmed there either. Notification address (owner, 2026-11-07): the monthly
+     job (524433148303929) and the probe both email the owner's login address, an inbox the
+     owner watches; it does not change the cause, since no run means no email was due.
+   - **Scheduler probe (owner OK, 2026-11-06; temporary):** `databricks/scheduler_probe_job.json`
+     and `databricks/notebooks/scheduler_probe.py`, a separate job with the same kind of
+     schedule (`0 0 6 8,9,10 * ?`, UTC), firing at 06:00 UTC on 8, 9 and 10 November 2026. Each
+     run writes one JSON file to `/Volumes/workspace/cdm/raw/results/scheduler_probe/` (run ID,
+     trigger type and time) and tries the one-image ISIC download, recorded without failing the
+     run. It touches no table. Written and tested in CI; deployed by the owner (notebook import,
+     then `scripts/deploy_databricks.py --job`); to be deleted after 10 November. The production
+     job is not changed.
+     - **Deployed by the owner, 2026-11-07:** job ID 325029901767432; notebook at
+       `/Users/<owner>/cdm/scheduler_probe`. The deploy needed the repo's virtual environment
+       (`.venv/Scripts/python.exe` on Windows); plain `python` failed with "No module named
+       'cdm'". `databricks jobs get` showed the schedule `0 0 6 8,9,10 * ?`, UTC, `UNPAUSED`,
+       the notebook path above, and success and failure emails to the owner's login address.
+     - **Manual test run, 2026-11-07:** run 621176150087695, `TERMINATED` / `SUCCESS`, 27 seconds;
+       its file recorded `run_utc` 2026-11-07T13:57:24+00:00 and `trigger_type` `one_time`. The
+       success email arrived (started 2026-11-07 13:57:17 UTC, "Launched: Manually"). This tests
+       the notebook and the email, not the scheduler: the scheduled fires are on 8 to 10 November.
+     - **Scheduled fires, 8 and 9 November: not reported.** The owner's answers for both days
+       (2026-11-09) arrived as unfilled placeholders ("[scheduled email arrived / no email]"), so
+       neither fire is recorded either way. To settle it: the run timeline for job
+       325029901767432 and the files in `/Volumes/workspace/cdm/raw/results/scheduler_probe/`.
+       The owner's message of 2026-11-10 again held the unfilled placeholders for both days, so
+       they stay not reported.
+     - **Probe results (owner, 2026-11-13; `results/phase3/scheduler_probe/runs.json`):** all
+       three scheduled fires ran. `databricks jobs list-runs` lists runs 1038163583722810,
+       774279266456471 and 786760919533574 as `PERIODIC`, started 06:00:04 to 06:00:05 UTC on 8,
+       9 and 10 November, all `SUCCESS`; each run's file records `trigger_type` `periodic` and
+       `trigger_time` 06:00:00 that day. Every file's ISIC download worked (ISIC_6589782,
+       CC-BY, Memorial Sloan Kettering Cancer Center, 2,658,276 bytes, SHA-256 b9d7aef5...).
+       **The owner's conclusion:** the Free Edition scheduler fired all three scheduled runs on
+       time, scheduled runs reach ISIC, and the 1 November miss of the drift job has another
+       cause, not found yet. Limit: the probe is a different job on different days, so it shows
+       the scheduler fires this kind of schedule, not what happened to the drift job on 1
+       November. **Next check (owner, 2026-11-13):** the drift job's own schedule, pause state,
+       deploy history and any run attempts. **Probe job deleted (owner, 2026-11-18):** job
+       325029901767432 is gone from the workspace. Its job definition and notebook stay in
+       `databricks/` as the record of the code that produced `runs.json`.
+   - **S6 evidence (owner, 2026-11-18) for job 524433148303929:** its settings now read quartz
+     `0 0 6 1 * ?`, `UTC`, `UNPAUSED`, created 2026-10-23 02:02 UTC. `list-runs` shows exactly
+     one run, 830837634650904 (`ONE_TIME`, `SUCCESS`, 8 s after creation), and no `PERIODIC`
+     run on 1 November, not even a skipped or failed one. The jobs audit since 20 October
+     shows create (02:02:05), runNow (02:02:13) and two resets (02:29:20 and 16:21:02) on 23
+     October, and nothing for this job after that.
+   - **Finding (Claude, 2026-11-19): cause not determined; the job's own settings are ruled
+     out.** Both resets set the schedule to `0 0 6 1 * ?`, `UTC`, `UNPAUSED` (query 4 of
+     2026-11-06 read their `request_params`), nothing changed the job afterwards, and it reads
+     the same today. So the job was correctly scheduled and unpaused on 1 November, and no run
+     was created at all. A job with the same kind of schedule (the probe, created once and never
+     reset) fired on time three times, so the scheduler does fire this kind of job. The one
+     known difference is this job's history: two `reset` calls after it was created, which
+     `system.lakeflow.jobs` did not record (the anomaly in query 2 of 2026-11-06). That is a
+     lead, not a shown cause. Otherwise this leaves a miss on the Databricks side that left
+     no record. **An observation, not a shown cause:** 06:00 UTC on Sunday
+     1 November 2026 is the exact moment US Eastern time fell back from daylight saving
+     (02:00 EDT). The job's time zone is UTC, which has no such change. The 20 November
+     rehearsal and the 1 December run fall on no clock change, so they will show whether the
+     miss recurs; the watchdog (after Thanksgiving) is the standing guard against a silent miss.
+   - **Rehearsal deployed (owner, 2026-11-18):** job `cdm-rehearsal-monthly-drift`,
+     746196917078725; the deploy script read back "schedule ok: 0 0 6 20 11 ? UTC UNPAUSED".
+   - **Scheduled rehearsal (owner, 2026-11-13; built, not deployed):** so item 1 doesn't wait
+     for 1 December, a temporary copy of the monthly job is scheduled for 06:00 UTC on 20 November
+     (`databricks/monthly_drift_rehearsal_job.json`; the cron repeats yearly, so the job is
+     deleted afterwards). It runs the monthly notebook as of its staging commit, with the same
+     bundle, imported under another name (`stage_research_job.py --workspace-name`). It replays
+     month 1 into `rehearsal_*` tables and `/Volumes/workspace/cdm/raw/results/rehearsal/monthly`;
+     the notebook's new `tables` parameter accepts only `gold` (the default) or `rehearsal`, and
+     a rehearsal must write under a rehearsal folder. Its evidence will be labelled a rehearsal.
+     The watchdog takes a `job_id` input so it can check the rehearsal too. The real job is not
+     changed: it still runs the notebook staged at 44451c6. The current notebook is newer than
+     that copy: besides the rehearsal switch, it has the targets and alert path (items 4 and 5:
+     `config/slo.json`, the `gold_melanoma_backfill` table, delayed accuracy with the referral
+     threshold, and an alert that fails the run), so the rehearsal is also the first Databricks
+     run of that code. It also passes `before_month` to `merge_history`, so a month's targets
+     never use labels from later months (a replayed month 1 would otherwise have seen the
+     backfill of months 1 to 12). The rehearsal shows a fresh scheduled copy fires and runs end
+     to end; it cannot show why the real job missed 1 November. Owner steps S11 and S12 in
+     `docs/OWNER_STEPS.md`. Tests in `tests/test_deploy.py` and
+     `tests/test_stage_research_job.py`.
+   - **Staged (owner, 2026-11-18):** `stage_research_job.py --workspace-name` at commit 7a0070b;
+     its values replace `STAGE_FIRST` in the rehearsal job file. The four file hashes match that
+     commit; the wheel's hash is the laptop build's, checked by the notebook at run time.
+   - **Fix (planned, written before code):**
+     1. Whatever the cause: a missed run must not be silent. A watchdog checks on the 2nd of
+        each month that the job has a run started by the schedule since the 1st, and fails
+        loudly if not. Proposed: a scheduled GitHub Actions workflow calling the Jobs API with
+        a read-only credential (Can View on this job only). Behind the approval gate, a
+        scheduled workflow would sit waiting (up to 30 days) until approved, which defeats a
+        watchdog, so this credential would sit outside the gate. **Owner decision (2026-11-06):**
+        OK, only with a credential that can view this one job and nothing else; if Free Edition
+        allows only a personal access token, stop and tell the owner before storing anything.
+        **Checked (owner, 2026-11-07):** "Add new" exists under Settings, Identity and access,
+        Service principals, so a service principal can be created; nothing is created or stored
+        yet.
+        Databricks job notifications cover start, success, failure and duration, not a run
+        that never starts, so the check has to live outside the job. **Built 2026-11-09, not
+        configured:** `scripts/watchdog.py` and `.github/workflows/drift-watchdog.yml` (07:17 UTC
+        on the 2nd, and by hand for any month; never on push or pull request). It asks the Jobs
+        API for a run of job 524433148303929 with trigger `PERIODIC` since 06:00 UTC on the 1st,
+        and exits 0 (ran; state printed), 1 (missed) or 2 (inconclusive: no credential or API
+        error), never passing without an answer. It needs three repo secrets from the owner's
+        view-only service principal: `DATABRICKS_HOST`, `DATABRICKS_CLIENT_ID`,
+        `DATABRICKS_CLIENT_SECRET`. Until they exist every run fails as "not configured".
+        It reads every page of runs, counts a `SKIPPED` run as missed, and never counts a later
+        month's run. The secret must allow the `all-apis` scope. GitHub disables scheduled
+        workflows after 60 days without repository activity, which would silence it too.
+        Tested with fake API replies; not yet run against the workspace.
+     2. A guard, not the likely cause (a redeploy from the repo unpauses):
+        `scripts/deploy_databricks.py --job` reads the job back after `jobs reset` or `jobs
+        create`, refuses if the schedule is missing, different from the committed one or not
+        `UNPAUSED`, and prints the schedule. A test checks that every committed job with a
+        schedule says `UNPAUSED`. **Built 2026-11-09** (`check_deployed_schedule`, tested in
+        `tests/test_deploy.py` with fake CLI replies); not yet used in a real deploy. The
+        next-run time is not printed: `jobs get` does not return one.
+     3. Then a scheduled run is shown green once (this item's "Done when").
+   - **After replay month 12, written before code.** The owner's rules (2026-11-06): score
+     whatever new ISIC images arrive; report drift signals that need no labels (input or
+     embedding drift, prediction mix, confidence); if no new images arrive, record "no new data"
+     as an explicit status, never a silent green run; add labelled metrics later, when labels
+     exist. **Proposed by Claude, confirmed by the owner on 2026-11-06:**
+     1. New images are public ISIC images whose IDs the job has not seen before, kept in a
+        table of seen IDs. Whether ISIC records an upload date is still an open question in
+        PLAN.md, so the job would not rely on one.
+     2. They are scored with the model under the `champion` alias. Each image's license and
+        attribution is recorded. Each signal is compared with the validation baseline: the OOD
+        score (the existing KS and PSI test), the embedding drift, the prediction mix across the
+        7 classes, and the confidence (top softmax probability). Each signal's test and
+        threshold go in a spec committed before the first such run.
+     3. The status is one of `scored` (with counts), `no_new_data` or `failed`.
+     - **Built 2026-11-09 (code and spec, not run):** `cdm.post_replay` (new-ID diff; OOD,
+       embedding, prediction-mix and confidence signals against the validation baseline; a
+       100-image minimum; the explicit status) and `results/phase3/monthly/post_replay_spec.json`
+       (each test and threshold, chosen by Claude before any such run, accepted by the       owner on 2026-11-09).
+       Tested on synthetic data in `tests/test_post_replay.py`. Not yet wired into
+       `databricks/notebooks/monthly_drift.py`, and no month has been scored with it.
+       **Owner decision, 2026-11-09:** the signal thresholds are accepted as specced.
+     4. **Limit checked (2026-11-07, the probe's manual run):** Free Edition restricts outbound
+        internet to a set of trusted domains, but a serverless job reached both hosts it needs.
+        For `ISIC_6589782` it read the metadata from `api.isic-archive.com` (license CC-BY,
+        attribution Memorial Sloan Kettering Cancer Center) and downloaded the file, 2,658,276
+        bytes, from `isic-archive.s3.amazonaws.com`. The SHA-256 was not captured that day (cut
+        off in the owner's terminal); the three scheduled runs later downloaded the same file,
+        and all four files record the same SHA-256 (`results/phase3/scheduler_probe/runs.json`).
+   - **Done when (owner, 2026-11-16; replaces the version below):** the scheduled rehearsal of
+     20 November closes the item on its own. Its run, started by the schedule (`PERIODIC` in
+     `databricks jobs list-runs`, committed with it), finishes `SUCCESS`, and its run ID,
+     `month_01.json` and `slo_01.json` (each labelled a rehearsal) are committed. The watchdog
+     is not part of this: it waits until after Thanksgiving, and still checks the real 1
+     December run once it is set up.
+   - **Done 2026-11-20 (a rehearsal; owner's S12 report, committed in
+     `results/phase3/rehearsal/`):** the rehearsal job 746196917078725 started run
+     759057427881435 by its schedule (`PERIODIC`, at 06:00:08 UTC on 20 November), and it ended
+     `TERMINATED` / `SUCCESS`. Its `month_01.json` and `slo_01.json` are committed, both carrying
+     the rehearsal label. Month 1 had no drift alert (KS p = 0.274, PSI = 0.020) and an abstain
+     share of 0.057, against a target of 0.15. Both label-based targets read "insufficient
+     data", as expected for a first month. These numbers equal the 2026-10-23 replay's month 1
+     to every digit (same seeded images, same bundle): a reproducibility check, not a new
+     result. This is a rehearsal on its own job and tables, not the real monthly job; the real
+     job's 1 November miss is still unexplained (see the S6 finding above), and the 1 December
+     run is still to come.
+   - **Done when (previous version, 2026-11-09; replaced 2026-11-16):** one run started by the
+     schedule (its `trigger_type` from the run timeline committed with it) finishes green and
+     records `scored` or `no_new_data`, with its results file and run ID committed; and, if the
+     owner approves the watchdog, it exists and has been seen to fail on a missing run.
+
+2. [ ] **Model versioning and rollbacks** through the MLflow model registry, with the steps to
+   roll back to the previous version.
+   - **Done when:** the registry holds two versions, a committed script moves the `champion`
+     alias to the newer one and back, a check after the rollback shows the served answers
+     match the older version, and the rollback steps are in the runbook.
+   - **Today:** `workspace.cdm.skin_lesion_classifier` has one version (v1, alias `champion`).
+     With one version there is nothing to roll back to yet.
+   - **Built 2026-11-09 (not used):** `cdm.registry` and `scripts/move_champion.py` move the
+     `champion` alias (dry run unless `--apply`), refusing if the alias is not where the owner
+     expects, or if the target is missing, has no `model_gen` tag or was `rejected` by the
+     promotion rule; a promotion must name its decision file's SHA-256. Each applied move is read
+     back and logged to `results/phase3/registry/alias_moves.jsonl`. The steps, and the check
+     after a rollback (the existing `check_registered_model` job against the older version's
+     bundle), are in `docs/rollback.md`. Tested with a fake registry. **Waits on:** a second
+     registry version (item 3's challenger, a GPU run the owner approves), and tagging v1
+     `model_gen=v2` (the owner, step 2 of `docs/rollback.md`).
+
+3. [ ] **Champion vs challenger.** The current model (v1) is the champion and v2 is the
+   challenger. Score both on the same data, compare them, and promote the challenger only if it
+   wins on the agreed targets (the ML version of a canary release).
+   - **Done when:** a spec committed before the run names the data and the targets; one run
+     scores both models on the same images; the decision file is committed; and the registry
+     alias moves only if the challenger wins.
+   - **Today:** a retraining loop with this rule exists and ran once (2026-10-23): the
+     challenger gained 6.2 points at Buenos Aires but lost 1.6 on client validation (limit 1.0),
+     so it was not promoted, and its weights were not kept. Registry "v1" is the model the
+     earlier phases call "v2" (the 3-seed ensemble).
+   - **Decided (owner, 2026-11-06):** train a new challenger on Databricks serverless GPU (a run
+     the owner approves, with its GPU estimate, before it starts). Every challenger is
+     registered in MLflow whether or not it is promoted; only the `champion` alias decides what
+     serves. Every registry version carries a `model_gen` tag naming its model generation, so
+     registry v1 is tagged `model_gen=v2`.
+   - **(ask), 2026-11-09:** the challenger needs one Databricks serverless GPU run, which waits
+     for the owner's approval. Estimate (not a result): the 2026-10-23 retraining run used one
+     A10 task under a 45-minute deadline, about 3 to 4 GPU DBUs, before start-up time. The
+     decision rule is already committed (`results/phase3/retrain/spec.json`). **Proposed:** make
+     this run the first run of item 17's pipeline once it is built, so one GPU run registers the
+     challenger (item 3), gives item 2 its second version to roll back from, and tests item 17;
+     item 16's shadow scoring then uses the same challenger. Nothing started.
+   - **Owner decision, 2026-11-10:** approved as the first run of item 17's pipeline; the owner
+     starts it from the laptop. **It cannot start yet:** the pipeline's training tasks (train with
+     checkpoints kept, evaluate, decide, build and check the serving bundle, register with tags)
+     are not built (item 17). **GPU estimate (from committed records, not a result; replaces the 2026-11-09
+     figure of 3 to 4 DBUs, which assumed the whole 45-minute deadline was used):** the
+     2026-10-23 retraining notebook ran 366 seconds on one A10 (`results/phase3/retrain/
+     decision.json`); its wall time with start-up is not in the cost table (billing was traced
+     to 2026-10-22). 12 of the 16 traced GPU jobs used 0.065 to 0.076 DBU per wall minute
+     (`results/phase3/costs/job_costs.json`; all 16 range from 0.028 to 0.090), so a 10- to
+     25-minute GPU task is about 0.7 to 1.9 GPU DBUs, and the 60-minute hard timeout caps it
+     near 4.6 (5.4 at the highest rate seen). Free Edition charges nothing; at the recorded
+     list price (about $0.65 per DBU) that is $0.45 to $1.25, capped near $3.00 ($3.50 at the
+     highest rate). Two start-up failures on 2026-10-23 (900 seconds each) may also count;
+     unknown. The 10 to 25 minutes assumes the 6-minute notebook plus start-up and the
+     pipeline's extra tasks; that is a guess, not a measurement.
+
+4. [ ] **SLOs as model targets**, such as a minimum melanoma sensitivity, written in the README,
+   with an alert when drift breaks a target.
+   - **Done when:** the README has an SLO table (each target, its value, why, and where it is
+     measured); the monthly job checks each target it can measure; and a broken target raises an
+     alert.
+   - **Today:** CI floors exist for committed metrics (`config/eval_gate.json`), but no runtime
+     SLOs. **Limit:** the job reports melanoma sensitivity only for a month with at least 100
+     melanomas; the replay months had 5 to 64, so a monthly melanoma-sensitivity SLO can't be
+     measured at 300 images a month without pooling months or changing the rule.
+   - **Rule (owner, 2026-11-06), written before any code:** melanoma sensitivity is measured on
+     a trailing window of labelled months. The window starts at the latest month whose labels
+     have arrived and adds earlier months one at a time until it holds at least 100 melanoma
+     images. Sensitivity is reported with a 95% Wilson score interval, with the months in the
+     window and the melanoma count. If all available months together have fewer than 100
+     melanomas, the month is marked "insufficient data" and the target is neither met nor
+     broken. The target's value, and whether it is judged on the point estimate or the
+     interval's lower bound, are set in the item's PR before any month is judged.
+   - **Built 2026-11-09 (code, not run):** `cdm.slo` (the window rule above, the Wilson
+     interval, three targets in `config/slo.json`: melanoma referral sensitivity 0.90, judged on
+     the point estimate; delayed balanced accuracy 0.55, from 100 labelled images; abstain share
+     0.15), `delayed_accuracy` now counts melanomas referred, and the monthly notebook checks the
+     targets after saving each month. Checked on the committed replay
+     (`results/phase3/monthly/slo_replay.json`); the README has the table. **Waits on:** a
+     redeploy (the values were accepted on 2026-11-09, below) (the job pins the notebook's hash
+     and needs `config/slo.json` staged). **Melanoma sensitivity cannot be judged yet:** the
+     replay records (months 1 to 12) have no referral count, and after the replay no labelled
+     months arrive, so it stays "insufficient data" until months 1 to 12 are backfilled from
+     `gold_prediction_audit.refer_melanoma` and their labels (a Databricks run for the owner;
+     the backfill code is not written).
+   - **Owner decision, 2026-11-09:** the three values are accepted (melanoma referral
+     sensitivity 0.90 on the point estimate, delayed balanced accuracy 0.55, abstain share
+     0.15) and are **provisional until the months 1 to 12 backfill exists**; Claude writes the
+     backfill code, and the owner runs it on Databricks with the redeploy.
+   - **Backfill code written 2026-11-09 (not run):** `cdm.backfill` and
+     `databricks/notebooks/melanoma_backfill.py` rebuild each replay month's delayed-accuracy
+     record, with `melanoma_referred`, from the rows the replay wrote to `gold_prediction_audit`
+     and the labels in silver; nothing is re-scored. The run fails if a stored `refer_melanoma`
+     flag disagrees with the bundle's threshold, or if any rebuilt month's labelled count,
+     melanoma count or balanced accuracy differs from the committed record (months 1 to 11;
+     month 12 has none and is marked unchecked). It writes `gold_melanoma_backfill` once and
+     `melanoma_backfill.json`; the monthly job merges the table into the target's history, and
+     `scripts/slo_report.py` uses the committed file (month m sees only months before m).
+     `databricks/melanoma_backfill_job.json` holds `STAGE_FIRST` values that the deploy refuses
+     until `scripts/stage_research_job.py melanoma_backfill results/phase3/serving/results.json
+     results/phase3/monthly/month_01.json ... month_12.json` has filled them. Tested on
+     synthetic data in `tests/test_backfill.py`.
+
+5. [ ] **Alerts** when drift, or equity drift by Fitzpatrick skin type, crosses a threshold,
+   with the thresholds and why.
+   - **Done when:** a threshold crossing reaches the owner (not only a flag in a table), and the
+     README states each threshold and the reason for it.
+   - **Today:** the job flags an alert (KS p < 0.01 and PSI >= 0.2) or a warning (PSI >= 0.1),
+     and runs the same test per skin type with at least 100 images. The rules were fixed in
+     `results/phase3/monthly/spec.json` before any month ran. The flags are written to
+     `gold_drift_monthly`. The job's email goes out on every success or failure, not on an
+     alert. **Limit:** skin type is recorded only at the two new hospitals, so a skin-type alert
+     so far detects the site, not anything about skin type.
+   - **Built 2026-11-09 (code, not run):** the alert path in `cdm.slo`: after saving every
+     month of a run the job fails the run with "ALERT (not a job error)" and each reason (a broken
+     target, an overall drift alert, a skin-type drift alert); the failure email reaches the
+     owner. Thresholds and reasons are in the README's "Alerts and model targets" table. Not
+     ticked: no run has sent an alert yet.
+   - **Next (2026-11-22):** owner step S15 runs the rehearsal job once by hand through months
+     2 to 10 on its own tables. In the committed replay record (`slo_replay.json`), months 7 to
+     10 alerted (skin type II from month 7, overall drift and the abstain-share target from month
+     9, delayed accuracy in month 10), so this run should end in "ALERT (not a job error)" and
+     send the failure email: live evidence for this item and for item 4's "a broken target raises an
+     alert". Real images, labelled a rehearsal.
+
+6. [x] **Tests and model evals in CI** on every push, with pass and fail thresholds.
+   - **Done when:** CI runs the tests and the eval gate on every push and pull request, the
+     thresholds are listed in one place, and a self-test shows a regression fails the build.
+   - **Today (2026-11-06; superseded by the notes below, which now run on every push):** built
+     for pushes to `main` and every pull request, not for pushes to other branches (`.github/workflows/ci.yml`, `docker.yml`): ruff, mypy, pytest, and the eval gate
+     with a regression self-test, plus the Docker smoke test. **The eval gate does not run
+     inference:** `tests/test_eval_gate.py`
+     reads committed results files (`config/eval_gate.json` says so). The Docker smoke test
+     runs inference, but on an untrained test bundle.
+   - **Decided (owner, 2026-11-06):** add a CPU smoke test in CI that loads the champion and
+     scores a fixed set of about 50 images, then mark the item done. This needs the champion
+     bundle downloadable in CI (the release asset with a checked SHA-256, decided 2026-11-03)
+     and a committed manifest of the images (ISIC IDs, license, attribution, SHA-256), fetched
+     at test time and never committed.
+   - **Built 2026-11-09, waiting on the owner:** `ci.yml` and `docker.yml` now run on every
+     push to every branch and on every pull request. `tests/test_champion_smoke.py` loads the
+     bundle with `cdm.serving.Service` (every file's SHA-256 and each seed's weights hash
+     checked), scores the manifest's images, and fails if more than 20% abstain
+     (`config/champion_smoke.json`). It **skips, naming what is missing,** until (1) the owner
+     attaches the champion bundle to a release and fills `bundle_asset` (URL and SHA-256), and
+     (2) `scripts/make_smoke_manifest.py` writes `config/champion_smoke_images.csv` (50 images
+     of the clients' test split; needs the ISIC API, unreachable from cloud sessions; its
+     search query syntax is unverified). Not ticked: the smoke test has not run.
+   - **2026-11-11: the image manifest exists.** `.github/workflows/smoke-manifest.yml` runs
+     `scripts/make_smoke_manifest.py` on a GitHub runner (the ISIC API is reachable there, not
+     from cloud sessions) and prints the CSV; `config/champion_smoke_images.csv` is that run's
+     output: 50 images, one per lesion, all in the clients' test split by `config/splits_v1.csv`,
+     licences CC-0 and CC-BY-NC only (the script now skips any other), each image's own lesion
+     ID checked against the one asked for (so the query syntax is now checked). The smoke test
+     now skips naming only the champion bundle release asset (owner).
+   - **Done 2026-11-18:** the owner attached the champion bundle to release v1.0.0 (archive
+     SHA-256 9132a89b..., manifest SHA-256 5734add1..., the evaluated bundle's), and
+     `config/champion_smoke.json` names it. The smoke test loaded it in CI and scored the 50
+     images within the 20% abstain limit (the `quality` job on commit 8c431a0, job
+     134590375116: 586 passed; the test's skip condition reads only the committed config and
+     manifest, both present). It also passed in the cloud session before the push. It now runs
+     on every push and pull request.
+
+7. [ ] **Observability on Databricks:** a prediction audit table, Unity Catalog lineage, and
+   per-run cost tracking.
+   - **Done when:** the audit table is written by every scoring run; lineage shows bronze to
+     silver to gold to the registered model to the audit table, with a screenshot; and the cost
+     table covers every run behind a committed result.
+   - **Today:** the audit table is built. Lineage has no edge from the registered model to the
+     audit table, and there is no screenshot. Costs are traced for 13 of 31 results files, with
+     billing up to 2026-10-22.
+   - **Blocked, 2026-11-09 (needs the workspace):** every remaining part runs in Databricks,
+     which cloud sessions cannot reach: the lineage screenshot, and the billing query that
+     traces the other 18 results files. **Proposed (owner to decide):** the missing edge exists
+     because the monthly job loads the serving bundle from a volume, not the registered model;
+     loading the champion through `models:/workspace.cdm.skin_lesion_classifier@champion` in the
+     scoring job would let Unity Catalog record registered model to audit table. It changes the
+     scoring job (and adds MLflow to its environment), so it waits for the owner's OK.
+   - **Owner decision, 2026-11-10:** load the champion through the registry
+     (`models:/workspace.cdm.skin_lesion_classifier@champion`) in the scoring job, so lineage
+     records the registered model to audit table edge. A change to the monthly job; the owner
+     deploys it.
+
+8. [ ] **8D incident reports as postmortems:** run one real drift incident end to end and write
+   it up.
+   - **Done when:** one alert month goes through the whole path: report written, every number
+     checked against the drift table, the report reviewed in the queue, and the runbook's
+     containment steps done. The write-up is committed and says whether the drift was real,
+     replayed or staged.
+   - **Today:** 30 synthetic (staged) eval scenarios and the eval spec
+     (`results/phase4/scenarios.json`, `results/phase4/eval_spec.json`) are on `main`; the owner
+     approved Claude's proposed thresholds on 2026-11-24 (27 of 30, groundedness a hard gate).
+     There is no report generator, groundedness check, review queue or runbook yet. The replay's alert months use real images in an order we
+     chose, so they count as replayed, not as live drift.
+
+9. [x] **Model card and change-control plan:** a CHAI-format applied model card, and a one-page
+   change-control plan mapped to FDA's Predetermined Change Control Plan guidance.
+   - **Done when:** both are regenerated from committed evidence and cover the built serving,
+     monitoring and retraining parts, and the change-control plan fits on one page.
+   - **Today:** both are drafted and generated by `scripts/build_docs.py`. The change-control
+     plan is 67 lines, longer than one page.
+   - **Done 2026-11-11:** the change-control plan is rewritten to one page (526 words; 48
+     lines as printed at 100 characters, blank lines included) and now covers serving (bundle
+     manifest, registry alias and rollback, input contract, abstain rule), monitoring (the
+     audit table, the overall and per-skin-type drift tests, the `config/slo.json` targets and
+     alert path, marked not yet deployed) and retraining (the drift-triggered challenger's
+     gates and its one result), with every number read from committed files or
+     `cdm.contract`. The model card gains the input contract, the targets, the alert path and
+     rollback. Cut from the old plan: site-level threshold recalibration (never built), the
+     CI gate's review-workload ceiling and promoted-challenger check (still enforced by
+     `config/eval_gate.json` and `tests/test_eval_gate.py`), the detector's same-hardware rule
+     (kept as a risk in the model card) and the "full new test set as a second row" detail.
+     `tests/test_build_docs.py` regenerates the model card, the plan and the standards
+     alignment and fails if a committed copy differs (stale or hand-edited), and holds the plan
+     to 550 words and 48 printed lines.
+
+10. [x] **Reviewer feedback section** in the README, to record what outside reviewers say and
+    what changed.
+    - **Done when:** the README has the section with a fixed format (date, reviewer role,
+      comment, what changed, link), empty or with real entries only.
+    - **Today (2026-11-06):** not started.
+    - **Done 2026-11-09:** the README's "Reviewer feedback" section has the five-column table,
+      empty ("No entries yet."); `tests/test_readme_feedback.py` fails if the header changes or
+      a row lacks a field. Done out of order. Every item before it in the Order of work is
+      unticked: the remaining parts of items 1, 6, 11, 4, 5, 18, 13, 2, 3, 7, 15, 17, 16, 14 and
+      8 wait on the owner (deploys, the bundle asset, approvals, GPU or Databricks runs, PR #50's
+      thresholds), but **item 9 is not blocked** and was skipped in this session; it is the next
+      item to work. Item 10 depends on none of them.
+
+## Production architecture (owner, 2026-11-08)
+
+What real ML, data and software engineering teams would add, checked against the repo on
+2026-11-08. Today the repo already has the `src/cdm` package, ruff, mypy, pytest, a Docker
+image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog registry.
+
+11. [x] **Supply chain and merge rules.** Dependabot for pip, Docker and GitHub Actions
+    (grouped, weekly); CodeQL for Python and the workflows; `pip-audit` and a Trivy scan of
+    the API image in CI, failing on fixable critical findings (accepted ones in an ignore file
+    with the reason); branch protection on `main`, which the **owner turns on** in GitHub
+    settings, requiring the `ci` and `docker` workflows' jobs.
+    - **Done when:** the first Dependabot PR appears; a known-vulnerable pin fails the build;
+      `gh api repos/erjonb19/clinical-drift-monitor/branches/main --jq .protected` is `true`.
+    - **Today:** none of these; `main` is unprotected; CI runs on pushes to `main` and on pull
+      requests only.
+    - **Built 2026-11-09 (repo side), waiting on the owner:** `.github/dependabot.yml` (pip,
+      Docker, Actions; weekly, grouped); `.github/workflows/codeql.yml` (Python and Actions);
+      in `ci.yml`, `pip-audit` 2.10.1 audits a freeze of the installed packages from its own
+      environment (torch's `+cpu` labels stripped so it is audited, and any package it cannot audit
+      fails the step) and fails on any finding not accepted in `config/pip_audit_ignore.json`; a
+      second step shows it reports a known-vulnerable pin by name (`tests/fixtures/`); in `docker.yml`,
+      Trivy (pinned to a commit) fails on fixable CRITICAL findings in the API image, with
+      accepted ones in `.trivyignore` (none). **Its first run found five fixable CRITICAL
+      Pillow 12.3.0 findings in the API image** (CVE-2026-112393, -112398, -112403, -112900,
+      -96639; fixed in 13.0.0), including a heap overflow in JPEG decoding, which the API does
+      on every upload; `docker/constraints.txt` now pins Pillow 13.0.0 (the full test suite
+      passes with it). **Accepted (confirmed by the owner, 2026-11-09):** four
+      `cryptography` 46.0.7 findings and one `uv` 0.11.33 finding, both held back by `flwr`
+      1.39.0 (`federated` extra, training only); `flwr` 1.43.0 would allow the fixed version but changes the stack behind the
+      committed federated results. **Resolved 2026-11-19:** the owner asked (2026-11-18) for
+      the Critical uv alert and the cryptography alerts to be fixed through the lockfile, with
+      none dismissed. The only lockfile fix found was moving `flwr` to 1.43.0 (Claude's choice
+      of version), which takes cryptography 50.0.2 and uv 0.13.7 and keeps the fastapi,
+      uvicorn and starlette pins. Both accepted entries are gone from
+      `config/pip_audit_ignore.json`, and pip-audit reports no known vulnerability without any
+      exception. The committed federated results were produced with `flwr` 1.39.0. GitHub then
+      listed Dependabot alerts #6 to #10 as fixed (2026-11-19, 04:50 UTC), none dismissed. **Owner:** turn on branch protection for `main` (Settings,
+      Branches) requiring the `quality`, `image` and CodeQL `analyze` checks; the first
+      Dependabot PR appears on its weekly run. **Gap:** Dependabot's Docker updates cover the
+      `FROM` image only, not the torch pin in the Dockerfile's `RUN` line or
+      `docker/constraints.txt`; those still need a manual bump (the Trivy scan reports their
+      vulnerabilities).
+    - **Owner decisions, 2026-11-09:** the `cryptography` and `uv` findings stay accepted until
+      the 2026-12-09 review, and `flwr` is not upgraded. Dependabot's first PRs: #67 (three
+      Actions) merged green; #66 (Python 3.11 to 3.15 in the image) and #68 (33 packages,
+      including `flwr` 1.43.0 and torch without its `+cpu` label) closed. `dependabot.yml` now
+      ignores Python minor and major updates of the image, and gives torch, torchvision, numpy,
+      scikit-learn, `flwr` and MLflow patch updates only (a test checks both rules); the rest
+      of the Python group is merged when its next PR is green. The owner turns on branch
+      protection (`quality`, `image`, `analyze`).
+    - **Dependabot's next Python group (#74, 2026-11-09): not merged, CI red.** `quality`
+      failed at install: pip could not resolve the dependencies (`ResolutionImpossible`),
+      because the PR pins `uvicorn==0.54.0` and `flwr` 1.39.0 (held on purpose) needs
+      `uvicorn<0.50.0`. It also drops the `+cpu` label from torch 2.14.1 in
+      `docker/constraints.txt` (the new test would fail on it; CI stopped before the tests),
+      raises lower bounds by a major version (`mlflow-skinny` 2.16 to 3.18, `duckdb` 1 to 2) and
+      moves the `transformers` pin from 4 to 5, so the patch-only rule did not stop floor raises
+      in `pyproject.toml`. Left open for the owner. Possible fixes: set the pip entry's
+      `versioning-strategy` to `increase-if-necessary` (keeps `>=` floors; exact pins are still
+      bumped), ignore uvicorn minor updates while flwr is held at 1.39.x, and bump torch by hand
+      in both the Dockerfile and the constraints.
+    - **Owner decision, 2026-11-10:** #74 closed; the suggested fixes applied in
+      `dependabot.yml`: `versioning-strategy: increase-if-necessary` for pip, uvicorn patch
+      updates only while flwr is held, and torch and torchvision ignored outright (replacing the
+      2026-11-09 patch-only rule for those two, since even a patch bump drops `+cpu`). A torch
+      bump is a hand change to the Dockerfile and `docker/constraints.txt` together, checked by
+      the `+cpu` test. Tests check all three.
+    - **Done 2026-11-11:** all three checks met. The first Dependabot PR appeared (#66,
+      2026-11-09); CI's self-test step shows pip-audit exits 1 and names the known-vulnerable pin
+      (`requests 2.19.0`, a test fixture), and the main audit step fails the build on any finding
+      not accepted in `config/pip_audit_ignore.json`; and
+      `GET /repos/erjonb19/clinical-drift-monitor/branches/main` returns `"protected": true`
+      with required checks `quality`, `image`, `analyze (actions)` and `analyze (python)`
+      (checked 2026-11-11). **Note:** enforcement is `non_admins`, so the owner's admin account
+      can bypass the checks; including administrators is the owner's setting.
+    - **Dependabot's next Python group (#83, 2026-11-11): held, closed.** `quality` failed at
+      install: it moved fastapi to 0.162.0, and `flwr` 1.39.0 needs fastapi `>=0.138,<0.139`. It
+      also moved the research Phase B stack a major version (`open_clip_torch` 3 to 4,
+      `transformers` 4 to 5). `dependabot.yml` now gives fastapi, `open_clip_torch` and
+      `transformers` patch updates only (a test checks it); the rest of the group comes back on
+      Dependabot's next run.
+
+    - **2026-11-13 (owner):** the five open Dependabot alerts were all transformers 4.57.6 in
+      the `vlm` extra (reached through `app/requirements.txt`'s `-e .`, although the Streamlit
+      app installs only the cohort and demo extras): GHSA-69w3-r845-3855 (Trainer),
+      GHSA-29pf-2h5f-8g72 (remote code execution), GHSA-fgcw-684q-jj6r (LightGlue loading),
+      GHSA-x9r9-c232-4q39 (remote generation code before trust) and GHSA-xrqw-3rrv-vx5w
+      (chat-template path traversal). Pinned to 5.10.1, the first release fixing all five (5.10.0
+      was yanked). Checked offline with open_clip 3.3.0: a 2-layer random-init BERT text tower
+      with BiomedCLIP's pooler, projection and context length and a toy vocabulary loads a
+      4.57.6 state dict strictly under 5.10.1 with identical tokens and embeddings; a review
+      also found a vocab-only BERT tokenizer gives the same ids and an old-layout hub cache
+      still reads. Not checked: the real BiomedCLIP weights and vocabulary (the Hugging Face
+      hub is unreachable from cloud sessions). `databricks/vlm_job.json` still installs the old
+      wheel (with 4.57.6), so the end-to-end check needs a new wheel and job file at the next
+      Databricks deploy (owner). No Dependabot security update came for these alerts (its
+      ignore rules for transformers may be why), so this bump is by hand;
+      `tests/test_supply_chain.py` keeps the pin at or above 5.10.1.
+12. [ ] **A live endpoint** **(ask)**. The free public deploy has been blocked since 2026-10-23
+    (Hugging Face now charges for Docker Spaces; `scripts/deploy_space.py`). Compare, from each
+    vendor's own pages: Databricks Model Serving on Free Edition (Databricks stays central;
+    CPU only, limits to check), and the ONNX export on a small free host such as Render
+    (512 MB; the ONNX model's memory measured first). Write the choice under this item; the
+    owner creates any account.
+    - **Done when:** a public URL answers `/health` and a scoring request, the README says
+      where it runs and its limits (cold starts, quotas), and every request is logged.
+    - **Today:** the API runs only in the CI smoke test and locally.
+
+13. [ ] **A load test and serving benchmark.** Locust or k6 against the API container at 1, 5
+    and 20 concurrent users, reporting p50, p95 and p99 latency, throughput and memory; the
+    same for the ONNX export, and for dynamic int8 quantization if its accuracy on the
+    validation set stays within the gate. A dispatch-only CI job; numbers in
+    `results/phase3/serving/benchmark.json` with the hardware named.
+    - **Done when:** the committed benchmark shows the numbers and names the bottleneck; the
+      README's serving section links it.
+    - **Today:** an ONNX export exists (`results/phase3/onnx/`), not shipped (PyTorch serves);
+      no load test.
+    - **Built 2026-11-09, partly measured:** `scripts/load_test.py` (1, 5 and 20 concurrent
+      users; p50, p95 and p99 latency, throughput, server memory), `scripts/bench_app.py` (the
+      API's own app with the rate limiter opened wide) and the dispatch-only
+      `.github/workflows/benchmark.yml`. **Measured** in this cloud session on the untrained
+      test bundle (one network; the champion runs three), so serving speed only:
+      `results/phase3/serving/benchmark.json`, linked from the README. The machine saturates
+      (throughput flat at about 44 to 53 images a second, latency growing with users); the mechanism and
+      a 5x gap with Phase 3's PyTorch timing are not explained.
+      **Not done:** the champion's numbers (needs its bundle), the ONNX export (failed parity in
+      Phase 3) and int8 quantization (needs the champion's accuracy on validation). Not ticked.
+    - **2026-11-22, the champion measured:** `benchmark.yml` now serves the champion bundle by
+      default (fetched by `scripts/fetch_champion_bundle.py`, SHA-256 checked). "Serving
+      benchmark" run 45074396136 on a 4-CPU GitHub runner, bundle `v2-ensemble-cpu-d7191f4`:
+      p50 158.8, 511.9 and 1,365.2 ms and 5.97, 8.52 and 14.21 images a second at 1, 5 and 20
+      users, server memory up to 1,158 MB; all 600 requests 200
+      (`results/phase3/serving/benchmark_champion.json`, linked from the README). The likely
+      bottleneck is CPU compute for the three networks (throughput up 2.4 times while latency
+      rises 8.6 times; CPU use not measured, so inferred). **Not ticked:** the bottleneck is
+      inferred, not measured, the ONNX export failed parity in Phase 3, and int8 quantization
+      has not been tried (it needs the
+      champion's accuracy on the validation images, which live on Databricks).
+
+14. [ ] **Batch scoring at scale.** Score a large slice of the public ISIC archive (for example
+    50,000 images) on Databricks serverless as a distributed job (Spark with a pandas UDF, or
+    batch inference over Delta), with throughput, cost from the billing table, and the
+    bottleneck found. **(ask)** before the run, with its estimate; respect each image's
+    license.
+    - **Done when:** the run's results file and cost are committed and the README states
+      images per minute and cost per 1,000 images, measured.
+    - **Today:** the monthly job scores about 300 images a month.
+    - **(ask), 2026-11-09, not started:** no estimate is good enough to ask with yet. At Phase
+      3's batch-1 timing (about 93 ms per network per image on serverless CPU, three networks)
+      50,000 images are roughly 4 CPU hours of scoring before any parallelism, and the images
+      themselves (about 2.6 MB each, from one probe download) are on the order of 130 GB through
+      Free Edition's restricted outbound access, whose limits for that volume are unknown. A
+      smaller first slice (for example 5,000 images) would measure both before the owner is
+      asked for the full run.
+    - **Owner decision, 2026-11-10:** measure a 5,000-image slice first.
+
+15. [ ] **Detector quality: time to detect and false alarms.** Staged shifts (labelled staged)
+    of known size and start month, run through the monthly drift test; report how many months
+    each shift takes to detect, and how often the test alarms on months with no shift. Ties
+    the thresholds in item 5 to measured error rates.
+    - **Done when:** a spec committed before the run, the results file, and a README table
+      (shift size, months to detect, false-alarm rate).
+    - **Today:** listed as open in PLAN.md Phase 3; PR #50's 30 scenarios are for the incident
+      report evals (item 8), not for this.
+    - **Spec written 2026-11-09 (not run, (ask)):** `results/phase3/detector_quality/spec.json`:
+      staged blur, brightness, JPEG and age-mix shifts at three sizes and four shares, starting
+      in month 4 of 12-month synthetic sequences (200 repeats each), scored by the shipped
+      detector on CPU like the monthly job; time to detect and false-alarm rate (with a Wilson
+      interval; the months reuse one pool, so it is not a population interval), with a no-shift
+      control, and the post-replay rule's false-alarm rate. Needs a Databricks run: about 2.5
+      CPU hours by Phase 3's batch-1 timing (an estimate), or less batched or on GPU.
+    - **Owner decision, 2026-11-09:** approved, to run on a GitHub Actions runner (dispatch
+      only), not on Databricks.
+    - **Built 2026-11-09 (not run):** `cdm.detector_quality` (the shifts, applied to the exact
+      224 px input the model sees; month draws; each sequence paired with a control that draws
+      the same months with no image altered; time to detect; false-alarm rates with Wilson
+      intervals; the post-replay rule's false-alarm rate), `scripts/detector_quality.py` (fetch
+      by ID from the ISIC Archive, score with the champion bundle on CPU, simulate) and
+      `.github/workflows/detector-quality.yml`. The spec is amended before any run: the runner
+      fetches exactly silver's labelled 3,262 and 3,210 images by ID, and fails on any other
+      count. Tested on synthetic scores (`tests/test_detector_quality.py`). **Waits on:** (1)
+      the champion bundle as a release asset (as item 6 does), and (2) the owner exporting
+      `config/detector_quality_ids.csv` once from Databricks (`isic_id, split`; public IDs only;
+      the query is in the script):
+      `SELECT isic_id, split FROM workspace.cdm.silver_images WHERE role = 'client' AND split
+      IN ('val', 'test') AND label IS NOT NULL ORDER BY split, isic_id`. The workflow fails,
+      saying which is missing, until both exist.
+
+16. [ ] **Shadow scoring.** The challenger scores the same monthly images as the champion
+    without serving them; both scores land in the audit table with the model version, and a
+    monthly comparison is written. The ML version of a canary, before item 3's promotion.
+    - **Done when:** one monthly run writes both models' scores and the comparison file.
+    - **Today:** champion vs challenger is an offline comparison only (item 3).
+    - **Blocked, 2026-11-09:** needs a registered challenger (item 3's GPU run, an (ask)).
+
+17. [ ] **An automated retraining pipeline.** One multi-task Databricks job: a drift alert
+    with labels available starts it; train the challenger, evaluate it against the
+    pre-committed targets, register it (always, with its `model_gen` tag), and end. The
+    `champion` alias moves only through a separate `promote_challenger` job that the owner runs
+    by hand with the registry version and the decision file's SHA-256 (the human approval;
+    wording changed by the owner on 2026-11-09, from "stop for a human approval" inside the one
+    job). **(ask)** before any GPU run.
+    - **Done when:** both job definitions are committed and tested; one run (approved) goes from
+      trigger to a registered version and a decision file, and the alias moves only when the
+      owner runs `promote_challenger`.
+    - **Today:** the retraining loop ran once by hand (2026-10-23).
+    - **Spec written 2026-11-09 (not built):** `docs/specs/item17-retraining-pipeline.md`: one
+      job (trigger check, challenger training, evaluation, decision, then registration of every
+      challenger) and a separate `promote_challenger` job the owner runs by hand with the
+      decision file's hash (**approved by the owner, 2026-11-09**; the item's wording above is
+      updated). About 3 to 4 GPU DBUs a run (an estimate); (ask) before any.
+    - **Built 2026-11-09 (the approval half; not run):** `cdm.promotion.trigger_check` (a month
+      triggers when it alerted and its labels have arrived; on the committed replay, months 7 to
+      11 would) and `cdm.promotion.verify_promotion`, with
+      `databricks/notebooks/promote_challenger.py` and `databricks/promote_challenger_job.json`
+      (no schedule; the owner passes the registry version, the expected current version, the
+      decision file and its SHA-256). It refuses unless that decision's rule promoted and the
+      version was registered from it with a checked serving bundle (tags `decision_sha256` and
+      `serving_bundle_sha256`), then moves the alias through `cdm.registry`, reads it back and
+      logs the move to `gold_model_decisions`. Tested in `tests/test_promotion.py`. **Not built:**
+      the training job's tasks (trigger check, train with checkpoints always kept, evaluate,
+      decide, build and check the serving bundle, register with those tags): they change the
+      GPU notebook `retrain.py` and can only be tried with a GPU run, an (ask). Two departures from the
+      approved spec, re-approved by the owner on 2026-11-10, are listed in the spec's "Changes made while
+      building" section: the decision key stays `promoted`, and the serving bundle is checked
+      before registration rather than rebuilt by `promote_challenger`.
+
+18. [ ] **An input contract for images.** Before scoring, each image is checked: format,
+    resolution, aspect ratio, blur, exposure, and duplicates (perceptual hash); failures are
+    quarantined with a reason, counted per month, and alerted on a spike, in the API and in the
+    monthly job alike.
+    - **Done when:** tests with bad images show each one quarantined with its reason; the
+      monthly results carry the counts.
+    - **Today:** no image quality checks before scoring.
+    - **Built 2026-11-09 (API and library; monthly job not yet):** `cdm.contract` checks format
+      (JPEG or PNG), resolution (shorter side at least 224 px, the model's input), aspect ratio
+      (at most 3:1) and near-duplicates (64-bit difference hash within 4 bits; monthly job only,
+      since the API keeps no hashes); these quarantine with a reason. Blur (Laplacian variance)
+      and exposure (mean brightness, clipped share) are **report-only** until calibrated on real
+      images; their values are guesses. `month_counts` gives counts per reason and a spike flag
+      (over 10% quarantined). The API returns 422 with the reason, counts `quarantined` in
+      `/health`, and returns `input_flags`; tested in `tests/test_contract.py` and
+      `tests/test_api.py` on synthetic images. **Not done:** the monthly job does not run the
+      contract yet (it belongs with the post-month-12 scoring wiring), so no monthly counts
+      exist; blur and exposure need calibrating (16-bit
+      PNGs, for one, read as heavily clipped). Decompression bombs (over the 50M-pixel limit)
+      are unreadable (400), as before; the check runs off the event loop and computes no hash
+      in the API; flat images hash to zero and are never matched as duplicates.
+    - **Owner decision, 2026-11-09:** the contract's thresholds are accepted; blur and exposure
+      stay report-only until calibrated on real images.
+
+19. [ ] **Least-privilege access.** The watchdog's service principal (item 1) can view one job
+    and nothing else, with the `users` group's default grants checked and removed; the
+    scoring job runs as its own principal, not as the owner; the API takes per-client keys
+    with a request log. **(ask)** before creating any principal (the owner creates them).
+    - **Done when:** a committed grants report shows each principal's rights, and a test
+      shows the API refuses a missing or revoked key.
+    - **Today:** jobs run as the owner; the API has no authentication.
+
+20. [ ] **Drift results through the governed clinical agent** **(ask: touches the other
+    repo)**. After that repo's item 22, the monthly drift tables become a read-only data
+    source there, so a person can ask in plain English which month and which site drifted,
+    through its guard.
+    - **Done when:** one question about a drift month answers correctly from the other repo.
+
+21. [x] **Showcase.** A one-page `docs/ARCHITECTURE.md` (one diagram; how it scales and where
+    it breaks, using items 13 to 15's numbers), the README refreshed results-first (an open
+    Phase 5 item), `docker compose up` as the one-command demo (also open in Phase 5), and a
+    three-minute walkthrough script for the owner to record.
+    - **Done when:** all four exist and the README links them.
+    - **2026-11-11, three of four built:** `docs/ARCHITECTURE.md` (#118: one diagram with planned
+      and hand-run steps dashed; item 13's measured numbers; items 14 and 15 named as not yet
+      measured), the README's "Results at a glance" (#121) and `docs/walkthrough.md` (#120),
+      linked from the README. **Not built:** `docker compose up` with a sample batch that trips
+      the drift alarm. A drift alarm from the untrained CI bundle would mean nothing, so it waits
+      for the champion bundle as a release asset (owner), like items 6, 13 and 15.
+    - **2026-11-14, built, waiting on the champion bundle:**
+      - `compose.yaml` runs the API and a demo client (`cdm.compose_demo`) beside it. The client
+        scores two fixed batches through the API and runs the pre-registered drift test on
+        their OOD scores.
+      - The reference batch is the smoke test's 50 test-split images. The shifted batch is 50
+        PAD-UFES-20 smartphone photos (`config/compose_demo_shift_images.csv`, collection 406).
+      - That file was written by `scripts/make_smoke_manifest.py --collection 406` on a GitHub
+        runner and copied from the run's log. All 100 images' SHA-256 values were then checked
+        against fresh downloads, and every image is checked again on each demo run.
+      - The script's first version used ISIC's plain image list, which ignores `collections`:
+        it returned a dermoscopic image (ISIC_0000000). Its clinical-photo check stopped the
+        run, and it now uses the search endpoint, as the ingest does.
+      - The thresholds were set for 300 images a month against the validation baseline; here
+        they are applied to 50 against 50, so the result is a demonstration, not a measurement.
+      - `scripts/fetch_champion_bundle.py` takes the bundle only from this repository's
+        releases, with the configured SHA-256.
+      - The API's rate limits can now be raised from the environment for the local demo
+        (`API_RATE_PER_CLIENT`, `API_RATE_TOTAL`). The defaults are unchanged, and a bad value
+        stops the API at startup.
+      - The "Compose demo" workflow ran `docker compose up` end to end on a runner (run
+        43537650980, repeated on the PR's final commit by run 43539072535). It used the untrained CI
+        bundle, whose scores gave the two batches identical distributions (KS statistic 0 and
+        PSI 0), so its "no alarm" means nothing and the run says so.
+    - **Done 2026-11-18:** with the champion bundle, `docker compose up` on a GitHub runner
+      (Compose demo run 44241541700) tripped the drift alarm: KS p = 1.41e-13, PSI = 7.66;
+      the API abstained on 38% of the PAD-UFES-20 batch and none of the reference batch
+      (`results/phase3/compose_demo/champion_2026-11-18.json`). Two 50-image batches compared
+      with each other, so a demonstration, not a measurement; this PSI is not comparable with
+      the monthly job's. All four parts exist and the README links them.
+
+22. [x] **Security audit against `docs/SECURITY_STANDARDS.md`** (owner, 2026-11-09). Plan only, change no code. Audit the repo against Section 19.3 of `docs/SECURITY_STANDARDS.md` and every section that applies to this stack, and report each gap in the file's SEVERITY format. Add one backlog item per gap, numbered after this one, with anything Critical (CVSS 9+) first in the Order of work. Propose a `.claude/settings.json` from Section 17.2, tailored so unattended runs don't stall: keep the deny list, and explain each change to the ask list. Check every vendor-specific setting (npm, uv, GitHub, Claude Code permission syntax) against the vendor's current docs before proposing it. One docs-only PR, which the owner reviews and merges himself (security decisions are his). Include Section 4.5: model checkpoints loaded with pickle (torch.load) should use `weights_only=True` or safetensors.
+    - **Done 2026-11-10:** `docs/security-audit-2026-11-10.md`: no Critical or High finding, no
+      secret in the tree or in any commit's history (414 counted); 5 Medium and 27 Low findings, each in
+      the SEVERITY format, with items 23 to 47 below; a proposed `.claude/settings.json`
+      (not added); the Section 4.5 `torch.load` call sites (item 31). The owner places the new
+      items when he merges the audit's PR.
+
+**Items from the security audit (2026-11-10).** None is Critical, so none goes first; the owner
+places them. Each names its finding in `docs/security-audit-2026-11-10.md`. "(owner)" marks a
+change only the owner can make (repository settings, accounts, consoles).
+
+23. [ ] **Add `.claude/settings.json`** from the audit's proposal, after the owner's review.
+    - **Done when:** the file is committed and a cloud session's `/permissions` lists its rules;
+      `ruff check .` runs without a prompt, `curl -X POST` and a push to `main` are denied.
+    - **2026-11-11:** the audit's proposal plus the `-q` push forms and a small read-only set
+      (`ls`, `cat`, `grep`, `sed -n` and similar). The owner reviewed it and asked for denies on
+      `cat`, `grep`, `head` and `tail` naming a `.env` file, and on `find` with `-delete` or
+      `-exec`; added (with `-execdir`, `-ok`, `-okdir`, `-fprint` and `-fls`), with a test. **Not
+      ticked:** the "Done when" check (a cloud session's `/permissions` lists the rules, and
+      `ruff check .` runs while `curl -X POST` and a push to `main` are refused) needs a new
+      session started after the merge. **Known limits:** a Bash rule matches the command's
+      text, so a read that never names the file (`grep -r KEY .`, a glob such as `cat .e*`, or
+      a script) is not caught; the `Read(...)` denies also cover `cat`, `head`, `tail`, `sed`
+      and `tee` and `<` redirects naming the file, but not `grep`. The `.env` rules also deny
+      names such as `.envrc` and `.env.example` (fail closed). And under
+      `dontAsk` it still denies much of what an unattended session does (tests through a venv
+      path or with `PYTHONPATH=...`, `python3` one-liners, `cd`), so try it in a watched
+      session first.
+    - **2026-11-18 (owner, S9):** `/permissions` in a fresh laptop session shows the deny list
+      loaded: `rm -rf` and `rm -fr`, `.env` reads (`grep`, `head`, `printenv`), `find -delete`
+      and `-exec`, `sudo`, and pushes to `main`. **Not ticked:** the "Done when" also asks for
+      a cloud session's `/permissions`, `ruff check .` running without a prompt, and `curl -X
+      POST` being denied, which were not reported.
+    - **2026-11-19, cloud session checks (Claude):** `ruff check .` ran without a prompt and
+      passed. `curl -sS -m 3 -o /dev/null http://127.0.0.1:9/ -X POST` was denied, but
+      `curl -X POST -sS -m 3 -o /dev/null http://127.0.0.1:9/` was **allowed**: it ran and only
+      failed to connect (nothing listens on that local port). Every curl and `gh api` write
+      rule has the form `Bash(curl * -X *)`, which needs some text between `curl` and the flag,
+      so a command that starts with the flag is not matched. **Not ticked:** the `curl -X POST`
+      check fails until flag-first rules are added. Proposed: `Bash(curl -X*)`,
+      `Bash(curl --request*)`, `Bash(curl -d*)`, `Bash(curl --data*)`, `Bash(curl -F*)`,
+      `Bash(curl --form*)`, `Bash(curl -T*)`, `Bash(curl --upload-file*)`, `Bash(curl --json*)`,
+      with no space before the final `*` so that `curl -XPOST` and `curl --request=POST` are
+      caught too. The existing flag-later rules (`Bash(curl * -X *)`) also miss `-XPOST`, so
+      each gets a no-space twin as well (`Bash(curl * -X*)`, and so on). The same applies to
+      `gh api` (`-X`, `--method`, `-f`, `-F`, `--input`, `--field`, `--raw-field`). The test
+      would check that a plain `curl -sS <url>` GET stays allowed. That is a
+      `.claude/settings.json` change, which needs the owner's approval; writing it was refused
+      in this session. The owner's report of this session's `/permissions` (2026-11-19) held an
+      unfilled placeholder, so that part is not reported either.
+    - **2026-11-20:** the owner approved the rules in chat (S13). They are added to
+      `.claude/settings.json` (31 rules: a flag-first and a no-space twin for each curl and
+      `gh api` write rule), with `test_curl_and_gh_api_writes_are_denied_whatever_the_flag_position`.
+      The owner merges that PR; then a new cloud session's `/permissions` and a re-run of the POST
+      check (against a local port) decide the tick.
+      **Not covered (found in review):** combined short flags (`curl -sX POST`, `curl -sd a=1`,
+      `curl -sSF x=1`, `gh api -iX POST`) and quoted flags (`curl "-X" POST`). The gap was there
+      before these rules too, and a glob that caught it (`curl *-d*`) would also deny ordinary URLs
+      such as `/my-data`. These rules are a guard against mistakes, not a security boundary; the
+      container and its network proxy are (SECURITY_STANDARDS 17.1). `curl --request-target` is
+      denied as a side effect (it fails closed).
+24. [x] **Branch protection on `main`** (owner, Medium): a ruleset requiring a PR and the
+    `quality`, `image` and CodeQL `analyze` checks; no force-push or deletion.
+    - **Done when:** `GET /repos/erjonb19/clinical-drift-monitor/branches/main` says
+      `"protected": true` (as item 11 already asks).
+    - **Done 2026-11-11 (owner):** turned on, requiring `quality`, `image` and both CodeQL
+      `analyze` checks.
+25. [x] **Secret scanning before commit and in CI** (Medium): `.pre-commit-config.yaml` with
+    gitleaks pinned; a CI job scanning full history (action pinned by SHA, `contents: read`).
+    - **Done when:** a planted fake key fails the CI job, and the job is green on the real repo.
+    - **Done 2026-11-11:** `.github/workflows/secrets.yml` runs gitleaks 8.30.1 (a release from
+      2026-03-12, its tarball checked against the published SHA-256; no third-party action) over
+      the full history on every push and pull request. A self-test step commits a fake AWS key,
+      made at run time, to a scratch repo and fails unless gitleaks exits 1. The real scan uses
+      gitleaks' default rules plus one allowlist (`.gitleaks.toml`): the `run_key` UUIDs in
+      `results/phase3/costs/job_costs.json`, Databricks pipeline-update IDs that the generic
+      rule flagged 24 times, matched by path and line together. Locally: no leaks in 354
+      commits. `.pre-commit-config.yaml` pins the same version by commit for the owner's
+      laptop (`pre-commit install`). **Owner:** add the `gitleaks` check to the required checks
+      on `main`. **Done (owner, 2026-11-14):** `gitleaks` is a required check on `main`.
+26. [ ] **Locked, hashed, cooled-down Python installs** (Medium; a new tool, uv, needs the
+    owner's OK first): `uv.lock`, `exclude-newer = "7 days"`, `uv sync --locked` in every
+    workflow, hashed exports for Docker and the Streamlit app.
+    - **Done when:** CI and the app install only from the lock or hashes, and a test fails if a
+      workflow installs without them.
+    - **Blocked (2026-11-11):** uv is approved (owner, 2026-11-11), but the lock cannot be
+      built from this cloud session: its network proxy returns 403 for `download.pytorch.org`,
+      where the CPU torch and torchvision wheels come from, so `uv lock` cannot resolve them.
+      Unblock: allow that host in the cloud environment's network settings, or run `uv lock` on
+      the laptop and commit `uv.lock`.
+    - **2026-11-13, CI part built:** the owner allowed `download.pytorch.org` (its wheels are
+      served from `download-r2.pytorch.org`, also allowed). `uv.lock` is committed
+      (`exclude-newer = "7 days"`, torch 2.14.0+cpu and torchvision 0.29.0 from the PyTorch CPU
+      index). The four workflows that install Python packages (ci, docker, benchmark,
+      detector-quality) use `uv sync --locked --no-python-downloads` (uv 0.13.7, pinned by
+      version and release SHA-256; uv before 0.13.4 trusts a compromised root CA,
+      GHSA-hq85-5cpj-mr62), and pip-audit runs from a locked `audit` dependency group.
+      `test_workflows_install_only_from_the_lock_or_hashes` fails on the other install commands
+      it knows (pip without hashes, uv without `--locked`, `uvx`, `uv tool`, `--with`,
+      `curl | sh`), and on a bare `uv` once `.venv/bin` is on PATH: flwr installs its own older
+      uv there, so CI's audit step calls the pinned binary by path and checks its version.
+      **Gap:** the project's own build backend (setuptools) is pinned by version
+      (`build-constraint-dependencies`) but not hash-checked, since uv does not lock build
+      dependencies. Dependabot now uses its `uv` ecosystem, which is expected to re-lock
+      `uv.lock` with each update so `--locked` accepts its PRs; not yet seen on a real
+      Dependabot PR. **First Dependabot `uv` run (2026-11-13, on `main` after #131):** both of its
+      update jobs reported errors. The security-update job cannot move `cryptography` or `uv`,
+      because flwr 1.39 pins both (`dependency_file_not_resolvable`): these are the findings
+      already accepted in `config/pip_audit_ignore.json`, so that job will show red until flwr
+      moves. The version-update job closed the old pip-ecosystem group PR as "no longer
+      possible" and failed on `transformers` and `starlette` with `unknown_error` and no detail;
+      its full log is on a host the cloud session cannot reach (owner: Insights, Dependency
+      graph, Dependabot, the `uv` job's log). **Not ticked yet:** the Streamlit app's hashed requirements
+      come in a separate PR that the owner merges, because merging it redeploys the live demo;
+      the Docker image is item 27.
+27. [x] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
+    torch wheels), `--require-hashes --no-deps`, pinned build backend.
+    - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.
+    - **Blocked (2026-11-11):** the hashed requirements need the `+cpu` torch wheels' hashes
+      from `download.pytorch.org`, which this session's proxy refuses (403); same unblock as
+      item 26, which it follows.
+    - **2026-11-11:** the image's Debian layer is now reproducible (#116: packages from fixed
+      snapshot.debian.org imports); the pip layers still wait for `download.pytorch.org`, which
+      the owner is allowing in the cloud environment's network settings.
+    - **2026-11-13, built:** every Python package in the image comes from
+      `docker/requirements.txt`, exported from `uv.lock` with hashes (`--extra api --group
+      image`: the API's packages, scikit-learn and the `+cpu` torch and torchvision wheels).
+      pip installs it with `--require-hashes --no-deps --only-binary=:all:`, PyPI and the PyTorch
+      CPU index (the hashes decide which file is accepted), then `pip check`. The project is built offline
+      (`--no-build-isolation --no-index`) with the hashed setuptools 84.2.1 from that file; the
+      build backend and wheel are then removed. `docker/constraints.txt` is gone.
+      `test_the_image_installs_only_hashed_packages_from_the_lock` fails if the file drifts from
+      `uv export`, or if either install loses its flags. Built locally (with a scratch copy of
+      the Dockerfile that adds this session's proxy CA, not committed): `/health` and
+      `/predict` answer on the untrained test bundle, torch is `2.14.0+cpu`, and setuptools and
+      wheel are gone. **Known cost:** Dependabot's `uv` updates re-lock `uv.lock` but not this
+      export, so a Dependabot PR that moves an image package fails that test until the file
+      is re-exported (the command is in its header). Trivy: CI's image job.
+    - **Done 2026-11-13 (#131):** CI's image job built the image with `--require-hashes` and
+      its Trivy step passed, on #131's final commit and on `main` after the merge.
+
+28. [x] **Read-only token in `ci.yml`** (Medium): `permissions: contents: read`,
+    `persist-credentials: false`; the repository default set to read-only (owner).
+    - **Done when:** every workflow declares its permissions, checked by a test.
+    - **Done 2026-11-11:** `ci.yml` now sets `permissions: contents: read` like the other five
+      workflows, every checkout sets `persist-credentials: false`, and
+      `tests/test_supply_chain.py` fails if a workflow lacks a top-level `contents: read` block or
+      a checkout keeps its credentials (checked by removing the block from `ci.yml`). **Owner:**
+      the repository's default workflow permission (Settings, Actions, General) should be
+      read-only; it cannot be read without admin access. **Done (owner, 2026-11-14):** the
+      default workflow token is read-only.
+29. [x] **Refuse 50 to 100 megapixel images** (silent failure #16): treat Pillow's
+    `DecompressionBombWarning` as unreadable, or cap `img.size` before decoding.
+    - **Done when:** a 60-megapixel PNG gets a 400 from the API and `unreadable` from the
+      contract, in tests.
+    - **Done 2026-11-11:** `cdm.contract.open_image` refuses any image over 50 megapixels from
+      its header, before decoding; the contract check and `Service.predict` both use it (a size
+      check rather than a warnings filter, which would be process-wide and not thread-safe in
+      the API's thread pool). Tests in `tests/test_contract.py`, `tests/test_api.py` and
+      `tests/test_serving.py`; silent failure #16 now names this check.
+30. [x] **Open uploads with JPEG and PNG decoders only** (`Image.open(..., formats=...)`).
+    - **Done when:** a TIFF or ICO upload is refused before any decoder other than JPEG or PNG
+      runs, in tests.
+    - **Done 2026-11-11:** `contract.open_image` passes `formats=` to `Image.open` (the
+      contract's `formats` in the check; JPEG and PNG in serving), so no other plugin parses an
+      upload. A refused image's format is named from Pillow's prefix checks, which compare magic
+      bytes and decode nothing, so a GIF, TIFF or ICO still gets `format: <name>` and a 422.
+      Changes from before: a refused image now gets the format reason only (no resolution
+      reason), a multi-picture JPEG (MPO) is refused from its header before any pixel is
+      decoded, and a non-image whose first bytes happen to match another format's magic (for
+      example text starting `P5`) is named as that format (422) instead of unreadable (400).
+      `tests/test_contract.py` spies on the TIFF, ICO, BMP and GIF decoders (none is called)
+      and on `load()` for an MPO. The ISIC ingestion paths (`cdm.images`, silver, gold) still
+      open files with every plugin; they read the archive's files, not uploads.
+31. [x] **`torch.load(..., weights_only=True)` everywhere; floor `torch>=2.6`** (Section 4.5;
+    the call sites are listed in the audit).
+    - **Done when:** a test fails on any `torch.load(` without `weights_only=True`.
+    - **Done 2026-11-11:** all 18 calls pass `weights_only=True` (each loads a plain
+      `state_dict`; 15 are in notebooks or a script that only run on Databricks or the owner's
+      laptop, converted by their call shape and not run here, and the other 3 run in the test
+      suite); the floor is
+      `torch>=2.6` in `pyproject.toml` and the seven job files. `tests/test_weights_only.py`
+      parses `src`, `scripts`, `tests`, `app` and the notebooks and fails on any `torch.load`
+      without a literal `weights_only=True` (aliases included), with a planted-call self-test.
+      Safetensors for the bundle stays a later option.
+32. [x] **Bundle manifest must cover every checkpoint and detector**; reject path-like names.
+    - **Done when:** a bundle whose manifest omits a checkpoint fails `Service.load`, in tests.
+    - **Done 2026-11-11:** `cdm.bundle.check_manifest` refuses a seed whose checkpoint or
+      detector is not a key of the manifest's `sha256` map, any bundle name that is not a plain
+      file name (`/`, `\`, `.`, `..` or empty), and a manifest with no seeds. `Service.load`
+      runs it before reading any bundle file other than `manifest.json`, and
+      `scripts/deploy_space.py` runs it before upload, so the deploy check and the Space agree.
+      `tests/test_serving.py` covers a map missing the checkpoint or the detector, six
+      path-like names (in a seed and in the map), no seeds, the deploy check, and a complete
+      bundle still loading. The real builder (`databricks/notebooks/serving_bundle.py`) and
+      `scripts/make_test_bundle.py` already list every file with plain names, so existing
+      bundles load unchanged. `manifest.json` itself is not hashed: the optional pinned
+      manifest hash from configuration is not done.
+33. [x] **Checksum the CIFAR-10 files before unpickling** (`scripts/build_benchmarks.py`).
+    - **Done when:** a changed CIFAR file is refused before `pickle.load`.
+    - **Done 2026-11-11:** each batch file's MD5 is checked against torchvision's published
+      list before `pickle.loads`; `tests/test_build_benchmarks.py` shows a planted pickle is
+      refused without running and an unknown file name is refused. The benchmark build itself
+      was not rerun here.
+34. [x] **Pin GitHub's own actions by SHA**; drop the test's owner exemption.
+    - **Done when:** `tests/test_supply_chain.py` requires a SHA for every `uses:`.
+    - **Done 2026-11-11:** every `actions/checkout`, `actions/setup-python` and
+      `actions/upload-artifact` in the seven workflows is pinned to the commit its `v7` tag
+      pointed to on 2026-11-11 (read with `git ls-remote`: checkout v7.0.1, setup-python
+      v7.1.0, upload-artifact v7.0.2), with the release in a comment for Dependabot.
+      `test_every_action_is_pinned_to_a_commit` replaces the test that let `actions/*` and
+      `github/*` use tags; it requires a 40-character SHA and a `# v...` comment on every
+      `uses:` (checked by putting a tag back).
+35. [x] **Pin the Docker base image by digest.**
+    - **Done when:** the `FROM` line carries `@sha256:` and Dependabot updates it.
+    - **Done 2026-11-11:** `FROM python:3.11.17-slim@sha256:b7a9e5f6…` (the multi-platform
+      index digest, read from Docker Hub's registry on 2026-11-11); `.github/dependabot.yml`'s
+      docker entry updates digests along with tags (its Python minor and major ignore stays),
+      and `tests/test_supply_chain.py` fails if any `FROM` lacks a digest.
+36. [x] **Turn on ruff's `S` rules**, fixing or justifying each hit.
+    - **Done when:** `ruff check .` passes with `S` selected.
+    - **Done 2026-11-11:** `S` is selected in `pyproject.toml`; `ruff check .` passes. Fixed: 16
+      `assert`s outside tests and notebooks became explicit `raise`s (several were data
+      integrity checks that `python -O` would have skipped), and the three MD5 checksums of
+      published files say `usedforsecurity=False`. Accepted, each with its reason in
+      `pyproject.toml`: argument-list subprocess calls (S603, S607; `shell=True` stays
+      flagged); asserts in tests and in Databricks notebooks (never run under `-O`); SQL built
+      from repository constants or the owner's own CLI arguments in eight named files; `urlopen` on fixed hosts in six named
+      files, and on URLs returned by the ISIC API in four (restricting those to the ISIC host is
+      item 47).
+37. [x] **zizmor on workflow changes.**
+    - **Done when:** a zizmor job runs on `.github/workflows/**` and passes.
+    - **2026-11-11 (owner approved zizmor):** `.github/workflows/zizmor.yml` installs zizmor
+      1.32.0 (released 2026-11-02) by its manylinux wheel's SHA-256, checks that it flags a
+      planted template-injection workflow, then audits `.github/workflows/` offline; it runs on
+      any push or PR that changes a workflow. Locally it finds nothing in the eight workflows
+      (its own self-test first tripped it: a planted `${{ }}` in a `run:` block would really
+      be expanded, so the planted line is now assembled at run time).
+      `tests/test_supply_chain.py` checks the pin, the hash and the self-test. The job passed
+      in CI on PR #115 (self-test, then no findings). Dependabot does not update this pin;
+      bump it by hand.
+38. [x] **Dependabot cooldown** (`cooldown: default-days: 7` per ecosystem).
+    - **Done when:** each ecosystem has a cooldown, checked by a test.
+    - **Done 2026-11-11:** pip, docker and github-actions each have `cooldown: default-days: 7`
+      in `.github/dependabot.yml`; `tests/test_supply_chain.py` fails if an ecosystem loses it or
+      goes under 7 days. GitHub applies a cooldown to version updates only, so security updates
+      still open at once. GitHub's default is a 3-day cooldown, so this raises it to 7. The file
+      parses with `yaml.safe_load`; Dependabot validates it again once it is on main.
+39. [x] **Trivy fails on fixable HIGH as well as CRITICAL.**
+    - **Done when:** the scan uses `CRITICAL,HIGH` and passes (accepted findings in
+      `.trivyignore` with reasons).
+    - **Done 2026-11-11:** `docker.yml` scans with `severity: CRITICAL,HIGH` (still
+      `ignore-unfixed`), and `tests/test_supply_chain.py` checks it. The first HIGH scan found
+      two fixable findings, jaraco.context 5.3.0 (CVE-2026-23949) and wheel 0.45.1
+      (CVE-2026-24049), read from package METADATA. They match the copies the base image's
+      setuptools vendors (not checked inside the image here). Nothing in the API imports
+      setuptools at run time, so the Dockerfile uninstalls setuptools and wheel after the
+      installs; the image's smoke test still calls `/predict`. The next scan found three more
+      fixable HIGHs in the Debian layer (apt and libapt-pkg CVE-2026-109518, zlib1g
+      CVE-2026-76844 and CVE-2026-85091), so the Dockerfile now runs `apt-get upgrade` before
+      the installs. That fetches Debian's current security packages at build time, so two
+      builds from the same pinned base (item 35) can differ in those packages. The CI run's
+      Trivy result is the check. `.trivyignore` stays empty.
+    - **2026-11-11 (owner: keep builds reproducible):** the `apt-get upgrade` now reads from
+      `snapshot.debian.org` at fixed imports (`debian` 20261111T083534Z, `debian-security`
+      20261111T085431Z, over https) instead of the moving mirror, so every build of the same
+      Dockerfile installs the same Debian packages (the pip layers are item 27); the build
+      stops if any apt source still points at `deb.debian.org`. A newer
+      base alone was not enough: `python:3.11.18-slim` has the fixed apt but not the fixed
+      zlib1g (read from its registry layers). Raise the timestamp and the base digest together.
+40. [x] **`.gitignore` covers Section 3.1's secret and state files.**
+    - **Done when:** `git check-ignore` matches `.env.local`, `x.pem`, `x.key`, `x.p12`,
+      `secrets/a` and `.databrickscfg`, checked by a test.
+    - **Done 2026-11-11:** `.gitignore` adds `.env.*` (except `.env.example`), `*.pem`, `*.key`,
+      `*.p12`, `*.pfx`, Terraform state, `secrets/`, credential and service-account JSON and
+      `.databrickscfg`; no tracked file matches them. `tests/test_gitignore.py` checks each with
+      `git check-ignore`, and that `.env.example` stays committable.
+41. [x] **`.env.example`** with variable names and placeholders only.
+    - **Done when:** it exists and lists every environment variable the code reads.
+    - **Done 2026-11-11:** `.env.example` names the nine variables the code reads: the Haiku
+      key and the watchdog's three Databricks values as empty names, and the data and notes
+      folders, the tier-2 switch, and the API's bundle folder and proxy hops commented out with
+      their defaults (an empty value would override a default; an empty `TRUSTED_PROXY_HOPS`
+      would stop the API). `tests/test_env_example.py` scans `src`, `scripts` and `app` for
+      `os.environ` reads and fails on any unlisted name or any filled-in value.
+42. [x] **Private vulnerability reporting** (owner turns it on) and a `SECURITY.md` pointing to
+    it, with no personal email.
+    - **Done when:** both exist.
+    - **Done 2026-11-11:** private vulnerability reporting is on (owner; `GET
+      /repos/erjonb19/clinical-drift-monitor/private-vulnerability-reporting` returns
+      `"enabled": true`), and `SECURITY.md` points to it, states the scope (the Streamlit demo
+      is the only public deployment; the API is not deployed; public data only) and publishes
+      no email address, which `tests/test_security_md.py` checks.
+43. [x] **Dependabot alerts and security updates on** (owner).
+    - **Done when:** the repository's security settings show both enabled.
+    - **Done 2026-11-11 (owner):** Dependabot security updates (grouped) and malware alerts on
+      (`security_and_analysis.dependabot_security_updates: enabled`, checked through the API).
+      Dependabot (vulnerability) alerts are on because GitHub enables security updates only
+      when alerts are on; the owner named security updates and malware alerts, not alerts.
+44. [x] **API hardening before any deploy:** security headers, `openapi_url=None`, response
+    models, and structured security-event logging with no address or body.
+    - **Done when:** tests check the headers, the absent schema, the response models and one
+      logged rejection.
+    - **Done 2026-11-11:** `app/api/main.py` adds a middleware that puts security headers on
+      every response the app builds (Starlette's plain-text 500 page is outside it): a CSP with
+      no default sources, scripts only by the page script's hash and no framing, plus
+      `nosniff`, `X-Frame-Options: DENY`, a Referrer-Policy and a Permissions-Policy. The
+      OpenAPI schema is off. `/predict` and `/health` have Pydantic response models, so extra
+      fields are dropped. Each refusal logs one JSON line (`cdm.api.security`) with a UTC time,
+      a fresh request id, the outcome and a reason code. Three new tests in `tests/test_api.py`
+      cover the headers on the page, JSON, refusals and 404s; the hash matching the page; the
+      missing schema and dropped fields; and two logged refusals with no address or body in the
+      log. HSTS is left to the host at deploy. The API is still not deployed, and the deployed
+      Streamlit demo is untouched.
+45. [x] **The Haiku cap fails closed:** a Console spend limit on the key (owner); refuse when
+    the spend log is missing after spending began; date the price constant.
+    - **Done when:** a test shows a missing log refuses a call, and the Console limit is noted.
+    - **Done 2026-11-11:** `SpendLog` keeps a high-water mark beside the log
+      (`~/.cdm/llm_spend.jsonl.high_water.json`), raised on every recorded call; once spending
+      has begun, a missing log or one recording less than the mark refuses every call
+      (`tests/test_extract.py`). The price constant carries the date it was last matched
+      (`PRICE_CHECKED`, 2026-11-11: $0.10 and $0.50 per million tokens for `claude-haiku-5-5`,
+      from the Claude API reference's model table). **Owner:** a spend limit on this key in the
+      Anthropic Console is the real backstop. **Set (owner, 2026-11-13):** the key was rotated
+      into a clinical-drift-monitor workspace with a Console spend limit, and the old key deleted.
+      Limits: deleting the log and its mark together still resets the client-side count, and a
+      log that predates this change has no mark until its next call.
+46. [x] **Neutralise formulas in the G5 CSV error sheets.**
+    - **Done when:** a cell starting with `=` is written with a leading `'`, in tests.
+    - **Done 2026-11-11:** `cdm.extract.spreadsheet_safe_frame` prefixes `'` to any text cell
+      starting with `=`, `+`, `-`, `@`, a tab or a carriage return, leaving numeric columns
+      unchanged; `scripts/extraction.py` writes `errors.csv` through it. The predictions CSV
+      stays raw, because scoring reads it back and a prefix would turn a valid reply with
+      leading whitespace into an invalid one (a test checks it still scores).
+      Tests in `tests/test_extract.py`, including an end-to-end run with no network or model
+      call.
+47. [x] **Public demo hardening:** DuckDB external access off and locked, error details hidden,
+    temporary folders cleaned, a per-session cap on definitions, and the ISIC client restricted
+    to its own host with a byte cap.
+    - **Done when:** tests cover each, and the deployed demo is redeployed (owner).
+    - **Built 2026-11-11, waiting on the owner's redeploy:** the demo's DuckDB connection has
+      external access off and its configuration locked (`read_csv`, `ATTACH`, `COPY` and
+      re-enabling all fail, in tests); `.streamlit/config.toml` hides error details and the
+      page shows a generic message for fetch and load errors; a session's scratch folder is a
+      temporary directory removed with the session, and a session may hold at most 50
+      definitions; the ISIC client follows `next` only on https to its own host and caps
+      response bodies (20 MB for JSON, 100 MB for images). Tests in `tests/test_cohort.py`,
+      `tests/test_demo.py` and `tests/test_sources.py`. **Owner:** redeploy the Streamlit app
+      (Community Cloud picks up `main` on reboot), then tick this item.
+    - **Done 2026-11-13:** the owner rebooted the demo, which is set to deploy `main` (per the
+      note above), where the hardening merged in #98 on 2026-11-11. The tests above pass on
+      `main`. The live page was not checked from the cloud session (its network proxy refuses
+      the demo's host); how to check it is in `docs/PROGRESS.md`.
+
+## Later (kept, not started)
+
+- Abstain and risk-coverage analysis (referral workload vs accuracy and melanoma sensitivity).
+  *Note:* a validation risk-coverage curve and the abstain threshold were already built in
+  Phase 3 (`results/phase3/serving/results.json`).
+- A more prominent CMS readmission drift model. *Note:* deferred on 2026-10-23, because no
+  monthly history of the CMS data exists yet.
+- The research informatics extensions: OMOP and SNOMED CT mapping, a vision-language baseline,
+  subgroup evaluation, interpretability and human review, multimodal fusion. *Note:* Phases A
+  to E are built. F is a draft waiting for the owner's review. In G, G5 and G6 are ticked in
+  PLAN.md but filed under Scaffolded in BUILT_VS_PLANNED, and G1 to G4 are open. See
+  `docs/BUILT_VS_PLANNED.md` and PLAN.md.
+
+- Saved ideas. *From the "Portfolio project upgrade stages" chat (Oct 25 to Nov 3, 2026), saved by the owner on 2026-11-17 before that chat was deleted. Ideas, not commitments: none is in the Order of work, and each needs the owner's OK before it starts.*
+  - An MCP server for the monitor, with optional multi-agent detection, analysis and reporting
+    (proposed Oct 14).
+  - A drift-alert incident agent: an alert triggers a drafted 8D report and a proposed action
+    under `docs/change-control-plan.md`, which a person signs off. *Note:* overlaps the Phase 4
+    report generator and review queue in the next section.
+  - Equity alerts (per Fitzpatrick type) routed to a reviewer queue.
+  - *Already built, so not listed:* the change-control plan (PCCP), the CHAI-aligned model card
+    and the technical report (`docs/report/report.tex`).
+
+## Open from PLAN.md, not placed (owner to decide)
+
+These were open in PLAN.md and are not in the list above. They stay here until the owner adds
+them to the list or drops them.
+
+- Recompute the gold embeddings and baseline score distributions with the registered model (a
+  Phase 2 item moved to Phase 3).
+- Phase 3: CPU batch-level drift, staged shifts scored for time to detect and false-alarm rate,
+  `diagnosis_confirm_type` in bronze and silver, and the free public API deploy (blocked by
+  free hosting limits, 2026-10-23).
+- Phase 4: the report generator, groundedness check, eval harness, human review queue and
+  manual live-eval workflow (item 8 needs most of these).
+- Phase 5: the one-command demo (`docker compose up`), the 8D runbook, the README refresh
+  (results first), the standards-alignment document, the "structured after, not compliant
+  with" check across the standards documents, and the optional demo recording.
+- Research: Phase F (the cohort contract, a draft waiting for review) and G1 to G4.

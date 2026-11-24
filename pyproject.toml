@@ -20,14 +20,14 @@ dependencies = [
 # Training, OOD scoring and the gold embeddings task.
 train = [
     # CI and local dev install the CPU wheels from download.pytorch.org.
-    "torch>=2.4",
+    "torch>=2.6",
     "torchvision>=0.19",
     # 3.x is the release that serves the native 224px MedMNIST+ files.
     "medmnist>=3.0",
 ]
 # Federated training (cdm.federated): Flower's FedAvg and FedProx strategies.
 federated = [
-    "flwr==1.39.0",
+    "flwr==1.43.0",
 ]
 # The governed cohort service (cdm.cohort, scripts/cohort.py): phenotype files and DuckDB.
 cohort = [
@@ -39,9 +39,15 @@ demo = [
     "streamlit>=1.40",
 ]
 # BiomedCLIP for research Phase B (cdm.vlm), on the Databricks GPU job and locally. Not in CI.
+# transformers 5.10.1 (2026-11-13; 5.10.0 was yanked) is the first release that fixes all five
+# Dependabot alerts (GHSA-69w3-r845-3855, GHSA-29pf-2h5f-8g72, GHSA-fgcw-684q-jj6r,
+# GHSA-x9r9-c232-4q39, GHSA-xrqw-3rrv-vx5w). The committed Phase B results ran on 4.57.6. An
+# offline check with open_clip 3.3.0 (a 2-layer random-init BERT text tower with BiomedCLIP's
+# pooler, projection and context length, and a toy vocabulary) loads a 4.57.6 state dict
+# strictly under 5.10.1 with identical tokens and embeddings; the real weights are untested.
 vlm = [
     "open_clip_torch==3.3.0",
-    "transformers==4.57.6",
+    "transformers==5.10.1",
 ]
 # Phase 3 serving (cdm.serve_onnx): ONNX export and ONNX Runtime on CPU. In CI.
 serve = [
@@ -53,7 +59,7 @@ serve = [
 api = [
     "fastapi==0.138.2",
     "uvicorn==0.49.0",
-    "python-multipart==0.0.32",
+    "python-multipart==0.0.33",
     "httpx==0.28.1",
 ]
 # Logging committed results files to Databricks MLflow (scripts/log_evidence.py). Not in CI.
@@ -70,10 +76,36 @@ dev = [
     "openpyxl==3.1.5",
 ]
 
+# Tools CI runs from their own locked environments, never installed into the project's.
+[dependency-groups]
+audit = ["pip-audit==2.10.1"]
+# Backlog item 27: the API image's torch (CPU wheels, held by the constraints above). The image
+# installs `--extra api --group image` from docker/requirements.txt, exported from this lock with
+# hashes; that export also pins setuptools, the build backend the project is installed with.
+image = ["torch", "torchvision"]
+
 [project.scripts]
 # Databricks job tasks run these as python_wheel_task entry points.
 cdm-ingest = "cdm.ingest:main"
 cdm-gold = "cdm.gold:main"
+
+# Backlog item 26: uv resolves every extra into the committed uv.lock, only from releases at
+# least 7 days old, and takes torch and torchvision as CPU wheels from the PyTorch index, held
+# at the versions the API image and the committed results use (Dependabot ignores torch).
+[tool.uv]
+exclude-newer = "7 days"
+constraint-dependencies = ["torch==2.14.0", "torchvision==0.29.0"]
+# The project's build backend, pinned by version (uv.lock does not hash build dependencies).
+build-constraint-dependencies = ["setuptools==84.2.1"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -85,14 +117,48 @@ target-version = "py311"
 extend-exclude = ["reference"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
+select = ["E", "F", "I", "B", "UP", "SIM", "NPY", "S"]
+# Security rules (S, backlog item 36), each exception with its reason:
+# S603/S607: every subprocess call is an argument list (no shell) to git, databricks, docker or
+# pip found on PATH; S602 (shell=True) stays on.
+ignore = ["S603", "S607"]
 
 [tool.ruff.lint.per-file-ignores]
 # Databricks notebooks get `spark` and `dbutils` from the runtime, and import after
-# their widget and %pip cells.
-"databricks/notebooks/*" = ["F821", "E501", "E402"]
+# their widget and %pip cells. S101: they run on Databricks, never under python -O, and their
+# asserts are integrity checks that stop the job; S108: /tmp is the job's own ephemeral disk.
+"databricks/notebooks/*" = ["F821", "E501", "E402", "S101", "S108"]
 # Document templates: long lines are the documents' own prose and tables.
 "scripts/build_docs.py" = ["E501"]
+# Tests assert by design and write to pytest's own temporary folders. S608: tests build SQL
+# from fixture table names and temporary paths, some of them on purpose as the attacks a
+# locked-down engine must refuse (tests/test_cohort.py, item 47); no outside input.
+"tests/*" = ["S101", "S108", "S310", "S324", "S608"]
+# SQL built only from repository constants (table and column names, allowlisted cohort
+# definitions; src/cdm/cohort.py compiles validated integers and identifiers, audited
+# 2026-11-10); no outside input reaches these strings.
+"src/cdm/cohort.py" = ["S608"]
+"scripts/omop_build_report.py" = ["S608"]
+"scripts/phase1_export_evidence.py" = ["S608", "S310"]
+"scripts/phase2_stage1_evidence.py" = ["S608"]
+"scripts/cost_table.py" = ["S608"]
+"scripts/lineage_edges.py" = ["S608"]
+"scripts/v2_data_checks.py" = ["S608"]  # pipeline id, flow names and a run time from the owner's own workspace
+"databricks/notebooks/lineage_rewrite.py" = ["F821", "E501", "E402", "S101", "S108", "S608"]
+# urlopen on fixed https hosts named in the code (ISIC, Dataverse, Anthropic, the owner's
+# Databricks host from its own secret) or the local test server; no user-supplied scheme.
+"src/cdm/data.py" = ["S310"]
+"src/cdm/extract.py" = ["S310"]
+"scripts/watchdog.py" = ["S310"]
+"scripts/load_test.py" = ["S310"]
+"scripts/api_local_check.py" = ["S310"]
+# urlopen on URLs returned by the ISIC API (the pagination `next` link, image file URLs); since
+# item 47, `next` is followed only over https to the same host and reads are size-capped; image
+# file URLs are still fetched from whatever host the API returns.
+"src/cdm/sources.py" = ["S310"]
+"scripts/detector_quality.py" = ["S310"]
+"scripts/make_smoke_manifest.py" = ["S310"]
+"databricks/notebooks/scheduler_probe.py" = ["F821", "E501", "E402", "S101", "S108", "S310"]
 
 [tool.mypy]
 files = ["src", "tests", "scripts", "pipelines"]

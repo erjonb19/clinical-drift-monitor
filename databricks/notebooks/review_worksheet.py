@@ -122,7 +122,9 @@ manifest = {m["seed"]: m for m in json.loads(Path(dbutils.widgets.get("models_fi
 models = {}
 for s, key in enumerate(SEEDS):
     model = build_model(pretrained=False, arch="b0")
-    model.load_state_dict(torch.load(manifest[s]["checkpoint"], map_location="cpu"))
+    model.load_state_dict(
+        torch.load(manifest[s]["checkpoint"], map_location="cpu", weights_only=True)
+    )
     assert weights_hash(model) == manifest[s]["weights_sha256"], f"{key} checkpoint mismatch"
     models[key] = model.eval()
 

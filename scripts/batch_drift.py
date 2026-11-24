@@ -52,7 +52,8 @@ def main() -> None:
         for key in MODELS:
             check[key] = json.loads(fetch(f"{VOLUME}/batch_drift/{key}_check.json",
                                           folder / f"{key}_check.json").read_text())  # fmt: skip
-            assert check[key]["passed"], f"{key}: the reference check did not pass"
+            if not check[key]["passed"]:
+                raise RuntimeError(f"{key}: the reference check did not pass")
             shifts = np.load(fetch(f"{VOLUME}/drift/v2/{key}_scores.npz", folder / f"{key}.npz"))
             ref = np.load(fetch(f"{VOLUME}/batch_drift/{key}_val_scores.npz",
                                 folder / f"{key}_val.npz"))  # fmt: skip

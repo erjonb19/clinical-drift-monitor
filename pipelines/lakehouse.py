@@ -33,7 +33,8 @@ from cdm.omop import TABLES, build_tables, check_tables, load_concept_map, profi
 from cdm.splits import load_frozen, load_patient_overlap
 
 _spark = SparkSession.getActiveSession()
-assert _spark is not None, "run inside a Databricks pipeline"
+if _spark is None:
+    raise RuntimeError("run inside a Databricks pipeline")
 spark: SparkSession = _spark
 
 with open(spark.conf.get("cdm.config"), encoding="utf-8") as f:
@@ -218,7 +219,8 @@ def _omop_input() -> DataFrame:
 
 
 def _omop_build(pdf: pd.DataFrame) -> dict[str, pd.DataFrame]:
-    assert OMOP is not None
+    if OMOP is None:
+        raise RuntimeError("the OMOP module is not loaded")
     return build_tables(
         pdf.drop(columns="_group"),
         OMOP_MAP,

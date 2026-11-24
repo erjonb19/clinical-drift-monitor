@@ -52,7 +52,10 @@ def main() -> None:
                 per_model[key] = {}
                 for site in SITES:
                     scores = z[f"{site}__mahalanobis"]
-                    assert len(scores) == len(types[site]), (site, len(scores), len(types[site]))
+                    if len(scores) != len(types[site]):
+                        raise ValueError(
+                            f"score and type counts differ: {(site, len(scores), len(types[site]))}"
+                        )
                     per_model[key][site] = {
                         t: detection_metrics(test, scores[types[site] == t])
                         for t in sorted(set(types[site]))

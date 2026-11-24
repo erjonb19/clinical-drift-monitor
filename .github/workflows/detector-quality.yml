@@ -1,0 +1,68 @@
+# Backlog item 15: detector quality on staged shifts (results/phase3/detector_quality/spec.json).
+# Approved by the owner on 2026-11-09 to run here, on a GitHub-hosted runner (free for a public
+# repo), not on Databricks. Run by hand only. It needs the champion bundle as a release asset
+# (config/champion_smoke.json bundle_asset) and silver's image IDs (config/detector_quality_ids.csv,
+# exported once by the owner), and fails, saying which is missing, until both exist. The images
+# come from the public ISIC Archive and are never committed; results.json (aggregates only, every
+# shift labelled staged) is uploaded as an artifact for the owner to commit.
+name: Detector quality (item 15)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  detector-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      # Backlog item 26: uv, pinned by version and its release SHA-256, installs the packages
+      # uv.lock records, hash-checked, from releases at least 7 days old. 0.13.4 or later: older
+      # uv trusts a compromised root CA (GHSA-hq85-5cpj-mr62). The project's own build backend
+      # (setuptools) is pinned by version, not hash: uv does not lock build dependencies.
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          checksum: "c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
+          enable-cache: false
+      - name: Install (locked, CPU torch)
+        run: |
+          uv sync --locked --no-python-downloads --python 3.11 --extra train
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Champion bundle (release asset, SHA-256 checked)
+        run: |
+          python - <<'PY'
+          import hashlib, json, sys, tarfile, urllib.request
+          asset = json.load(open("config/champion_smoke.json"))["bundle_asset"]
+          if not asset.get("url") or not asset.get("sha256"):
+              sys.exit("::error::waits for the champion bundle release asset "
+                       "(config/champion_smoke.json bundle_asset url and sha256)")
+          data = urllib.request.urlopen(asset["url"], timeout=300).read()
+          if hashlib.sha256(data).hexdigest() != asset["sha256"]:
+              sys.exit("::error::the bundle's SHA-256 does not match config/champion_smoke.json")
+          open("/tmp/bundle.tar.gz", "wb").write(data)
+          with tarfile.open("/tmp/bundle.tar.gz") as t:
+              t.extractall("/tmp/bundle", filter="data")
+          PY
+          echo "BUNDLE=$(dirname "$(find /tmp/bundle -name manifest.json | head -1)")" >> "$GITHUB_ENV"
+      - name: Fetch the images (ISIC Archive)
+        run: python scripts/detector_quality.py fetch --work /tmp/dq
+      - name: Score (CPU)
+        run: python scripts/detector_quality.py score --work /tmp/dq --bundle "$BUNDLE"
+      - name: Simulate
+        run: python scripts/detector_quality.py simulate --work /tmp/dq --out results.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: detector-quality-${{ github.run_id }}
+          path: |
+            results.json
+            /tmp/dq/manifest.csv
+            /tmp/dq/score_meta.json

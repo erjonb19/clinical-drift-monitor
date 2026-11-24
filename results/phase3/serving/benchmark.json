@@ -1,0 +1,95 @@
+{
+  "what": "serving speed of the API (backlog item 13); not accuracy",
+  "bundle_version": "ci-test-bundle-untrained",
+  "caveat": "the CI test bundle has untrained weights: these numbers measure serving speed only, never accuracy",
+  "measured_utc": "2026-11-09T04:39:29+00:00",
+  "code_version": "98d91b4",
+  "uncommitted_changes": false,
+  "where": "Claude Code cloud session container (shared VM), 2026-11-09",
+  "hardware": {
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "logical_cpus": 4,
+    "memory_mb": 16086,
+    "os": "Linux-6.18.44-fc-v310-x86_64-with-glibc2.39"
+  },
+  "software": {
+    "python": "3.11.18",
+    "torch": "2.15.0+cu132",
+    "torch_threads_default": 4,
+    "torch_threads_note": "read in the client process; the server uses the same default"
+  },
+  "server": "scripts/bench_app.py: app/api/main.py's create_app, one uvicorn worker, rate limiter opened wide",
+  "networks_in_bundle": 1,
+  "conditions": "client and server share the same machine's CPUs; every request opens a new connection (urllib sends Connection: close); the API runs each request in a worker thread, so concurrent requests compute in parallel and compete for the CPUs; CPU use is not measured",
+  "image": "one synthetic 448x448 JPEG, sent repeatedly; 10 warm-up requests not counted",
+  "memory_after_warmup_kb": {
+    "VmHWM": 895212,
+    "VmRSS": 895212
+  },
+  "levels": [
+    {
+      "users": 1,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 18.4,
+        "p95": 24.0,
+        "p99": 27.0,
+        "mean": 19.0
+      },
+      "throughput_per_s": 52.54,
+      "wall_s": 3.8,
+      "server_memory_kb": {
+        "VmHWM": 895212,
+        "VmRSS": 895212
+      }
+    },
+    {
+      "users": 5,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 94.2,
+        "p95": 111.0,
+        "p99": 116.3,
+        "mean": 93.6
+      },
+      "throughput_per_s": 52.75,
+      "wall_s": 3.8,
+      "server_memory_kb": {
+        "VmHWM": 1014064,
+        "VmRSS": 1014064
+      }
+    },
+    {
+      "users": 20,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 458.6,
+        "p95": 510.1,
+        "p99": 529.5,
+        "mean": 454.7
+      },
+      "throughput_per_s": 43.63,
+      "wall_s": 4.6,
+      "server_memory_kb": {
+        "VmHWM": 1469916,
+        "VmRSS": 1469916
+      }
+    }
+  ],
+  "annotations_by_hand": {
+    "note": "written by Claude after the run, from the numbers above and the repo; not script output",
+    "not_the_champion": "the test bundle has 1 network; the champion runs 3 per image (the 3-seed ensemble), so its latency and throughput are not these numbers. Measuring it needs the champion bundle (a release asset the owner uploads, as for item 6).",
+    "differs_from_the_api_image": "this run used torch 2.15.0+cu132 (a CUDA build from PyPI, run on CPU), not the image's torch 2.14.0 CPU build, and no Docker container; memory in particular may differ from the image. .github/workflows/benchmark.yml measures on a GitHub runner with the CPU build.",
+    "reading": "throughput stays at about 44 to 53 images a second from 1 to 20 users while median latency grows from 18.4 ms to 458.6 ms, roughly in proportion to the users: the machine is saturated. The mechanism is not measured: concurrent requests compute in parallel worker threads (each with torch's default intra-op threads) and compete for the 4 CPUs with each other and with the client's threads. More processes with fewer threads each, or a lighter model, are the likely levers; not measured.",
+    "unreconciled_with_phase_3": "Phase 3's ONNX parity job measured PyTorch EfficientNet-B0 at a median of about 93 ms per seed for one already-preprocessed image on Databricks serverless (4 CPUs; results/phase3/onnx/results.json). Here a whole request (decode, preprocessing, one B0, Mahalanobis, HTTP) took about 18 ms median on a different machine and torch build. The gap (about 5x) is not explained; hardware, torch version and thread settings all differ, and neither run recorded enough to separate them."
+  }
+}

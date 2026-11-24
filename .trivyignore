@@ -1,0 +1,2 @@
+# Backlog item 11: findings Trivy is told to accept in the API image scan, one per line, each
+# with its reason and review date on the line above it. Empty: nothing is accepted.

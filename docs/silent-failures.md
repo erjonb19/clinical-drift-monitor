@@ -365,3 +365,36 @@ any scoring run. Now `MAX_OUTPUT_TOKENS` is 2048; the transport records `stop_re
 (`tests/test_extract.py::test_a_reply_cut_off_at_the_token_limit_fails_and_is_not_cached`); and
 the cache key holds the output limit, so the old cut replies are never reused. No scoring note
 had been run.
+
+## 15. New tests written over an existing test file, and the suite stayed green
+
+**Symptom.** While building backlog item 17 (PR #77, 2026-11-09), the new tests were written to
+`tests/test_pipeline.py` with a shell redirect that replaced the file. That file already held
+the seven end-to-end tests of `cdm.reproduce`, including the regression check for #6. The suite
+passed: the tests that would have mattered were gone, not failing.
+
+**Cause.** A new file's name collided with an existing one, and the write did not check whether
+the file existed. Nothing compared the number of tests before and after.
+
+**Caught by.** A fresh review of the PR's diff, before merge. Now also
+`tests/test_test_counts.py`: `config/test_counts.json` records each test file's number of test
+functions, and CI fails if a file disappears or has fewer; removing a test means editing that
+file in the same change, where it is visible.
+
+## 16. A decompression-bomb limit that refuses at 100 megapixels, not the 50 it states
+
+**Symptom.** `src/cdm/contract.py` and `src/cdm/serving.py` set `Image.MAX_IMAGE_PIXELS =
+50_000_000` with comments saying larger images are refused, and the test passed. Found by the
+security audit on 2026-11-10: a 58 KB PNG of 60 megapixels passed `contract.check` with
+`unreadable=False` and nothing quarantined, only a `DecompressionBombWarning`.
+
+**Cause.** Pillow raises `DecompressionBombError` only above twice `MAX_IMAGE_PIXELS`; between
+one and two times the limit it only warns. The test used 108 megapixels, above both limits, so
+it could not see the gap.
+
+**Caught by.** `cdm.contract.open_image` (backlog item 29, 2026-11-11) checks width times
+height against `MAX_PIXELS` right after `Image.open` reads the header and before any pixel is
+decoded, and refuses with `DecompressionBombError`; the contract check and `Service.predict`
+both open uploads through it. Tests: a 60-megapixel PNG is unreadable in the contract, gets a
+400 from the API and is refused by the service; all three failed on the old code.
+

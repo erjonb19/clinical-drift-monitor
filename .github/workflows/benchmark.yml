@@ -1,0 +1,73 @@
+# Backlog item 13: the serving benchmark on a GitHub runner, by hand only. By default it serves
+# the champion bundle (the release asset in config/champion_smoke.json, SHA-256 checked by
+# scripts/fetch_champion_bundle.py); `bundle: test` serves the untrained CI test bundle instead.
+# Either way its numbers are serving speed, never accuracy. The results file is uploaded as an
+# artifact and printed in the log; committing it is a normal PR.
+name: Serving benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      requests:
+        description: "Requests per concurrency level"
+        required: false
+        default: "200"
+      bundle:
+        description: "Which bundle to serve: champion (three networks) or test (one, untrained)"
+        required: false
+        default: "champion"
+        type: choice
+        options: [champion, test]
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      # Backlog item 26: uv, pinned by version and its release SHA-256, installs the packages
+      # uv.lock records, hash-checked, from releases at least 7 days old. 0.13.4 or later: older
+      # uv trusts a compromised root CA (GHSA-hq85-5cpj-mr62). The project's own build backend
+      # (setuptools) is pinned by version, not hash: uv does not lock build dependencies.
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          checksum: "c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
+          enable-cache: false
+      - name: Install (locked)
+        run: |
+          uv sync --locked --no-python-downloads --python 3.11 --extra train --extra serve --extra api
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Bundle
+        env:
+          BUNDLE: ${{ inputs.bundle }}
+        run: |
+          set -euo pipefail
+          if [ "$BUNDLE" = "test" ]; then
+            python scripts/make_test_bundle.py --out dist/bundle
+          else
+            python scripts/fetch_champion_bundle.py --dest dist/bundle
+          fi
+      - name: Benchmark
+        env:
+          REQUESTS: ${{ inputs.requests }}
+        run: |
+          set -euo pipefail
+          nproc
+          PYTHONPATH=. python scripts/load_test.py --bundle dist/bundle --requests "$REQUESTS" \
+            --where "GitHub Actions ubuntu-latest runner ($(nproc) CPUs)" --out benchmark.json
+          echo "----- BEGIN benchmark.json -----"
+          cat benchmark.json
+          echo "----- END benchmark.json -----"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: benchmark-${{ github.run_id }}
+          path: benchmark.json

@@ -132,7 +132,8 @@ class Embeddings:
 def select(emb: Embeddings) -> None:
     x_train, y_train = emb.feats["train"], emb.labels("train")
     x_val, y_val = emb.feats["val"], emb.labels("val")
-    assert (y_train >= 0).all() and (y_val >= 0).all(), "unlabelled client rows"
+    if not ((y_train >= 0).all() and (y_val >= 0).all()):
+        raise ValueError("unlabelled client rows")
     choice, template_scores = select_templates(x_val, y_val, emb.text, emb.scale)
     cfg, grid = select_config(x_train, y_train, x_val, y_val, len(CLASSES))
     spec = {

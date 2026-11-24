@@ -1,0 +1,12 @@
+{
+  "what": "Backlog item 6: a CPU smoke test that loads the champion serving bundle and scores a fixed set of about 50 public ISIC images (tests/test_champion_smoke.py). It skips, saying why, until both inputs below exist.",
+  "bundle_asset": {
+    "url": "https://github.com/erjonb19/clinical-drift-monitor/releases/download/v1.0.0/cdm-champion-bundle-d7191f4.tar.gz",
+    "sha256": "9132a89b6abe0b9899c6dc37855729308649b1e6c956fd611dc24b1aac0a3354",
+    "note": "the evaluated serving bundle (registry v1, model_gen v2; manifest SHA-256 5734add1790eadd6f2e36d767bd78d6fcf5a791484756ed616edf721e8eedee5) as a tar.gz attached to release v1.0.0 by the owner on 2026-11-18 (65 MB); archive SHA-256 checked before use"
+  },
+  "images_manifest": "config/champion_smoke_images.csv",
+  "images_note": "written by scripts/make_smoke_manifest.py in the 'Smoke manifest' workflow (.github/workflows/smoke-manifest.yml), where the ISIC API is reachable; committed 2026-11-11 from that run's log: 50 images of 50 different test-split lesions, licences CC-0 and CC-BY-NC, each with attribution, URL and SHA-256. Images are fetched at test time and never committed.",
+  "max_abstain_share": 0.2,
+  "max_abstain_share_why": "the abstain threshold is the 95th percentile of the validation OOD score, so on in-distribution test images about 5% should abstain; 20% leaves room for 50 images and still fails a bundle whose detector is broken"
+}

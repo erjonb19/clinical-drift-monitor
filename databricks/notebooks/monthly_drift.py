@@ -10,6 +10,9 @@
 # MAGIC Months 1 to 12 replay real shifts in a fixed order; later months log the live check only.
 # MAGIC Every table write is a Spark query over the tables its rows come from, so Unity Catalog lineage
 # MAGIC reaches the three tables (`results/phase3/lineage/spark_writes_spec.json`).
+# MAGIC `tables` picks the three tables' prefix: `gold` (the default, the real job) or `rehearsal`
+# MAGIC (backlog item 1's one-off scheduled rehearsal, `databricks/monthly_drift_rehearsal_job.json`,
+# MAGIC which must never touch the real tables or results). Any other value stops the run.
 
 # COMMAND ----------
 
@@ -23,6 +26,7 @@ for name, default in {
     "out": "/Volumes/workspace/cdm/raw/results/phase3/monthly",
     "count": "1",
     "job_run_id": "",
+    "tables": "gold",
 }.items():
     dbutils.widgets.text(name, default)
 
@@ -42,9 +46,11 @@ import torch
 from PIL import Image
 from pyspark.sql import functions as F
 
+from cdm.backfill import merge_history
 from cdm.data import eval_transform
 from cdm.monitor import by_skin_type, delayed_accuracy, draw_schedule, drift_test
 from cdm.serving import Service, mahalanobis
+from cdm.slo import alerts, evaluate, load_config, raise_if_alerts
 from cdm.splits import CLASSES
 from cdm.train import features_and_logits
 
@@ -54,11 +60,17 @@ OUT = Path(dbutils.widgets.get("out"))
 BUNDLE = Path(dbutils.widgets.get("bundle"))
 COUNT = int(dbutils.widgets.get("count"))
 JOB_RUN = dbutils.widgets.get("job_run_id") or "manual"
+TABLES = dbutils.widgets.get("tables")
+if TABLES not in {"gold", "rehearsal"}:
+    raise ValueError(f"tables must be gold or rehearsal, not {TABLES!r}")
+REHEARSAL_ROOT = "/Volumes/workspace/cdm/raw/results/rehearsal/"
+if TABLES == "rehearsal" and (".." in OUT.parts or not f"{OUT}/".startswith(REHEARSAL_ROOT)):
+    raise ValueError(f"a rehearsal writes its files under {REHEARSAL_ROOT}, not {OUT}")
 MONTHLY, AUDIT, BASELINE = (
-    f"workspace.cdm.{t}"
-    for t in ("gold_drift_monthly", "gold_prediction_audit", "gold_drift_baseline")
+    f"workspace.cdm.{TABLES}_{t}" for t in ("drift_monthly", "prediction_audit", "drift_baseline")
 )
 INDEX = {c: i for i, c in enumerate(CLASSES)}
+BACKFILL = "workspace.cdm.gold_melanoma_backfill"  # written once by melanoma_backfill.py
 
 WHEEL_SHA = hashlib.sha256(Path(dbutils.widgets.get("wheel")).read_bytes()).hexdigest()
 assert dbutils.widgets.get("wheel_sha256") == WHEEL_SHA, f"wheel sha256 {WHEEL_SHA}"
@@ -71,6 +83,9 @@ evaluated = json.loads((REPO / "results/phase3/serving/results.json").read_text(
 manifest_sha = hashlib.sha256((BUNDLE / "manifest.json").read_bytes()).hexdigest()
 assert manifest_sha == evaluated["bundle"]["manifest_sha256"], "not the evaluated bundle"
 VERSION = json.loads((BUNDLE / "manifest.json").read_text(encoding="utf-8"))["version"]
+SLO_CONFIG = load_config(REPO / "config/slo.json")
+# The referral threshold, for the melanoma-referral target (backlog item 4; cdm.slo).
+REFER = float(json.loads((BUNDLE / "manifest.json").read_text(encoding="utf-8"))["refer_threshold"])
 LAST_REPLAY = max(int(m) for m in spec["replay"]["schedule"])
 transform = eval_transform(224)
 
@@ -206,6 +221,8 @@ def run_month(month: int) -> dict:
         live["new_since_last_run"] = live["count"] - int(previous["live_count"])
     row = {"month": month, "run_utc": datetime.now(UTC).isoformat(timespec="seconds"), "job_run": JOB_RUN,
            "code_version": CODE, "bundle_version": VERSION, "live": live, "sizes": SIZES}  # fmt: skip
+    if TABLES == "rehearsal":
+        row["rehearsal"] = "backlog item 1's scheduled rehearsal: separate tables and folder"
     # The previous month's accuracy: its labels have now "arrived".
     prev = (
         spark.table(AUDIT).where(F.col("month") == month - 1).toPandas()
@@ -227,7 +244,7 @@ def run_month(month: int) -> dict:
         probs = prev[[f"p_{c}" for c in CLASSES]].to_numpy(np.float64)
         row["delayed_accuracy_of_month"] = {
             "month": month - 1,
-            **delayed_accuracy(labels.astype(np.int64), probs),
+            **delayed_accuracy(labels.astype(np.int64), probs, refer_threshold=REFER),
         }
     batch = months.get(month) if REPLAYING else None
     if batch is None:
@@ -291,11 +308,32 @@ def run_month(month: int) -> dict:
     out.write.mode("append").saveAsTable(MONTHLY)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / f"month_{month:02d}.json").write_text(json.dumps(row, indent=2) + "\n")
+    # Targets (backlog item 4) and the alert path (item 5): checked after the results are saved,
+    # so an alert never loses the month's record.
+    history = [
+        json.loads(r["summary"]).get("delayed_accuracy_of_month")
+        for r in spark.table(MONTHLY).orderBy("month").select("summary").collect()
+    ]
+    # Replay months 1 to 12 get their referral counts from the one-off backfill (item 4).
+    backfill = (
+        [r.asDict() for r in spark.table(BACKFILL).collect()] if table_exists(BACKFILL) else []
+    )
+    slo = evaluate(
+        row, merge_history([h for h in history if h], backfill, before_month=month), SLO_CONFIG
+    )
+    # The file carries the rehearsal label; `slo` itself stays targets only, for alerts().
+    label = {"rehearsal": row["rehearsal"]} if TABLES == "rehearsal" else {}
+    (OUT / f"slo_{month:02d}.json").write_text(json.dumps({**label, **slo}, indent=2) + "\n")
+    row["alerts"] = alerts(row, slo)
     return row
 
 
 # COMMAND ----------
 
+raised: dict[int, list[str]] = {}
 for m in range(START, START + COUNT):
     r = run_month(int(m))
+    raised[int(m)] = r.get("alerts", [])
     print(m, json.dumps({k: r.get(k) for k in ("by_source", "drift", "abstain_share")}), flush=True)
+# Every month is saved before this; an alert then fails the run, which emails the owner.
+raise_if_alerts(raised)

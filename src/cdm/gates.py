@@ -273,9 +273,11 @@ def every_client_image_has_a_client(frame: pd.DataFrame) -> Gate:
 
 def run_all(frame: pd.DataFrame, config: Mapping[str, Any]) -> list[Gate]:
     ham_cfg = config["ham10000"]
-    assert isinstance(ham_cfg, Mapping)
+    if not isinstance(ham_cfg, Mapping):
+        raise TypeError("sites.json: ham10000 must be a mapping")
     allowed = config["license_allowed"]
-    assert isinstance(allowed, list)
+    if not isinstance(allowed, list):
+        raise TypeError("sites.json: license_allowed must be a list")
     ham = frame[frame["source"] == "ham10000"]
     return [
         split_computed(frame),

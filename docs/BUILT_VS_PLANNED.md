@@ -7,7 +7,7 @@ runs and is reproducible from the repository.
 **This is a personal portfolio project.** No patients, clinicians or business decisions
 depend on it.
 
-Last updated: 2026-10-20.
+Last updated: 2026-11-11.
 
 ## Built
 
@@ -78,7 +78,10 @@ tagged so). Record: [phase2-note.md](phase2-note.md).
 - v2 data: Barcelona to 9,999 images. Auto Loader picked up only the new files.
 - Tuning ladder on validation only: no rung beat the control (`results/phase2/ladder/`).
 - 3 centralized and 6 federated models (Flower FedAvg and FedProx, clients trained in sequence in
-  one process). One test look per model (`results/phase2/v2/test/final_test.json`).
+  one process). One test look per model (`results/phase2/v2/test/final_test.json`). The
+  federated models were trained with `flwr` 1.39.0. On 2026-11-19 the lockfile moved to 1.43.0
+  for security fixes in its cryptography and uv dependencies (#144); the federated results were
+  not re-run, and a re-run would use 1.43.0.
 - Drift table: 4 detectors × 3 setups × 2 real held-out sites + 2 benchmark sets
   (`results/phase2/drift/v2/`). Mahalanobis was shipped by the pre-set rule.
 - Triage operating point, committed before test (`results/phase2/triage/`).
@@ -271,6 +274,39 @@ Known limits:
 - `tests/test_eval_gate.py` with `config/eval_gate.json`: floors on the committed serving
   metrics and on any promoted challenger, with a self-test that a regression fails.
 
+### Security hardening (security audit items, 2026-11-11)
+
+Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (items 23 to 47).
+- Supply chain: every action pinned to a commit; the API image's base pinned by digest, with
+  Debian security updates and no setuptools; Trivy fails on fixable HIGH and CRITICAL;
+  Dependabot with a 7-day cooldown; gitleaks over the full history with a planted-key self-test;
+  read-only workflow tokens; ruff's security rules.
+- Code: uploads decoded only by JPEG and PNG, refused above 50 megapixels from the header;
+  `torch.load(weights_only=True)` everywhere; the serving bundle's manifest must hash every
+  checkpoint and detector; CIFAR-10 files checksummed before unpickling; spreadsheet formulas
+  neutralised in the G5 CSVs; the $5 Haiku cap fails closed without its spend log.
+- API (`app/api`, not deployed): security headers, no public schema, response models, refusal
+  events logged without an address or body.
+- Public cohort demo (item 47): DuckDB external access off and locked, no error details in the
+  browser, per-session temporary folders and a definition cap, the ISIC client held to its own
+  host with byte caps. Redeployed by the owner's reboot on 2026-11-13; the live page was not
+  checked from the cloud session.
+- Workflow audit: zizmor, pinned by hash, on every workflow change (item 37, 2026-11-11).
+- Scheduled drift job (item 1, 2026-11-20): a rehearsal copy of the monthly job started by its
+  schedule and finished green, writing its own tables and files (`results/phase3/rehearsal/`).
+  The real monthly job's first scheduled run (1 November) did not start, and its cause is not
+  found; its 1 December run is still to come.
+- Champion smoke test in CI (item 6, 2026-11-18): the release-asset bundle, SHA-256 checked,
+  scores 50 public test-split images on every push.
+- `docker compose up` demo (item 21, 2026-11-18): with the champion bundle it tripped the drift
+  alarm on 50 PAD-UFES-20 photos against 50 test-split images (a demonstration on small
+  batches; `results/phase3/compose_demo/champion_2026-11-18.json`).
+- Locked installs: CI installs only from `uv.lock` (7-day `exclude-newer`; uv pinned by
+  version and checksum), and the API image installs only hashed packages exported from it
+  (items 26 and 27, 2026-11-13).
+- Not done: the Streamlit app's hashed requirements (the rest of item 26), and the owner's
+  check that `.claude/settings.json` is loaded (item 23).
+
 ## Scaffolded
 
 ### Phase 3: ONNX export (tried 2026-10-22; parity failed)
@@ -315,14 +351,41 @@ Known limits:
   committed metrics (`tests/test_eval_gate.py`), and a Docker build and smoke test with an
   untrained test bundle.
 
+### Backlog item 1: scoring after replay month 12 (2026-11-09)
+
+- `cdm.post_replay` and `results/phase3/monthly/post_replay_spec.json`: label-free signals (OOD
+  score, embedding drift on the baseline's top 5 components, predicted-class mix, top softmax
+  probability), a 100-image minimum and an explicit `scored` / `no_new_data` / `failed` status.
+  Tested on synthetic data only; not wired into the monthly notebook; nothing scored with it.
+
+### Backlog items 4 and 5: model targets and alerts (2026-11-09)
+
+- `cdm.slo`, `config/slo.json`, `scripts/slo_report.py`: three targets (melanoma referral
+  sensitivity over a pooled window with a Wilson interval, delayed balanced accuracy, abstain
+  share) and the alert path (a failed run with an "ALERT" message, which Databricks emails).
+  Wired into `databricks/notebooks/monthly_drift.py`; not deployed, so no alert has been sent.
+  Checked on the committed replay months only. Targets accepted by the owner (2026-11-09),
+  provisional until the backfill below has run.
+- `cdm.backfill`, `databricks/notebooks/melanoma_backfill.py` and its job: the melanoma
+  referral count of replay months 1 to 12, rebuilt from the audit table and checked against the
+  committed months. Written and tested on synthetic data; not run (the owner runs it with the
+  redeploy), so the melanoma target still reads "insufficient data".
+
+### Backlog item 18: input contract (2026-11-09)
+
+- `cdm.contract`: enforced checks (format, resolution, aspect ratio, near-duplicates) quarantine
+  with a reason; blur and exposure only flag (uncalibrated). In the API (422, a `quarantined`
+  count, `input_flags`); not yet in the monthly job. Tested on synthetic images only.
+
 ### Phase 4: eval scenarios (2026-11-03)
 
 - `cdm.scenarios` and `scripts/phase4_scenarios.py`: 30 synthetic (staged) drift scenarios in
   `results/phase4/scenarios.json`, each a month record shaped like `gold_drift_monthly`'s summary,
   built from seeded made-up scores run through the monitoring code's own drift tests; known
   findings derived from each record and a fixed rules context (the job's rules and the finding
-  words, committed with the scenarios). `results/phase4/eval_spec.json` proposes the scoring and a
-  pass threshold (owner to set). No generator, groundedness check or LLM call exists yet.
+  words, committed with the scenarios). `results/phase4/eval_spec.json` sets the scoring and the pass
+  threshold (Claude's proposal, approved by the owner 2026-11-24). No generator, groundedness
+  check or LLM call exists yet.
 
 ## Not started
 

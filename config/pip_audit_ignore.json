@@ -1,0 +1,5 @@
+{
+  "what": "Known vulnerabilities pip-audit is told to accept in CI (backlog item 11). Every other finding fails the build, with or without a fix. Each entry gives the reason and when to look again.",
+  "accepted": [],
+  "history": "2026-11-19: both earlier entries were removed. They accepted four cryptography 46.0.7 findings and uv 0.11.33's PYSEC-2026-4321, all held back by flwr 1.39.0. flwr moved to 1.43.0 (the federated extra), which takes cryptography 50.0.2 and uv 0.13.7; pip-audit then reported no known vulnerability with no exception. The owner asked on 2026-11-18 for the fix to go through the lockfile and for no alert to be dismissed."
+}

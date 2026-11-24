@@ -6,7 +6,10 @@ and prints the wheel's SHA-256 and the ``files_sha256`` map for the job definiti
 notebook checks both before it reads anything. The notebook's own source is staged and hashed
 too, so the run records which committed notebook it was imported from.
 
-Usage: python scripts/stage_research_job.py <notebook name> <repo file> [<repo file> ...]
+Usage: python scripts/stage_research_job.py [--workspace-name NAME] <notebook name> <repo file> ...
+
+``--workspace-name`` imports the notebook under another workspace name, so a second job (item
+1's rehearsal of the monthly job) never replaces the notebook a scheduled job runs.
 """
 
 from __future__ import annotations
@@ -31,7 +34,12 @@ def run(*args: str, capture: bool = True) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
-    args = sys.argv[1:] if argv is None else argv
+    args = list(sys.argv[1:] if argv is None else argv)
+    workspace_name = None
+    if args[:1] == ["--workspace-name"]:
+        if len(args) < 2 or not args[1].replace("_", "").isalnum():
+            sys.exit("--workspace-name takes a name of letters, digits and underscores")
+        workspace_name, args = args[1], args[2:]
     if len(args) < 2:
         sys.exit(__doc__)
     notebook = args[0]
@@ -60,7 +68,8 @@ def main(argv: list[str] | None = None) -> None:
         wheel_sha = hashlib.sha256(wheel.read_bytes()).hexdigest()
     user = json.loads(run("databricks", "current-user", "me", "-o", "json"))["userName"]
     source = REPO / "databricks" / "notebooks" / f"{notebook}.py"
-    run("databricks", "workspace", "import", f"/Users/{user}/cdm/{notebook}", "--file",
+    target = workspace_name or notebook
+    run("databricks", "workspace", "import", f"/Users/{user}/cdm/{target}", "--file",
         str(source), "--format", "SOURCE", "--language", "PYTHON", "--overwrite")  # fmt: skip
     print(json.dumps({"code_version": sha, "wheel": f"{remote}/{WHEEL}",
                       "wheel_sha256": wheel_sha, "repo": f"{remote}/repo",

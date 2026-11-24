@@ -4,14 +4,22 @@ Run locally: ``streamlit run app/cohort_demo.py`` (needs ``pip install -e ".[coh
 The logic lives in ``cdm.demo``; this file is the page. Counts only, no images, concept IDs
 and ISIC source labels only (no SNOMED text). Deployed on Streamlit Community Cloud:
 https://cdm-cohort-demo.streamlit.app/
+
+Errors: ``.streamlit/config.toml`` (repository root, which Community Cloud reads) sets
+``showErrorDetails = "none"``, and the expected failures below show a generic message. The
+log gets the exception type only, never its text or traceback.
 """
 
 from __future__ import annotations
 
+import logging
+from typing import NoReturn
+
 import pandas as pd
 import streamlit as st
+import yaml
 
-from cdm.cohort import Refused, load
+from cdm.cohort import PhenotypeError, Refused, load
 from cdm.demo import (
     ATTRIBUTION,
     DemoSession,
@@ -21,6 +29,9 @@ from cdm.demo import (
     fetch_tables,
 )
 from cdm.demo import library as phenotype_library
+from cdm.splits import DataError
+
+log = logging.getLogger("cdm.cohort_demo")
 
 st.set_page_config(page_title="Governed cohort counts", page_icon=":bar_chart:", layout="wide")
 
@@ -30,8 +41,18 @@ def tables() -> dict[str, pd.DataFrame]:
     return fetch_tables()
 
 
+def fail(what: str, exc: Exception) -> NoReturn:
+    """A generic message for the visitor; the log gets the exception type only."""
+    log.warning("cohort demo: %s failed (%s)", what, type(exc).__name__)
+    st.error(f"Sorry, the demo could not {what} just now. Please try again in a few minutes.")
+    st.stop()
+
+
 if "session" not in st.session_state:
-    st.session_state.session = DemoSession(tables())
+    try:
+        st.session_state.session = DemoSession(tables())
+    except (OSError, ValueError, KeyError, DataError) as exc:  # network, JSON, response shape
+        fail("load the public ISIC metadata", exc)
 session: DemoSession = st.session_state.session
 
 st.title("Governed cohort counts on OMOP")
@@ -64,8 +85,15 @@ with left:
         definition = custom_definition(
             labels, low if low > 0 else None, high if high < 100 else None, histo, breakdown
         )
-        path = session.write(definition)
-    pheno = load(path)
+        try:
+            path = session.write(definition)
+        except Refused as refusal:
+            st.error(f"Refused: {refusal}")
+            st.stop()
+    try:
+        pheno = load(path)
+    except (PhenotypeError, OSError, yaml.YAMLError) as exc:
+        fail("read this definition", exc)
     st.code(path.read_text(encoding="utf-8"), language="yaml")
     st.write(f"Definition hash `{pheno.sha256[:12]}`, status: **{session.status(path)}**")
     with st.expander("Concepts in this definition"):

@@ -163,7 +163,9 @@ checked: dict[int, str] = {}
 
 def load_champion(seed: int) -> torch.nn.Module:
     champ = build_model(pretrained=False, arch="b0")
-    champ.load_state_dict(torch.load(manifest[seed]["checkpoint"], map_location="cpu"))
+    champ.load_state_dict(
+        torch.load(manifest[seed]["checkpoint"], map_location="cpu", weights_only=True)
+    )
     digest = weights_hash(champ)
     assert digest == manifest[seed]["weights_sha256"], f"seed {seed}: weights {digest}"
     checked[seed] = digest

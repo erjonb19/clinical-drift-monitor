@@ -117,7 +117,8 @@ def test_no_committed_definition_holds_an_email_address() -> None:
     "path", sorted((REPO / "databricks").glob("*_job.json")), ids=lambda p: p.name
 )
 def test_recorded_jobs_render_with_only_the_user(path: Path) -> None:
-    spec = deploy_module().render(path.read_text(encoding="utf-8"), {"DATABRICKS_USER": "u@x.org"})
+    text = path.read_text(encoding="utf-8").replace('"STAGE_FIRST"', '"/Volumes/x"')
+    spec = deploy_module().render(text, {"DATABRICKS_USER": "u@x.org"})
     paths = [t["notebook_task"]["notebook_path"] for t in spec["tasks"] if "notebook_task" in t]
     assert paths and all(p.startswith("/Users/u@x.org/cdm/") for p in paths)
 
@@ -139,3 +140,206 @@ def test_job_mode_refuses_the_deploy_templates(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr("sys.argv", ["deploy", "--job", str(REPO / "databricks" / "job.json")])
     with pytest.raises(SystemExit, match="full run"):
         deploy_module().main()
+
+
+@pytest.mark.parametrize(
+    "path", sorted((REPO / "databricks").glob("*_job.json")), ids=lambda p: p.name
+)
+def test_every_scheduled_job_is_unpaused_and_in_utc(path: Path) -> None:
+    """Backlog item 1: a committed schedule is never paused, and every time is UTC."""
+    schedule = json.loads(path.read_text(encoding="utf-8")).get("schedule")
+    if schedule is not None:
+        assert schedule["pause_status"] == "UNPAUSED", path.name
+        assert schedule["timezone_id"] == "UTC", path.name
+
+
+def test_the_scheduler_probe_is_small_and_writes_only_its_own_folder() -> None:
+    """Backlog item 1's probe: the monthly job's kind of schedule, firing on 8 to 10 November at
+    06:00 UTC; one file per run in its own folder; no table, no wheel, a short timeout."""
+    spec = json.loads((REPO / "databricks" / "scheduler_probe_job.json").read_text("utf-8"))
+    monthly = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    assert spec["schedule"]["quartz_cron_expression"] == "0 0 6 8,9,10 * ?"
+    # Same shape as the monthly cron: same seconds, minute and hour; a day-of-month field
+    # (a day or a list of days); every month; no day-of-week.
+    probe = spec["schedule"]["quartz_cron_expression"].split()
+    month = monthly["schedule"]["quartz_cron_expression"].split()
+    assert probe[:3] == month[:3] == ["0", "0", "6"]
+    assert month[3] == "1" and all(d.isdigit() for d in probe[3].split(","))
+    assert probe[4:] == month[4:] == ["*", "?"]
+    assert spec["max_concurrent_runs"] == 1
+    assert "dependencies" not in spec["environments"][0]["spec"]
+    (task,) = spec["tasks"]
+    assert task["timeout_seconds"] <= 600 and task["max_retries"] == 0
+    params = task["notebook_task"]["base_parameters"]
+    assert params["out"] == "/Volumes/workspace/cdm/raw/results/scheduler_probe"
+    assert params["trigger_type"] == "{{job.trigger.type}}"
+    source = (REPO / "databricks" / "notebooks" / "scheduler_probe.py").read_text("utf-8")
+    for forbidden in ("spark", "saveAsTable", "gold_", "import cdm", "from cdm"):
+        assert forbidden not in source, forbidden
+    # The notebook's default folder is the same, and OUT is the only place it writes.
+    assert f'"out": "{params["out"]}"' in source
+    assert source.count("write_text(") == 1 and "(OUT / " in source
+
+
+def test_the_deploy_guard_refuses_a_paused_or_changed_schedule() -> None:
+    """Item 1: after reset or create the job is read back; a paused, missing or different
+    schedule stops the deploy with a message, a matching one passes."""
+    check = deploy_module().check_deployed_schedule
+    spec = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    good = {"settings": {"schedule": dict(spec["schedule"])}}
+    check(spec, good)
+    paused = {"settings": {"schedule": {**spec["schedule"], "pause_status": "PAUSED"}}}
+    with pytest.raises(SystemExit, match="PAUSED, not UNPAUSED"):
+        check(spec, paused)
+    other = {"settings": {"schedule": {**spec["schedule"], "timezone_id": "America/New_York"}}}
+    with pytest.raises(SystemExit, match="timezone_id"):
+        check(spec, other)
+    with pytest.raises(SystemExit, match="without its schedule"):
+        check(spec, {"settings": {}})
+    unscheduled = {k: v for k, v in spec.items() if k != "schedule"}
+    check(unscheduled, {"settings": {}})
+    with pytest.raises(SystemExit, match="does not have"):
+        check(unscheduled, good)
+
+
+def test_upsert_reads_the_job_back_after_reset(monkeypatch: pytest.MonkeyPatch) -> None:
+    module = deploy_module()
+    spec = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    calls: list[tuple[str, ...]] = []
+
+    def cli(*args: str, ok_if: str | None = None) -> str:
+        calls.append(args)
+        if args[:2] == ("jobs", "list"):
+            return json.dumps([{"job_id": 7}])
+        if args[:2] == ("jobs", "get"):
+            return json.dumps(
+                {"settings": {"schedule": {**spec["schedule"], "pause_status": "PAUSED"}}}
+            )
+        return "{}"
+
+    (REPO / "dist").mkdir(exist_ok=True)
+    with pytest.raises(SystemExit, match="not UNPAUSED"):
+        module.upsert_job(cli, spec, dry_run=False)
+    assert [c[:2] for c in calls] == [("jobs", "list"), ("jobs", "reset"), ("jobs", "get")]
+
+
+def test_the_guard_treats_a_missing_pause_status_as_the_api_default() -> None:
+    """The Jobs API omits pause_status for an unpaused schedule; that passes."""
+    check = deploy_module().check_deployed_schedule
+    spec = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    bare = {k: v for k, v in spec["schedule"].items() if k != "pause_status"}
+    check(spec, {"settings": {"schedule": bare}})
+
+
+def test_upsert_reads_back_the_created_job_by_its_new_id() -> None:
+    module = deploy_module()
+    spec = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    calls: list[tuple[str, ...]] = []
+
+    def cli(*args: str, ok_if: str | None = None) -> str:
+        calls.append(args)
+        if args[:2] == ("jobs", "list"):
+            return "[]"
+        if args[:2] == ("jobs", "create"):
+            return json.dumps({"job_id": 42})
+        return json.dumps({"settings": {"schedule": dict(spec["schedule"])}})
+
+    (REPO / "dist").mkdir(exist_ok=True)
+    assert module.upsert_job(cli, spec, dry_run=False) == "42"
+    assert calls[-1][:3] == ("jobs", "get", "42")
+
+
+def test_an_unstaged_job_is_refused_until_its_values_are_filled() -> None:
+    """The backfill job (item 4) is committed before staging; deploying it as is must fail."""
+    text = (REPO / "databricks" / "melanoma_backfill_job.json").read_text(encoding="utf-8")
+    with pytest.raises(ValueError, match="stage_research_job"):
+        deploy_module().render(text, {"DATABRICKS_USER": "u@x.org"})
+    staged = text.replace('"STAGE_FIRST"', '"/Volumes/x"')
+    assert deploy_module().render(staged, {"DATABRICKS_USER": "u@x.org"})["tasks"]
+
+
+def test_the_backfill_job_installs_torch_like_the_monthly_job() -> None:
+    """cdm.backfill imports cdm.monitor, which imports cdm.serving and so torch."""
+    deps = {}
+    for name in ("melanoma_backfill_job.json", "monthly_drift_job.json"):
+        spec = json.loads((REPO / "databricks" / name).read_text(encoding="utf-8"))
+        deps[name] = {d for d in spec["environments"][0]["spec"]["dependencies"] if "torch" in d}
+    assert deps["melanoma_backfill_job.json"] == deps["monthly_drift_job.json"] != set()
+
+
+def test_the_rehearsal_never_touches_the_real_job_tables_or_results() -> None:
+    """Item 1's rehearsal (owner, 2026-11-13): a copy of the monthly job on a one-date schedule
+    before 26 November, writing only to `rehearsal_*` tables and a rehearsal folder, under its
+    own notebook name, so it cannot replace the notebook or the results of the real job."""
+    real = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    spec = json.loads((REPO / "databricks" / "monthly_drift_rehearsal_job.json").read_text("utf-8"))
+    assert spec["name"] != real["name"]
+    cron = spec["schedule"]["quartz_cron_expression"].split()
+    assert cron[:3] == ["0", "0", "6"] and cron[5] == "?" and len(cron) == 6
+    day, month = int(cron[3]), int(cron[4])  # one date: a single day in a single month
+    assert (month, day) < (11, 26), "the rehearsal must fire before the 26 November deadline"
+    assert spec["schedule"]["timezone_id"] == "UTC"
+    (task,) = spec["tasks"]
+    (real_task,) = real["tasks"]
+    path = task["notebook_task"]["notebook_path"]
+    assert path != real_task["notebook_task"]["notebook_path"] and "rehearsal" in path
+    params = task["notebook_task"]["base_parameters"]
+    assert params["tables"] == "rehearsal"
+    assert params["out"].startswith("/Volumes/workspace/cdm/raw/results/rehearsal/")
+    assert params["bundle"] == real_task["notebook_task"]["base_parameters"]["bundle"]
+    assert real_task["notebook_task"]["base_parameters"].get("tables", "gold") == "gold"
+    for key in ("code_version", "wheel_sha256"):  # staged, never the real job's old values
+        assert (
+            params[key] == "STAGE_FIRST"
+            or params[key] != real_task["notebook_task"]["base_parameters"][key]
+        ), key
+    source = (REPO / "databricks" / "notebooks" / "monthly_drift.py").read_text("utf-8")
+    assert '"tables": "gold"' in source and 'TABLES not in {"gold", "rehearsal"}' in source
+    # a rehearsal must write under the rehearsal folder, matched from its start
+    assert 'REHEARSAL_ROOT = "/Volumes/workspace/cdm/raw/results/rehearsal/"' in source
+    assert ".startswith(REHEARSAL_ROOT)" in source and '".." in OUT.parts' in source
+    assert ".." not in params["out"].split("/")
+    assert "before_month=month" in source  # a month's targets never see later labels
+    assert 'f"workspace.cdm.{TABLES}_{t}"' in source
+    assert "gold_drift_monthly" not in source.split("MONTHLY, AUDIT, BASELINE", 1)[1]
+
+
+def test_the_watchdog_takes_a_job_id_only_as_digits() -> None:
+    """Item 1: the rehearsal is checked by the same watchdog, by hand, with its job ID passed
+    through the environment (never expanded into the script) and refused unless all digits."""
+    text = (REPO / ".github" / "workflows" / "drift-watchdog.yml").read_text("utf-8")
+    assert "JOB_ID: ${{ inputs.job_id }}" in text
+    assert '[[ "$JOB_ID" =~ ^[0-9]{1,20}$ ]]' in text
+    run = text.split("run: |", 1)[1]
+    assert "${{" not in run
+
+
+def test_the_rehearsal_stages_every_file_the_notebook_reads_and_differs_only_where_named() -> None:
+    """Review of #130: the notebook reads repo files from the staged folder, so the owner's
+    staging command (OWNER_STEPS S11) must stage each one; and the rehearsal job equals the real
+    job except in the fields that make it a rehearsal or that staging fills."""
+    source = (REPO / "databricks" / "notebooks" / "monthly_drift.py").read_text("utf-8")
+    read = set(re.findall(r'REPO / "([^"]+)"', source))
+    steps = (REPO / "docs" / "OWNER_STEPS.md").read_text("utf-8")
+    command = next(
+        line for line in steps.splitlines() if "stage_research_job.py --workspace-name" in line
+    )
+    staged = set(command.split(" monthly_drift ", 1)[1].split())
+    assert read and read <= staged, read - staged
+    real = json.loads((REPO / "databricks" / "monthly_drift_job.json").read_text("utf-8"))
+    spec = json.loads((REPO / "databricks" / "monthly_drift_rehearsal_job.json").read_text("utf-8"))
+    assert set(spec) == set(real)
+    for key in set(real) - {"name", "schedule", "tasks", "environments"}:
+        assert spec[key] == real[key], key
+    assert (
+        spec["environments"][0]["spec"]["dependencies"][1:]
+        == (real["environments"][0]["spec"]["dependencies"][1:])
+    )
+    (task,), (real_task,) = spec["tasks"], real["tasks"]
+    for key in set(real_task) - {"task_key", "notebook_task"}:
+        assert task[key] == real_task[key], key
+    params, real_params = (t["notebook_task"]["base_parameters"] for t in (task, real_task))
+    named = {"code_version", "wheel", "wheel_sha256", "repo", "files_sha256", "out", "tables"}
+    assert set(params) - set(real_params) <= {"tables"}
+    for key in set(real_params) - named:
+        assert params[key] == real_params[key], key

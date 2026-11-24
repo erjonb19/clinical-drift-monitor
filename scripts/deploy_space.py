@@ -5,7 +5,7 @@ Gradio Spaces on free CPU need a PRO subscription), so nothing is deployed. Kept
 changed tier.
 
 Run on a clean commit, after the owner has logged in (``hf auth login``). Stages exactly what
-the Dockerfile needs (pyproject, docker/constraints.txt, src, app/api, the serving bundle) with
+the Dockerfile needs (pyproject, docker/requirements.txt, src, app/api, the serving bundle) with
 a Space README that carries the notice, licence and attribution, checks the bundle against its
 manifest, then creates the Space if needed and uploads. The Space is public, so the model
 weights in the bundle become downloadable there: non-commercial research use, with attribution.
@@ -61,15 +61,23 @@ def git(*args: str) -> str:
 
 
 def check_bundle(bundle: Path) -> dict[str, Any]:
+    """The same manifest rules the Space applies when it boots (cdm.bundle, item 32), then the
+    hashes, so a bundle that would fail there is refused before upload."""
+    from cdm.bundle import check_manifest
+
     manifest: dict[str, Any] = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
-    for name, digest in manifest["sha256"].items():
+    try:
+        hashes = check_manifest(manifest)
+    except ValueError as err:
+        sys.exit(f"{bundle / 'manifest.json'}: {err}")
+    for name, digest in hashes.items():
         if hashlib.sha256((bundle / name).read_bytes()).hexdigest() != digest:
             sys.exit(f"{bundle / name} does not match the bundle manifest")
     return manifest
 
 
 def stage(target: Path, bundle: Path) -> None:
-    for rel in ("Dockerfile", ".dockerignore", "pyproject.toml", "docker/constraints.txt"):
+    for rel in ("Dockerfile", ".dockerignore", "pyproject.toml", "docker/requirements.txt"):
         (target / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO / rel, target / rel)
     (target / "README.md").write_text(SPACE_README, encoding="utf-8", newline="\n")

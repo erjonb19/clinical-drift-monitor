@@ -110,7 +110,7 @@ for m in MODELS:
         continue
     drift = json.loads((DRIFT / f"{key}.json").read_text())
     model = build_model(pretrained=False, arch=CONFIG.get("arch", "b0"))
-    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu"))
+    model.load_state_dict(torch.load(m["checkpoint"], map_location="cpu", weights_only=True))
     assert weights_hash(model) == m["weights_sha256"] == drift["weights_sha256"], key
     model.eval()
     train_labels = SETS["train"]["label"].map(INDEX)

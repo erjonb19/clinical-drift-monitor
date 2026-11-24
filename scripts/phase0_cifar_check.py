@@ -42,7 +42,8 @@ DEFAULT_PCA = 256
 
 
 def nearest_class(det: MahalanobisDetector, feats: np.ndarray) -> np.ndarray:
-    assert det.pca is not None and det.means is not None and det.precision is not None
+    if det.pca is None or det.means is None or det.precision is None:
+        raise RuntimeError("the detector is not fitted")
     z = det.pca.transform(feats)
     dists = np.stack(
         [np.einsum("ij,jk,ik->i", z - mu, det.precision, z - mu) for mu in det.means], axis=1
@@ -71,7 +72,9 @@ def main() -> None:
     else:
         model = build_model(pretrained=True)
         if args.checkpoint is not None:
-            model.load_state_dict(torch.load(args.checkpoint, map_location="cpu"))
+            model.load_state_dict(
+                torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+            )
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
         ham = prepare_ham(root)
