@@ -29,8 +29,7 @@ gets a **Blocked:** line with the reason.
    run waits for the owner's approval of its estimate.
 7. **Item 7**, then **items 15, 17, 16, 14** (detector quality, an automated retraining
    pipeline, shadow scoring, batch scoring at scale).
-8. **Item 8** once the owner sets PR #50's thresholds (after 26 November, owner 2026-11-16),
-   then **items 9 and 10**.
+8. **Item 8** (PR #50's thresholds approved by the owner 2026-11-24), then **items 9 and 10**.
 9. **Item 12** (a live endpoint) and **item 19** (least-privilege access) when the owner has
    made their accounts and decisions; **item 20** after the governed clinical agent's item 22.
 10. **Item 21** (showcase) last.
@@ -49,8 +48,8 @@ gets a **Blocked:** line with the reason.
   including ones marked "owner merges", once CI is green on the final commit and a fresh review
   by a separate agent that did not write the change finds nothing blocking. The owner is asked
   first, in chat, for spending, GPU runs, release tags, Databricks deploys, deleting data and any
-  permission-settings change (those PRs are opened and left). PR #50 stays with the owner (his
-  threshold decisions); it waits until after 26 November (owner, 2026-11-16).
+  permission-settings change (those PRs are opened and left). PR #50's thresholds were set by the
+  owner on 2026-11-24 (Claude's proposal, approved); #50 then merges under this rule.
 
 ## Items, in order
 
@@ -468,10 +467,12 @@ gets a **Blocked:** line with the reason.
      checked against the drift table, the report reviewed in the queue, and the runbook's
      containment steps done. The write-up is committed and says whether the drift was real,
      replayed or staged.
-   - **Today:** 30 synthetic (staged) eval scenarios and a proposed eval spec are in open PR #50,
-     with thresholds waiting for the owner. There is no report generator, groundedness check,
-     review queue or runbook yet. The replay's alert months use real images in an order we
-     chose, so they count as replayed, not as live drift.
+   - **Today:** 30 synthetic (staged) eval scenarios and the eval spec
+     (`results/phase4/scenarios.json`, `results/phase4/eval_spec.json`) are on `main`; the owner
+     approved Claude's proposed thresholds on 2026-11-24 (27 of 30, groundedness a hard gate).
+     There is no report generator, groundedness check, review queue or runbook yet. The
+     replay's alert months use real images in an order we chose, so they count as replayed, not
+     as live drift.
 
 9. [x] **Model card and change-control plan:** a CHAI-format applied model card, and a one-page
    change-control plan mapped to FDA's Predetermined Change Control Plan guidance.
