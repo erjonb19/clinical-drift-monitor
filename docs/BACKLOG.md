@@ -492,6 +492,12 @@ gets a **Blocked:** line with the reason.
      PLAN.md Phase 4 says to reuse the governed agent's check; it is written fresh here (CLAUDE.md:
      read the other repo for the pattern, write fresh code), and that repo's check was not read in
      this session. PLAN.md's box stays open until the check scores a real eval run.
+   - **Built 2026-11-24 (not used on any run yet):** the eval's scoring, `cdm.report_eval`
+     (`tests/test_report_eval.py`): correctness per run (structured findings, caveats, the 8D
+     report exactly when due), the groundedness gate, 2 of 3 runs per scenario, outages not
+     scored, and the approved verdict (pass at 27 of 30, inconclusive with exit 2 when more than
+     3 scenarios lack 2 scored runs, otherwise fail). Tested on made-up runs only. **Not built:**
+     the generator (Gemini, free tier) and its manual workflow, the review queue and the runbook.
 
 9. [x] **Model card and change-control plan:** a CHAI-format applied model card, and a one-page
    change-control plan mapped to FDA's Predetermined Change Control Plan guidance.
