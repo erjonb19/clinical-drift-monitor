@@ -53,7 +53,9 @@ def test_a_whole_number_is_never_a_rounding_of_a_fraction() -> None:
 
 
 def test_tokens_joined_to_letters_are_not_numbers() -> None:
-    assert [n.text for n in numbers_in("8D report for ISIC_0024306 at site_1, v2")] == []
+    assert [n.text for n in numbers_in("8D report for ISIC_0024306 at site_y")] == []
+    for text in ("month9", "n301 images", "x2 the rate", "top3", "PSI0", "e5", "site_1", "v2"):
+        assert not grounded(text), text
     assert [n.value for n in numbers_in("the 95th percentile")] == [95.0]
 
 
@@ -98,3 +100,11 @@ def test_non_finite_leaves_and_keys_in_the_report_are_read() -> None:
 def test_a_huge_exponent_in_the_record_is_ignored_not_a_crash() -> None:
     record = {**RECORD, "note": "1e400"}
     assert check("300", record, RULES, FLOOR)["grounded"]
+
+
+def test_huge_ints_and_other_leaf_types_are_unmatched_not_a_crash() -> None:
+    from decimal import Decimal
+
+    for leaf in (10**400, Decimal("0.9"), b"301", {301}):
+        assert not check({"v": leaf}, RECORD, RULES, FLOOR)["grounded"], leaf
+    assert check("300", {**RECORD, "huge": 10**400}, RULES, FLOOR)["grounded"]

@@ -15,8 +15,9 @@ forms to be fixed here, before any live call. They are:
   matches 0.14 within 0.005 and ``15.7%`` matches 0.157 within 0.0005.
 - **Scientific** (``3.76e-07``): matches within half a unit of the mantissa's last written digit.
 - **Thousands separators** (``553,019``) are read as one number.
-- **Not numbers:** an identifier of letters and digits with no decimal point (``site_1``,
-  ``ISIC_0024306``, ``v2``) and the literal ``8D``. Ordinals (``95th``) are read as numbers.
+- **Not numbers:** ISIC image IDs (``ISIC_0024306``) and the literal ``8D``, the only digit
+  identifiers the records and reports use. Any other letters-and-digits token (``month9``,
+  ``x2``, ``N301``) is unmatched. Ordinals (``95th``) are read as numbers.
   Roman numerals (skin types ``I`` to ``VI``) contain no digit and are not read.
 
 Every other run of characters that holds a digit must read in full as one of the forms above,
@@ -47,7 +48,7 @@ NUMBER = re.compile(
     r"(?P<sign>[-−+])?(?P<int>\d{1,3}(?:,\d{3})+|\d+)?(?:\.(?P<dec>\d+))?"
     r"(?:[eE](?P<exp>[-+−]?\d+))?(?:(?P<pct>%)|(?P<ord>st|nd|rd|th))?"
 )
-IDENTIFIER = re.compile(r"[A-Za-z]+_?\d+|8D")
+IDENTIFIER = re.compile(r"ISIC_\d+|8D")
 EXACT = 1e-12
 
 
@@ -100,6 +101,14 @@ def numbers_in(text: str) -> list[Number]:
     return found
 
 
+def _finite(x: float) -> bool:
+    """True for a number that converts to a finite float (a huge int does not)."""
+    try:
+        return math.isfinite(float(x))
+    except OverflowError:
+        return False
+
+
 def _leaves(obj: Any) -> Iterator[Any]:
     """Every leaf, dictionary keys included."""
     if isinstance(obj, Mapping):
@@ -122,7 +131,7 @@ def allowed_values(
         if isinstance(leaf, bool) or leaf is None:
             continue
         if isinstance(leaf, (int, float)):
-            if math.isfinite(leaf):
+            if _finite(leaf):
                 values.append(float(leaf))
         elif isinstance(leaf, str):
             values += [n.value for n in numbers_in(leaf) if math.isfinite(n.value)]
@@ -139,11 +148,13 @@ def _report_numbers(obj: Any) -> Iterator[Number]:
     for leaf in _leaves(obj):
         if isinstance(leaf, str):
             yield from numbers_in(leaf)
-        elif isinstance(leaf, (int, float)) and not isinstance(leaf, bool):
-            if not math.isfinite(leaf):
-                yield Number(repr(leaf), math.nan, 0.0, False)
-            else:
-                yield from numbers_in(repr(leaf))
+        elif leaf is None or isinstance(leaf, bool):
+            continue
+        elif isinstance(leaf, (int, float)) and _finite(leaf):
+            yield from numbers_in(repr(leaf))
+        else:
+            # A non-finite or unreadably large number, or any other kind of leaf, is unmatched.
+            yield Number(repr(leaf)[:40], math.nan, 0.0, False)
 
 
 def check(
