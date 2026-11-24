@@ -481,9 +481,17 @@ gets a **Blocked:** line with the reason.
    - **Today:** 30 synthetic (staged) eval scenarios and the eval spec
      (`results/phase4/scenarios.json`, `results/phase4/eval_spec.json`) are on `main`; the owner
      approved Claude's proposed thresholds on 2026-11-24 (27 of 30, groundedness a hard gate).
-     There is no report generator, groundedness check, review queue or runbook yet. The
+     There is no report generator, review queue or runbook yet. The
      replay's alert months use real images in an order we chose, so they count as replayed, not
      as live drift.
+   - **Built 2026-11-24 (not used on any report yet):** the groundedness check,
+     `cdm.groundedness` (`tests/test_groundedness.py`): every number in a report, prose or JSON,
+     must match a number in its scenario record or the rules context; the rounding and percent
+     rules the eval spec left open are fixed there and in `eval_spec.json`
+     (`scoring.groundedness_rules`), before any generator or live call (Claude's choice of rules).
+     PLAN.md Phase 4 says to reuse the governed agent's check; it is written fresh here (CLAUDE.md:
+     read the other repo for the pattern, write fresh code), and that repo's check was not read in
+     this session. PLAN.md's box stays open until the check scores a real eval run.
 
 9. [x] **Model card and change-control plan:** a CHAI-format applied model card, and a one-page
    change-control plan mapped to FDA's Predetermined Change Control Plan guidance.

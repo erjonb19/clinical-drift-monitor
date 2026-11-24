@@ -24,7 +24,8 @@
     "scenario_pass": "correct and grounded",
     "runs_per_scenario": 3,
     "scenario_result": "correctness: passes if at least 2 of its 3 runs are correct. Groundedness is a hard gate, not 2 of 3: one ungrounded number in any scored run fails the whole eval",
-    "provider_outage": "a call that fails at the provider after retries (quota, timeout, 5xx) is an outage, not a wrong answer: it is counted apart and the run is not scored"
+    "provider_outage": "a call that fails at the provider after retries (quota, timeout, 5xx) is an outage, not a wrong answer: it is counted apart and the run is not scored",
+    "groundedness_rules": "fixed 2026-11-24 in cdm.groundedness, before any generator or live call (the step the spec above left to this PR): a number written with d decimals matches an allowed value within 0.5 x 10^-d; a whole number must equal an allowed value exactly; a percent is read as x/100 with two more decimals (14% matches 0.14 within 0.005); scientific form within half a unit of the mantissa's last digit; thousands separators are read as one number; ISIC image IDs and the literal 8D are not numbers (any other letters-and-digits token, such as month9 or x2, is unmatched), ordinals (95th) are; every other run of characters holding a digit must read in full as a number or it is unmatched (0.9x, dates, ranges, unreadable numerals, NaN, huge or non-numeric leaves), so the check fails closed; allowed values are every number in the record and the rules context, including numbers written inside their strings and keys. It matches a number against all allowed values, not against the field it describes, so a right-looking but wrong number that equals another allowed value passes; the correctness scoring catches that. Tested in tests/test_groundedness.py"
   },
   "thresholds": {
     "pass": "at least 27 of 30 scenarios pass (90%) AND no scored run anywhere contains an ungrounded number",
