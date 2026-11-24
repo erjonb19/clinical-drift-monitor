@@ -438,6 +438,17 @@ gets a **Blocked:** line with the reason.
      (`models:/workspace.cdm.skin_lesion_classifier@champion`) in the scoring job, so lineage
      records the registered model to audit table edge. A change to the monthly job; the owner
      deploys it.
+   - **Found 2026-11-24 (Claude; not changed):** after replay month 12 the monthly job loads no
+     model at all (`service = Service.load(BUNDLE) if REPLAYING else None` in
+     `databricks/notebooks/monthly_drift.py`): the 1 December run and later ones log the live
+     check (and, in the first of them, month 12's delayed accuracy) and write no audit rows. So
+     loading the champion through the registry there would not create the registered model to
+     audit table edge in the real `gold_prediction_audit`; only a replaying run would (today the rehearsal, writing
+     `rehearsal_prediction_audit`), or the post-replay scoring once it is wired (item 18's note
+     and `cdm.post_replay`, not wired). Whether Unity Catalog records a model-to-table edge for a
+     model loaded with MLflow in a notebook is not checked against the docs. **For the owner:**
+     wire the registry load into the post-replay scoring when that is built, or into the
+     rehearsal now (its audit rows are a rehearsal's, not the real table's).
 
 8. [ ] **8D incident reports as postmortems:** run one real drift incident end to end and write
    it up.
