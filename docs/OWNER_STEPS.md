@@ -107,6 +107,9 @@ credential or its permission is wrong.
 
 - [ ] Done
 
+2026-11-20: approved by the owner in chat (step 1). The PR that adds the rules is open for the
+owner to merge; step 2 follows the merge.
+
 **Why:** in a cloud session on 2026-11-19, `curl -X POST <url>` (flag right after `curl`) was
 not denied. Every curl and `gh api` write rule in `.claude/settings.json` needs some text
 between the command and the flag. Item 23 can't close until a POST is denied in that form too.
