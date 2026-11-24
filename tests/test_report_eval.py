@@ -9,7 +9,17 @@ from typing import Any
 
 import pytest
 
-from cdm.report_eval import EIGHT_D, MAX_SHORT, PASS_AT_LEAST, correct, score, shape_errors
+from cdm.report_eval import (
+    EIGHT_D,
+    FINDINGS,
+    MAX_SHORT,
+    MIN_CORRECT,
+    PASS_AT_LEAST,
+    RUNS,
+    correct,
+    score,
+    shape_errors,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 DATA = json.loads((REPO / "results/phase4/scenarios.json").read_text(encoding="utf-8"))
@@ -36,7 +46,10 @@ def runs(outputs: dict[str, list[tuple[str, Any]]] | None = None) -> list[dict[s
         for n, (outcome, out) in enumerate(
             (outputs or {}).get(s["id"], [("ok", perfect(s))] * 3), 1
         ):
-            rows.append({"scenario": s["id"], "run": n, "outcome": outcome, "output": out})
+            row = {"scenario": s["id"], "run": n, "outcome": outcome, "output": out}
+            if outcome == "outage":
+                row["error"] = "503 after 3 retries"
+            rows.append(row)
     return rows
 
 
@@ -48,7 +61,9 @@ def test_the_constants_are_the_approved_thresholds() -> None:
     t = SPEC["thresholds"]
     assert f"at least {PASS_AT_LEAST} of 30" in t["pass"]
     assert f"more than {MAX_SHORT} scenarios" in t["inconclusive"]
-    assert SPEC["scoring"]["runs_per_scenario"] == 3 and len(SCENARIOS) == 30
+    assert SPEC["scoring"]["runs_per_scenario"] == RUNS == 3 and len(SCENARIOS) == 30
+    assert f"at least {MIN_CORRECT} of its {RUNS}" in SPEC["scoring"]["scenario_result"]
+    assert all(set(FINDINGS) | {"caveats"} == set(s["expected"]) for s in SCENARIOS)
 
 
 def test_perfect_runs_pass() -> None:
@@ -112,3 +127,25 @@ def test_malformed_run_lists_are_refused() -> None:
         result([*rows[:-1], rows[-1] | {"outcome": "timeout"}])
     with pytest.raises(ValueError, match="out of range"):
         result([*rows[:-1], rows[-1] | {"run": 4}])
+
+
+def test_a_missing_run_is_refused_not_treated_as_an_outage() -> None:
+    """Review of #158: dropping a run (an ungrounded one, or whole scenarios) once turned a fail
+    into a pass or an inconclusive."""
+    rows = runs()
+    for dropped in (rows[:-1], [r for r in rows if r["run"] < 3], rows[15:], []):
+        with pytest.raises(ValueError, match="not recorded"):
+            result(dropped)
+
+
+def test_an_outage_must_carry_its_error_and_no_output() -> None:
+    s = SCENARIOS[0]
+    bad = perfect(s) | {"claims": [{"value": 0.987654, "source": "drift.psi"}]}
+    rows = runs({s["id"]: [("ok", perfect(s)), ("ok", perfect(s)), ("outage", None)]})
+    assert result(rows)["outages"] == 1
+    hidden = [r | {"output": bad} if r["outcome"] == "outage" else r for r in rows]
+    with pytest.raises(ValueError, match="outage"):
+        result(hidden)
+    no_error = [{k: v for k, v in r.items() if k != "error"} for r in rows]
+    with pytest.raises(ValueError, match="outage"):
+        result(no_error)

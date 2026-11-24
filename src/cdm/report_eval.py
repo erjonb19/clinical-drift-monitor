@@ -1,11 +1,19 @@
 """Phase 4 (backlog item 8): score incident-report runs against the approved eval spec.
 
 ``results/phase4/eval_spec.json`` (thresholds approved by the owner, 2026-11-24), applied to
-recorded runs. Nothing here calls a model; a generator writes the runs, and CI replays them.
+recorded runs. Nothing here calls a model; a generator is to write the runs and a CI step to replay
+them (neither is built yet).
 
 - **A run** is ``{"scenario": id, "run": n, "outcome": "ok" | "outage" | "invalid", "output":
-  ...}``. An ``outage`` (the provider failed after retries) is not scored. An ``invalid`` run (the
-  provider answered, but not in the required shape) is scored and is never correct.
+  ...}``. Every scenario must have exactly runs 1, 2 and 3 recorded, or the run list is refused:
+  a run cannot go missing. An ``outage`` (the provider failed after retries) is not scored; it
+  must carry the provider's ``error`` and no ``output``. An ``invalid`` run (the provider
+  answered, but not in the required shape) is scored, is checked for groundedness, and is never
+  correct.
+- **The 8D report** is the output's ``eight_d`` object with the keys ``problem``,
+  ``containment``, ``root_cause``, ``permanent_fix``, ``verification`` and ``prevention``. List
+  findings are compared as sets (a repeated item is not penalised); caveats beyond the expected
+  ones are not penalised either (the spec asks only that the expected ones are stated).
 - **Correct:** every structured finding equals the known one (lists compared as sets), every
   expected caveat is stated, and the 8D report is present, with all six sections non-empty,
   exactly when one is due.
@@ -85,8 +93,9 @@ def score(
     rules: Mapping[str, Any],
     floor: float,
 ) -> dict[str, Any]:
-    """The eval's result for recorded runs. Refuses runs that name an unknown scenario, an
-    unknown outcome, a repeated or out-of-range run number."""
+    """The eval's result for recorded runs. Refuses a run list with an unknown scenario or
+    outcome, a repeated or out-of-range run, a scenario without all its runs, or an outage that
+    has an output or no error."""
     by_id = {s["id"]: s for s in scenarios}
     per: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
     seen = set()
@@ -96,8 +105,13 @@ def score(
             raise ValueError(f"unknown scenario or outcome in run {key}")
         if key in seen or not (isinstance(r["run"], int) and 1 <= r["run"] <= RUNS):
             raise ValueError(f"run {key} is repeated or out of range")
+        if r["outcome"] == "outage" and (r.get("output") is not None or not r.get("error")):
+            raise ValueError(f"outage {key} must have the provider's error and no output")
         seen.add(key)
         per[r["scenario"]].append(r)
+    missing = [(sid, n) for sid in by_id for n in range(1, RUNS + 1) if (sid, n) not in seen]
+    if missing:
+        raise ValueError(f"{len(missing)} runs are not recorded, first {missing[0]}")
 
     rows, ungrounded = [], []
     for sid, s in by_id.items():

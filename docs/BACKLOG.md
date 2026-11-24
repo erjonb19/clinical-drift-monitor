@@ -496,8 +496,11 @@ gets a **Blocked:** line with the reason.
      (`tests/test_report_eval.py`): correctness per run (structured findings, caveats, the 8D
      report exactly when due), the groundedness gate, 2 of 3 runs per scenario, outages not
      scored, and the approved verdict (pass at 27 of 30, inconclusive with exit 2 when more than
-     3 scenarios lack 2 scored runs, otherwise fail). Tested on made-up runs only. **Not built:**
-     the generator (Gemini, free tier) and its manual workflow, the review queue and the runbook.
+     3 scenarios lack 2 scored runs, otherwise fail). A run list must hold runs 1 to 3 for every
+     scenario, and an outage must record the provider's error and no output, so no run can be
+     dropped or hidden. Tested on made-up runs only. **Not built:** the generator (Gemini, free
+     tier) and its manual workflow, the CLI or CI step that replays recorded runs through this
+     scorer, the review queue and the runbook.
 
 9. [x] **Model card and change-control plan:** a CHAI-format applied model card, and a one-page
    change-control plan mapped to FDA's Predetermined Change Control Plan guidance.
