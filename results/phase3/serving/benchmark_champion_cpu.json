@@ -1,0 +1,99 @@
+{
+  "what": "serving speed of the API (backlog item 13); not accuracy",
+  "bundle_version": "v2-ensemble-cpu-d7191f4",
+  "caveat": "",
+  "measured_utc": "2026-11-25T04:35:06+00:00",
+  "code_version": "2c0a668",
+  "uncommitted_changes": false,
+  "where": "GitHub Actions ubuntu-latest runner (4 CPUs)",
+  "hardware": {
+    "cpu": "Intel(R) Xeon(R) 6975P-C",
+    "logical_cpus": 4,
+    "memory_mb": 15700,
+    "os": "Linux-7.0.0-1016-aws-x86_64-with-glibc2.43"
+  },
+  "software": {
+    "python": "3.11.18",
+    "torch": "2.14.0+cpu",
+    "torch_threads_default": 2,
+    "torch_threads_note": "read in the client process; the server uses the same default"
+  },
+  "server": "scripts/bench_app.py: app/api/main.py's create_app, one uvicorn worker, rate limiter opened wide",
+  "networks_in_bundle": 3,
+  "conditions": "client and server share the same machine's CPUs; every request opens a new connection (urllib sends Connection: close); the API runs each request in a worker thread, so concurrent requests compute in parallel and compete for the CPUs; CPU is measured per level (server_cpu_cores_used: the server process's CPU seconds over wall time, all its threads; machine_cpu_busy_share: all CPUs, the load generator included)",
+  "image": "one synthetic 448x448 JPEG, sent repeatedly; 10 warm-up requests not counted",
+  "memory_after_warmup_kb": {
+    "VmHWM": 662332,
+    "VmRSS": 662332
+  },
+  "levels": [
+    {
+      "users": 1,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 104.2,
+        "p95": 179.8,
+        "p99": 207.9,
+        "mean": 109.7
+      },
+      "throughput_per_s": 9.11,
+      "wall_s": 21.9,
+      "server_cpu_cores_used": 3.95,
+      "machine_cpu_busy_share": 0.997,
+      "server_memory_kb": {
+        "VmHWM": 662376,
+        "VmRSS": 662376
+      }
+    },
+    {
+      "users": 5,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 349.5,
+        "p95": 964.9,
+        "p99": 1087.8,
+        "mean": 410.5
+      },
+      "throughput_per_s": 11.36,
+      "wall_s": 17.6,
+      "server_cpu_cores_used": 3.95,
+      "machine_cpu_busy_share": 0.997,
+      "server_memory_kb": {
+        "VmHWM": 778016,
+        "VmRSS": 778016
+      }
+    },
+    {
+      "users": 20,
+      "requests": 200,
+      "status_codes": {
+        "200": 200
+      },
+      "latency_ms": {
+        "p50": 1052.8,
+        "p95": 1177.0,
+        "p99": 1236.0,
+        "mean": 1036.2
+      },
+      "throughput_per_s": 18.78,
+      "wall_s": 10.6,
+      "server_cpu_cores_used": 3.95,
+      "machine_cpu_busy_share": 0.996,
+      "server_memory_kb": {
+        "VmHWM": 1247292,
+        "VmRSS": 1247292
+      }
+    }
+  ],
+  "bottleneck": {
+    "named": "CPU compute",
+    "evidence": "at 20 users the server used 3.95 of 4 cores and the machine was 99.6% busy",
+    "rule": "CPU-bound when the server used at least 85% of the cores or the machine was at least 90% busy at the busiest level (the load generator runs on the same machine)"
+  }
+}
