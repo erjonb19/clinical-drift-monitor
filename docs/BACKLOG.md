@@ -692,7 +692,9 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       time) and the machine's busy share (`/proc/stat`), and names the bottleneck by a stated
       rule. "Serving benchmark" run 45547586355 on a 4-CPU GitHub runner (Intel Xeon 6975P-C;
       the 2026-11-22 run drew an AMD EPYC 7763, so times differ): the champion bundle used 3.95
-      of 4 cores at 1, 5 and 20 users, the machine was over 99% busy, p50 104.2, 349.5 and
+      of 4 vCPUs at 1, 5 and 20 users and the machine was over 99% busy (CPU-bound at 20 users;
+      at one user part of that CPU time was not useful work, since throughput still doubled at
+      the same CPU time), p50 104.2, 349.5 and
       1,052.8 ms, 9.11, 11.36 and 18.78 images a second, all 600 requests 200
       (`results/phase3/serving/benchmark_champion_cpu.json`, linked from the README's serving
       section). The bottleneck is CPU compute. **Not done from the description (not in the Done
