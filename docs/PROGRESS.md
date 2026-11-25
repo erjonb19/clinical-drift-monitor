@@ -7,6 +7,10 @@ Nothing goes here until the item's "Done when" is met.
 
 Blocked items and decisions waiting on the owner, newest first. Each has a recommendation.
 
+- **Phase F (2026-11-25): have you reviewed `docs/cohort_contract.md`, and does
+  governed-clinical-agent's plan note the item?** Those are its Done when; only your 2026-10-22
+  approval of the routing is recorded. Recommendation: read the contract (it is short), say
+  "reviewed" in chat, and add one line to the agent repo's plan; Claude then ticks F.
 - **Item 18 (2026-11-25): the monthly job now runs the input contract, but no Databricks run
   has carried the counts, which the Done when needs.** Only a month that scores images can carry
   them, and after month 12 only the rehearsal scores. Recommendation: before S15, restage the

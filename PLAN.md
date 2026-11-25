@@ -187,6 +187,7 @@ The full first plan is in [docs/research_extension_plan.md](docs/research_extens
 **F: Cohort contract.**
 - *Prep done:* [docs/cohort_contract.md](docs/cohort_contract.md), a draft. It now routes the agent through the G2 cohort service (library phenotypes run autonomously; new definitions are gated on a human approval by hash) instead of new SQL templates.
 - *Done when:* the owner has reviewed it and the agent repo's plan notes the item.
+- *Checked 2026-11-25, not done:* the decisions log records the owner's approval of the routing (2026-10-22: the agent reaches the OMOP tables only through the G2 service), but no review of `docs/cohort_contract.md` itself is recorded, and whether governed-clinical-agent's plan notes the item was not checked (that repository is outside this session). Asked under "Questions for the owner" in `docs/PROGRESS.md`.
 
 **Order:** C (CPU, shipped model) and F (review) can go first; B is approved (capped at 2 GPU hours); D needs a CPU job; E needs B.
 
@@ -232,12 +233,12 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
 | G5 Clinical text extraction to OMOP fields | 1 to 1.5 days, plus your labelling | A | AI-ie, AI-eval, DE-ehr |
 | G6 Public Streamlit cohort demo and walkthrough script | 0.5 day | G2, license check | SUP, DE-cohort |
 
-- [ ] **G1: Docs, quick wins.**
+- [x] **G1: Docs, quick wins.** (Checked 2026-11-25: `docs/EVAL_PLAN.md` and `docs/governance.md` are on `main`; `.github/ISSUE_TEMPLATE/data_request.yml` is checked by `tests/test_issue_form.py`; issues #8 to #14 were filed from the form, labelled `data-request` and `synthetic`.)
   - `docs/EVAL_PLAN.md`, written as a study protocol: baselines, splits, human review, error analysis, reproducibility, subgroups and bias, failure criteria.
   - `docs/governance.md`: public and restricted access tiers, a data use checklist, risk tiering and the escalation path.
   - `.github/ISSUE_TEMPLATE/data_request.yml`: question, cohort, data needed, approval status. Plus a GitHub project board: [Research data requests](https://github.com/users/erjonb19/projects/2), created 2026-10-21; the form adds each new request to it.
   - **Done when** the docs are merged and a test request issue renders from the form.
-- [ ] **G2: Governed cohort and feasibility service** (`src/cdm/cohort.py`).
+- [x] **G2: Governed cohort and feasibility service** (`src/cdm/cohort.py`). (Checked 2026-11-25: `tests/test_cohort.py` covers refusal outside the allowlist, unapproved and changed definitions by hash, small-cell and subtraction suppression, and the hash-chained audit log; `results/research/g2_cohort/audit.jsonl` records 12 runs of five phenotypes against `workspace.cdm.omop_*`, the Phase A tables, for the synthetic requests #8 to #14. All 12 runs used the v1 definitions under stand-in approvals (recorded in `synthetic_approvals.jsonl` and in the audit log); the owner's own approvals (2026-10-23, `phenotypes/approvals.jsonl`) cover v2, and no v2 run is logged yet.)
   - Cohort definitions are versioned YAML files in `phenotypes/`, built only from allowlisted OMOP tables, columns and operators. No free SQL.
   - A definition runs only once a recorded human has approved that exact version, by hash.
   - Every request, approval, run and refusal goes to an append-only audit log.
@@ -245,12 +246,12 @@ Phase G turns the OMOP tables from Phase A into a small research data service. I
   - It is written against generic OMOP CDM v5.4 column names, so it can later point at the intake platform's OMOP. It runs on DuckDB locally and in CI, and on Databricks SQL in the workspace.
   - The pattern comes from `Security-Constrained-Agent-Runtime`, which is read only and not modified.
   - **Done when** tests cover refusal of non-allowlisted fields, unapproved and changed definitions, suppression including the subtraction case, and the audit trail, and at least three phenotypes run on the Phase A tables.
-- [ ] **G3: FAIR packaging.**
+- [x] **G3: FAIR packaging.** (Checked 2026-11-25: `metadata/dataset.jsonld`, `CITATION.cff` and `.zenodo.json` are validated by `tests/test_fair.py`, and `notebooks/quickstart.ipynb` runs offline in `tests/test_quickstart.py`, both in CI's pytest step.)
   - Dataset metadata: DCAT/schema.org JSON-LD, plus a `CITATION.cff`.
   - `notebooks/quickstart.ipynb`, which runs on the public demo extract.
   - A Zenodo-ready release: `.zenodo.json` and a release checklist. You connect Zenodo to GitHub; it needs your login. (Released 2026-10-23 by the owner's approval: v1.0.0, DOI 10.5281/zenodo.23600426; concept DOI 10.5281/zenodo.23600425.)
   - **Done when** the metadata validates in CI and the notebook runs in CI.
-- [ ] **G4: Service metrics page** (`scripts/service_metrics.py` to `docs/service_metrics.md`).
+- [x] **G4: Service metrics page** (`scripts/service_metrics.py` to `docs/service_metrics.md`). (Checked 2026-11-25: one command regenerates the page; `tests/test_service_metrics.py` checks its numbers against fixtures and the committed page against its model rows.)
   - Request turnaround from the issue tracker.
   - Cohort output quality from the gates and audit log.
   - Method reuse: phenotype runs per definition.
