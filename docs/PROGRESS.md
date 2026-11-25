@@ -7,6 +7,12 @@ Nothing goes here until the item's "Done when" is met.
 
 Blocked items and decisions waiting on the owner, newest first. Each has a recommendation.
 
+- **Item 18 (2026-11-25): the monthly job now runs the input contract, but no Databricks run
+  has carried the counts, which the Done when needs.** Only a month that scores images can carry
+  them, and after month 12 only the rehearsal scores. Recommendation: before S15, restage the
+  rehearsal notebook from `main` (S11 step 2's command) so its months 2 to 10 carry the counts;
+  Claude then fills the rehearsal job file, and S15 runs as written.
+
 - **Item 8 (2026-11-25): does a report from the template writer count as "report written" for
   the Done when, or must it be the Gemini one?** Recommendation: the Gemini one, since PLAN.md
   Phase 4 says the LLM writes it; keep the template report as the grounded baseline.

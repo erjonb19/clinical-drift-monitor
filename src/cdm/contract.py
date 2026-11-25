@@ -219,3 +219,22 @@ def month_counts(verdicts: Iterable[Verdict], config: dict[str, Any]) -> dict[st
         "quarantine_share": share,
         "spike": bool(verdicts) and share > config["spike_share"],
     }
+
+
+def screen(images: Iterable[bytes], config: dict[str, Any]) -> tuple[list[int], dict[str, Any]]:
+    """The monthly job's contract (backlog item 18): check a month's images in order, each
+    against the hashes of every image before it, and return the indices that pass (the only
+    ones scored) with the month's counts (:func:`month_counts` plus ``scored``)."""
+    seen: list[int] = []
+    verdicts: list[Verdict] = []
+    keep: list[int] = []
+    for i, data in enumerate(images):
+        v = check(data, config, seen)
+        verdicts.append(v)
+        if v.dhash is not None:
+            seen.append(v.dhash)
+        if v.ok:
+            keep.append(i)
+    counts = month_counts(verdicts, config)
+    counts["scored"] = len(keep)
+    return keep, counts

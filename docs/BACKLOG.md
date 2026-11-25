@@ -801,6 +801,18 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       in the API; flat images hash to zero and are never matched as duplicates.
     - **Owner decision, 2026-11-09:** the contract's thresholds are accepted; blur and exposure
       stay report-only until calibrated on real images.
+    - **2026-11-25, the monthly job wired (not run):** `databricks/notebooks/monthly_drift.py`
+      runs the contract on each scored month before scoring (`cdm.contract.screen`: each image
+      against the hashes of every image before it). Quarantined images are counted per reason
+      in the month's row (`input_contract`: images, quarantined, by reason, flagged, share,
+      spike, scored) and never scored; a spike (over 10% quarantined) joins the run's ALERT
+      message (`cdm.slo.alerts`). Tested on synthetic images (`tests/test_contract.py`,
+      `tests/test_slo.py`). **Not ticked:** "the monthly results carry the counts" needs a run
+      on Databricks, and only a month that scores images carries them: after replay month 12 the
+      real job scores nothing, so today only the rehearsal would (its staged notebook predates
+      this change). Listed under "Questions for the owner" in `docs/PROGRESS.md`. Risk to watch
+      in that first run: ISIC holds several photos of one lesion; if any are near-identical by
+      the 4-bit hash rule, they are quarantined as duplicates and the drift test sees fewer images.
 
 19. [ ] **Least-privilege access.** The watchdog's service principal (item 1) can view one job
     and nothing else, with the `users` group's default grants checked and removed; the
