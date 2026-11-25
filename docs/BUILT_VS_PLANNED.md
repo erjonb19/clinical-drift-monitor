@@ -400,13 +400,18 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
   exists yet, so no report has been checked.
 - `cdm.report_eval` (2026-11-24): scores recorded runs under the approved spec (correctness,
   the groundedness gate, 2 of 3 runs, outages apart, pass / inconclusive / fail). Tested on
-  made-up runs only; no generator exists, so no real run has been scored.
+  made-up runs only.
+- Incident reports (item 8, 2026-11-25): `cdm.incident`, `scripts/incident_report.py`, the
+  review queue, `docs/runbook.md` and the dispatch-only `incident-eval` workflow. One report is
+  queued (replay month 9, replayed, by the deterministic template writer, grounded), not yet
+  reviewed. The Gemini client is tested with a fake server only: no LLM has been called, so no
+  LLM report or eval result exists.
 
 ## Not started
 
 - Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
-  shifts); the rest of Phase 4 (generator and its workflow, the replay step, review queue, runbook) and
-  Phase 5.
+  shifts); the rest of Phase 4 (the Gemini eval run and an LLM-written report; owner steps
+  S18 and S19) and Phase 5.
 - Closed without being built (owner, 2026-11-03): the Gram backup detector (dropped: a CPU
   refit missed the GPU fit's normalizer by up to 11.8% in Phase 2) and the GPU-fit serving-setup
   check (superseded: the served bundle fits its detector on CPU features). See PLAN.md's
