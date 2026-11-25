@@ -76,7 +76,38 @@ def memory_kb(pid: int) -> dict[str, int]:
     return out
 
 
-def level(url: str, body: bytes, users: int, total: int) -> dict[str, Any]:
+def process_cpu_s(pid: int) -> float:
+    """CPU seconds the process has used, all its threads (utime + stime in /proc/<pid>/stat)."""
+    fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
+    return (int(fields[11]) + int(fields[12])) / os.sysconf("SC_CLK_TCK")
+
+
+def machine_cpu() -> tuple[int, int]:
+    """Busy and total jiffies of all CPUs (first line of /proc/stat; idle and iowait are idle)."""
+    # user nice system idle iowait irq softirq steal; guest time is already inside user.
+    values = [int(x) for x in Path("/proc/stat").read_text().splitlines()[0].split()[1:9]]
+    idle = values[3] + (values[4] if len(values) > 4 else 0)
+    return sum(values) - idle, sum(values)
+
+
+def bottleneck(levels: list[dict[str, Any]], logical_cpus: int) -> dict[str, Any]:
+    """Name the bottleneck from the measured CPU at the busiest level: the server is CPU-bound
+    when it used at least 85% of the machine's cores, or the machine was at least 90% busy."""
+    top = max(levels, key=lambda lv: lv["users"])
+    cores, busy = top["server_cpu_cores_used"], top["machine_cpu_busy_share"]
+    cpu_bound = cores >= 0.85 * logical_cpus or busy >= 0.90
+    return {
+        "named": "CPU compute" if cpu_bound else "not CPU (CPU had headroom at the busiest level)",
+        "evidence": (
+            f"at {top['users']} users the server used {cores} of {logical_cpus} cores and the "
+            f"machine was {round(100 * busy, 1)}% busy"
+        ),
+        "rule": "CPU-bound when the server used at least 85% of the cores or the machine was at "
+        "least 90% busy at the busiest level (the load generator runs on the same machine)",
+    }
+
+
+def level(url: str, body: bytes, users: int, total: int, pid: int) -> dict[str, Any]:
     per = max(1, total // users)
     lat: list[float] = []
     codes: dict[int, int] = {}
@@ -91,12 +122,14 @@ def level(url: str, body: bytes, users: int, total: int) -> dict[str, Any]:
                     lat.append(ms)
 
     threads = [threading.Thread(target=worker) for _ in range(users)]
+    cpu0, (busy0, total0) = process_cpu_s(pid), machine_cpu()
     start = time.perf_counter()
     for t in threads:
         t.start()
     for t in threads:
         t.join()
     wall = time.perf_counter() - start
+    cpu1, (busy1, total1) = process_cpu_s(pid), machine_cpu()
     if not lat:
         raise RuntimeError(f"no request succeeded at {users} users: {codes}")
     q = [float(x) for x in np.percentile(lat, [50, 95, 99])]
@@ -112,6 +145,8 @@ def level(url: str, body: bytes, users: int, total: int) -> dict[str, Any]:
         },
         "throughput_per_s": round(len(lat) / wall, 2),
         "wall_s": round(wall, 1),
+        "server_cpu_cores_used": round((cpu1 - cpu0) / wall, 2),
+        "machine_cpu_busy_share": round((busy1 - busy0) / max(1, total1 - total0), 3),
     }
 
 
@@ -157,7 +192,7 @@ def main() -> None:
         idle = memory_kb(server.pid)
         levels = []
         for users in args.users:
-            levels.append(level(url + "/predict", body, users, args.requests))
+            levels.append(level(url + "/predict", body, users, args.requests, server.pid))
             levels[-1]["server_memory_kb"] = memory_kb(server.pid)
     finally:
         server.terminate()
@@ -192,6 +227,7 @@ def main() -> None:
         "image": "one synthetic 448x448 JPEG, sent repeatedly; 10 warm-up requests not counted",
         "memory_after_warmup_kb": idle,
         "levels": levels,
+        "bottleneck": bottleneck(levels, os.cpu_count() or 1),
     }
     args.out.write_text(json.dumps(result, indent=2) + "\n")
     for lv in levels:
