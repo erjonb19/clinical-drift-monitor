@@ -1,0 +1,141 @@
+{
+  "month": 9,
+  "kind": "replayed",
+  "writer": "template",
+  "record": {
+    "month": 9,
+    "run_utc": "2026-10-23T02:15:13+00:00",
+    "job_run": "830837634650904",
+    "code_version": "01f25eb",
+    "bundle_version": "v2-ensemble-cpu-d7191f4",
+    "live": {
+      "count": 553019,
+      "new_since_last_run": 0
+    },
+    "delayed_accuracy_of_month": {
+      "month": 8,
+      "labelled": 290,
+      "melanoma_images": 59,
+      "balanced_accuracy": 0.5918419212818623
+    },
+    "by_source": {
+      "client_test": 0,
+      "buenos_aires": 300,
+      "pad_ufes": 0
+    },
+    "drift": {
+      "images": 300,
+      "ks_statistic": 0.3353894080996885,
+      "ks_p": 5.734241946655379e-28,
+      "psi": 0.6249009591713144,
+      "alert": true,
+      "warning": false
+    },
+    "by_skin_type": {
+      "I": {
+        "images": 26,
+        "alert": false,
+        "note": "counts only (under 100 images or not recorded)"
+      },
+      "II": {
+        "images": 187,
+        "ks_statistic": 0.4639795425391907,
+        "ks_p": 2.917933834996705e-35,
+        "psi": 2.2943569412968925,
+        "alert": true,
+        "warning": false
+      },
+      "III": {
+        "images": 56,
+        "alert": false,
+        "note": "counts only (under 100 images or not recorded)"
+      },
+      "IV": {
+        "images": 4,
+        "alert": false,
+        "note": "counts only (under 100 images or not recorded)"
+      },
+      "not recorded": {
+        "images": 27,
+        "alert": false,
+        "note": "counts only (under 100 images or not recorded)"
+      }
+    },
+    "abstain_share": 0.20333333333333334
+  },
+  "report": {
+    "severity": "alert",
+    "overall_alert": true,
+    "alerting_skin_types": [
+      "II"
+    ],
+    "new_sources": [
+      "buenos_aires"
+    ],
+    "containment": "abstain_and_hold",
+    "eight_d_report": true,
+    "delayed_accuracy_available": true,
+    "accuracy_drop": false,
+    "caveats": [
+      "skin_type_recorded_only_at_new_sites"
+    ],
+    "claims": [
+      {
+        "value": 9,
+        "source": "month"
+      },
+      {
+        "value": 300,
+        "source": "drift.images"
+      },
+      {
+        "value": 0.6249009591713144,
+        "source": "drift.psi"
+      },
+      {
+        "value": 5.734241946655379e-28,
+        "source": "drift.ks_p"
+      },
+      {
+        "value": 0.20333333333333334,
+        "source": "abstain_share"
+      }
+    ],
+    "eight_d": {
+      "problem": "Month 9: the OOD scores of 300 images shifted (PSI 0.62 with KS p = 5.73e-28; skin type II (187 images) also alerted, which detects the new site, not anything about skin type). Images came from buenos_aires (300 images). 20.3% of images were above the abstain threshold, above the abstain-share target of 15% (target broken).",
+      "containment": "Containment word: abstain_and_hold. Abstain: the service flags every image above the abstain threshold for a person to review instead of reading it from the model. Hold: the champion is not replaced while the alert is open (a runbook procedure, not enforced by code). The steps are in the runbook's containment section (docs/runbook.md).",
+      "root_cause": "Images from buenos_aires (300 images) entered the month's batch. The test shows the scores moved, not why; the source mix is the leading explanation and must be confirmed by a reviewer.",
+      "permanent_fix": "Relabel a sample from the new source, then train a challenger and promote it only if it wins under the committed retraining rule.",
+      "verification": "Month 9's own accuracy arrives with the next month's run. The latest known, month 8's delayed balanced accuracy, was 0.592 on 290 labelled images, not below the in-distribution floor of 0.591.",
+      "prevention": "Keep the monthly drift test and the per-skin-type test running, and review each alert's report in the queue before it counts as sent."
+    }
+  },
+  "accuracy_floor": 0.5910713198670328,
+  "groundedness": {
+    "grounded": true,
+    "numbers": 19,
+    "unmatched": []
+  },
+  "findings_match_rules": true,
+  "expected_findings": {
+    "severity": "alert",
+    "overall_alert": true,
+    "alerting_skin_types": [
+      "II"
+    ],
+    "new_sources": [
+      "buenos_aires"
+    ],
+    "containment": "abstain_and_hold",
+    "eight_d_report": true,
+    "delayed_accuracy_available": true,
+    "accuracy_drop": false,
+    "caveats": [
+      "skin_type_recorded_only_at_new_sites"
+    ]
+  },
+  "status": "pending_review",
+  "reviews": [],
+  "queued_utc": "2026-11-25T04:30:17+00:00",
+  "call": {}
+}

@@ -103,6 +103,88 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
+### S19. Review the queued incident reports (item 8)
+
+- [ ] Done
+
+**Why:** a report counts as sent only after a person approves it in the review queue (PLAN.md
+Phase 4), and item 8 closes only when one alert month has gone through the whole path. The
+queue holds `results/phase4/review_queue/month_09_template.json`: replay month 9 (real images
+in an order we chose, so **replayed**, not live drift), written by the deterministic template
+writer, grounded (every number matches the month's row). After S18 it also holds
+`month_09_gemini.json`, the LLM's report for the same month. Work through `docs/runbook.md`
+(D3 containment, D6 verification) while you read each one.
+
+1. Read the report and the runbook:
+   ```powershell
+   git checkout main
+   git pull
+   Get-Content results\phase4\review_queue\month_09_template.json
+   Get-Content docs\runbook.md
+   ```
+2. Record your decision on a branch (`approved` or `rejected`; the note says what you checked).
+   Repeat for `month_09_gemini.json` once it exists:
+   ```powershell
+   git checkout -b owner/incident-review
+   .venv\Scripts\python.exe scripts\incident_report.py review results\phase4\review_queue\month_09_template.json --decision approved --reviewer owner --note "checked the row, abstain share and the hold"
+   git add results\phase4\review_queue
+   git commit -m "Item 8: owner review of the month 9 incident report"
+   git push -u origin owner/incident-review
+   ```
+3. Tell Claude the branch name; Claude opens the PR and closes item 8 if the Done when is met.
+
+### S18. Set up the Gemini key and run the incident-report eval (item 8)
+
+- [ ] Done
+
+**Why:** the eval (90 calls: 30 staged scenarios, 3 runs each) and the LLM report for month 9
+run in `.github/workflows/incident-eval.yml`, by hand only, in a GitHub environment
+`llm-eval` that you approve each time. The key lives only in that environment's secret. Free
+tier: no charge. The model is `gemini-2.5-flash` (stable on Google's models page; that it is on
+the free tier for your key is **not checked**). Free-tier limits change often and may be far
+below 91 calls a day: in AI Studio, look up this model's **requests per day** for your key before
+step 4, and tell Claude if the model is not on the free tier. Calls are 7 seconds apart for the
+per-minute limit. The eval resumes: each run makes at most `max_calls` calls and keeps what it
+has, so it can be spread over several days. The prompts hold only staged scenarios and the
+committed replay row: no patient data. (The artifact's folders are `eval` and `review_queue`:
+the upload drops the common `results/phase4` prefix.)
+
+1. Create a free-tier key at https://aistudio.google.com/apikey (do not paste it anywhere but
+   step 3's prompt).
+2. Create the environment with you as the required reviewer:
+   ```powershell
+   $me = gh api user --jq .id
+   gh api -X PUT repos/erjonb19/clinical-drift-monitor/environments/llm-eval -F "reviewers[][type]=User" -F "reviewers[][id]=$me"
+   ```
+3. Add the key as the environment's secret (it prompts for the value; nothing is echoed):
+   ```powershell
+   gh secret set GEMINI_API_KEY --env llm-eval --repo erjonb19/clinical-drift-monitor
+   ```
+4. Start the run, then approve it under Actions → the run → **Review deployments**. Set
+   `max_calls` to the daily limit minus 1 (the report takes one call); `90` if the limit allows.
+   ```powershell
+   gh workflow run incident-eval.yml --repo erjonb19/clinical-drift-monitor -f month=9 -f max_calls=90 -f write_report=true
+   ```
+5. When it ends (every outcome uploads), download the artifact and push it. The last step's
+   exit code says what happened: 0 pass, 1 fail, 2 inconclusive, 3 partial (not all 90 runs yet).
+   ```powershell
+   $Run = gh run list --workflow incident-eval.yml --repo erjonb19/clinical-drift-monitor --limit 1 --json databaseId --jq ".[0].databaseId"
+   git checkout main
+   git pull
+   git checkout -b owner/incident-eval
+   gh run download $Run --repo erjonb19/clinical-drift-monitor --dir dist\incident-eval
+   New-Item -ItemType Directory -Force results\phase4\eval | Out-Null
+   Copy-Item dist\incident-eval\incident-eval-$Run\eval\* results\phase4\eval\
+   Copy-Item dist\incident-eval\incident-eval-$Run\review_queue\month_09_gemini.json results\phase4\review_queue\ -ErrorAction SilentlyContinue
+   git add results\phase4
+   git commit -m "Item 8: Gemini eval run and month 9 report"
+   git push -u origin owner/incident-eval
+   ```
+   Tell Claude the branch name; Claude merges it so the next run resumes from it. If it was
+   partial (3), repeat steps 4 and 5 the next day with `-f write_report=false`, until it ends
+   with 0, 1 or 2. If a run failed with "Gemini refused the request", the key or the model is
+   wrong: tell Claude the HTTP code shown.
+
 ### S17. Export the detector-quality image IDs once (item 15)
 
 - [ ] Done

@@ -3,6 +3,14 @@
 One line per finished item from [BACKLOG.md](BACKLOG.md): what changed, and how to check it.
 Nothing goes here until the item's "Done when" is met.
 
+## Questions for the owner
+
+Blocked items and decisions waiting on the owner, newest first. Each has a recommendation.
+
+- **Item 8 (2026-11-25): does a report from the template writer count as "report written" for
+  the Done when, or must it be the Gemini one?** Recommendation: the Gemini one, since PLAN.md
+  Phase 4 says the LLM writes it; keep the template report as the grounded baseline.
+
 | Date | Item | What changed | How to check |
 | --- | --- | --- | --- |
 | 2026-11-24 | 23 | `.claude/settings.json` (91 deny rules, from the security audit, the owner's review and the flag-first rules of #150): in a cloud session on 2026-11-24 a flag-first `curl -X POST` and a push to `main` were refused, consistent with its deny rules (the refusal names no rule); `ruff check .` runs without a prompt | In a new session run `/permissions` and look for `Bash(curl -X*)` and `Bash(git push * HEAD:main*)` under deny (not yet reported for a cloud session); `pytest tests/test_claude_settings.py` |

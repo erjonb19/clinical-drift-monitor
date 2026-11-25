@@ -1,0 +1,85 @@
+# Backlog item 8 / Phase 4: the incident-report eval and the LLM report for one month, with
+# Gemini on the free tier (owner, 2026-11-03: a manual workflow, never inside the Databricks job;
+# CI never calls an LLM). Run by hand only, in the `llm-eval` environment, which the owner
+# creates with themselves as required reviewer and the GEMINI_API_KEY secret (docs/OWNER_STEPS.md).
+# The key reaches only the step that calls Gemini, as an environment variable; it is never
+# printed or written. Outputs (runs, per-call log, score, the queued report) are uploaded as an
+# artifact for the owner to commit; nothing is pushed from here.
+name: Incident report eval (item 8)
+
+on:
+  workflow_dispatch:
+    inputs:
+      month:
+        description: "Committed replay month to write the Gemini report for (an alert month)"
+        default: "9"
+        required: true
+      max_calls:
+        description: "Eval calls this run (the free tier's daily limit, minus one for the report)"
+        default: "90"
+        required: true
+      write_report:
+        description: "Also write the month's Gemini report (once; it is never rewritten)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  incident-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: llm-eval
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      # Backlog item 26: uv pinned by version and checksum; locked, hash-checked installs.
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.7"
+          checksum: "c5221ff41b7892bfc223543883600125f6a47fe845093e0f5bdff4f359196d83"
+          enable-cache: false
+      - name: Install (locked)
+        run: |
+          uv sync --locked --no-python-downloads --python 3.11 --extra train
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Check the inputs
+        env:
+          MONTH: ${{ inputs.month }}
+          MAX_CALLS: ${{ inputs.max_calls }}
+        run: |
+          for v in "$MONTH" "$MAX_CALLS"; do
+            case "$v" in ''|*[!0-9]*) echo "::error::month and max_calls must be numbers"; exit 1;; esac
+          done
+      # The report first (one call), then the eval, which resumes from the runs committed under
+      # results/phase4/eval/ and makes at most max_calls calls (exit 3: partial, run again).
+      - name: The month's Gemini report
+        if: inputs.write_report
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MONTH: ${{ inputs.month }}
+        run: python scripts/incident_report.py write --month "$MONTH" --kind replayed --writer gemini
+      - name: Eval (resumable)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MAX_CALLS: ${{ inputs.max_calls }}
+        run: |
+          set +e
+          python scripts/incident_report.py eval --out results/phase4/eval --max-calls "$MAX_CALLS"
+          echo "EVAL_EXIT=$?" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: incident-eval-${{ github.run_id }}
+          path: |
+            results/phase4/eval/
+            results/phase4/review_queue/
+      - name: Verdict (0 pass, 1 fail, 2 inconclusive, 3 partial)
+        run: |
+          echo "eval exit code: $EVAL_EXIT"
+          exit "$EVAL_EXIT"
