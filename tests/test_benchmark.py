@@ -41,8 +41,10 @@ def test_the_bottleneck_is_named_from_measured_cpu() -> None:
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    busy = [{"users": 1, "server_cpu_cores_used": 1.0, "machine_cpu_busy_share": 0.5},
-            {"users": 20, "server_cpu_cores_used": 3.6, "machine_cpu_busy_share": 0.97}]  # fmt: skip
+    busy = [
+        {"users": 1, "server_cpu_cores_used": 1.0, "machine_cpu_busy_share": 0.5},
+        {"users": 20, "server_cpu_cores_used": 3.6, "machine_cpu_busy_share": 0.97},
+    ]
     idle = [{"users": 20, "server_cpu_cores_used": 1.2, "machine_cpu_busy_share": 0.4}]
     assert module.bottleneck(busy, 4)["named"] == "CPU compute"
     assert module.bottleneck(idle, 4)["named"].startswith("not CPU")
