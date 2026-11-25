@@ -1261,9 +1261,9 @@ change only the owner can make (repository settings, accounts, consoles).
   monthly history of the CMS data exists yet.
 - The research informatics extensions: OMOP and SNOMED CT mapping, a vision-language baseline,
   subgroup evaluation, interpretability and human review, multimodal fusion. *Note:* Phases A
-  to E are built. F is a draft waiting for the owner's review. In G, G5 and G6 are ticked in
-  PLAN.md but filed under Scaffolded in BUILT_VS_PLANNED, and G1 to G4 are open. See
-  `docs/BUILT_VS_PLANNED.md` and PLAN.md.
+  to E are built. F is a draft waiting for the owner's review. G1 to G6 are ticked in PLAN.md
+  (G1 to G4 checked against their Done when on 2026-11-25). See `docs/BUILT_VS_PLANNED.md` and
+  PLAN.md.
 
 - Saved ideas. *From the "Portfolio project upgrade stages" chat (Oct 25 to Nov 3, 2026), saved by the owner on 2026-11-17 before that chat was deleted. Ideas, not commitments: none is in the Order of work, and each needs the owner's OK before it starts.*
   - An MCP server for the monitor, with optional multi-agent detection, analysis and reporting
@@ -1285,9 +1285,8 @@ them to the list or drops them.
 - Phase 3: CPU batch-level drift, staged shifts scored for time to detect and false-alarm rate,
   `diagnosis_confirm_type` in bronze and silver, and the free public API deploy (blocked by
   free hosting limits, 2026-10-23).
-- Phase 4: the report generator, groundedness check, eval harness, human review queue and
-  manual live-eval workflow (item 8 needs most of these).
-- Phase 5: the one-command demo (`docker compose up`), the 8D runbook, the README refresh
-  (results first), the standards-alignment document, the "structured after, not compliant
-  with" check across the standards documents, and the optional demo recording.
-- Research: Phase F (the cohort contract, a draft waiting for review) and G1 to G4.
+- Phase 4 (status 2026-11-25): all built under item 8 (the generator, groundedness check,
+  scorer, review queue and the manual eval workflow); open only until the Gemini eval runs and
+  a report is reviewed (owner steps S18 and S19).
+- Phase 5 (status 2026-11-25): built and ticked in PLAN.md except the optional demo recording.
+- Research: Phase F (the cohort contract, a draft waiting for the owner's review).
