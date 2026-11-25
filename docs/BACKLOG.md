@@ -813,6 +813,11 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       this change). Listed under "Questions for the owner" in `docs/PROGRESS.md`. Risk to watch
       in that first run: ISIC holds several photos of one lesion; if any are near-identical by
       the 4-bit hash rule, they are quarantined as duplicates and the drift test sees fewer images.
+      The validation baseline is not screened, so a month's screened images and the baseline are
+      selected differently; a source of mostly low-resolution images would be quarantined (the
+      spike alert says so) rather than tested for drift. Months scored with the contract are not
+      comparable with the committed replay months 1 to 12, which ran without it; label them so.
+      The table's `alert` column stays the drift alert; a spike reaches the run's ALERT message.
 
 19. [ ] **Least-privilege access.** The watchdog's service principal (item 1) can view one job
     and nothing else, with the `users` group's default grants checked and removed; the
