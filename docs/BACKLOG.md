@@ -501,6 +501,19 @@ gets a **Blocked:** line with the reason.
      dropped or hidden. Tested on made-up runs only. **Not built:** the generator (Gemini, free
      tier) and its manual workflow, the CLI or CI step that replays recorded runs through this
      scorer, the review queue and the runbook.
+   - **Built 2026-11-25 (no LLM call yet):** `cdm.incident` and `scripts/incident_report.py`:
+     a deterministic template writer (findings from the rules, prose quoting only the row's
+     numbers: a baseline, never evidence about an LLM), the Gemini client (`gemini-2.5-flash`,
+     standard-library HTTP, no new dependency; outages, invalid answers and setup errors kept
+     apart), the review queue (`results/phase4/review_queue/`: a report counts as sent only
+     when a person approves it; an ungrounded one cannot be approved), the eval run with a
+     per-call log (model, prompt hash, tokens, latency, outcome, cost 0) and the replay scorer,
+     `.github/workflows/incident-eval.yml` (dispatch only, in an `llm-eval` environment the
+     owner approves) and `docs/runbook.md` (8D). Queued: replay month 9 (**replayed**: real
+     images in an order we chose), written by the template writer, grounded, its findings
+     matching the rules, awaiting the owner's review. **Not done:** the Done when needs the
+     owner's review in the queue and the runbook's containment checks (S19), and PLAN.md's
+     Phase 4 needs the Gemini eval run and report (S18: a key and the environment).
 
 9. [x] **Model card and change-control plan:** a CHAI-format applied model card, and a one-page
    change-control plan mapped to FDA's Predetermined Change Control Plan guidance.
