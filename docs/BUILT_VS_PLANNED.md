@@ -304,6 +304,10 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 - Locked installs: CI installs only from `uv.lock` (7-day `exclude-newer`; uv pinned by
   version and checksum), and the API image installs only hashed packages exported from it
   (items 26 and 27, 2026-11-13).
+- Serving benchmark (item 13, 2026-11-25): the dispatch-only load test of the champion on a
+  GitHub runner, with CPU measured per level; the bottleneck is CPU compute
+  (`results/phase3/serving/benchmark_champion_cpu.json`). Not done: ONNX (failed parity) and
+  int8 quantization.
 - Claude Code permission rules (item 23, 2026-11-24): `.claude/settings.json` is committed; in a
   cloud session a flag-first `curl -X POST` and a push to `main` were refused, consistent with its
   deny rules (the refusal names no rule); that session's `/permissions` list was not reported. Known gaps are listed under item 23.

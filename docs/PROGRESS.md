@@ -7,12 +7,18 @@ Nothing goes here until the item's "Done when" is met.
 
 Blocked items and decisions waiting on the owner, newest first. Each has a recommendation.
 
+- **Item 13 (2026-11-25): ticked on its Done when (numbers and a measured bottleneck). Do the
+  ONNX and int8 runs in its description still matter?** Recommendation: drop ONNX (it failed
+  parity, so its speed would describe a different model) and keep int8 as a follow-up once
+  S17's validation IDs exist, since it needs a validation accuracy check.
+
 - **Item 8 (2026-11-25): does a report from the template writer count as "report written" for
   the Done when, or must it be the Gemini one?** Recommendation: the Gemini one, since PLAN.md
   Phase 4 says the LLM writes it; keep the template report as the grounded baseline.
 
 | Date | Item | What changed | How to check |
 | --- | --- | --- | --- |
+| 2026-11-25 | 13 | The load test measures CPU per level and names the bottleneck: on a 4-vCPU GitHub runner the champion was CPU-bound at 20 users (3.95 of 4 vCPUs, machine 99.6% busy; the same CPU time at one user was partly not useful work, since throughput doubled); p50 104.2 / 349.5 / 1,052.8 ms, 9.11 / 11.36 / 18.78 images a second | Open `results/phase3/serving/benchmark_champion_cpu.json` and the README's serving section; `pytest tests/test_benchmark.py`; rerun the dispatch-only "Serving benchmark" workflow |
 | 2026-11-24 | 23 | `.claude/settings.json` (91 deny rules, from the security audit, the owner's review and the flag-first rules of #150): in a cloud session on 2026-11-24 a flag-first `curl -X POST` and a push to `main` were refused, consistent with its deny rules (the refusal names no rule); `ruff check .` runs without a prompt | In a new session run `/permissions` and look for `Bash(curl -X*)` and `Bash(git push * HEAD:main*)` under deny (not yet reported for a cloud session); `pytest tests/test_claude_settings.py` |
 | 2026-11-20 | 1 | A scheduled run of the drift job ran green with no one pressing anything: the rehearsal copy (job 746196917078725) started run 759057427881435 by its schedule at 06:00 UTC and finished `SUCCESS` (a rehearsal, on its own tables) | `results/phase3/rehearsal/run.json`, `month_01.json` and `slo_01.json`; `pytest tests/test_deploy.py -k rehearsal` |
 | 2026-11-18 | 21 | `docker compose up` runs the API and a demo client: with the champion bundle, 50 PAD-UFES-20 smartphone photos tripped the drift alarm against 50 test-split images (KS p = 1.41e-13, PSI = 7.66; a demonstration on small batches) | `results/phase3/compose_demo/champion_2026-11-18.json`; the "Compose demo" workflow (run it from the Actions tab); or locally: `python scripts/fetch_champion_bundle.py` then `docker compose up --build --abort-on-container-exit --exit-code-from demo` |

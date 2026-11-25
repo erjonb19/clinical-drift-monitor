@@ -657,7 +657,7 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       where it runs and its limits (cold starts, quotas), and every request is logged.
     - **Today:** the API runs only in the CI smoke test and locally.
 
-13. [ ] **A load test and serving benchmark.** Locust or k6 against the API container at 1, 5
+13. [x] **A load test and serving benchmark.** Locust or k6 against the API container at 1, 5
     and 20 concurrent users, reporting p50, p95 and p99 latency, throughput and memory; the
     same for the ONNX export, and for dynamic int8 quantization if its accuracy on the
     validation set stays within the gate. A dispatch-only CI job; numbers in
@@ -687,6 +687,20 @@ image smoke-tested in CI, a `v1.0.0` tag (with no assets) and the Unity Catalog 
       inferred, not measured, the ONNX export failed parity in Phase 3, and int8 quantization
       has not been tried (it needs the
       champion's accuracy on the validation images, which live on Databricks).
+    - **Done 2026-11-25 (the bottleneck measured):** `scripts/load_test.py` now records, per
+      level, the server process's CPU (cores used: CPU seconds of all its threads over wall
+      time) and the machine's busy share (`/proc/stat`), and names the bottleneck by a stated
+      rule. "Serving benchmark" run 45547586355 on a 4-CPU GitHub runner (Intel Xeon 6975P-C;
+      the 2026-11-22 run drew an AMD EPYC 7763, so times differ): the champion bundle used 3.95
+      of 4 vCPUs at 1, 5 and 20 users and the machine was over 99% busy (CPU-bound at 20 users;
+      at one user part of that CPU time was not useful work, since throughput still doubled at
+      the same CPU time), p50 104.2, 349.5 and
+      1,052.8 ms, 9.11, 11.36 and 18.78 images a second, all 600 requests 200
+      (`results/phase3/serving/benchmark_champion_cpu.json`, linked from the README's serving
+      section). The bottleneck is CPU compute. **Not done from the description (not in the Done
+      when):** the ONNX numbers (the export failed parity in Phase 3, so it is not a servable
+      model) and int8 quantization (its accuracy check needs the validation images; the IDs come
+      with owner step S17). Listed under "Questions for the owner" in `docs/PROGRESS.md`.
 
 14. [ ] **Batch scoring at scale.** Score a large slice of the public ISIC archive (for example
     50,000 images) on Databricks serverless as a distributed job (Spark with a pandas UDF, or
