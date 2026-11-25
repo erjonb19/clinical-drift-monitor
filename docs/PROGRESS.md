@@ -7,6 +7,11 @@ Nothing goes here until the item's "Done when" is met.
 
 Blocked items and decisions waiting on the owner, newest first. Each has a recommendation.
 
+- **Phase F (2026-11-25): have you reviewed `docs/cohort_contract.md`, and does
+  governed-clinical-agent's plan note the item?** Those are its Done when; only your 2026-10-22
+  approval of the routing is recorded. Recommendation: read the contract (it is short), say
+  "reviewed" in chat, and add one line to the agent repo's plan; Claude then ticks F.
+
 - **Item 8 (2026-11-25): does a report from the template writer count as "report written" for
   the Done when, or must it be the Gemini one?** Recommendation: the Gemini one, since PLAN.md
   Phase 4 says the LLM writes it; keep the template report as the grounded baseline.
