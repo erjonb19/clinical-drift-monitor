@@ -148,6 +148,11 @@ def alerts(record: dict[str, Any], slo: dict[str, Any]) -> list[str]:
         for t, r in record.get("by_skin_type", {}).items()
         if r.get("alert")
     ]
+    contract = record.get("input_contract") or {}
+    if contract.get("spike"):
+        reasons.append(
+            f"input contract: {contract['quarantined']} of {contract['images']} images quarantined"
+        )
     return reasons
 
 
