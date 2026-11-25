@@ -125,6 +125,26 @@ def test_the_image_installs_only_hashed_packages_from_the_lock() -> None:
     assert "setuptools==" in body  # the build backend for the offline project install
 
 
+def test_the_streamlit_app_installs_only_hashed_packages_from_the_lock() -> None:
+    """Backlog item 26: app/requirements.txt (what Streamlit Community Cloud installs) is exactly
+    uv's hashed export of the cohort and demo extras, with no editable or unhashed line; the
+    app imports cdm from the checkout instead of installing the project."""
+    uv = shutil.which("uv")
+    assert uv, "uv is needed to check app/requirements.txt against uv.lock"
+    exported = subprocess.run(  # noqa: S603 (fixed arguments, no shell)
+        [uv, "export", "--frozen", "--no-dev", "--extra", "cohort", "--extra", "demo",
+         "--no-emit-project", "--format", "requirements-txt", "--no-header", "--no-annotate"],
+        cwd=REPO, capture_output=True, text=True, check=True,
+    ).stdout  # fmt: skip
+    committed = (REPO / "app" / "requirements.txt").read_text("utf-8")
+    body = "".join(line for line in committed.splitlines(keepends=True) if not line.startswith("#"))
+    assert body == exported, "app/requirements.txt is stale: re-export it from uv.lock"
+    pins = [line for line in body.splitlines() if line and not line.startswith(" ")]
+    assert pins and all("==" in line and line.endswith("\\") for line in pins), pins
+    app = (REPO / "app" / "cohort_demo.py").read_text("utf-8")
+    assert 'sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))' in app
+
+
 def test_dependabot_keeps_floors_and_the_uvicorn_that_flwr_needs() -> None:
     """Owner, 2026-11-10, after #74: floors stay unless a release needs them raised, and
     uvicorn gets patches only while flwr is held at 1.39.x (it needs uvicorn < 0.50)."""

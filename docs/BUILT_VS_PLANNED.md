@@ -307,7 +307,8 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 - Claude Code permission rules (item 23, 2026-11-24): `.claude/settings.json` is committed; in a
   cloud session a flag-first `curl -X POST` and a push to `main` were refused, consistent with its
   deny rules (the refusal names no rule); that session's `/permissions` list was not reported. Known gaps are listed under item 23.
-- Not done: the Streamlit app's hashed requirements (the rest of item 26).
+- The Streamlit app's hashed requirements (the rest of item 26, 2026-11-25): installed and run
+  from hashes in a test venv; not yet confirmed on the live demo, which merging redeploys (S20).
 
 ## Scaffolded
 

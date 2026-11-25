@@ -1,6 +1,7 @@
 """Governed cohort service, public demo (research Phase G6).
 
-Run locally: ``streamlit run app/cohort_demo.py`` (needs ``pip install -e ".[cohort,demo]"``).
+Run locally: ``streamlit run app/cohort_demo.py`` (``pip install --require-hashes -r
+app/requirements.txt``, the hashed lock export; ``cdm`` is imported from the checkout's ``src/``).
 The logic lives in ``cdm.demo``; this file is the page. Counts only, no images, concept IDs
 and ISIC source labels only (no SNOMED text). Deployed on Streamlit Community Cloud:
 https://cdm-cohort-demo.streamlit.app/
@@ -13,13 +14,20 @@ log gets the exception type only, never its text or traceback.
 from __future__ import annotations
 
 import logging
+import sys
+from pathlib import Path
 from typing import NoReturn
 
 import pandas as pd
 import streamlit as st
 import yaml
 
-from cdm.cohort import PhenotypeError, Refused, load
+# Backlog item 26: the app's packages install from hashes (app/requirements.txt), which pip
+# cannot do for an editable install of this project, so cdm comes from the checkout. It reads
+# config/ and phenotypes/ relative to src/cdm, so they resolve inside the checkout as before.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from cdm.cohort import PhenotypeError, Refused, load  # noqa: E402
 from cdm.demo import (
     ATTRIBUTION,
     DemoSession,
