@@ -1262,8 +1262,8 @@ change only the owner can make (repository settings, accounts, consoles).
 - The research informatics extensions: OMOP and SNOMED CT mapping, a vision-language baseline,
   subgroup evaluation, interpretability and human review, multimodal fusion. *Note:* Phases A
   to E are built. F is a draft waiting for the owner's review. G1 to G6 are ticked in PLAN.md
-  (G1 to G4 checked against their Done when on 2026-11-25); BUILT_VS_PLANNED still files G5 and
-  G6 under Scaffolded. See `docs/BUILT_VS_PLANNED.md` and PLAN.md.
+  (G1 to G4 checked against their Done when on 2026-11-25); BUILT_VS_PLANNED files them under
+  Built (G5 and G6 moved there on 2026-11-25). See `docs/BUILT_VS_PLANNED.md` and PLAN.md.
 
 - Saved ideas. *From the "Portfolio project upgrade stages" chat (Oct 25 to Nov 3, 2026), saved by the owner on 2026-11-17 before that chat was deleted. Ideas, not commitments: none is in the Order of work, and each needs the owner's OK before it starts.*
   - An MCP server for the monitor, with optional multi-agent detection, analysis and reporting

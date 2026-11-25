@@ -26,13 +26,15 @@ further down.
 scales, where it breaks), [docs/walkthrough.md](docs/walkthrough.md) (a 3-minute tour) and the
 [one-command demo](#one-command-demo-docker-compose-up-backlog-item-21) (`docker compose up`).
 
-**Status (2026-11-11):** Phases 0 to 2 are done; research Phases A to E are built and G is in
-progress ([plan](docs/research_extension_plan.md)); Phase 3 (serving and MLOps) is mostly
-built, with the API built and scanned in CI but not deployed (its "Done when" was amended on
-2026-11-03: no live URL needed; see PLAN.md's decisions log). The production backlog
-(`docs/BACKLOG.md`) is worked one reviewed pull request at a time; its finished items are
-listed under "Production readiness" below. Phases 4 and 5 have not started; Phase 6 is
-deferred.
+**Status (2026-11-25):** Phases 0 to 2 are done; research Phases A to E and G are built, and
+F (the cohort contract) waits for the owner's review ([plan](docs/research_extension_plan.md));
+Phase 3 (serving and MLOps) is mostly built, with the API built and scanned in CI but not
+deployed (its "Done when" was amended on 2026-11-03: no live URL needed; see PLAN.md's
+decisions log). Phase 4 (LLM incident reports) is built and tested without a model call: no
+LLM has written a report or run the eval yet. Phase 5 is built except the optional recording;
+its runbook is written but not yet followed on a reviewed incident.
+The production backlog (`docs/BACKLOG.md`) is worked one reviewed pull request at a time; its
+finished items are listed under "Production readiness" below. Phase 6 is deferred.
 
 A short technical report, written for 4 to 6 pages (LaTeX source with standard packages, written to build on Overleaf;
 not yet compiled, since no TeX is installed on the build machine):
@@ -677,6 +679,24 @@ drift; months 10 to 12 also break the accuracy target. Melanoma referral sensiti
 It stays so after the replay too, since new images have no labels, until months 1 to 12 are
 backfilled from the audit table's referral flags and their labels (a Databricks run for the
 owner).
+
+## Incident reports (Phase 4, backlog item 8; built, no LLM run yet)
+
+When a month is in alert, an 8D report is written from that month's drift-table row and queued
+for a person to review ([`docs/runbook.md`](docs/runbook.md)). Every number in a report must
+match a number in the row or the fixed rules (`cdm.groundedness`); an ungrounded report cannot
+be approved, and a report counts as sent only once a person approves it
+(`results/phase4/review_queue/`).
+
+- **Queued so far:** replay month 9 (**replayed**: real Buenos Aires images in an order we
+  chose, not live drift), written by the deterministic template writer, which is a grounded
+  baseline and not an LLM: 19 numbers, none unmatched; awaiting review
+  ([`month_09_template.json`](results/phase4/review_queue/month_09_template.json)).
+- **Not run yet:** the Gemini writer and the eval on 30 staged scenarios (pass at 27 of 30 with
+  no ungrounded number, a threshold the owner approved before any run;
+  [`eval_spec.json`](results/phase4/eval_spec.json)). They run by hand in
+  `.github/workflows/incident-eval.yml` once the owner adds a free-tier key. No LLM result is
+  claimed here.
 
 ## Phase 3: registry, retraining, CI gate and costs
 

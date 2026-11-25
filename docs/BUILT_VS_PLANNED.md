@@ -7,7 +7,7 @@ runs and is reproducible from the repository.
 **This is a personal portfolio project.** No patients, clinicians or business decisions
 depend on it.
 
-Last updated: 2026-11-24.
+Last updated: 2026-11-25.
 
 ## Built
 
@@ -175,7 +175,7 @@ Known limits:
   pair with `cdm.fusion.select_per_seed` and its own spec and single look
   (`databricks/fusion_shipped_job.json`, mode=look committed; run 124072636853443).
 
-### Research Phase G: research informatics services (2026-10-21 and 22)
+### Research Phase G: research informatics services (2026-10-21 and 22; G1 to G4 checked against their Done when on 2026-11-25)
 
 - G1: `docs/EVAL_PLAN.md`, `docs/governance.md`, the request issue form and the project board.
 - G2: the governed cohort service and phenotype library, with tests; run on the workspace OMOP
@@ -188,6 +188,28 @@ Known limits:
   10.5281/zenodo.23600426; concept DOI 10.5281/zenodo.23600425 for all versions).
 - G4: `scripts/service_metrics.py` and `docs/service_metrics.md`, with tests; request numbers
   come from a committed snapshot of the issue tracker.
+
+### Research Phase G5: clinical text extraction (built and scored 2026-10-23)
+
+- `cdm.extract` and `scripts/extraction.py`: note sources (MTSamples; MIMIC-IV-Note behind a
+  tier 2 switch, never sent to an outside API), label choices from the concept map, the Haiku
+  extractor with a spend log and budget cap, a keyword baseline, the labelling sheet, scoring
+  and error categories. Tested with made-up notes and a recorded transport.
+- Scored 2026-10-23 on 67 MTSamples scoring notes (8 dev notes used first, prompt unchanged):
+  Haiku 77.6% diagnosis, 76.1% body site, 92.5% confirmation, against the keyword baseline's
+  50.7%, 17.9% and 62.7% (`results/research/g5_extraction/score.json`, logged to MLflow). The
+  labels were pre-annotated by Claude and human-reviewed (`label_provenance.json`), so the LLM's
+  agreement may be inflated by shared judgements. $0.0265 of Haiku spend in total.
+- Not done: the per-error label review in `errors.csv`, and a second human labeller.
+
+### Research Phase G6: public cohort demo (live since 2026-10-22)
+
+- `app/cohort_demo.py` and `cdm.demo`: the cohort service on public PAD-UFES-20 metadata,
+  fetched at start-up; each visitor approves in a scratch file. Its logic is tested in CI on a
+  made-up stand-in, and the page ran once locally against live ISIC metadata (Streamlit's
+  test harness). Deployed on Streamlit Community Cloud on 2026-10-22, with the owner's approval:
+  https://cdm-cohort-demo.streamlit.app/. The live page was opened once: it loaded the live metadata, and Run refused an
+  unapproved definition and logged the refusal.
 
 ### Tooling
 
@@ -337,28 +359,6 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 
 - F: `docs/cohort_contract.md`, a draft waiting for the owner's review.
 
-### Research Phase G5: clinical text extraction
-
-- `cdm.extract` and `scripts/extraction.py`: note sources (MTSamples; MIMIC-IV-Note behind a
-  tier 2 switch, never sent to an outside API), label choices from the concept map, the Haiku
-  extractor with a spend log and budget cap, a keyword baseline, the labelling sheet, scoring
-  and error categories. Tested with made-up notes and a recorded transport.
-- Scored 2026-10-23 on 67 MTSamples scoring notes (8 dev notes used first, prompt unchanged):
-  Haiku 77.6% diagnosis, 76.1% body site, 92.5% confirmation, against the keyword baseline's
-  50.7%, 17.9% and 62.7% (`results/research/g5_extraction/score.json`, logged to MLflow). The
-  labels were pre-annotated by Claude and human-reviewed (`label_provenance.json`), so the LLM's
-  agreement may be inflated by shared judgements. $0.0265 of Haiku spend in total.
-- Not done: the per-error label review in `errors.csv`, and a second human labeller.
-
-### Research Phase G6: public cohort demo
-
-- `app/cohort_demo.py` and `cdm.demo`: the cohort service on public PAD-UFES-20 metadata,
-  fetched at start-up; each visitor approves in a scratch file. Its logic is tested in CI on a
-  made-up stand-in, and the page ran once locally against live ISIC metadata (Streamlit's
-  test harness). Deployed on Streamlit Community Cloud on 2026-10-22, with the owner's approval:
-  https://cdm-cohort-demo.streamlit.app/. The live page was opened once: it loaded the live metadata, and Run refused an
-  unapproved definition and logged the refusal.
-
 ### Tooling
 
 - CI: ruff, ruff format, mypy (strict) and pytest on every push, an accuracy gate on the
@@ -415,9 +415,11 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 
 ## Not started
 
-- Phase 3's remaining items (CPU batch drift, the diagnosis_confirm_type ingest, staged
-  shifts); the rest of Phase 4 (the Gemini eval run and an LLM-written report; owner steps
-  S18 and S19) and Phase 5.
+- Phase 3's remaining items: CPU batch drift and the diagnosis_confirm_type ingest. (Staged
+  shifts for detector quality are built but not run: backlog item 15 in `docs/BACKLOG.md`,
+  waiting on owner step S17.)
+- Phase 4's runs: the Gemini eval and an LLM-written report (built, not run; owner steps S18
+  and S19). Phase 5 is built except the optional demo recording.
 - Closed without being built (owner, 2026-11-03): the Gram backup detector (dropped: a CPU
   refit missed the GPU fit's normalizer by up to 11.8% in Phase 2) and the GPU-fit serving-setup
   check (superseded: the served bundle fits its detector on CPU features). See PLAN.md's
