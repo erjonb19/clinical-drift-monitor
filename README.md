@@ -31,7 +31,8 @@ F (the cohort contract) waits for the owner's review ([plan](docs/research_exten
 Phase 3 (serving and MLOps) is mostly built, with the API built and scanned in CI but not
 deployed (its "Done when" was amended on 2026-11-03: no live URL needed; see PLAN.md's
 decisions log). Phase 4 (LLM incident reports) is built and tested without a model call: no
-LLM has written a report or run the eval yet. Phase 5 is built except the optional recording.
+LLM has written a report or run the eval yet. Phase 5 is built except the optional recording;
+its runbook is written but not yet followed on a reviewed incident.
 The production backlog (`docs/BACKLOG.md`) is worked one reviewed pull request at a time; its
 finished items are listed under "Production readiness" below. Phase 6 is deferred.
 

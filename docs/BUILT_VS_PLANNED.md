@@ -416,7 +416,8 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 ## Not started
 
 - Phase 3's remaining items: CPU batch drift and the diagnosis_confirm_type ingest. (Staged
-  shifts for detector quality are scaffolded as item 15, waiting on owner step S17.)
+  shifts for detector quality are built but not run: backlog item 15 in `docs/BACKLOG.md`,
+  waiting on owner step S17.)
 - Phase 4's runs: the Gemini eval and an LLM-written report (built, not run; owner steps S18
   and S19). Phase 5 is built except the optional demo recording.
 - Closed without being built (owner, 2026-11-03): the Gram backup detector (dropped: a CPU
