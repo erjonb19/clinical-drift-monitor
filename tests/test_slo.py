@@ -133,3 +133,12 @@ def test_config_targets_match_their_stated_sources() -> None:
     assert "0.0638" in CONFIG["targets"]["melanoma_referral_sensitivity"]["measure"]
     assert triage["thresholds"]["v2-ensemble-final-seeds0-1-2"] == pytest.approx(0.0638, abs=1e-4)
     assert CONFIG["targets"]["melanoma_referral_sensitivity"]["min_melanoma_images"] == 100
+
+
+def test_a_quarantine_spike_in_the_input_contract_alerts() -> None:
+    """Backlog item 18: over 10% of a month's images quarantined is an alert."""
+    base = {"month": 9, "abstain_share": 0.05, "drift": {"alert": False}, "by_skin_type": {}}
+    spike = {**base, "input_contract": {"images": 300, "quarantined": 40, "spike": True}}
+    quiet = {**base, "input_contract": {"images": 300, "quarantined": 3, "spike": False}}
+    assert slo.alerts(spike, {}) == ["input contract: 40 of 300 images quarantined"]
+    assert slo.alerts(quiet, {}) == [] and slo.alerts(base, {}) == []

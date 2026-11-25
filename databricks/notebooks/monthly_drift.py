@@ -47,6 +47,8 @@ from PIL import Image
 from pyspark.sql import functions as F
 
 from cdm.backfill import merge_history
+from cdm.contract import load_config as load_contract
+from cdm.contract import screen
 from cdm.data import eval_transform
 from cdm.monitor import by_skin_type, delayed_accuracy, draw_schedule, drift_test
 from cdm.serving import Service, mahalanobis
@@ -259,6 +261,15 @@ def run_month(month: int) -> dict:
             .set_index("isic_id")
             .loc[ids, "image"]
         )
+        # Backlog item 18: the input contract runs before scoring; quarantined images are
+        # counted per reason in the row and never scored (a spike above 10% alerts, cdm.slo).
+        keep, row["input_contract"] = screen(list(blobs), load_contract())
+        batch = [batch[k] for k in keep]
+        ids = [ids[k] for k in keep]
+        blobs = blobs.iloc[keep]
+    if batch is not None and not batch:
+        row["replay"] = "every image of the month was quarantined by the input contract"
+    elif batch is not None:
         probs, ood, shas = score(list(blobs))
         row["by_source"] = {k: sum(1 for p, _ in batch if p == k) for k in pools}
         row["drift"] = drift_test(baseline, ood)

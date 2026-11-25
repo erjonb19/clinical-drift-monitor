@@ -7,6 +7,11 @@ Nothing goes here until the item's "Done when" is met.
 
 Blocked items and decisions waiting on the owner, newest first. Each has a recommendation.
 
+- **Item 18 (2026-11-25): the monthly job now runs the input contract, but no Databricks run
+  has carried the counts, which the Done when needs.** Only a month that scores images can carry
+  them, and after month 12 only the rehearsal scores. Recommendation: before S15, restage the
+  rehearsal notebook from `main` (S11 step 2's command) so its months 2 to 10 carry the counts;
+  Claude then fills the rehearsal job file, and S15 runs as written.
 - **Item 13 (2026-11-25): ticked on its Done when (numbers and a measured bottleneck). Do the
   ONNX and int8 runs in its description still matter?** Recommendation: drop ONNX (it failed
   parity, so its speed would describe a different model) and keep int8 as a follow-up once

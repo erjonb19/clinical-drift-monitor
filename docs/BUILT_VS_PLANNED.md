@@ -389,7 +389,9 @@ Built and checked by tests in CI; what each item does is in `docs/BACKLOG.md` (i
 
 - `cdm.contract`: enforced checks (format, resolution, aspect ratio, near-duplicates) quarantine
   with a reason; blur and exposure only flag (uncalibrated). In the API (422, a `quarantined`
-  count, `input_flags`); not yet in the monthly job. Tested on synthetic images only.
+  count, `input_flags`); in the monthly notebook since 2026-11-25 (quarantined images are not
+  scored; counts go in the month's row; a spike alerts), not yet run on Databricks. Tested on
+  synthetic images only.
 
 ### Phase 4: eval scenarios (2026-11-03)
 

@@ -158,3 +158,26 @@ def test_an_mpo_is_refused_before_its_pixels_are_decoded(monkeypatch: pytest.Mon
     monkeypatch.setattr(ImageFile.ImageFile, "load", spy)
     v = contract.check(buf.getvalue(), CONFIG)
     assert v.quarantined == ["format: MPO (allowed: JPEG, PNG)"] and "MPO" not in loads
+
+
+def test_the_monthly_screen_scores_only_what_passes_and_counts_the_rest() -> None:
+    """Backlog item 18 in the monthly job: each image is checked against every one before it."""
+    config = contract.load_config()
+    good, other = encode(textured(seed=1)), encode(textured(seed=2))
+    images = [good, b"not an image", encode(textured(100, 100, seed=3)), good, other]
+    keep, counts = contract.screen(images, config)
+    assert keep == [0, 4]
+    assert counts["images"] == 5 and counts["scored"] == 2 and counts["quarantined"] == 3
+    assert counts["by_reason"] == {"format": 1, "resolution": 1, "duplicate": 1}
+    assert counts["spike"] is True  # 3 of 5 is over the 10% spike share
+    assert contract.screen([], config) == ([], {**contract.month_counts([], config), "scored": 0})
+
+
+def test_the_monthly_notebook_screens_before_it_scores() -> None:
+    from pathlib import Path
+
+    source = (
+        Path(__file__).resolve().parents[1] / "databricks/notebooks/monthly_drift.py"
+    ).read_text()
+    assert source.index("screen(list(blobs), load_contract())") < source.index("score(list(blobs))")
+    assert 'row["input_contract"]' in source
