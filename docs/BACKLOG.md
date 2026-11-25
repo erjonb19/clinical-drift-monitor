@@ -481,7 +481,7 @@ gets a **Blocked:** line with the reason.
    - **Today:** 30 synthetic (staged) eval scenarios and the eval spec
      (`results/phase4/scenarios.json`, `results/phase4/eval_spec.json`) are on `main`; the owner
      approved Claude's proposed thresholds on 2026-11-24 (27 of 30, groundedness a hard gate).
-     There is no report generator, review queue or runbook yet. The
+     The report writers, review queue and runbook came later (notes below). The
      replay's alert months use real images in an order we chose, so they count as replayed, not
      as live drift.
    - **Built 2026-11-24 (not used on any report yet):** the groundedness check,
@@ -1262,8 +1262,8 @@ change only the owner can make (repository settings, accounts, consoles).
 - The research informatics extensions: OMOP and SNOMED CT mapping, a vision-language baseline,
   subgroup evaluation, interpretability and human review, multimodal fusion. *Note:* Phases A
   to E are built. F is a draft waiting for the owner's review. G1 to G6 are ticked in PLAN.md
-  (G1 to G4 checked against their Done when on 2026-11-25). See `docs/BUILT_VS_PLANNED.md` and
-  PLAN.md.
+  (G1 to G4 checked against their Done when on 2026-11-25); BUILT_VS_PLANNED still files G5 and
+  G6 under Scaffolded. See `docs/BUILT_VS_PLANNED.md` and PLAN.md.
 
 - Saved ideas. *From the "Portfolio project upgrade stages" chat (Oct 25 to Nov 3, 2026), saved by the owner on 2026-11-17 before that chat was deleted. Ideas, not commitments: none is in the Order of work, and each needs the owner's OK before it starts.*
   - An MCP server for the monitor, with optional multi-agent detection, analysis and reporting
@@ -1286,7 +1286,8 @@ them to the list or drops them.
   `diagnosis_confirm_type` in bronze and silver, and the free public API deploy (blocked by
   free hosting limits, 2026-10-23).
 - Phase 4 (status 2026-11-25): all built under item 8 (the generator, groundedness check,
-  scorer, review queue and the manual eval workflow); open only until the Gemini eval runs and
-  a report is reviewed (owner steps S18 and S19).
-- Phase 5 (status 2026-11-25): built and ticked in PLAN.md except the optional demo recording.
+  scorer, review queue and the manual eval workflow), none ticked: open until the Gemini eval
+  runs and a report is reviewed (owner steps S18 and S19).
+- Phase 5 (status 2026-11-25): ticked in PLAN.md except the runbook (written, open until it is
+  followed on a reviewed incident) and the optional demo recording.
 - Research: Phase F (the cohort contract, a draft waiting for the owner's review).
