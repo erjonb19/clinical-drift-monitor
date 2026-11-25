@@ -141,9 +141,13 @@ writer, grounded (every number matches the month's row). After S18 it also holds
 run in `.github/workflows/incident-eval.yml`, by hand only, in a GitHub environment
 `llm-eval` that you approve each time. The key lives only in that environment's secret. Free
 tier: no charge. The model is `gemini-2.5-flash` (stable on Google's models page; that it is on
-the free tier for your key is **not checked**: look in AI Studio first, and tell Claude if it is
-not, so the model is changed before the run). Calls are 7 seconds apart for the free tier's rate
-limit. The prompts hold only staged scenarios and the committed replay row: no patient data.
+the free tier for your key is **not checked**). Free-tier limits change often and may be far
+below 91 calls a day: in AI Studio, look up this model's **requests per day** for your key before
+step 4, and tell Claude if the model is not on the free tier. Calls are 7 seconds apart for the
+per-minute limit. The eval resumes: each run makes at most `max_calls` calls and keeps what it
+has, so it can be spread over several days. The prompts hold only staged scenarios and the
+committed replay row: no patient data. (The artifact's folders are `eval` and `review_queue`:
+the upload drops the common `results/phase4` prefix.)
 
 1. Create a free-tier key at https://aistudio.google.com/apikey (do not paste it anywhere but
    step 3's prompt).
@@ -156,11 +160,13 @@ limit. The prompts hold only staged scenarios and the committed replay row: no p
    ```powershell
    gh secret set GEMINI_API_KEY --env llm-eval --repo erjonb19/clinical-drift-monitor
    ```
-4. Start the run, then approve it under Actions → the run → **Review deployments**:
+4. Start the run, then approve it under Actions → the run → **Review deployments**. Set
+   `max_calls` to the daily limit minus 1 (the report takes one call); `90` if the limit allows.
    ```powershell
-   gh workflow run incident-eval.yml --repo erjonb19/clinical-drift-monitor -f month=9
+   gh workflow run incident-eval.yml --repo erjonb19/clinical-drift-monitor -f month=9 -f max_calls=90 -f write_report=true
    ```
-5. When it ends (pass, fail or inconclusive all upload), download the artifact and push it:
+5. When it ends (every outcome uploads), download the artifact and push it. The last step's
+   exit code says what happened: 0 pass, 1 fail, 2 inconclusive, 3 partial (not all 90 runs yet).
    ```powershell
    $Run = gh run list --workflow incident-eval.yml --repo erjonb19/clinical-drift-monitor --limit 1 --json databaseId --jq ".[0].databaseId"
    git checkout main
@@ -169,13 +175,15 @@ limit. The prompts hold only staged scenarios and the committed replay row: no p
    gh run download $Run --repo erjonb19/clinical-drift-monitor --dir dist\incident-eval
    New-Item -ItemType Directory -Force results\phase4\eval | Out-Null
    Copy-Item dist\incident-eval\incident-eval-$Run\eval\* results\phase4\eval\
-   Copy-Item dist\incident-eval\incident-eval-$Run\results\phase4\review_queue\month_09_gemini.json results\phase4\review_queue\
+   Copy-Item dist\incident-eval\incident-eval-$Run\review_queue\month_09_gemini.json results\phase4\review_queue\ -ErrorAction SilentlyContinue
    git add results\phase4
    git commit -m "Item 8: Gemini eval run and month 9 report"
    git push -u origin owner/incident-eval
    ```
-   Tell Claude the branch name. If step 4 failed with "Gemini refused the request", the key or
-   the model is wrong: tell Claude the HTTP code shown.
+   Tell Claude the branch name; Claude merges it so the next run resumes from it. If it was
+   partial (3), repeat steps 4 and 5 the next day with `-f write_report=false`, until it ends
+   with 0, 1 or 2. If a run failed with "Gemini refused the request", the key or the model is
+   wrong: tell Claude the HTTP code shown.
 
 ### S17. Export the detector-quality image IDs once (item 15)
 

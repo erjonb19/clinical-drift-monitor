@@ -22,6 +22,7 @@ and never rewrites the report.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import time
 import urllib.error
@@ -35,6 +36,7 @@ from cdm.groundedness import check
 from cdm.report_eval import EIGHT_D, FINDINGS, correct, shape_errors
 from cdm.scenarios import RULES, expected_findings
 
+REPO = Path(__file__).resolve().parents[2]
 MODEL = "gemini-2.5-flash"  # fixed before any live call (eval spec); the owner may change it
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 RETRIES, TIMEOUT_S = 3, 60
@@ -55,6 +57,14 @@ SCHEMA = {
     "or rule it comes from",
     "eight_d": "null unless eight_d_report; then an object with " + ", ".join(EIGHT_D),
 }
+
+
+def month_context(slo: Path = REPO / "config" / "slo.json") -> dict[str, Any]:
+    """The rules context for a real or replayed month: the fixed rules plus the abstain-share
+    target from ``config/slo.json``, so a report may say the target is broken. (The staged
+    scenarios use the rules alone, as the eval spec fixes.)"""
+    target = json.loads(slo.read_text(encoding="utf-8"))["targets"]["abstain_share"]["value"]
+    return {**RULES, "abstain_share_target": float(target)}
 
 
 def build_prompt(record: Mapping[str, Any], rules: Mapping[str, Any], floor: float) -> str:
@@ -78,8 +88,11 @@ def _fmt(x: float, places: int = 3) -> str:
     return f"{x:.{places}f}"
 
 
-def template_report(record: Mapping[str, Any], floor: float) -> dict[str, Any]:
-    """A grounded report from the rules alone (see the module docstring: a baseline)."""
+def template_report(
+    record: Mapping[str, Any], floor: float, abstain_target: float | None = None
+) -> dict[str, Any]:
+    """A grounded report from the rules alone (see the module docstring: a baseline). With
+    ``abstain_target`` (a real or replayed month), it says whether the abstain share broke it."""
     found = expected_findings(dict(record), floor)
     drift = record["drift"]
     month = record["month"]
@@ -107,20 +120,29 @@ def template_report(record: Mapping[str, Any], floor: float) -> dict[str, Any]:
         if typed
         else ""
     )
+    abstain_text = ""
+    if abstain_target is not None:
+        broken = record["abstain_share"] > abstain_target
+        abstain_text = (
+            f", {'above' if broken else 'within'} the abstain-share target of "
+            f"{_fmt(100 * abstain_target, 0)}%" + (" (target broken)" if broken else "")
+        )
     delayed = record.get("delayed_accuracy_of_month")
     accuracy = (
-        f"Delayed balanced accuracy of month {delayed['month']} was "
+        f"Month {month}'s own accuracy arrives with the next month's run. The latest known, "
+        f"month {delayed['month']}'s delayed balanced accuracy, was "
         f"{_fmt(delayed['balanced_accuracy'])} on {delayed['labelled']} labelled images, "
         + ("below" if found["accuracy_drop"] else "not below")
         + f" the in-distribution floor of {_fmt(floor)}."
         if delayed
-        else "Labels for this month have not arrived, so accuracy is not known yet."
+        else "Labels have not arrived, so accuracy is not known yet; it arrives with a later run."
     )
     out["eight_d"] = {
         "problem": (
             f"Month {month}: the OOD scores of {drift['images']} images shifted ({shifted}"
             f"{typed_text}). Images came from {sources or 'the clients only'}. "
-            f"{_fmt(100 * record['abstain_share'], 1)}% of images were above the abstain threshold."
+            f"{_fmt(100 * record['abstain_share'], 1)}% of images were above the abstain threshold"
+            f"{abstain_text}."
         ),
         "containment": (
             f"Containment word: {found['containment']}. Abstain: the service flags every image "
@@ -170,28 +192,35 @@ def gemini_call(
         headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
         method="POST",
     )
-    start, error, payload = time.perf_counter(), "", None
+    start, error, payload, attempt_ms = time.perf_counter(), "", None, 0
     for attempt in range(RETRIES):
+        tried = time.perf_counter()
         try:
             with opener(request, timeout=TIMEOUT_S) as response:
                 payload = json.loads(response.read())
+            attempt_ms = round(1000 * (time.perf_counter() - tried))
             break
         except urllib.error.HTTPError as err:
             if err.code in (400, 401, 403, 404):
                 # The request or the key is wrong: a setup error, not an outage. Stop the run.
                 raise RuntimeError(f"Gemini refused the request (HTTP {err.code})") from None
             error = f"HTTP {err.code}"
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as err:
+        except (OSError, http.client.HTTPException, json.JSONDecodeError) as err:
+            # URLError, timeouts, connection resets and broken responses: the provider failed.
             error = type(err).__name__
         if attempt < RETRIES - 1:
             sleep(2.0 * 2**attempt)
-    latency_ms = round(1000 * (time.perf_counter() - start))
+    # latency_ms: the answering attempt alone; wall_ms: every attempt and back-off sleep.
+    wall_ms = round(1000 * (time.perf_counter() - start))
     if payload is None:
-        return {"outcome": "outage", "output": None, "error": error, "latency_ms": latency_ms}
+        return {"outcome": "outage", "output": None, "error": error, "wall_ms": wall_ms}
+    latency_ms = attempt_ms
     usage = payload.get("usageMetadata", {})
     tokens = {
         "input_tokens": usage.get("promptTokenCount"),
         "output_tokens": usage.get("candidatesTokenCount"),
+        "thinking_tokens": usage.get("thoughtsTokenCount"),
+        "wall_ms": wall_ms,
     }
     try:
         text = "".join(p.get("text", "") for p in payload["candidates"][0]["content"]["parts"])
@@ -214,7 +243,7 @@ def incident(
     drift is real, replayed or staged (CLAUDE.md: never mixed)."""
     if kind not in ("real", "replayed", "staged"):
         raise ValueError("kind is real, replayed or staged")
-    grounded = check(report, record, RULES, floor)
+    grounded = check(report, record, month_context(), floor)
     expected = expected_findings(dict(record), floor)
     return {
         "month": record["month"],
@@ -222,6 +251,7 @@ def incident(
         "writer": writer,
         "record": record,
         "report": report,
+        "accuracy_floor": floor,
         "groundedness": grounded,
         "findings_match_rules": correct(report, expected),
         "expected_findings": {k: expected[k] for k in (*FINDINGS, "caveats")},
@@ -237,7 +267,9 @@ def review(entry: dict[str, Any], decision: str, reviewer: str, note: str) -> di
         raise ValueError(f"decision is one of {sorted(DECISIONS)}")
     if not reviewer.strip():
         raise ValueError("a review names its reviewer")
-    if decision == "approved" and not entry["groundedness"]["grounded"]:
+    # Re-run the check rather than trust the stored flag: the file may have been edited.
+    recheck = check(entry["report"], entry["record"], month_context(), entry["accuracy_floor"])
+    if decision == "approved" and not (recheck["grounded"] and entry["groundedness"]["grounded"]):
         raise ValueError("an ungrounded report cannot be approved")
     entry["reviews"].append({
         "decision": decision, "reviewer": reviewer.strip(), "note": note,

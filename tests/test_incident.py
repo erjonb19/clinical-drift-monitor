@@ -10,7 +10,14 @@ from typing import Any
 
 import pytest
 
-from cdm.incident import build_prompt, gemini_call, incident, review, template_report
+from cdm.incident import (
+    build_prompt,
+    gemini_call,
+    incident,
+    month_context,
+    review,
+    template_report,
+)
 from cdm.report_eval import score
 from cdm.scenarios import RULES, expected_findings, in_distribution_accuracy_floor
 
@@ -78,6 +85,12 @@ def gemini(text: str) -> dict[str, Any]:
             "usageMetadata": {"promptTokenCount": 900, "candidatesTokenCount": 300}}  # fmt: skip
 
 
+def recovered_latency_is_the_answering_attempt() -> bool:
+    good = json.dumps(template_report(MONTHS[8], FLOOR))
+    call = gemini_call("p", "k", opener=Fake(http(503), gemini(good)), sleep=lambda s: None)
+    return bool(call["latency_ms"] <= call["wall_ms"] and call["thinking_tokens"] is None)
+
+
 def test_a_call_is_ok_invalid_or_an_outage_and_never_returns_the_key() -> None:
     record = MONTHS[8]
     good = json.dumps(template_report(record, FLOOR))
@@ -102,6 +115,12 @@ def test_a_call_is_ok_invalid_or_an_outage_and_never_returns_the_key() -> None:
         "TimeoutError",
         None,
     )
+    assert recovered_latency_is_the_answering_attempt()
+    for err in (ConnectionResetError(), __import__("http.client").client.RemoteDisconnected()):
+        assert (
+            gemini_call("p", "k", opener=Fake(err, err, err), sleep=lambda s: None)["outcome"]
+            == "outage"
+        )
     recovered = gemini_call("p", "k", opener=Fake(http(503), gemini(good)), sleep=lambda s: None)
     assert recovered["outcome"] == "ok"
 
@@ -123,6 +142,11 @@ def test_review_needs_a_reviewer_and_never_approves_an_ungrounded_report() -> No
     with pytest.raises(ValueError, match="reviewer"):
         review(entry, "rejected", " ", "")
     assert review(entry, "rejected", "owner", "a made-up PSI")["status"] == "rejected"
+    good = incident(record, template_report(record, FLOOR), FLOOR, "template", "replayed")
+    edited = json.loads(json.dumps(good))
+    edited["report"]["claims"].append({"value": 0.987654, "source": "drift.psi"})
+    with pytest.raises(ValueError, match="ungrounded"):
+        review(edited, "approved", "owner", "")  # the stored flag still says grounded
     with pytest.raises(ValueError, match="real, replayed or staged"):
         incident(record, bad, FLOOR, "template", "live")
 
@@ -135,7 +159,9 @@ def test_the_queued_month_9_report_is_grounded_replayed_and_awaits_review() -> N
         "pending_review",
     )
     assert entry["record"] == MONTHS[8] and entry["groundedness"]["grounded"]
-    assert entry["report"] == template_report(MONTHS[8], FLOOR)
+    target = month_context()["abstain_share_target"]
+    assert entry["report"] == template_report(MONTHS[8], FLOOR, target)
+    assert "target broken" in entry["report"]["eight_d"]["problem"]  # 0.203 > 0.15
     assert entry["expected_findings"]["severity"] == "alert"
     assert entry["report"]["severity"] == expected_findings(MONTHS[8], FLOOR)["severity"]
     words: dict[str, str] = RULES["containment_words"]  # type: ignore[assignment]
@@ -168,3 +194,44 @@ def test_the_script_scores_recorded_runs_and_never_rewrites_a_queued_report(
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     with pytest.raises(SystemExit, match="GEMINI_API_KEY"):
         module.main(["eval", "--out", str(tmp_path / "e")])
+
+
+def test_the_eval_resumes_retries_outages_and_scores_only_when_complete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import importlib.util
+    import sys
+
+    spec = importlib.util.spec_from_file_location(
+        "incident_report2", REPO / "scripts/incident_report.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    by_prompt = {
+        build_prompt(s["record"], DATA["rules"], DATA["accuracy_floor"]): s
+        for s in DATA["scenarios"]
+    }
+    calls: list[int] = []
+
+    def fake(prompt: str, key: str, model: str) -> dict[str, Any]:
+        calls.append(1)
+        if len(calls) == 2:
+            return {"outcome": "outage", "output": None, "error": "HTTP 429", "wall_ms": 1}
+        report = template_report(by_prompt[prompt]["record"], DATA["accuracy_floor"])
+        return {"outcome": "ok", "output": report, "latency_ms": 1, "wall_ms": 1}
+
+    monkeypatch.setattr(module, "gemini_call", fake)
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    out = str(tmp_path / "eval")
+    args = ["eval", "--out", out, "--pause", "0"]
+    assert module.main([*args, "--max-calls", "40"]) == 3  # partial
+    assert len(calls) == 40
+    assert module.main([*args, "--max-calls", "40"]) == 3
+    assert module.main(args) == 0  # the outage was retried; all 90 recorded; pass
+    assert len(calls) == 91
+    runs = [json.loads(x) for x in (tmp_path / "eval" / "runs.jsonl").read_text().splitlines()]
+    assert len(runs) == 90 and all(r["outcome"] == "ok" for r in runs)
+    log = (tmp_path / "eval" / "calls.jsonl").read_text().splitlines()
+    assert len(log) == 91 and '"error": "HTTP 429"' in log[1]

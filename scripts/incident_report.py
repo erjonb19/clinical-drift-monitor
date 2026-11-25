@@ -32,13 +32,14 @@ from cdm.incident import (  # noqa: E402
     build_prompt,
     gemini_call,
     incident,
+    month_context,
     prompt_sha256,
     review,
     save,
     template_report,
 )
 from cdm.report_eval import RUNS, score  # noqa: E402
-from cdm.scenarios import RULES, in_distribution_accuracy_floor  # noqa: E402
+from cdm.scenarios import in_distribution_accuracy_floor  # noqa: E402
 
 MONTHLY = REPO / "results" / "phase3" / "monthly"
 QUEUE = REPO / "results" / "phase4" / "review_queue"
@@ -53,22 +54,24 @@ def _key() -> str:
 
 
 def cmd_write(args: argparse.Namespace) -> int:
+    path = QUEUE / f"month_{args.month:02d}_{args.writer}.json"
+    if path.exists():
+        sys.exit(f"{path.relative_to(REPO)} exists: a queued report is never rewritten")
     record = json.loads((MONTHLY / f"month_{args.month:02d}.json").read_text(encoding="utf-8"))
-    floor = in_distribution_accuracy_floor()
+    floor, context = in_distribution_accuracy_floor(), month_context()
     if args.writer == "template":
-        report, meta = template_report(record, floor), {}
+        report = template_report(record, floor, context["abstain_share_target"])
+        meta: dict[str, Any] = {}
     else:
-        prompt = build_prompt(record, RULES, floor)
+        prompt = build_prompt(record, context, floor)
         call = gemini_call(prompt, _key(), args.model)
         if call["outcome"] != "ok":
             sys.exit(f"no report: the call was {call['outcome']} ({call.get('error', '')})")
         report = call["output"]
         meta = {"model": args.model, "prompt_sha256": prompt_sha256(prompt)}
-        meta |= {k: call.get(k) for k in ("latency_ms", "input_tokens", "output_tokens")}
+        meta |= {k: call.get(k) for k in ("latency_ms", "wall_ms", "input_tokens", "output_tokens",
+                                          "thinking_tokens")}  # fmt: skip
     entry = incident(record, report, floor, args.writer, args.kind) | {"call": meta}
-    path = QUEUE / f"month_{args.month:02d}_{args.writer}.json"
-    if path.exists():
-        sys.exit(f"{path.relative_to(REPO)} exists: a queued report is never rewritten")
     save(entry, path)
     print(json.dumps({"queued": str(path.relative_to(REPO)), **entry["groundedness"],
                       "findings_match_rules": entry["findings_match_rules"]}))  # fmt: skip
@@ -83,17 +86,35 @@ def cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+
+
 def cmd_eval(args: argparse.Namespace) -> int:
+    """Resumable: runs already recorded as ok or invalid are kept, outages are tried again, and
+    at most ``--max-calls`` calls are made, so a free tier's daily quota can spread the 90 calls
+    over several days. Each run is written as soon as it finishes. Scores once all 90 exist."""
     data = json.loads(SCENARIOS.read_text(encoding="utf-8"))
     key, out = _key(), Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    runs: list[dict[str, Any]] = []
-    calls = []
+    runs_path, calls_path = out / "runs.jsonl", out / "calls.jsonl"
+    kept = {
+        (r["scenario"], r["run"]): r for r in _read_jsonl(runs_path) if r["outcome"] != "outage"
+    }
+    outages = {
+        (r["scenario"], r["run"]): r for r in _read_jsonl(runs_path) if r["outcome"] == "outage"
+    }
+    made = 0
     for s in data["scenarios"]:
         prompt = build_prompt(s["record"], data["rules"], data["accuracy_floor"])
         for n in range(1, RUNS + 1):
+            if (s["id"], n) in kept or made >= args.max_calls:
+                continue
             time.sleep(args.pause)  # stay under the free tier's requests-per-minute limit
             call = gemini_call(prompt, key, args.model)
+            made += 1
             run = {
                 "scenario": s["id"],
                 "run": n,
@@ -102,15 +123,26 @@ def cmd_eval(args: argparse.Namespace) -> int:
             }
             if call["outcome"] == "outage":
                 run["error"] = call["error"]
-            runs.append(run)
-            calls.append({"model": args.model, "prompt_sha256": prompt_sha256(prompt),
-                          "scenario": s["id"], "run": n, "outcome": call["outcome"],
-                          "input_tokens": call.get("input_tokens"),
-                          "output_tokens": call.get("output_tokens"),
-                          "latency_ms": call["latency_ms"], "dollar_cost": 0.0})  # fmt: skip
-    (out / "runs.jsonl").write_text("".join(json.dumps(r) + "\n" for r in runs), encoding="utf-8")
-    (out / "calls.jsonl").write_text("".join(json.dumps(c) + "\n" for c in calls), encoding="utf-8")
-    return _score(out / "runs.jsonl", out / "result.json")
+                outages[(s["id"], n)] = run
+            else:
+                kept[(s["id"], n)] = run
+                outages.pop((s["id"], n), None)
+            rows = sorted(
+                [*kept.values(), *outages.values()], key=lambda r: (r["scenario"], r["run"])
+            )
+            runs_path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+            log = {"model": args.model, "prompt_sha256": prompt_sha256(prompt), "scenario": s["id"],
+                   "run": n, "outcome": call["outcome"], "error": call.get("error"),
+                   **{k: call.get(k) for k in ("input_tokens", "output_tokens", "thinking_tokens",
+                                               "latency_ms", "wall_ms")},
+                   "dollar_cost": 0.0}  # fmt: skip
+            with calls_path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(log) + "\n")
+    recorded = len(kept) + len(outages)
+    if recorded < RUNS * len(data["scenarios"]):
+        print(f"partial: {recorded} of {RUNS * len(data['scenarios'])} runs recorded; run again")
+        return 3
+    return _score(runs_path, out / "result.json")
 
 
 def _score(runs_path: Path, out: Path | None) -> int:
@@ -147,6 +179,7 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--out", default=str(REPO / "results" / "phase4" / "eval"))
     e.add_argument("--model", default=MODEL)
     e.add_argument("--pause", type=float, default=7.0, help="seconds between calls")
+    e.add_argument("--max-calls", type=int, default=90, help="calls this time (a daily quota)")
     sc = sub.add_parser("score")
     sc.add_argument("runs")
     sc.add_argument("--out", default="")

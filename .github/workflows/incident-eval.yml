@@ -14,6 +14,14 @@ on:
         description: "Committed replay month to write the Gemini report for (an alert month)"
         default: "9"
         required: true
+      max_calls:
+        description: "Eval calls this run (the free tier's daily limit, minus one for the report)"
+        default: "90"
+        required: true
+      write_report:
+        description: "Also write the month's Gemini report (once; it is never rewritten)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -40,29 +48,38 @@ jobs:
         run: |
           uv sync --locked --no-python-downloads --python 3.11 --extra train
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
-      - name: Check the month input
+      - name: Check the inputs
         env:
           MONTH: ${{ inputs.month }}
+          MAX_CALLS: ${{ inputs.max_calls }}
         run: |
-          case "$MONTH" in ''|*[!0-9]*) echo "::error::month must be a number"; exit 1;; esac
-      - name: Eval (90 calls) and the month's report
+          for v in "$MONTH" "$MAX_CALLS"; do
+            case "$v" in ''|*[!0-9]*) echo "::error::month and max_calls must be numbers"; exit 1;; esac
+          done
+      # The report first (one call), then the eval, which resumes from the runs committed under
+      # results/phase4/eval/ and makes at most max_calls calls (exit 3: partial, run again).
+      - name: The month's Gemini report
+        if: inputs.write_report
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           MONTH: ${{ inputs.month }}
+        run: python scripts/incident_report.py write --month "$MONTH" --kind replayed --writer gemini
+      - name: Eval (resumable)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MAX_CALLS: ${{ inputs.max_calls }}
         run: |
           set +e
-          python scripts/incident_report.py eval --out eval
+          python scripts/incident_report.py eval --out results/phase4/eval --max-calls "$MAX_CALLS"
           echo "EVAL_EXIT=$?" >> "$GITHUB_ENV"
-          set -e
-          python scripts/incident_report.py write --month "$MONTH" --kind replayed --writer gemini
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: incident-eval-${{ github.run_id }}
           path: |
-            eval/
+            results/phase4/eval/
             results/phase4/review_queue/
-      - name: Verdict (0 pass, 1 fail, 2 inconclusive)
+      - name: Verdict (0 pass, 1 fail, 2 inconclusive, 3 partial)
         run: |
           echo "eval exit code: $EVAL_EXIT"
           exit "$EVAL_EXIT"

@@ -102,17 +102,18 @@
       }
     ],
     "eight_d": {
-      "problem": "Month 9: the OOD scores of 300 images shifted (PSI 0.62 with KS p = 5.73e-28; skin type II (187 images) also alerted, which detects the new site, not anything about skin type). Images came from buenos_aires (300 images). 20.3% of images were above the abstain threshold.",
+      "problem": "Month 9: the OOD scores of 300 images shifted (PSI 0.62 with KS p = 5.73e-28; skin type II (187 images) also alerted, which detects the new site, not anything about skin type). Images came from buenos_aires (300 images). 20.3% of images were above the abstain threshold, above the abstain-share target of 15% (target broken).",
       "containment": "Containment word: abstain_and_hold. Abstain: the service flags every image above the abstain threshold for a person to review instead of reading it from the model. Hold: the champion is not replaced while the alert is open (a runbook procedure, not enforced by code). The steps are in the runbook's containment section (docs/runbook.md).",
       "root_cause": "Images from buenos_aires (300 images) entered the month's batch. The test shows the scores moved, not why; the source mix is the leading explanation and must be confirmed by a reviewer.",
       "permanent_fix": "Relabel a sample from the new source, then train a challenger and promote it only if it wins under the committed retraining rule.",
-      "verification": "Delayed balanced accuracy of month 8 was 0.592 on 290 labelled images, not below the in-distribution floor of 0.591.",
+      "verification": "Month 9's own accuracy arrives with the next month's run. The latest known, month 8's delayed balanced accuracy, was 0.592 on 290 labelled images, not below the in-distribution floor of 0.591.",
       "prevention": "Keep the monthly drift test and the per-skin-type test running, and review each alert's report in the queue before it counts as sent."
     }
   },
+  "accuracy_floor": 0.5910713198670328,
   "groundedness": {
     "grounded": true,
-    "numbers": 17,
+    "numbers": 19,
     "unmatched": []
   },
   "findings_match_rules": true,
@@ -135,6 +136,6 @@
   },
   "status": "pending_review",
   "reviews": [],
-  "queued_utc": "2026-11-25T04:19:35+00:00",
+  "queued_utc": "2026-11-25T04:30:17+00:00",
   "call": {}
 }
