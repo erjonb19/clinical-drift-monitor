@@ -982,6 +982,16 @@ change only the owner can make (repository settings, accounts, consoles).
       graph, Dependabot, the `uv` job's log). **Not ticked yet:** the Streamlit app's hashed requirements
       come in a separate PR that the owner merges, because merging it redeploys the live demo;
       the Docker image is item 27.
+    - **2026-11-25, the app's part built (not merged; the owner merges):** `app/requirements.txt`
+      is uv's hashed export of the cohort and demo extras (43 packages, every line hashed, no
+      editable install; pip's hash mode refuses one), and `app/cohort_demo.py` imports `cdm`
+      from the checkout's `src/`. `test_the_streamlit_app_installs_only_hashed_packages_from_the_lock`
+      fails when the file and the lock disagree. Checked in this cloud session: a fresh Python
+      3.11 venv installed it with `--require-hashes`, Streamlit served `/_stcore/health`, and the
+      page ran with no exception through Streamlit's AppTest with `cdm` loaded from `src/` (its
+      ISIC fetch failed here because this sandbox cannot reach that host, and the page showed its
+      generic error). **Not ticked:** merging redeploys the live demo on Streamlit Community
+      Cloud, which this session cannot check; owner step S20.
 27. [x] **Hashed installs in the API image** (Medium): hashed requirements (with the `+cpu`
     torch wheels), `--require-hashes --no-deps`, pinned build backend.
     - **Done when:** the image builds with `--require-hashes` and the Trivy step passes.

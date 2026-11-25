@@ -103,6 +103,24 @@ credential or its permission is wrong.
    gh run view --log --repo erjonb19/clinical-drift-monitor | Select-String -Pattern "ok:|MISSED|inconclusive|not configured"
    ```
 
+### S20. Merge the Streamlit app's hashed requirements and check the live demo (item 26)
+
+- [ ] Done
+
+**Why:** item 26 asks that the app installs only from the lock or hashes. The PR replaces
+`app/requirements.txt` (`-e .[cohort,demo]`) with hashed pins exported from `uv.lock`; merging
+it makes Streamlit Community Cloud reinstall the app, which only you can see. Rolling back is
+reverting the PR.
+
+1. Merge the PR "Item 26: the Streamlit app installs only hashed packages from the lock" on
+   GitHub (its CI must be green).
+2. In Streamlit Community Cloud, open the app's **Manage app** panel and **Reboot app**; watch
+   the log until it says the app is running (no `--require-hashes` or `cdm` import error).
+3. Open https://cdm-cohort-demo.streamlit.app/ and build one cohort: counts must appear.
+4. Tell Claude "S20 done" (or paste the error line from the log). Claude then ticks item 26.
+   If it fails, open the merged PR on GitHub and press **Revert**: it opens a revert PR, which
+   restores the old `app/requirements.txt` once merged.
+
 ### S19. Review the queued incident reports (item 8)
 
 - [ ] Done
