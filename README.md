@@ -548,9 +548,24 @@ synthetic 448x448 JPEG; "Serving benchmark" run 45074396136, 2026-11-22):
 | 5 | 511.9 | 1033.8 | 1247.5 | 8.52 | 741 |
 | 20 | 1365.2 | 1702.4 | 1767.4 | 14.21 | 1158 |
 
-From 1 to 20 users throughput rises only 2.4 times while median latency rises 8.6 times: the
-likely bottleneck is CPU compute for the three networks, shared by concurrent requests on four
-CPUs (CPU use was not measured, so this is inferred, not shown). All 600 requests returned 200.
+From 1 to 20 users throughput rises only 2.4 times while median latency rises 8.6 times. All
+600 requests returned 200.
+
+**The bottleneck, measured: CPU compute.** A second run with CPU measured per level
+([`benchmark_champion_cpu.json`](results/phase3/serving/benchmark_champion_cpu.json); "Serving
+benchmark" run 45547586355, 2026-11-25; same bundle and settings, but the runner drew an Intel
+Xeon 6975P-C, so its times are not comparable with the AMD EPYC run above):
+
+| Concurrent users | p50 ms | p95 ms | p99 ms | Images/s | Server CPU (cores of 4) | Machine CPU busy |
+|---|---|---|---|---|---|---|
+| 1 | 104.2 | 179.8 | 207.9 | 9.11 | 3.95 | 99.7% |
+| 5 | 349.5 | 964.9 | 1087.8 | 11.36 | 3.95 | 99.7% |
+| 20 | 1052.8 | 1177.0 | 1236.0 | 18.78 | 3.95 | 99.6% |
+
+The server used 3.95 of the 4 cores at every level and the machine was over 99% busy: the three
+networks' compute fills the CPUs already at one user, so more users queue for the same cores
+(the load generator shares the machine). More throughput needs more cores or cheaper inference;
+the ONNX export failed parity (Phase 3) and int8 quantization is not tried.
 
 **Serving speed (backlog item 13), measured earlier on the untrained CI test bundle, so serving
 speed only, never accuracy** ([`benchmark.json`](results/phase3/serving/benchmark.json); one network,
@@ -950,6 +965,7 @@ Backlog items (docs/BACKLOG.md) whose "Done when" is met. One line each; how to 
 - [x] Item 6: CI loads the champion bundle and scores 50 public test-split images on every push.
 - [x] Item 21: one-command demo (`docker compose up`) that trips the drift alarm with the champion bundle.
 - [x] Item 47: the public cohort demo is hardened (DuckDB external access off, no error details, per-session caps, the ISIC client held to its host).
+- [x] Item 13: a serving benchmark of the champion with the bottleneck measured (CPU compute: 3.95 of 4 cores in use at every load).
 - [x] Item 23: Claude Code permission rules (`.claude/settings.json`) deny secret reads, force pushes, pushes to `main` and curl or `gh api` writes; a guard against mistakes, not a security boundary (known gaps under item 23 in docs/BACKLOG.md).
 
 ## Reviewer feedback

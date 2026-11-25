@@ -50,3 +50,16 @@ def test_the_bottleneck_is_named_from_measured_cpu() -> None:
     assert module.bottleneck(idle, 4)["named"].startswith("not CPU")
     assert "3.6 of 4 cores" in module.bottleneck(busy, 4)["evidence"]
     assert module.process_cpu_s(1) >= 0 and module.machine_cpu()[1] > 0
+
+
+def test_the_champion_cpu_run_names_a_measured_bottleneck() -> None:
+    d = json.loads((REPO / "results/phase3/serving/benchmark_champion_cpu.json").read_text())
+    assert d["bundle_version"] == "v2-ensemble-cpu-d7191f4" and d["networks_in_bundle"] == 3
+    assert d["code_version"] and d["uncommitted_changes"] is False and d["caveat"] == ""
+    cores = d["hardware"]["logical_cpus"]
+    for lv in d["levels"]:
+        assert lv["status_codes"] == {"200": lv["requests"]}
+        assert 0 < lv["server_cpu_cores_used"] <= cores + 0.1
+        assert 0 < lv["machine_cpu_busy_share"] <= 1
+    assert d["bottleneck"]["named"] == "CPU compute"
+    assert f"of {cores} cores" in d["bottleneck"]["evidence"]

@@ -49,7 +49,10 @@ flowchart LR
   other hardware is about 5 times faster per network; the gap is not explained. The champion
   itself, on a 4-CPU GitHub runner (`results/phase3/serving/benchmark_champion.json`): median 158.8 ms per request for one user,
   rising to 1,365.2 ms at 20 users, while throughput rises only from 5.97 to 14.21 images a
-  second; the likely bottleneck is CPU compute for the three networks (CPU use not measured).
+  second. The bottleneck is CPU compute, measured: in a second run the server used 3.95 of 4
+  cores at every level and the machine was over 99% busy
+  (`results/phase3/serving/benchmark_champion_cpu.json`, a different runner CPU, so its times
+  differ).
 - **Not measured yet:** batch scoring at scale (item 14; the owner chose a 5,000-image slice
   first) and detector quality on staged shifts (item 15; approved, code and spec committed, not yet
   run; the champion bundle it needs is a release asset since 2026-11-18).
