@@ -38,7 +38,9 @@ UNTRAINED = (
 CONDITIONS = (
     "client and server share the same machine's CPUs; every request opens a new connection "
     "(urllib sends Connection: close); the API runs each request in a worker thread, so "
-    "concurrent requests compute in parallel and compete for the CPUs; CPU use is not measured"
+    "concurrent requests compute in parallel and compete for the CPUs; CPU is measured per level "
+    "(server_cpu_cores_used: the server process's CPU seconds over wall time, all its threads; "
+    "machine_cpu_busy_share: all CPUs, the load generator included)"
 )
 SERVER = (
     "scripts/bench_app.py: app/api/main.py's create_app, one uvicorn worker, "
